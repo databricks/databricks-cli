@@ -1,0 +1,24 @@
+strictness: high
+test-warnings: True
+doc-warnings: false
+
+ignore-paths:
+  - sdk
+
+max-line-length: 100
+
+pylint:
+  disable:
+    - too-many-instance-attributes
+    - cyclic-import
+    - len-as-condition
+    - invalid-name
+    - no-else-return
+    - no-self-use
+
+mccabe:
+  disable:
+    - MC0001
+
+pyroma:
+  run: true
