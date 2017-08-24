@@ -1,7 +1,7 @@
 # Test reqs
-prospector[with_pyroma]
-pytest
-mock
+prospector[with_pyroma]==0.12.7
+pytest==3.2.1
+mock==2.0.0
 # Real reqs
 click>=6.7
 requests>=2.17.3

@@ -34,6 +34,7 @@ DEFAULT_SECTION = 'DEFAULT'
 HOST = 'host'
 USERNAME = 'username'
 PASSWORD = 'password' #  NOQA
+TOKEN = 'token'
 
 
 def require_config(function):
@@ -49,49 +50,73 @@ def require_config(function):
 
 def get_dbfs_client():
     conf = DatabricksConfig.fetch_from_fs()
-    return DbfsService(ApiClient(conf.username, conf.password, host=conf.host))
+    if conf.is_valid_with_token:
+        return DbfsService(ApiClient(host=conf.host, token=conf.token))
+    return DbfsService(ApiClient(user=conf.username, password=conf.password, host=conf.host))
 
 
 class DatabricksConfig(object):
     home = expanduser('~')
 
-    def __init__(self, host=None, username=None, password=None):
-        self.config = ConfigParser.RawConfigParser()
-        if host:
-            self.config.set(DEFAULT_SECTION, HOST, host)
-        if username:
-            self.config.set(DEFAULT_SECTION, USERNAME, username)
-        if password:
-            self.config.set(DEFAULT_SECTION, PASSWORD, password)
+    def __init__(self):
+        self._config = ConfigParser.RawConfigParser()
 
     def overwrite(self):
-        config_path = join(self.home, '.databrickscfg')
+        config_path = self.get_path()
         with open(config_path, 'wb') as cfg:
-            self.config.write(cfg)
+            self._config.write(cfg)
         os.chmod(config_path, 0o600)
 
     @property
     def is_valid(self):
-        return self.config.has_option(DEFAULT_SECTION, USERNAME) and \
-            self.config.has_option(DEFAULT_SECTION, PASSWORD) and \
-            self.config.has_option(DEFAULT_SECTION, HOST)
+        return self.is_valid_with_password or self.is_valid_with_token
+
+    @property
+    def is_valid_with_password(self):
+        return self._config.has_option(DEFAULT_SECTION, USERNAME) and \
+            self._config.has_option(DEFAULT_SECTION, PASSWORD) and \
+            self._config.has_option(DEFAULT_SECTION, HOST)
+
+    @property
+    def is_valid_with_token(self):
+        return self._config.has_option(DEFAULT_SECTION, TOKEN) and \
+            self._config.has_option(DEFAULT_SECTION, HOST)
 
     @property
     def host(self):
-        return self.config.get(DEFAULT_SECTION, HOST) if self.is_valid else None
+        return self._config.get(DEFAULT_SECTION, HOST) if self.is_valid else None
 
     @property
     def username(self):
-        return self.config.get(DEFAULT_SECTION, USERNAME) if self.is_valid else None
+        return self._config.get(DEFAULT_SECTION, USERNAME) if self.is_valid_with_password else None
 
     @property
     def password(self):
-        return self.config.get(DEFAULT_SECTION, PASSWORD) if self.is_valid else None
+        return self._config.get(DEFAULT_SECTION, PASSWORD) if self.is_valid_with_password else None
+
+    @property
+    def token(self):
+        return self._config.get(DEFAULT_SECTION, TOKEN) if self.is_valid_with_token else None
 
     @classmethod
     def fetch_from_fs(cls):
         databricks_config = cls()
-        databricks_config.config.read(cls.get_path())
+        databricks_config._config.read(cls.get_path())
+        return databricks_config
+
+    @classmethod
+    def construct_from_password(cls, host, username, password):
+        databricks_config = cls()
+        databricks_config._config.set(DEFAULT_SECTION, HOST, host)
+        databricks_config._config.set(DEFAULT_SECTION, USERNAME, username)
+        databricks_config._config.set(DEFAULT_SECTION, PASSWORD, password)
+        return databricks_config
+
+    @classmethod
+    def construct_from_token(cls, host, token):
+        databricks_config = cls()
+        databricks_config._config.set(DEFAULT_SECTION, HOST, host)
+        databricks_config._config.set(DEFAULT_SECTION, TOKEN, token)
         return databricks_config
 
     @classmethod

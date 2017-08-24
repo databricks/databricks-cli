@@ -4,6 +4,7 @@ doc-warnings: false
 
 ignore-paths:
   - sdk
+  - build
 
 max-line-length: 100
 
@@ -15,6 +16,7 @@ pylint:
     - invalid-name
     - no-else-return
     - no-self-use
+    - protected-access
 
 mccabe:
   disable:

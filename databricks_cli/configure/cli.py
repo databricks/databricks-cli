@@ -32,10 +32,18 @@ from databricks_cli.configure.config import DatabricksConfig
 PROMPT_HOST = 'Databricks Host (should begin with https://)'
 PROMPT_USERNAME = 'Username'
 PROMPT_PASSWORD = 'Password' #  NOQA
+PROMPT_TOKEN = 'Token' #  NOQA
 
 
-@click.command(context_settings=CONTEXT_SETTINGS)
-def configure_cli():
+def _configure_cli_token():
+    conf = DatabricksConfig.fetch_from_fs()
+    host = click.prompt(PROMPT_HOST, default=conf.host, type=_DbfsHost())
+    token = click.prompt(PROMPT_TOKEN, default=conf.token)
+    config = DatabricksConfig.construct_from_token(host, token)
+    config.overwrite()
+
+
+def _configure_cli_password():
     conf = DatabricksConfig.fetch_from_fs()
     if conf.password:
         default_password = '*' * len(conf.password)
@@ -47,8 +55,17 @@ def configure_cli():
                             confirmation_prompt=True)
     if password == default_password:
         password = conf.password
-    config = DatabricksConfig(host, username, password)
+    config = DatabricksConfig.construct_from_password(host, username, password)
     config.overwrite()
+
+
+@click.command(context_settings=CONTEXT_SETTINGS)
+@click.option('--token', show_default=True, is_flag=True, default=False)
+def configure_cli(token):
+    if token:
+        _configure_cli_token()
+    else:
+        _configure_cli_password()
 
 
 class _DbfsHost(ParamType):

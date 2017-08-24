@@ -61,7 +61,7 @@ class ApiClient(object):
     A partial Python implementation of dbc rest api
     to be used by different versions of the client.
     """
-    def __init__(self, user = None, password = None, host = None, configUrl = None, 
+    def __init__(self, user = None, password = None, host = None, token = None, configUrl = None,
             apiVersion = version.API_VERSION, default_headers = {}):
         if configUrl:
             self.url = configUrl
@@ -81,6 +81,8 @@ class ApiClient(object):
         if user is not None and password is not None:
             userHeaderData = "Basic " + base64.standard_b64encode(user + ":" + password)
             auth = {'Authorization': userHeaderData, 'Content-Type': 'text/json'}
+        elif token is not None:
+            auth = {'Authorization': 'Bearer {}'.format(token), 'Content-Type': 'text/json'}
         else:
             auth = {}
         self.default_headers = dict(auth.items() + default_headers.items())
