@@ -30,14 +30,17 @@ To install simply run
 In order to upgrade your databricks-cli installation please run
 ``pip install --upgrade databricks-cli``
 
-Getting started
-----------------
+Getting started and setting up authentication
+----------------------------------------------
 
-After installing, ``dbfs`` will be installed into your PATH. Try it out
-by running ``dbfs --help``.
+After installing, ``databricks`` and ``dbfs`` (shorthand for ``databricks fs``) will be installed
+into your PATH. Try it out by running ``dbfs --help``.
 
-To configure your username/password/host try running ``dbfs configure``.
-You will be prompted for your username, password, and host.
+There are two ways to authenticate to the Databricks API. The first way
+is to use your username and password pair. To do this run ``dbfs configure``
+and follow the prompts. The second way is to use a access token generated inside of
+Databricks. To configure the CLI to use an access token run ``dbfs configure --token``
+and follow the prompts.
 
 Known Issues
 ---------------
@@ -53,4 +56,5 @@ For MacOS, the easiest way may be to install Python with `Homebrew <https://brew
 Don't have a password because of SSO?
 -------------------------------------
 
-Your administrator can choose to set a password for you.
+Databricks will soon provide a token service which will allow users to authenticate to the API
+using a secret token.
