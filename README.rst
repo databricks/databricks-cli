@@ -6,7 +6,7 @@ databricks-cli
 
 
 This repository includes the code for the command line interface to
-Databricks APIs. Currently, the only APIs implemented are for DBFS.
+Databricks APIs. Currently, the only APIs implemented are for DBFS and Workspace.
 **PLEASE NOTE**, this CLI is under active development and is released as
 an experimental client. This
 means that interfaces are subject to being changed and that
@@ -34,7 +34,7 @@ Getting started and setting up authentication
 ----------------------------------------------
 
 After installing, ``databricks`` and ``dbfs`` (shorthand for ``databricks fs``) will be installed
-into your PATH. Try it out by running ``dbfs --help``.
+into your PATH. Try it out by running ``dbfs --help`` or ``databricks workspace --help.
 
 There are two ways to authenticate to the Databricks API. The first way
 is to use your username and password pair. To do this run ``dbfs configure``
