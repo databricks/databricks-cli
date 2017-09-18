@@ -457,3 +457,60 @@ class DbfsService(object):
             self.add_block(handle, base64.encodestring(block))
         self.close(handle)
         input_file.close()
+
+
+class WorkspaceService(object):
+    def __init__(self, client):
+        self.client = client
+
+    def mkdirs(self, path):
+        _data = {}
+        if path is not None:
+            _data['path'] = path
+        return self.client.perform_query('POST', '/workspace/mkdirs', data=_data)
+    
+    def list(self, path):
+        _data = {}
+        if path is not None:
+            _data['path'] = path
+        return self.client.perform_query('GET', '/workspace/list', data=_data)
+    
+    def import_workspace(self, path, format=None, language=None, content=None, overwrite=None):
+        _data = {}
+        if path is not None:
+            _data['path'] = path
+        if format is not None:
+            _data['format'] = format
+        if language is not None:
+            _data['language'] = language
+        if content is not None:
+            _data['content'] = content
+        if overwrite is not None:
+            _data['overwrite'] = overwrite
+        return self.client.perform_query('POST', '/workspace/import', data=_data)
+    
+    def export_workspace(self, path, format=None, direct_download=None):
+        _data = {}
+        if path is not None:
+            _data['path'] = path
+        if format is not None:
+            _data['format'] = format
+        if direct_download is not None:
+            _data['direct_download'] = direct_download
+        return self.client.perform_query('GET', '/workspace/export', data=_data)
+    
+    def delete(self, path, recursive=None):
+        _data = {}
+        if path is not None:
+            _data['path'] = path
+        if recursive is not None:
+            _data['recursive'] = recursive
+        return self.client.perform_query('POST', '/workspace/delete', data=_data)
+    
+    def get_status(self, path):
+        _data = {}
+        if path is not None:
+            _data['path'] = path
+        return self.client.perform_query('GET', '/workspace/get-status', data=_data)
+     
+

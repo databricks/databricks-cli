@@ -28,7 +28,7 @@ import os
 from os.path import expanduser, join
 
 from databricks_cli.utils import error_and_quit
-from databricks_cli.sdk import ApiClient, DbfsService
+from databricks_cli.sdk import ApiClient, DbfsService, WorkspaceService
 
 DEFAULT_SECTION = 'DEFAULT'
 HOST = 'host'
@@ -48,11 +48,21 @@ def require_config(function):
     return decorator
 
 
-def get_dbfs_client():
+def _get_api_client():
     conf = DatabricksConfig.fetch_from_fs()
     if conf.is_valid_with_token:
-        return DbfsService(ApiClient(host=conf.host, token=conf.token))
-    return DbfsService(ApiClient(user=conf.username, password=conf.password, host=conf.host))
+        return ApiClient(host=conf.host, token=conf.token)
+    return ApiClient(user=conf.username, password=conf.password, host=conf.host)
+
+
+def get_dbfs_client():
+    api_client = _get_api_client()
+    return DbfsService(api_client)
+
+
+def get_workspace_client():
+    api_client = _get_api_client()
+    return WorkspaceService(api_client)
 
 
 class DatabricksConfig(object):
