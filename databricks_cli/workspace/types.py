@@ -30,7 +30,7 @@ class WorkspaceLanguage(object):
     SQL = 'SQL'
     R = 'R'
     ALL = [SCALA, PYTHON, SQL, R]
-    EXTENSIONS = ['.scala', '.py', '.sql', '.r', '.R']
+    EXTENSIONS = ['.scala', '.py', '.sql', '.SQL', '.r', '.R']
 
     @classmethod
     def to_language(cls, path):
@@ -40,6 +40,8 @@ class WorkspaceLanguage(object):
         elif ext == '.py':
             return cls.PYTHON
         elif ext == '.sql':
+            return cls.SQL
+        elif ext == '.SQL':
             return cls.SQL
         elif ext == '.r':
             return cls.R
