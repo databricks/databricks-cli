@@ -68,9 +68,7 @@ def mkdirs_cli(dbfs_path):
     """
     Make directories in DBFS.
 
-    Note that this function is subtly different than mkdir. Mkdir requires
-    the parent directory of the input to already exist. Mkdirs will create directories
-    along the path to the argument directory.
+    Mkdirs will create directories along the path to the argument directory.
     """
     mkdirs(dbfs_path)
 
@@ -148,6 +146,7 @@ def copy_to_dbfs_recursive(src, dbfs_path_dst, overwrite):
 def copy_from_dbfs_recursive(dbfs_path_src, dst, overwrite):
     if os.path.isfile(dst):
         click.echo('{} exists as a file. Skipping this subtree {}'.format(dst, repr(dbfs_path_src)))
+        return
     elif not os.path.isdir(dst):
         os.makedirs(dst)
 
