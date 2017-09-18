@@ -42,6 +42,18 @@ and follow the prompts. The second way is to use a access token generated inside
 Databricks. To configure the CLI to use an access token run ``dbfs configure --token``
 and follow the prompts.
 
+Using Docker
+------------
+
+To build image run
+``docker build -t $(pwd | sed 's@^.*/\([^$]*\)$@\1@') .``
+
+To run container with shell
+``docker run -it databricks-cli bash -l``
+
+To run command in docker (e.g. dbfs --help)
+``docker run -it databricks-cli dbfs --help``
+
 Known Issues
 ---------------
 ``AttributeError: 'module' object has no attribute 'PROTOCOL_TLSv1_2'``
