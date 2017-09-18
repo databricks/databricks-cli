@@ -53,7 +53,7 @@ def ls_cli(l, absolute, workspace_path):
     else:
         workspace_path = workspace_path[0]
     objects = list_objects(workspace_path)
-    table = tabulate([o.to_row(is_long_form=l, is_absolute=absolute) for o in objects],
+    table = tabulate([obj.to_row(is_long_form=l, is_absolute=absolute) for obj in objects],
                      tablefmt='plain')
     click.echo(table)
 
@@ -125,13 +125,13 @@ def _export_dir_helper(source_path, target_path, overwrite):
         return
     if not os.path.isdir(target_path):
         os.makedirs(target_path)
-    for o in list_objects(source_path):
-        cur_src = o.path
-        cur_dst = os.path.join(target_path, o.basename)
-        if o.is_dir:
+    for obj in list_objects(source_path):
+        cur_src = obj.path
+        cur_dst = os.path.join(target_path, obj.basename)
+        if obj.is_dir:
             _export_dir_helper(cur_src, cur_dst, overwrite)
-        elif o.is_notebook:
-            cur_dst = cur_dst + WorkspaceLanguage.to_extension(o.language)
+        elif obj.is_notebook:
+            cur_dst = cur_dst + WorkspaceLanguage.to_extension(obj.language)
             try:
                 export_workspace(cur_src, cur_dst, WorkspaceFormat.SOURCE, overwrite)
             except LocalFileExistsException:
