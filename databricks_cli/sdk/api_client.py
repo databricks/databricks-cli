@@ -46,6 +46,8 @@ except ImportError:
     from urllib3.poolmanager import PoolManager
     from urllib3 import exceptions
 
+from databricks_cli.version import version as databricks_cli_version
+
 class TlsV1HttpAdapter(HTTPAdapter):
     """
     A HTTP adapter implementation that specifies the ssl version to be TLS1.
@@ -85,7 +87,8 @@ class ApiClient(object):
             auth = {'Authorization': 'Bearer {}'.format(token), 'Content-Type': 'text/json'}
         else:
             auth = {}
-        self.default_headers = dict(auth.items() + default_headers.items())
+        user_agent = {'user-agent': 'databricks-cli-{v}'.format(v=databricks_cli_version)}
+        self.default_headers = dict(auth.items() + default_headers.items() + user_agent.items())
 
     def close(self):
         """Close the client"""
