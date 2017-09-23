@@ -45,14 +45,17 @@ and follow the prompts.
 Using Docker
 ------------
 
-To build image run
-``docker build -t $(pwd | sed 's@^.*/\([^$]*\)$@\1@') .``
+To build image
 
-To run container with shell
-``docker run -it databricks-cli bash -l``
+``docker build -t docker build -t databricks-cli .``
 
-To run command in docker (e.g. dbfs --help)
-``docker run -it databricks-cli dbfs --help``
+To run container
+
+``docker run -it databricks-cli``
+
+To run command in docker (e.g. ``fs --help``)
+
+``docker run -it databricks-cli fs --help``
 
 Known Issues
 ---------------
