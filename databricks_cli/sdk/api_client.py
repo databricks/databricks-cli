@@ -104,7 +104,7 @@ class ApiClient(object):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", exceptions.InsecureRequestWarning)
             resp = self.session.request(method, self.url + path, data = json.dumps(data),
-                verify = False, headers = headers)
+                headers = headers)
 
         try:
             resp.raise_for_status()
