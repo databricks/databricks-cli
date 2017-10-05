@@ -56,5 +56,4 @@ For MacOS, the easiest way may be to install Python with `Homebrew <https://brew
 Don't have a password because of SSO?
 -------------------------------------
 
-Databricks will soon provide a token service which will allow users to authenticate to the API
-using a secret token.
+Databricks now has added support for token based authentication. So users can use tokens instead of username/passwords for Databricks REST API. Click `here <https://docs.databricks.com/administration-guide/admin-settings/tokens.html#rest-api-tokens>`_ for more details on REST API tokens.
