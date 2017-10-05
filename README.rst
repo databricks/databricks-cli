@@ -47,14 +47,14 @@ an access token generated from Databricks. To configure the CLI to use the acces
 ``databricks configure --token``. After following the prompts, your access credentials will be stored
 in the file ``~/.databrickscfg``.
 
-Read :ref:`token-management` for more information about Databricks Access Tokens.
+Read `Token Management <https://docs.databricks.com/api/latest/authentication.html#token-management>`_ for more information about Databricks Access Tokens.
 
 Workspace CLI Examples
 -----------------------
 The implemented commands for the Workspace CLI can be listed by running ``databricks workspace -h``.
 Commands are run by appending them to ``databricks workspace``. To make it easier to use the workspace
 CLI, feel free to alias ``databricks workspace`` to something shorter. For more information
-reference :ref:`alias_databricks_cli`.
+reference `Aliasing Command Groups <https://github.com/andrewmchen/databricks-cli/tree/docs#aliasing-command-groups>`_.
 
 .. code::
 
