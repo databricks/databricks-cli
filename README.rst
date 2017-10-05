@@ -186,7 +186,3 @@ Sometimes it can be inconvenient to prefix each CLI invocation with the name of 
 command groups to shorter commands. For example to shorten ``databricks workspace ls`` to ``dw ls`` in the
 Bourne again shell, you can add ``alias dw="databricks workspace"`` to the appropriate bash profile. Typically,
 this file is located at ``~/.bash_profile``.
-
-.. info::
-
-    By default, we have already aliased ``databricks fs`` to ``dbfs``.
