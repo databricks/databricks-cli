@@ -114,7 +114,8 @@ def export_workspace_cli(source_path, target_path, format, overwrite): # NOQA
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Deletes objects from the Databricks workspace. rm and delete are synonyms.')
+               short_help='Deletes objects from the Databricks workspace. '
+                          'rm and delete are synonyms.')
 @click.argument('workspace_path')
 @click.option('--recursive', '-r', is_flag=True, default=False)
 @require_config
