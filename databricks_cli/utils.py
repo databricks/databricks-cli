@@ -28,6 +28,7 @@ from requests.exceptions import HTTPError
 
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+DEBUG_MODE = False
 
 
 def eat_exceptions(function):
@@ -40,6 +41,9 @@ def eat_exceptions(function):
                                'reconfigure with ``dbfs configure``')
             else:
                 error_and_quit(exception.response.content)
+        except Exception as exception: # noqa
+            if not DEBUG_MODE:
+                error_and_quit('{}: {}'.format(type(exception).__name__, str(exception)))
     decorator.__doc__ = function.__doc__
     return decorator
 

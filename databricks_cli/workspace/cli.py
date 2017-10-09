@@ -36,7 +36,8 @@ from databricks_cli.workspace.types import LanguageClickType, FormatClickType, W
     WorkspaceLanguage
 
 
-@click.command(context_settings=CONTEXT_SETTINGS)
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='List objects in the Databricks Workspace. ls and list are synonyms.')
 @click.option('--absolute', is_flag=True, default=False,
               help='Displays absolute paths.')
 @click.option('-l', is_flag=True, default=False,
@@ -58,7 +59,8 @@ def ls_cli(l, absolute, workspace_path):
     click.echo(table)
 
 
-@click.command(context_settings=CONTEXT_SETTINGS)
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Make directories in the Databricks Workspace.')
 @click.argument('workspace_path')
 @require_config
 @eat_exceptions
@@ -71,10 +73,12 @@ def mkdirs_cli(workspace_path):
     mkdirs(workspace_path)
 
 
-@click.command(context_settings=CONTEXT_SETTINGS)
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Imports a file from local to the Databricks workspace.')
 @click.argument('source_path')
 @click.argument('target_path')
-@click.option('--language', '-l', required=True, type=LanguageClickType())
+@click.option('--language', '-l', required=True, type=LanguageClickType(),
+              help=', '.join(WorkspaceLanguage.ALL))
 @click.option('--format', '-f', default=WorkspaceFormat.SOURCE, type=FormatClickType())
 @click.option('--overwrite', '-o', is_flag=True, default=False)
 @require_config
@@ -83,12 +87,15 @@ def import_workspace_cli(source_path, target_path, language, format, overwrite):
     """
     Imports a file from local to the Databricks workspace.
 
-    The format is by default SOURCE.
+    The format is by default SOURCE. Possible formats are SOURCE, HTML, JUPTYER, and DBC. Each
+    format is documented at
+    https://docs.databricks.com/api/latest/workspace.html#notebookexportformat.
     """
     import_workspace(source_path, target_path, language, format, overwrite) # NOQA
 
 
-@click.command(context_settings=CONTEXT_SETTINGS)
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Exports a file from the Databricks workspace.')
 @click.argument('source_path')
 @click.argument('target_path')
 @click.option('--format', '-f', default=WorkspaceFormat.SOURCE, type=FormatClickType())
@@ -97,14 +104,18 @@ def import_workspace_cli(source_path, target_path, language, format, overwrite):
 @eat_exceptions
 def export_workspace_cli(source_path, target_path, format, overwrite): # NOQA
     """
-    Exports a file from the Databricks workspace to local.
+    Exports a notebook from the Databricks workspace.
 
-    The format is by default SOURCE.
+    The format is by default SOURCE. Possible formats are SOURCE, HTML, JUPTYER, and DBC. Each
+    format is documented at
+    https://docs.databricks.com/api/latest/workspace.html#notebookexportformat.
     """
     export_workspace(source_path, target_path, format, overwrite) # NOQA
 
 
-@click.command(context_settings=CONTEXT_SETTINGS)
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Deletes objects from the Databricks workspace. '
+                          'rm and delete are synonyms.')
 @click.argument('workspace_path')
 @click.option('--recursive', '-r', is_flag=True, default=False)
 @require_config
@@ -141,7 +152,8 @@ def _export_dir_helper(source_path, target_path, overwrite):
             click.echo('{} is neither a dir or a notebook. Skip.'.format(cur_src))
 
 
-@click.command(context_settings=CONTEXT_SETTINGS)
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Recursively exports a directory from the Databricks workspace.')
 @click.argument('source_path')
 @click.argument('target_path')
 @click.option('--overwrite', '-o', is_flag=True, default=False)
@@ -149,7 +161,7 @@ def _export_dir_helper(source_path, target_path, overwrite):
 @eat_exceptions
 def export_dir_cli(source_path, target_path, overwrite):
     """
-    Recursively exports a directory from the Databricks workspace to local.
+    Recursively exports a directory from the Databricks workspace.
 
     Only directories and notebooks are exported. Notebooks are always exported in the SOURCE
     format. Notebooks will also have the extension of .scala, .py, .sql, or .r appended
@@ -161,12 +173,14 @@ def export_dir_cli(source_path, target_path, overwrite):
 
 
 def _import_dir_helper(source_path, target_path, overwrite):
+    # Try doing the os.listdir before creating the dir in Databricks.
+    filenames = os.listdir(source_path)
     try:
         mkdirs(target_path)
     except HTTPError as e:
         click.echo(e.response.json())
         return
-    for filename in os.listdir(source_path):
+    for filename in filenames:
         cur_src = os.path.join(source_path, filename)
         cur_dst = os.path.join(target_path, filename)
         if os.path.isdir(cur_src):
@@ -184,7 +198,8 @@ def _import_dir_helper(source_path, target_path, overwrite):
                             'continue.').format(cur_src, extensions))
 
 
-@click.command(context_settings=CONTEXT_SETTINGS)
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Recursively imports a directory to the Databricks workspace.')
 @click.argument('source_path')
 @click.argument('target_path')
 @click.option('--overwrite', '-o', is_flag=True, default=False)
