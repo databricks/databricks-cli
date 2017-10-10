@@ -34,8 +34,7 @@ def test_export_workspace_cli(tmpdir):
     with mock.patch('databricks_cli.workspace.cli.get_status') as get_status_mock:
         with mock.patch('databricks_cli.workspace.cli.export_workspace') as export_workspace_mock:
             get_status_mock.return_value = WorkspaceFileInfo('/notebook-name', NOTEBOOK, WorkspaceLanguage.SCALA)
-            cli.export_workspace_cli.callback('/notebook-name', path, WorkspaceFormat.SOURCE, False)
-            print export_workspace_mock.call_args
+            cli.export_workspace_cli.callback('/notebook-name', path, WorkspaceFormat.SOURCE, False, test_mode=True)
             assert export_workspace_mock.call_args[0][1] == os.path.join(path, 'notebook-name.scala')
 
 def test_export_dir_helper(tmpdir):

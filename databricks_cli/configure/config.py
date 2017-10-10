@@ -39,6 +39,9 @@ TOKEN = 'token'
 
 def require_config(function):
     def decorator(*args, **kwargs):
+        if kwargs.get('test_mode'):
+            del kwargs['test_mode']
+            return function(*args, **kwargs)
         config = DatabricksConfig.fetch_from_fs()
         if not config.is_valid:
             error_and_quit(('You haven\'t configured the CLI yet! '
