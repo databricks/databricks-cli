@@ -110,8 +110,12 @@ def import_workspace(source_path, target_path, language, fmt, is_overwrite):
 
 
 def export_workspace(source_path, target_path, fmt, is_overwrite):
+    """
+    Faithfully exports the source_path to the target_path. Does not
+    attempt to do any munging of the target_path if it is a directory.
+    """
     if os.path.exists(target_path) and not is_overwrite:
-        raise LocalFileExistsException()
+        raise LocalFileExistsException('Target {} already exists.'.format(target_path))
     workspace_client = get_workspace_client()
     output = workspace_client.export_workspace(source_path, fmt)
     content = output['content']
