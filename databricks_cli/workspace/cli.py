@@ -110,6 +110,12 @@ def export_workspace_cli(source_path, target_path, format, overwrite): # NOQA
     format is documented at
     https://docs.databricks.com/api/latest/workspace.html#notebookexportformat.
     """
+    if os.path.isdir(target_path):
+        file_info = get_status(source_path)
+        if not file_info.is_notebook:
+            raise RuntimeError('Export can only be called on a notebook.')
+        extension = WorkspaceLanguage.to_extension(file_info.language)
+        target_path = os.path.join(target_path, file_info.basename + extension)
     export_workspace(source_path, target_path, format, overwrite) # NOQA
 
 

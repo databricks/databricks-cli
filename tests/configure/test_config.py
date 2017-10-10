@@ -40,6 +40,14 @@ def test_require_config_valid():
         assert test_function(1) == 1
 
 
+def test_require_config_valid_test_mode():
+    @config.require_config
+    def test_function(x):
+        return x
+
+    assert test_function(1, test_mode=True) == 1 # noqa
+
+
 def test_require_config_invalid():
     with mock.patch('databricks_cli.configure.config.DatabricksConfig') as DatabricksConfigMock:
         with mock.patch('databricks_cli.configure.config.error_and_quit') as error_and_quit_mock:
