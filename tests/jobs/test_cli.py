@@ -23,7 +23,6 @@
 
 import json
 import mock
-import pytest
 from tabulate import tabulate
 
 import databricks_cli.jobs.cli as cli
@@ -62,16 +61,6 @@ def test_reset_cli_json():
             get_callback(cli.reset_cli)(None, CREATE_JSON)
             assert reset_job_mock.call_args[0][0] == json.loads(CREATE_JSON)
             assert echo_mock.call_args[0][0] == pretty_format(CREATE_RETURN)
-
-
-def test_create_reset_base_both_args():
-    with pytest.raises(RuntimeError):
-        cli._create_reset_base('a', 'b', mock.Mock())
-
-
-def test_create_reset_base_no_args():
-    with pytest.raises(RuntimeError):
-        cli._create_reset_base('a', 'b', mock.Mock())
 
 
 LIST_RETURN = {

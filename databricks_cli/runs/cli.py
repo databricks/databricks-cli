@@ -21,84 +21,68 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from json import loads as json_loads
-
 import click
 from tabulate import tabulate
 
 from databricks_cli.click_types import OutputClickType
-from databricks_cli.jobs.api import create_job, list_jobs, delete_job, get_job, reset_job, run_now
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_base
 from databricks_cli.configure.config import require_config
+from databricks_cli.runs.api import submit_run, list_runs, get_run, cancel_run
 from databricks_cli.version import print_version_callback
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--json-file', default=None,
-              help='File containing json to POST to /jobs/create.')
+              help='File containing json to POST to /jobs/runs/submit.')
 @click.option('--json', default=None, help='Displays absolute paths.')
 @require_config
 @eat_exceptions
-def create_cli(json_file, json):
-    json_base(json_file, json, create_job)
+def submit_cli(json_file, json):
+    json_base(json_file, json, submit_run)
 
 
-@click.command(context_settings=CONTEXT_SETTINGS)
-@click.option('--json-file', default=None,
-              help='File containing json to POST to /jobs/create.')
-@click.option('--json', default=None, help='Displays absolute paths.')
-@require_config
-@eat_exceptions
-def reset_cli(json_file, json):
-    json_base(json_file, json, reset_job)
-
-
-def _jobs_to_table(jobs_json):
+def _runs_to_table(runs_json):
     ret = []
-    for j in jobs_json['jobs']:
-        ret.append((j['job_id'], j['settings']['name']))
+    for r in runs_json['runs']:
+        run_id = r.get('run_id', 'no_run_id')
+        run_name = r.get('run_name', 'no_run_name')
+        life_cycle_state = r.get('state', {}).get('life_cycle_state', 'no_life_cycle_state')
+        result_state = r.get('state', {}).get('result_state', 'no_result_state')
+        ret.append((run_id, run_name, life_cycle_state, result_state))
     return ret
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
+@click.option('--job-id', default=None, type=int)
+@click.option('--active-only', is_flag=True, default=None)
+@click.option('--completed-only', is_flag=True, default=None)
+@click.option('--offset', default=None, type=int)
+@click.option('--limit', default=None, type=int)
 @click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
 @require_config
 @eat_exceptions
-def list_cli(output):
-    jobs_json = list_jobs()
+def list_cli(job_id, active_only, completed_only, offset, limit, output): # noqa
+    runs_json = list_runs(job_id, active_only, completed_only, offset, limit)
     if OutputClickType.is_json(output):
-        click.echo(pretty_format(jobs_json))
+        click.echo(pretty_format(runs_json))
     else:
-        click.echo(tabulate(_jobs_to_table(jobs_json), tablefmt='plain'))
+        click.echo(tabulate(_runs_to_table(runs_json), tablefmt='plain'))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
-@click.option('--job-id', required=True, type=int)
+@click.option('--run-id', required=True, type=int)
 @require_config
 @eat_exceptions
-def delete_cli(job_id):
-    delete_job(job_id)
+def get_cli(run_id):
+    click.echo(pretty_format(get_run(run_id)))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
-@click.option('--job-id', required=True, type=int)
+@click.option('--run-id', required=True, type=int)
 @require_config
 @eat_exceptions
-def get_cli(job_id):
-    click.echo(pretty_format(get_job(job_id)))
-
-
-@click.command(context_settings=CONTEXT_SETTINGS)
-@click.option('--job-id', required=True, type=int)
-@click.option('--jar-params', default=None)
-@click.option('--notebook-params', default=None)
-@require_config
-@eat_exceptions
-def run_now_cli(job_id, jar_params, notebook_params):
-    jar_params_json = json_loads(jar_params) if jar_params else None
-    notebook_params_json = json_loads(notebook_params) if notebook_params else None
-    res = run_now(job_id, jar_params_json, notebook_params_json)
-    click.echo(pretty_format(res))
+def cancel_cli(run_id):
+    click.echo(pretty_format(cancel_run(run_id)))
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
@@ -106,16 +90,14 @@ def run_now_cli(job_id, jar_params, notebook_params):
               expose_value=False, is_eager=True)
 @require_config
 @eat_exceptions
-def jobs_group():
+def runs_group():
     """
-    Utility to interact with the Jobs service.
+    Utility to interact with the Runs service.
     """
     pass
 
 
-jobs_group.add_command(create_cli, name='create')
-jobs_group.add_command(list_cli, name='list')
-jobs_group.add_command(delete_cli, name='delete')
-jobs_group.add_command(get_cli, name='get')
-jobs_group.add_command(reset_cli, name='reset')
-jobs_group.add_command(run_now_cli, name='run-now')
+runs_group.add_command(submit_cli, name='submit')
+runs_group.add_command(list_cli, name='list')
+runs_group.add_command(get_cli, name='get')
+runs_group.add_command(cancel_cli, name='cancel')

@@ -21,26 +21,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import click
-
-from databricks_cli.version import print_version_callback
-from databricks_cli.utils import CONTEXT_SETTINGS
-from databricks_cli.configure.cli import configure_cli
-from databricks_cli.dbfs.cli import dbfs_group
-from databricks_cli.workspace.cli import workspace_group
-from databricks_cli.jobs.cli import jobs_group
-from databricks_cli.runs.cli import runs_group
+from databricks_cli.configure.config import get_jobs_client
 
 
-@click.group(context_settings=CONTEXT_SETTINGS)
-@click.option('--version', '-v', is_flag=True, callback=print_version_callback,
-              expose_value=False, is_eager=True)
-def cli():
-    pass
+def submit_run(json):
+    return get_jobs_client().client.perform_query('POST', '/jobs/runs/submit', data=json)
 
 
-cli.add_command(configure_cli, name='configure')
-cli.add_command(dbfs_group, name='fs')
-cli.add_command(workspace_group, name='workspace')
-cli.add_command(jobs_group, name='jobs')
-cli.add_command(runs_group, name='runs')
+def list_runs(job_id, active_only, completed_only, offset, limit):
+    return get_jobs_client().list_runs(job_id, active_only, completed_only, offset, limit)
+
+
+def get_run(run_id):
+    return get_jobs_client().get_run(run_id)
+
+
+def cancel_run(run_id):
+    return get_jobs_client().cancel_run(run_id)
