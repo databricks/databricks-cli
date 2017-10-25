@@ -24,7 +24,6 @@
 import sys
 from json import dumps as json_dumps, loads as json_loads
 
-
 import click
 import six
 from requests.exceptions import HTTPError
