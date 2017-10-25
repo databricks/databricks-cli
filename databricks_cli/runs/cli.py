@@ -34,16 +34,22 @@ from databricks_cli.version import print_version_callback
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--json-file', default=None,
               help='File containing json to POST to /jobs/runs/submit.')
-@click.option('--json', default=None, help='Displays absolute paths.')
+@click.option('--json', default=None)
 @require_config
 @eat_exceptions
 def submit_cli(json_file, json):
+    """
+    Submits a one time run to the Databricks Job Service.
+
+    The specification for the request json can be found
+    https://docs.databricks.com/api/latest/jobs.html#runs-submit
+    """
     json_base(json_file, json, submit_run)
 
 
 def _runs_to_table(runs_json):
     ret = []
-    for r in runs_json['runs']:
+    for r in runs_json.get('runs', []):
         run_id = r.get('run_id', 'no_run_id')
         run_name = r.get('run_name', 'no_run_name')
         life_cycle_state = r.get('state', {}).get('life_cycle_state', 'no_life_cycle_state')
@@ -53,15 +59,30 @@ def _runs_to_table(runs_json):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
-@click.option('--job-id', default=None, type=int)
-@click.option('--active-only', is_flag=True, default=None)
-@click.option('--completed-only', is_flag=True, default=None)
+@click.option('--job-id', default=None, type=int,
+              help='If specified, runs from only the specified job_id will be listed.')
+@click.option('--active-only', is_flag=True, default=None,
+              help='If specified, only active runs will be listed')
+@click.option('--completed-only', is_flag=True, default=None,
+              help='If specifed, only completed runs will be listed')
 @click.option('--offset', default=None, type=int)
 @click.option('--limit', default=None, type=int)
 @click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
 @require_config
 @eat_exceptions
 def list_cli(job_id, active_only, completed_only, offset, limit, output): # noqa
+    """
+    Lists runs from the Databricks Job Scheduler.
+
+    The limit and offset determine which runs will be listed. Runs are always listed
+    by descending order of run_id.
+
+    By default
+
+      - limit is set to 20. This means 20 runs are listed. limit must be in between 0 to 1000
+
+      - offset is set to 0. The offset is relative to the most recent run_id.
+    """
     runs_json = list_runs(job_id, active_only, completed_only, offset, limit)
     if OutputClickType.is_json(output):
         click.echo(pretty_format(runs_json))
@@ -74,6 +95,11 @@ def list_cli(job_id, active_only, completed_only, offset, limit, output): # noqa
 @require_config
 @eat_exceptions
 def get_cli(run_id):
+    """
+    Gets the metadata about a run in json form.
+
+    The output schema is documented https://docs.databricks.com/api/latest/jobs.html#runs-get.
+    """
     click.echo(pretty_format(get_run(run_id)))
 
 
@@ -82,6 +108,9 @@ def get_cli(run_id):
 @require_config
 @eat_exceptions
 def cancel_cli(run_id):
+    """
+    Cancels the run specified
+    """
     click.echo(pretty_format(cancel_run(run_id)))
 
 
