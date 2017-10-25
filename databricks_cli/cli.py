@@ -28,6 +28,7 @@ from databricks_cli.utils import CONTEXT_SETTINGS
 from databricks_cli.configure.cli import configure_cli
 from databricks_cli.dbfs.cli import dbfs_group
 from databricks_cli.workspace.cli import workspace_group
+from databricks_cli.jobs.cli import jobs_group
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
@@ -40,3 +41,4 @@ def cli():
 cli.add_command(configure_cli, name='configure')
 cli.add_command(dbfs_group, name='fs')
 cli.add_command(workspace_group, name='workspace')
+cli.add_command(jobs_group, name='jobs')

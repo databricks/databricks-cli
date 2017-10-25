@@ -27,8 +27,10 @@ import os
 
 from os.path import expanduser, join
 
+import six
+
 from databricks_cli.utils import error_and_quit
-from databricks_cli.sdk import ApiClient, DbfsService, WorkspaceService
+from databricks_cli.sdk import ApiClient, DbfsService, WorkspaceService, JobsService
 
 DEFAULT_SECTION = 'DEFAULT'
 HOST = 'host'
@@ -38,10 +40,8 @@ TOKEN = 'token'
 
 
 def require_config(function):
+    @six.wraps(function)
     def decorator(*args, **kwargs):
-        if kwargs.get('test_mode'):
-            del kwargs['test_mode']
-            return function(*args, **kwargs)
         config = DatabricksConfig.fetch_from_fs()
         if not config.is_valid:
             error_and_quit(('You haven\'t configured the CLI yet! '
@@ -66,6 +66,11 @@ def get_dbfs_client():
 def get_workspace_client():
     api_client = _get_api_client()
     return WorkspaceService(api_client)
+
+
+def get_jobs_client():
+    api_client = _get_api_client()
+    return JobsService(api_client)
 
 
 class DatabricksConfig(object):
