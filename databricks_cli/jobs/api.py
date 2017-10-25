@@ -21,40 +21,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-from json import dumps as json_dumps
-
-import click
-import six
-from requests.exceptions import HTTPError
+from databricks_cli.configure.config import get_jobs_client
 
 
-CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
-DEBUG_MODE = False
+def create_job(json):
+    return get_jobs_client().client.perform_query('POST', '/jobs/create', data=json)
 
 
-def eat_exceptions(function):
-    @six.wraps(function)
-    def decorator(*args, **kwargs):
-        try:
-            return function(*args, **kwargs)
-        except HTTPError as exception:
-            if exception.response.status_code == 401:
-                error_and_quit('Your authentication information may be incorrect. Please '
-                               'reconfigure with ``dbfs configure``')
-            else:
-                error_and_quit(exception.response.content)
-        except Exception as exception: # noqa
-            if not DEBUG_MODE:
-                error_and_quit('{}: {}'.format(type(exception).__name__, str(exception)))
-    decorator.__doc__ = function.__doc__
-    return decorator
+def list_jobs():
+    return get_jobs_client().list_jobs()
 
 
-def error_and_quit(message):
-    click.echo('Error: {}'.format(message))
-    sys.exit(1)
+def delete_job(job_id):
+    return get_jobs_client().delete_job(job_id)
 
 
-def pretty_format(json):
-    return json_dumps(json, indent=2)
+def get_job(job_id):
+    return get_jobs_client().get_job(job_id)
+
+
+def reset_job(json):
+    return get_jobs_client().client.perform_query('POST', '/jobs/reset', data=json)
+
+
+def run_now(job_id, jar_params, notebook_params):
+    return get_jobs_client().run_now(job_id, jar_params, notebook_params)

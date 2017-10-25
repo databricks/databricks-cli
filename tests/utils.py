@@ -21,40 +21,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-from json import dumps as json_dumps
 
-import click
-import six
-from requests.exceptions import HTTPError
-
-
-CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
-DEBUG_MODE = False
-
-
-def eat_exceptions(function):
-    @six.wraps(function)
-    def decorator(*args, **kwargs):
-        try:
-            return function(*args, **kwargs)
-        except HTTPError as exception:
-            if exception.response.status_code == 401:
-                error_and_quit('Your authentication information may be incorrect. Please '
-                               'reconfigure with ``dbfs configure``')
-            else:
-                error_and_quit(exception.response.content)
-        except Exception as exception: # noqa
-            if not DEBUG_MODE:
-                error_and_quit('{}: {}'.format(type(exception).__name__, str(exception)))
-    decorator.__doc__ = function.__doc__
-    return decorator
-
-
-def error_and_quit(message):
-    click.echo('Error: {}'.format(message))
-    sys.exit(1)
-
-
-def pretty_format(json):
-    return json_dumps(json, indent=2)
+def get_callback(command):
+    """
+    Convenience function to reach into a Command object's callback and
+    to unwrap the decorators
+    """
+    func = command.callback
+    while hasattr(func, '__wrapped__'):
+        func = func.__wrapped__
+    return func

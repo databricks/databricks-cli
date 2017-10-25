@@ -21,40 +21,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-from json import dumps as json_dumps
-
-import click
-import six
-from requests.exceptions import HTTPError
+from click import ParamType
 
 
-CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
-DEBUG_MODE = False
+class OutputClickType(ParamType):
+    name = 'Output type'
+    help = 'can be "json" or "table"'
 
+    def convert(self, value, param, ctx):
+        if value != 'json' and value != 'table':
+            raise RuntimeError('output must be "json" or "table"')
+        return value
 
-def eat_exceptions(function):
-    @six.wraps(function)
-    def decorator(*args, **kwargs):
-        try:
-            return function(*args, **kwargs)
-        except HTTPError as exception:
-            if exception.response.status_code == 401:
-                error_and_quit('Your authentication information may be incorrect. Please '
-                               'reconfigure with ``dbfs configure``')
-            else:
-                error_and_quit(exception.response.content)
-        except Exception as exception: # noqa
-            if not DEBUG_MODE:
-                error_and_quit('{}: {}'.format(type(exception).__name__, str(exception)))
-    decorator.__doc__ = function.__doc__
-    return decorator
+    @classmethod
+    def is_json(cls, value):
+        return value == 'json'
 
-
-def error_and_quit(message):
-    click.echo('Error: {}'.format(message))
-    sys.exit(1)
-
-
-def pretty_format(json):
-    return json_dumps(json, indent=2)
+    @classmethod
+    def is_table(cls, value):
+        return value == 'table'
