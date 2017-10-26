@@ -57,10 +57,6 @@ def reset_cli(json_file, json, job_id):
         with open(json_file, 'r') as f:
             json = f.read()
     deser_json = json_loads(json)
-    if 'job_id' in deser_json:
-        raise RuntimeError('job_id should not be provided in the json spec. The json spec should ' +
-                           'be of the format ' +
-                           'https://docs.databricks.com/api/latest/jobs.html#jobsjobsettings')
     request_body = {
         'job_id': job_id,
         'new_settings': deser_json
