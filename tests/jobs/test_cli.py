@@ -71,7 +71,6 @@ RESET_JSON_WITH_JOB_ID = '{"job_id": 5, "job_name": "test_job"}'
 
 
 def test_reset_cli_json_with_job_id():
-    get_callback(cli.reset_cli)(None, RESET_JSON, 1)
     with pytest.raises(RuntimeError):
         get_callback(cli.reset_cli)(None, RESET_JSON_WITH_JOB_ID, 1)
 
