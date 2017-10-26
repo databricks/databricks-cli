@@ -22,7 +22,7 @@
 # limitations under the License.
 
 import sys
-from json import dumps as json_dumps
+from json import dumps as json_dumps, loads as json_loads
 
 import click
 import six
@@ -58,3 +58,17 @@ def error_and_quit(message):
 
 def pretty_format(json):
     return json_dumps(json, indent=2)
+
+
+def json_cli_base(json_file, json, api):
+    """
+    Takes json_file or json string and calls an function "api" with the json
+    deserialized
+    """
+    if not bool(json_file) ^ bool(json):
+        raise RuntimeError('Either --json-file or --json should be provided')
+    if json_file:
+        with open(json_file, 'r') as f:
+            json = f.read()
+    res = api(json_loads(json))
+    click.echo(pretty_format(res))
