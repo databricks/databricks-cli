@@ -27,7 +27,7 @@ from tabulate import tabulate
 from databricks_cli.click_types import OutputClickType
 from databricks_cli.clusters.api import create_cluster, start_cluster, restart_cluster, \
     delete_cluster, get_cluster, list_clusters, list_zones, list_node_types, spark_versions
-from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_base
+from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base
 from databricks_cli.configure.config import require_config
 from databricks_cli.version import print_version_callback
 
@@ -45,7 +45,7 @@ def create_cli(json_file, json):
     The specification for the request json can be found at
     https://docs.databricks.com/api/latest/clusters.html#create
     """
-    json_base(json_file, json, create_cluster)
+    json_cli_base(json_file, json, create_cluster)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
