@@ -36,7 +36,7 @@ from databricks_cli.version import print_version_callback
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--json-file', default=None,
               help='File containing json to POST to /jobs/create.')
-@click.option('--json', default=None, help='Displays absolute paths.')
+@click.option('--json', default=None)
 @require_config
 @eat_exceptions
 def create_cli(json_file, json):
@@ -52,7 +52,7 @@ def create_cli(json_file, json):
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--json-file', default=None,
               help='File containing json to POST to /jobs/reset.')
-@click.option('--json', default=None, help='Displays absolute paths.')
+@click.option('--json', default=None)
 @click.option('--job-id', required=True, help='The job_id to reset')
 @require_config
 @eat_exceptions
