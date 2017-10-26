@@ -25,7 +25,7 @@ import click
 from tabulate import tabulate
 
 from databricks_cli.click_types import OutputClickType
-from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_base
+from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base
 from databricks_cli.configure.config import require_config
 from databricks_cli.runs.api import submit_run, list_runs, get_run, cancel_run
 from databricks_cli.version import print_version_callback
@@ -44,7 +44,7 @@ def submit_cli(json_file, json):
     The specification for the request json can be found
     https://docs.databricks.com/api/latest/jobs.html#runs-submit
     """
-    json_base(json_file, json, submit_run)
+    json_cli_base(json_file, json, submit_run)
 
 
 def _runs_to_table(runs_json):

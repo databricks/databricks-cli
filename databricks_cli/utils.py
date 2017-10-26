@@ -60,7 +60,7 @@ def pretty_format(json):
     return json_dumps(json, indent=2)
 
 
-def json_base(json_file, json, api):
+def json_cli_base(json_file, json, api):
     """
     Takes json_file or json string and calls an function "api" with the json
     deserialized

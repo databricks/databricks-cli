@@ -55,11 +55,11 @@ def test_eat_exceptions_401():
         assert 'Your authentication information' in error_and_quit_mock.call_args[0][0]
 
 
-def test_json_base_both_args():
+def test_json_cli_base_both_args():
     with pytest.raises(RuntimeError):
-        utils.json_base('a', 'b', mock.Mock())
+        utils.json_cli_base('a', 'b', mock.Mock())
 
 
-def test_json_base_no_args():
+def test_json_cli_base_no_args():
     with pytest.raises(RuntimeError):
-        utils.json_base('a', 'b', mock.Mock())
+        utils.json_cli_base('a', 'b', mock.Mock())
