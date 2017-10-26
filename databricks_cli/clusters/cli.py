@@ -21,16 +21,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from json import loads as json_loads
-
 import click
 from tabulate import tabulate
 
 from databricks_cli.click_types import OutputClickType
-from databricks_cli.clusters.api import create_cluster, start_cluster, restart_cluster, delete_cluster, get_cluster, list_clusters, list_zones, list_node_types, spark_versions
+from databricks_cli.clusters.api import create_cluster, start_cluster, restart_cluster, \
+    delete_cluster, get_cluster, list_clusters, list_zones, list_node_types, spark_versions
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_base
 from databricks_cli.configure.config import require_config
 from databricks_cli.version import print_version_callback
+
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--json-file', default=None,

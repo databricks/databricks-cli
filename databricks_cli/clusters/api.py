@@ -23,6 +23,7 @@
 
 from databricks_cli.configure.config import get_clusters_client
 
+
 def create_cluster(json):
     return get_clusters_client().client.perform_query('POST', '/clusters/create', data=json)
 

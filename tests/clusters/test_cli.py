@@ -23,7 +23,6 @@
 
 import json
 import mock
-import pytest
 from tabulate import tabulate
 
 import databricks_cli.clusters.cli as cli
@@ -85,7 +84,8 @@ def test_list_jobs():
         with mock.patch('databricks_cli.clusters.cli.click.echo') as echo_mock:
             list_clusters_mock.return_value = LIST_RETURN
             get_callback(cli.list_cli)(None)
-            assert echo_mock.call_args[0][0] == tabulate([('test_id', 'test_name', 'PENDING')], tablefmt='plain')
+            assert echo_mock.call_args[0][0] == \
+                tabulate([('test_id', 'test_name', 'PENDING')], tablefmt='plain')
 
 
 def test_list_clusters_output_json():
