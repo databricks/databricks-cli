@@ -28,19 +28,9 @@ from tabulate import tabulate
 
 from databricks_cli.click_types import OutputClickType
 from databricks_cli.jobs.api import create_job, list_jobs, delete_job, get_job, reset_job, run_now
-from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format
+from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base
 from databricks_cli.configure.config import require_config
 from databricks_cli.version import print_version_callback
-
-
-def _create_reset_base(json_file, json, api):
-    if not bool(json_file) ^ bool(json):
-        raise RuntimeError('Either --json-file or --json should be provided')
-    if json_file:
-        with open(json_file, 'r') as f:
-            json = f.read()
-    res = api(json_loads(json))
-    click.echo(pretty_format(res))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
@@ -50,7 +40,7 @@ def _create_reset_base(json_file, json, api):
 @require_config
 @eat_exceptions
 def create_cli(json_file, json):
-    _create_reset_base(json_file, json, create_job)
+    json_cli_base(json_file, json, create_job)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
@@ -60,7 +50,7 @@ def create_cli(json_file, json):
 @require_config
 @eat_exceptions
 def reset_cli(json_file, json):
-    _create_reset_base(json_file, json, reset_job)
+    json_cli_base(json_file, json, reset_job)
 
 
 def _jobs_to_table(jobs_json):

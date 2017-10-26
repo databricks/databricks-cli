@@ -21,6 +21,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pytest
 import mock
 from requests import Response
 from requests.exceptions import HTTPError
@@ -52,3 +53,13 @@ def test_eat_exceptions_401():
         test_function()
         assert error_and_quit_mock.call_count == 1
         assert 'Your authentication information' in error_and_quit_mock.call_args[0][0]
+
+
+def test_json_cli_base_both_args():
+    with pytest.raises(RuntimeError):
+        utils.json_cli_base('a', 'b', mock.Mock())
+
+
+def test_json_cli_base_no_args():
+    with pytest.raises(RuntimeError):
+        utils.json_cli_base('a', 'b', mock.Mock())
