@@ -145,7 +145,10 @@ def get_cli(job_id):
 @eat_exceptions
 def run_now_cli(job_id, jar_params, notebook_params):
     """
-    Runs a job
+    Runs a job with the specified parameters.
+
+    Parameter options are specified in json and the format is documented in
+    https://docs.databricks.com/api/latest/jobs.html#jobsrunnow.
     """
     jar_params_json = json_loads(jar_params) if jar_params else None
     notebook_params_json = json_loads(notebook_params) if notebook_params else None
