@@ -21,28 +21,40 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import click
-
-from databricks_cli.version import print_version_callback
-from databricks_cli.utils import CONTEXT_SETTINGS
-from databricks_cli.configure.cli import configure_cli
-from databricks_cli.dbfs.cli import dbfs_group
-from databricks_cli.workspace.cli import workspace_group
-from databricks_cli.jobs.cli import jobs_group
-from databricks_cli.clusters.cli import clusters_group
-from databricks_cli.runs.cli import runs_group
+from databricks_cli.configure.config import get_clusters_client
 
 
-@click.group(context_settings=CONTEXT_SETTINGS)
-@click.option('--version', '-v', is_flag=True, callback=print_version_callback,
-              expose_value=False, is_eager=True)
-def cli():
-    pass
+def create_cluster(json):
+    return get_clusters_client().client.perform_query('POST', '/clusters/create', data=json)
 
 
-cli.add_command(configure_cli, name='configure')
-cli.add_command(dbfs_group, name='fs')
-cli.add_command(workspace_group, name='workspace')
-cli.add_command(jobs_group, name='jobs')
-cli.add_command(clusters_group, name='clusters')
-cli.add_command(runs_group, name='runs')
+def start_cluster(cluster_id):
+    return get_clusters_client().start_cluster(cluster_id)
+
+
+def restart_cluster(cluster_id):
+    return get_clusters_client().restart_cluster(cluster_id)
+
+
+def delete_cluster(cluster_id):
+    return get_clusters_client().delete_cluster(cluster_id)
+
+
+def get_cluster(cluster_id):
+    return get_clusters_client().get_cluster(cluster_id)
+
+
+def list_clusters():
+    return get_clusters_client().list_clusters()
+
+
+def list_zones():
+    return get_clusters_client().list_available_zones()
+
+
+def list_node_types():
+    return get_clusters_client().list_node_types()
+
+
+def spark_versions():
+    return get_clusters_client().list_spark_versions()
