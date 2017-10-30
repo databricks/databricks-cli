@@ -47,10 +47,21 @@ def create_cli(json_file, json):
 @click.option('--json-file', default=None,
               help='File containing json to POST to /jobs/create.')
 @click.option('--json', default=None, help='Displays absolute paths.')
+@click.option('--job-id', required=True, help='The job_id to reset')
 @require_config
 @eat_exceptions
-def reset_cli(json_file, json):
-    json_cli_base(json_file, json, reset_job)
+def reset_cli(json_file, json, job_id):
+    if not bool(json_file) ^ bool(json):
+        raise RuntimeError('Either --json-file or --json should be provided')
+    if json_file:
+        with open(json_file, 'r') as f:
+            json = f.read()
+    deser_json = json_loads(json)
+    request_body = {
+        'job_id': job_id,
+        'new_settings': deser_json
+    }
+    reset_job(request_body)
 
 
 def _jobs_to_table(jobs_json):

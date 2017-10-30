@@ -54,13 +54,16 @@ def test_create_cli_json_file(tmpdir):
             assert echo_mock.call_args[0][0] == pretty_format(CREATE_RETURN)
 
 
+RESET_JSON = '{"job_name": "test_job"}'
+
+
 def test_reset_cli_json():
     with mock.patch('databricks_cli.jobs.cli.reset_job') as reset_job_mock:
-        with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
-            reset_job_mock.return_value = CREATE_RETURN
-            get_callback(cli.reset_cli)(None, CREATE_JSON)
-            assert reset_job_mock.call_args[0][0] == json.loads(CREATE_JSON)
-            assert echo_mock.call_args[0][0] == pretty_format(CREATE_RETURN)
+        get_callback(cli.reset_cli)(None, RESET_JSON, 1)
+        assert reset_job_mock.call_args[0][0] == {
+            'job_id': 1,
+            'new_settings': json.loads(RESET_JSON)
+        }
 
 
 LIST_RETURN = {
