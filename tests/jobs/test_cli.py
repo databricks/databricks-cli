@@ -23,7 +23,6 @@
 
 import json
 import mock
-import pytest
 from tabulate import tabulate
 
 import databricks_cli.jobs.cli as cli
