@@ -23,6 +23,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 """
 A common class to be used by client of different APIs
 """
@@ -44,6 +45,8 @@ except ImportError:
     from urllib3.poolmanager import PoolManager
     from urllib3 import exceptions
 
+from databricks_cli.version import version as databricks_cli_version
+
 class TlsV1HttpAdapter(HTTPAdapter):
     """
     A HTTP adapter implementation that specifies the ssl version to be TLS1.
@@ -59,7 +62,7 @@ class ApiClient(object):
     A partial Python implementation of dbc rest api
     to be used by different versions of the client.
     """
-    def __init__(self, user = None, password = None, host = None, configUrl = None,
+    def __init__(self, user = None, password = None, host = None, token = None, configUrl = None,
             apiVersion = version.API_VERSION, default_headers = {}, verify = True):
         if configUrl:
             self.url = configUrl
@@ -72,7 +75,6 @@ class ApiClient(object):
         if host[-1] == "/":
             host = host[:-1]
 
-        self.host = host
         self.session = requests.Session()
         self.session.mount('https://', TlsV1HttpAdapter())
 
@@ -80,9 +82,12 @@ class ApiClient(object):
         if user is not None and password is not None:
             userHeaderData = "Basic " + base64.standard_b64encode(user + ":" + password)
             auth = {'Authorization': userHeaderData, 'Content-Type': 'text/json'}
+        elif token is not None:
+            auth = {'Authorization': 'Bearer {}'.format(token), 'Content-Type': 'text/json'}
         else:
             auth = {}
-        self.default_headers = dict(auth.items() + default_headers.items())
+        user_agent = {'user-agent': 'databricks-cli-{v}'.format(v=databricks_cli_version)}
+        self.default_headers = dict(auth.items() + default_headers.items() + user_agent.items())
         self.verify = verify
 
     def close(self):
@@ -104,7 +109,6 @@ class ApiClient(object):
         try:
             resp.raise_for_status()
         except requests.exceptions.HTTPError, e:
-            print 'Error: %s' % resp.text
             raise e
         return resp.json()
 

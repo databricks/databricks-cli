@@ -33,8 +33,7 @@ class JobsService(object):
     def create_job(self, name=None, existing_cluster_id=None, new_cluster=None, libraries=None,
                    email_notifications=None, timeout_seconds=None, max_retries=None,
                    min_retry_interval_millis=None, retry_on_timeout=None, schedule=None,
-                   notebook_task=None, spark_jar_task=None, spark_python_task=None,
-                   spark_submit_task=None, max_concurrent_runs=None):
+                   notebook_task=None, spark_jar_task=None, max_concurrent_runs=None):
         _data = {}
         if name is not None:
             _data['name'] = name
@@ -70,21 +69,12 @@ class JobsService(object):
             _data['spark_jar_task'] = spark_jar_task
             if not isinstance(spark_jar_task, dict):
                 raise TypeError('Expected databricks.SparkJarTask() or dict for field spark_jar_task')
-        if spark_python_task is not None:
-            _data['spark_python_task'] = spark_python_task
-            if not isinstance(spark_python_task, dict):
-                raise TypeError('Expected databricks.SparkPythonTask() or dict for field spark_python_task')
-        if spark_submit_task is not None:
-            _data['spark_submit_task'] = spark_submit_task
-            if not isinstance(spark_submit_task, dict):
-                raise TypeError('Expected databricks.SparkSubmitTask() or dict for field spark_submit_task')
         if max_concurrent_runs is not None:
             _data['max_concurrent_runs'] = max_concurrent_runs
         return self.client.perform_query('POST', '/jobs/create', data=_data)
     
     def submit_run(self, run_name=None, existing_cluster_id=None, new_cluster=None, libraries=None,
-                   notebook_task=None, spark_jar_task=None, spark_python_task=None,
-                   spark_submit_task=None, timeout_seconds=None):
+                   notebook_task=None, spark_jar_task=None, timeout_seconds=None):
         _data = {}
         if run_name is not None:
             _data['run_name'] = run_name
@@ -104,14 +94,6 @@ class JobsService(object):
             _data['spark_jar_task'] = spark_jar_task
             if not isinstance(spark_jar_task, dict):
                 raise TypeError('Expected databricks.SparkJarTask() or dict for field spark_jar_task')
-        if spark_python_task is not None:
-            _data['spark_python_task'] = spark_python_task
-            if not isinstance(spark_python_task, dict):
-                raise TypeError('Expected databricks.SparkPythonTask() or dict for field spark_python_task')
-        if spark_submit_task is not None:
-            _data['spark_submit_task'] = spark_submit_task
-            if not isinstance(spark_submit_task, dict):
-                raise TypeError('Expected databricks.SparkSubmitTask() or dict for field spark_submit_task')
         if timeout_seconds is not None:
             _data['timeout_seconds'] = timeout_seconds
         return self.client.perform_query('POST', '/jobs/runs/submit', data=_data)
@@ -184,12 +166,6 @@ class JobsService(object):
         if run_id is not None:
             _data['run_id'] = run_id
         return self.client.perform_query('POST', '/jobs/runs/cancel', data=_data)
-    
-    def get_run_output(self, run_id):
-        _data = {}
-        if run_id is not None:
-            _data['run_id'] = run_id
-        return self.client.perform_query('GET', '/jobs/runs/get-output', data=_data)
      
 
 class ClusterService(object):
@@ -486,3 +462,60 @@ class DbfsService(object):
             self.add_block(handle, base64.encodestring(block))
         self.close(handle)
         input_file.close()
+
+
+class WorkspaceService(object):
+    def __init__(self, client):
+        self.client = client
+
+    def mkdirs(self, path):
+        _data = {}
+        if path is not None:
+            _data['path'] = path
+        return self.client.perform_query('POST', '/workspace/mkdirs', data=_data)
+    
+    def list(self, path):
+        _data = {}
+        if path is not None:
+            _data['path'] = path
+        return self.client.perform_query('GET', '/workspace/list', data=_data)
+    
+    def import_workspace(self, path, format=None, language=None, content=None, overwrite=None):
+        _data = {}
+        if path is not None:
+            _data['path'] = path
+        if format is not None:
+            _data['format'] = format
+        if language is not None:
+            _data['language'] = language
+        if content is not None:
+            _data['content'] = content
+        if overwrite is not None:
+            _data['overwrite'] = overwrite
+        return self.client.perform_query('POST', '/workspace/import', data=_data)
+    
+    def export_workspace(self, path, format=None, direct_download=None):
+        _data = {}
+        if path is not None:
+            _data['path'] = path
+        if format is not None:
+            _data['format'] = format
+        if direct_download is not None:
+            _data['direct_download'] = direct_download
+        return self.client.perform_query('GET', '/workspace/export', data=_data)
+    
+    def delete(self, path, recursive=None):
+        _data = {}
+        if path is not None:
+            _data['path'] = path
+        if recursive is not None:
+            _data['recursive'] = recursive
+        return self.client.perform_query('POST', '/workspace/delete', data=_data)
+    
+    def get_status(self, path):
+        _data = {}
+        if path is not None:
+            _data['path'] = path
+        return self.client.perform_query('GET', '/workspace/get-status', data=_data)
+     
+
