@@ -36,21 +36,38 @@ from databricks_cli.version import print_version_callback
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--json-file', default=None,
               help='File containing json to POST to /jobs/create.')
-@click.option('--json', default=None, help='Displays absolute paths.')
+@click.option('--json', default=None)
 @require_config
 @eat_exceptions
 def create_cli(json_file, json):
+    """
+    Creates a job in the Databricks Job Service.
+
+    The specification for the json option can be found
+    https://docs.databricks.com/api/latest/jobs.html#create
+    """
     json_cli_base(json_file, json, create_job)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--json-file', default=None,
-              help='File containing json to POST to /jobs/create.')
-@click.option('--json', default=None, help='Displays absolute paths.')
+              help='File containing json to POST to /jobs/reset.')
+@click.option('--json', default=None)
 @click.option('--job-id', required=True, help='The job_id to reset')
 @require_config
 @eat_exceptions
 def reset_cli(json_file, json, job_id):
+    """
+    Resets (edits) the definition of a job.
+
+    The specification for the json option can be found
+    https://docs.databricks.com/api/latest/jobs.html#jobsjobsettings
+
+    NOTE. The json parameter describe above is not the same as what is normally POSTed
+    in the request body to the reset endpoint. Instead it is the object
+    defined in the top level "new_settings" field. The job_id is provided
+    by the job-id option.
+    """
     if not bool(json_file) ^ bool(json):
         raise RuntimeError('Either --json-file or --json should be provided')
     if json_file:
@@ -76,6 +93,17 @@ def _jobs_to_table(jobs_json):
 @require_config
 @eat_exceptions
 def list_cli(output):
+    """
+    Lists the jobs in the Databricks Job Service
+
+    By default the output format will be a human readable table with the following fields
+
+      - job_id
+
+      - settings.name
+
+    A json formatted output can also be requested by setting the --output parameter to "json"
+    """
     jobs_json = list_jobs()
     if OutputClickType.is_json(output):
         click.echo(pretty_format(jobs_json))
@@ -88,6 +116,9 @@ def list_cli(output):
 @require_config
 @eat_exceptions
 def delete_cli(job_id):
+    """
+    Delete the specified job from the Databricks Job Service
+    """
     delete_job(job_id)
 
 
@@ -96,6 +127,9 @@ def delete_cli(job_id):
 @require_config
 @eat_exceptions
 def get_cli(job_id):
+    """
+    Describe the metadata for a job.
+    """
     click.echo(pretty_format(get_job(job_id)))
 
 
@@ -106,6 +140,12 @@ def get_cli(job_id):
 @require_config
 @eat_exceptions
 def run_now_cli(job_id, jar_params, notebook_params):
+    """
+    Runs a job with the specified parameters.
+
+    Parameter options are specified in json and the format is documented in
+    https://docs.databricks.com/api/latest/jobs.html#jobsrunnow.
+    """
     jar_params_json = json_loads(jar_params) if jar_params else None
     notebook_params_json = json_loads(notebook_params) if notebook_params else None
     res = run_now(job_id, jar_params_json, notebook_params_json)
