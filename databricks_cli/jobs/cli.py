@@ -103,6 +103,8 @@ def list_cli(output):
       - settings.name
 
     A json formatted output can also be requested by setting the --output parameter to "json"
+
+    In table mode, the jobs are sorted by their name.
     """
     jobs_json = list_jobs()
     if OutputClickType.is_json(output):
