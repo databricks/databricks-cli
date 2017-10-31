@@ -98,16 +98,20 @@ RUN_NOW_RETURN = {
 }
 NOTEBOOK_PARAMS = '{"a": 1}'
 JAR_PARAMS = '[1, 2, 3]'
+PYTHON_PARAMS = '["python", "params"]'
+SPARK_SUBMIT_PARAMS = '["--class", "org.apache.spark.examples.SparkPi"]'
 
 
 def test_run_now_no_params():
     with mock.patch('databricks_cli.jobs.cli.run_now') as run_now_mock:
         with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
             run_now_mock.return_value = RUN_NOW_RETURN
-            get_callback(cli.run_now_cli)(1, None, None)
+            get_callback(cli.run_now_cli)(1, None, None, None, None)
             assert run_now_mock.call_args[0][0] == 1
             assert run_now_mock.call_args[0][1] is None
             assert run_now_mock.call_args[0][2] is None
+            assert run_now_mock.call_args[0][3] is None
+            assert run_now_mock.call_args[0][4] is None
             assert echo_mock.call_args[0][0] == pretty_format(RUN_NOW_RETURN)
 
 
@@ -115,8 +119,11 @@ def test_run_now_with_params():
     with mock.patch('databricks_cli.jobs.cli.run_now') as run_now_mock:
         with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
             run_now_mock.return_value = RUN_NOW_RETURN
-            get_callback(cli.run_now_cli)(1, JAR_PARAMS, NOTEBOOK_PARAMS)
+            get_callback(cli.run_now_cli)(1, JAR_PARAMS, NOTEBOOK_PARAMS, PYTHON_PARAMS,
+                                          SPARK_SUBMIT_PARAMS)
             assert run_now_mock.call_args[0][0] == 1
             assert run_now_mock.call_args[0][1] == json.loads(JAR_PARAMS)
             assert run_now_mock.call_args[0][2] == json.loads(NOTEBOOK_PARAMS)
+            assert run_now_mock.call_args[0][3] == json.loads(PYTHON_PARAMS)
+            assert run_now_mock.call_args[0][4] == json.loads(SPARK_SUBMIT_PARAMS)
             assert echo_mock.call_args[0][0] == pretty_format(RUN_NOW_RETURN)

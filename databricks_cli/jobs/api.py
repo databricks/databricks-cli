@@ -44,5 +44,6 @@ def reset_job(json):
     return get_jobs_client().client.perform_query('POST', '/jobs/reset', data=json)
 
 
-def run_now(job_id, jar_params, notebook_params):
-    return get_jobs_client().run_now(job_id, jar_params, notebook_params)
+def run_now(job_id, jar_params, notebook_params, python_params, spark_submit_params):
+    return get_jobs_client().run_now(job_id, jar_params, notebook_params, python_params,
+                                     spark_submit_params)
