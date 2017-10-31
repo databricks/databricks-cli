@@ -144,9 +144,14 @@ def get_cli(job_id):
               help='JSON array of parameters. i.e. ["param1", "param2"]')
 @click.option('--notebook-params', default=None, type=JsonClickType(),
               help='JSON map of key-value pairs. i.e. {"name": "john doe", "age": 35}')
+@click.option('--python-params', default=None, type=JsonClickType(),
+              help='JSON array of parameters. i.e. ["param1", "param2"]')
+@click.option('--spark-submit-params', default=None, type=JsonClickType(),
+              help='JSON array of parameters. i.e. '
+                   '["--class", "org.apache.spark.examples.SparkPi"]')
 @require_config
 @eat_exceptions
-def run_now_cli(job_id, jar_params, notebook_params):
+def run_now_cli(job_id, jar_params, notebook_params, python_params, spark_submit_params):
     """
     Runs a job with the specified parameters.
 
@@ -155,7 +160,9 @@ def run_now_cli(job_id, jar_params, notebook_params):
     """
     jar_params_json = json_loads(jar_params) if jar_params else None
     notebook_params_json = json_loads(notebook_params) if notebook_params else None
-    res = run_now(job_id, jar_params_json, notebook_params_json)
+    python_params = json_loads(python_params) if python_params else None
+    spark_submit_params = json_loads(spark_submit_params) if spark_submit_params else None
+    res = run_now(job_id, jar_params_json, notebook_params_json, python_params, spark_submit_params)
     click.echo(pretty_format(res))
 
 
