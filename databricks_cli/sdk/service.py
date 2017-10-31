@@ -24,8 +24,6 @@
 import base64
 import StringIO
 
-from . import objects
-
 class JobsService(object):
     def __init__(self, client):
         self.client = client
@@ -125,7 +123,8 @@ class JobsService(object):
     
         return self.client.perform_query('GET', '/jobs/list', data=_data)
     
-    def run_now(self, job_id=None, jar_params=None, notebook_params=None):
+    def run_now(self, job_id=None, jar_params=None, notebook_params=None, python_params=None,
+                spark_submit_params=None):
         _data = {}
         if job_id is not None:
             _data['job_id'] = job_id
@@ -133,6 +132,10 @@ class JobsService(object):
             _data['jar_params'] = jar_params
         if notebook_params is not None:
             _data['notebook_params'] = notebook_params
+        if python_params is not None:
+            _data['python_params'] = python_params
+        if spark_submit_params is not None:
+            _data['spark_submit_params'] = spark_submit_params
         return self.client.perform_query('POST', '/jobs/run-now', data=_data)
     
     def list_runs(self, job_id=None, active_only=None, completed_only=None, offset=None,
