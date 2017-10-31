@@ -88,13 +88,14 @@ def _jobs_to_table(jobs_json):
     return ret
 
 
-@click.command(context_settings=CONTEXT_SETTINGS)
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Lists the jobs in the Databricks Job Service.')
 @click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
 @require_config
 @eat_exceptions
 def list_cli(output):
     """
-    Lists the jobs in the Databricks Job Service
+    Lists the jobs in the Databricks Job Service.
 
     By default the output format will be a human readable table with the following fields
 
@@ -111,13 +112,14 @@ def list_cli(output):
         click.echo(tabulate(_jobs_to_table(jobs_json), tablefmt='plain'))
 
 
-@click.command(context_settings=CONTEXT_SETTINGS)
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help="Delete the specified job from the Databricks Job Service.")
 @click.option('--job-id', required=True, type=int)
 @require_config
 @eat_exceptions
 def delete_cli(job_id):
     """
-    Delete the specified job from the Databricks Job Service
+    Delete the specified job from the Databricks Job Service.
     """
     delete_job(job_id)
 
