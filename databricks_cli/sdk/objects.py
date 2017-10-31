@@ -166,7 +166,8 @@ class JobSettings(dict):
     def __init__(self, name=None, existing_cluster_id=None, new_cluster=None, libraries=None,
                  email_notifications=None, timeout_seconds=None, max_retries=None,
                  min_retry_interval_millis=None, retry_on_timeout=None, schedule=None,
-                 notebook_task=None, spark_jar_task=None, max_concurrent_runs=None):
+                 notebook_task=None, spark_jar_task=None, spark_python_task=None,
+                 spark_submit_task=None, max_concurrent_runs=None):
         super(JobSettings, self).__init__()
         if name is not None:
             self['name'] = name
@@ -202,6 +203,14 @@ class JobSettings(dict):
             self['spark_jar_task'] = spark_jar_task
             if not isinstance(spark_jar_task, dict):
                 raise TypeError('Expected databricks.SparkJarTask() or dict for field spark_jar_task')
+        if spark_python_task is not None:
+            self['spark_python_task'] = spark_python_task
+            if not isinstance(spark_python_task, dict):
+                raise TypeError('Expected databricks.SparkPythonTask() or dict for field spark_python_task')
+        if spark_submit_task is not None:
+            self['spark_submit_task'] = spark_submit_task
+            if not isinstance(spark_submit_task, dict):
+                raise TypeError('Expected databricks.SparkSubmitTask() or dict for field spark_submit_task')
         if max_concurrent_runs is not None:
             self['max_concurrent_runs'] = max_concurrent_runs
 
@@ -241,6 +250,20 @@ class SparkJarTask(dict):
         if parameters is not None:
             self['parameters'] = parameters
 
+class SparkPythonTask(dict):
+    def __init__(self, python_file, parameters=None):
+        super(SparkPythonTask, self).__init__()
+        if python_file is not None:
+            self['python_file'] = python_file
+        if parameters is not None:
+            self['parameters'] = parameters
+
+class SparkSubmitTask(dict):
+    def __init__(self, parameters=None):
+        super(SparkSubmitTask, self).__init__()
+        if parameters is not None:
+            self['parameters'] = parameters
+
 class EggSpecification(dict):
     def __init__(self, uri=None):
         super(EggSpecification, self).__init__()
@@ -267,7 +290,7 @@ class PipSpecification(dict):
             self['version_specifier'] = version_specifier
 
 class Library(dict):
-    def __init__(self, jar=None, egg=None, pypi=None, maven=None):
+    def __init__(self, jar=None, egg=None, pypi=None, maven=None, cran=None):
         super(Library, self).__init__()
         if jar is not None:
             self['jar'] = jar
@@ -281,6 +304,10 @@ class Library(dict):
             self['maven'] = maven
             if not isinstance(maven, dict):
                 raise TypeError('Expected databricks.MavenLibrary() or dict for field maven')
+        if cran is not None:
+            self['cran'] = cran
+            if not isinstance(cran, dict):
+                raise TypeError('Expected databricks.RCranLibrary() or dict for field cran')
 
 class MavenLibrary(dict):
     def __init__(self, coordinates, repo=None, exclusions=None):
@@ -295,6 +322,14 @@ class MavenLibrary(dict):
 class PythonPyPiLibrary(dict):
     def __init__(self, package, repo=None):
         super(PythonPyPiLibrary, self).__init__()
+        if package is not None:
+            self['package'] = package
+        if repo is not None:
+            self['repo'] = repo
+
+class RCranLibrary(dict):
+    def __init__(self, package, repo=None):
+        super(RCranLibrary, self).__init__()
         if package is not None:
             self['package'] = package
         if repo is not None:
