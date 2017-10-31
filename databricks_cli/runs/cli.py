@@ -109,7 +109,7 @@ def get_cli(run_id):
 @eat_exceptions
 def cancel_cli(run_id):
     """
-    Cancels the run specified
+    Cancels the run specified.
     """
     click.echo(pretty_format(cancel_run(run_id)))
 
