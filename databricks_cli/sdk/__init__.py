@@ -52,5 +52,4 @@ To get started, below is an example usage of the Python API client.
   help(JobsService)
 """
 from .service import *
-from .objects import *
 from .api_client import ApiClient

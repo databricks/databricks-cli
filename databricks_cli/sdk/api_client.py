@@ -41,7 +41,6 @@ from requests.adapters import HTTPAdapter
 try:
     from requests.packages.urllib3.poolmanager import PoolManager
     from requests.packages.urllib3 import exceptions
-    requests.packages.urllib3.disable_warnings()
 except ImportError:
     from urllib3.poolmanager import PoolManager
     from urllib3 import exceptions
@@ -64,7 +63,7 @@ class ApiClient(object):
     to be used by different versions of the client.
     """
     def __init__(self, user = None, password = None, host = None, token = None, configUrl = None,
-            apiVersion = version.API_VERSION, default_headers = {}):
+            apiVersion = version.API_VERSION, default_headers = {}, verify = True):
         if configUrl:
             self.url = configUrl
             params = self.performQuery("/", headers = {})[1]
@@ -89,6 +88,7 @@ class ApiClient(object):
             auth = {}
         user_agent = {'user-agent': 'databricks-cli-{v}'.format(v=databricks_cli_version)}
         self.default_headers = dict(auth.items() + default_headers.items() + user_agent.items())
+        self.verify = verify
 
     def close(self):
         """Close the client"""
@@ -104,7 +104,7 @@ class ApiClient(object):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", exceptions.InsecureRequestWarning)
             resp = self.session.request(method, self.url + path, data = json.dumps(data),
-                headers = headers)
+                verify = self.verify, headers = headers)
 
         try:
             resp.raise_for_status()
