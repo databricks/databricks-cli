@@ -137,9 +137,11 @@ def get_cli(job_id):
 @click.option('--job-id', required=True, type=int)
 @click.option('--jar-params', default=None)
 @click.option('--notebook-params', default=None)
+@click.option('--python-params', default=None)
+@click.option('--spark-submit-params', default=None)
 @require_config
 @eat_exceptions
-def run_now_cli(job_id, jar_params, notebook_params):
+def run_now_cli(job_id, jar_params, notebook_params, python_params, spark_submit_params):
     """
     Runs a job with the specified parameters.
 
@@ -148,7 +150,9 @@ def run_now_cli(job_id, jar_params, notebook_params):
     """
     jar_params_json = json_loads(jar_params) if jar_params else None
     notebook_params_json = json_loads(notebook_params) if notebook_params else None
-    res = run_now(job_id, jar_params_json, notebook_params_json)
+    python_params = json_loads(python_params) if python_params else None
+    spark_submit_params = json_loads(spark_submit_params) if spark_submit_params else None
+    res = run_now(job_id, jar_params_json, notebook_params_json, python_params, spark_submit_params)
     click.echo(pretty_format(res))
 
 
