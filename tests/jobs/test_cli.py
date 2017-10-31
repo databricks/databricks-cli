@@ -70,6 +70,11 @@ LIST_RETURN = {
     'jobs': [{
         'job_id': 1,
         'settings': {
+            'name': 'b'
+        }
+    }, {
+        'job_id': 2,
+        'settings': {
             'name': 'a'
         }
     }]
@@ -81,7 +86,8 @@ def test_list_jobs():
         with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
             list_jobs_mock.return_value = LIST_RETURN
             get_callback(cli.list_cli)(None)
-            assert echo_mock.call_args[0][0] == tabulate([(1, 'a')], tablefmt='plain')
+            # Output should be sorted here.
+            assert echo_mock.call_args[0][0] == tabulate([(2, 'a'), (1, 'b')], tablefmt='plain')
 
 
 def test_list_jobs_output_json():
