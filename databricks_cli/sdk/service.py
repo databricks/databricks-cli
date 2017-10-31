@@ -24,8 +24,6 @@
 import base64
 import StringIO
 
-from . import objects
-
 class JobsService(object):
     def __init__(self, client):
         self.client = client
