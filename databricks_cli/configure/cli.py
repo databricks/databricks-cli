@@ -59,9 +59,13 @@ def _configure_cli_password():
     config.overwrite()
 
 
-@click.command(context_settings=CONTEXT_SETTINGS)
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Configure host and authentication info for CLI.')
 @click.option('--token', show_default=True, is_flag=True, default=False)
 def configure_cli(token):
+    """
+    Configure host and authentication info for CLI.
+    """
     if token:
         _configure_cli_token()
     else:

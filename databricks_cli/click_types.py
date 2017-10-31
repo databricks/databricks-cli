@@ -25,18 +25,37 @@ from click import ParamType
 
 
 class OutputClickType(ParamType):
-    name = 'Output type'
-    help = 'can be "json" or "table"'
+    name = 'FORMAT'
+    help = 'can be "JSON" or "TABLE". Set to TABLE by default.'
 
     def convert(self, value, param, ctx):
-        if value != 'json' and value != 'table':
+        if value is None:
+            return value
+        if value.lower() != 'json' and value.lower() != 'table':
             raise RuntimeError('output must be "json" or "table"')
         return value
 
     @classmethod
     def is_json(cls, value):
-        return value == 'json'
+        return value is not None and value.lower() == 'json'
 
     @classmethod
     def is_table(cls, value):
-        return value == 'table'
+        return value is not None and value.lower() == 'table'
+
+
+class JsonClickType(ParamType):
+    name = 'JSON'
+    help = 'Valid JSON string. Cannot be provided with --json-file.'
+
+
+class JobIdClickType(ParamType):
+    name = 'JOB_ID'
+
+
+class RunIdClickType(ParamType):
+    name = 'RUN_ID'
+
+
+class ClusterIdClickType(ParamType):
+    name = 'CLUSTER_ID'
