@@ -46,11 +46,15 @@ class OutputClickType(ParamType):
 
 class JsonClickType(ParamType):
     name = 'JSON'
-    help = 'Valid JSON string. Cannot be provided with --json-file.'
+
+    @classmethod
+    def help(cls, endpoint):
+        return 'JSON string to POST to {}.'.format(endpoint)
 
 
 class JobIdClickType(ParamType):
     name = 'JOB_ID'
+    help = 'Can be found in the URL at https://*.cloud.databricks.com/#job/$JOB_ID.'
 
 
 class RunIdClickType(ParamType):
@@ -59,3 +63,5 @@ class RunIdClickType(ParamType):
 
 class ClusterIdClickType(ParamType):
     name = 'CLUSTER_ID'
+    help = ('Can be found in the URL at '
+            'https://*.cloud.databricks.com/#/setting/clusters/$CLUSTER_ID/configuration.')

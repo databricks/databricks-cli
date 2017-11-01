@@ -38,7 +38,7 @@ from databricks_cli.version import print_version_callback, version
 @click.option('--json-file', default=None, type=click.Path(),
               help='File containing JSON request to POST to /api/2.0/jobs/create.')
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help)
+              help=JsonClickType.help('/api/2.0/jobs/create'))
 @require_config
 @eat_exceptions
 def create_cli(json_file, json):
@@ -52,11 +52,13 @@ def create_cli(json_file, json):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
+@click.option('--job-id', required=True, type=JobIdClickType(), help=JobIdClickType.help)
 @click.option('--json-file', default=None, type=click.Path(),
-              help='File containing JSON request to POST to /api/2.0/jobs/reset.')
+              help='File containing partial JSON request to POST to /api/2.0/jobs/reset. '
+                   'For more, read full help message.')
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help)
-@click.option('--job-id', required=True, type=JobIdClickType(), help='The job_id to reset')
+              help='Partial JSON string to POST to /api/2.0/jobs/reset. '
+                   'For more, read full help message.')
 @require_config
 @eat_exceptions
 def reset_cli(json_file, json, job_id):
@@ -69,7 +71,7 @@ def reset_cli(json_file, json, job_id):
     NOTE. The json parameter described above is not the same as what is normally POSTed
     in the request body to the reset endpoint. Instead it is the object
     defined in the top level "new_settings" field. The job ID is provided
-    by the job-id option.
+    by the --job-id option.
     """
     if not bool(json_file) ^ bool(json):
         raise RuntimeError('Either --json-file or --json should be provided')
@@ -106,7 +108,7 @@ def list_cli(output):
 
       - Job name
 
-    A json formatted output can also be requested by setting the --output parameter to "json"
+    A JSON formatted output can also be requested by setting the --output parameter to "json"
 
     In table mode, the jobs are sorted by their name.
     """
@@ -118,19 +120,19 @@ def list_cli(output):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help="Delete the specified job from the Databricks Job Service.")
-@click.option('--job-id', required=True, type=JobIdClickType())
+               short_help='Deletes the specified job.')
+@click.option('--job-id', required=True, type=JobIdClickType(), help=JobIdClickType.help)
 @require_config
 @eat_exceptions
 def delete_cli(job_id):
     """
-    Delete the specified job from the Databricks Job Service.
+    Deletes the specified job.
     """
     delete_job(job_id)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
-@click.option('--job-id', required=True, type=JobIdClickType())
+@click.option('--job-id', required=True, type=JobIdClickType(), help=JobIdClickType.help)
 @require_config
 @eat_exceptions
 def get_cli(job_id):
@@ -141,15 +143,16 @@ def get_cli(job_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
-@click.option('--job-id', required=True, type=JobIdClickType())
+@click.option('--job-id', required=True, type=JobIdClickType(), help=JobIdClickType.help)
 @click.option('--jar-params', default=None, type=JsonClickType(),
-              help='JSON array of parameters. i.e. ["param1", "param2"]')
+              help='JSON string specifying an array of parameters. i.e. ["param1", "param2"]')
 @click.option('--notebook-params', default=None, type=JsonClickType(),
-              help='JSON map of key-value pairs. i.e. {"name": "john doe", "age": 35}')
+              help='JSON string specifying map of key-value pairs. '
+                   'i.e. {"name": "john doe", "age": 35}')
 @click.option('--python-params', default=None, type=JsonClickType(),
-              help='JSON array of parameters. i.e. ["param1", "param2"]')
+              help='JSON string specifying array of parameters. i.e. ["param1", "param2"]')
 @click.option('--spark-submit-params', default=None, type=JsonClickType(),
-              help='JSON array of parameters. i.e. '
+              help='JSON string specifying array of parameters. i.e. '
                    '["--class", "org.apache.spark.examples.SparkPi"]')
 @require_config
 @eat_exceptions
@@ -169,17 +172,17 @@ def run_now_cli(job_id, jar_params, notebook_params, python_params, spark_submit
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
-             short_help='Utility to interact with the Jobs service.')
+             short_help='Utility to interact with jobs.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
 @require_config
 @eat_exceptions
 def jobs_group():
     """
-    Utility to interact with the Jobs service.
+    Utility to interact with jobs.
 
     This is a wrapper around the jobs API (https://docs.databricks.com/api/latest/jobs.html).
-    /jobs/runs API endpoints are handled by ``databricks runs``.
+    Job runs are handled by ``databricks runs``.
     """
     pass
 

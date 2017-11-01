@@ -36,7 +36,7 @@ from databricks_cli.version import print_version_callback, version
 @click.option('--json-file', default=None, type=click.Path(),
               help='File containing JSON request to POST to /api/2.0/jobs/runs/submit.')
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help)
+              help=JsonClickType.help('/api/2.0/jobs/runs/submit'))
 @require_config
 @eat_exceptions
 def submit_cli(json_file, json):
@@ -68,12 +68,12 @@ def _runs_to_table(runs_json):
 @click.option('--active-only', is_flag=True, default=None,
               help='If specified, only active runs will be listed')
 @click.option('--completed-only', is_flag=True, default=None,
-              help='If specifed, only completed runs will be listed')
+              help='If specified, only completed runs will be listed')
 @click.option('--offset', default=None, type=int,
-              help='Set to 0 by default. The offset is relative to the most recent run ID.')
+              help='The offset is relative to the most recent run ID. Set to 0 by default.')
 @click.option('--limit', default=None, type=int,
-              help='Set to 20 runs by default. The limit determines the number of runs listed. '
-                   'Limit must be between 0 and 1000.')
+              help='The limit determines the number of runs listed. '
+                   'Limit must be between 0 and 1000. Set to 20 runs by default.')
 @click.option('--output', help=OutputClickType.help, type=OutputClickType())
 @require_config
 @eat_exceptions # noqa
@@ -82,7 +82,7 @@ def list_cli(job_id, active_only, completed_only, offset, limit, output): # noqa
     Lists job runs.
 
     The limit and offset determine which runs will be listed. Runs are always listed
-    by descending order of run start time or run_id.
+    by descending order of run start time and run ID.
 
     In the TABLE output mode, the columns are as follows.
 
@@ -92,7 +92,7 @@ def list_cli(job_id, active_only, completed_only, offset, limit, output): # noqa
 
       - Life cycle state
 
-      - Result state
+      - Result state (can be n/a)
     """
     runs_json = list_runs(job_id, active_only, completed_only, offset, limit)
     if OutputClickType.is_json(output):
@@ -126,14 +126,14 @@ def cancel_cli(run_id):
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
-             short_help='Utility to interact with the jobs/runs API endpoints.')
+             short_help='Utility to interact with the jobs runs.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
 @require_config
 @eat_exceptions
 def runs_group():
     """
-    Utility to interact with jobs/runs API endpoints.
+    Utility to interact with jobs runs.
     """
     pass
 

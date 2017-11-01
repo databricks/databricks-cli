@@ -47,7 +47,7 @@ from databricks_cli.workspace.types import LanguageClickType, FormatClickType, W
 @eat_exceptions
 def ls_cli(l, absolute, workspace_path):
     """
-    List objects in the Databricks Workspace
+    List objects in the Databricks Workspace.
     """
     if len(workspace_path) == 0:
         workspace_path = '/'
@@ -222,12 +222,12 @@ def import_dir_cli(source_path, target_path, overwrite):
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
-             short_help='Utility to interact with the Databricks Workspace.')
+             short_help='Utility to interact with the Databricks workspace.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
 def workspace_group():
     """
-    Utility to interact with the Databricks Workspace.
+    Utility to interact with the Databricks workspace.
     Workspace paths must be absolute and be prefixed with `/`.
     """
     pass

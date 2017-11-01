@@ -37,12 +37,12 @@ from databricks_cli.version import print_version_callback, version
 @click.option('--json-file', default=None, type=click.Path(),
               help='File containing JSON request to POST to /api/2.0/clusters/create.')
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help)
+              help=JsonClickType.help('/api/2.0/clusters/create'))
 @require_config
 @eat_exceptions
 def create_cli(json_file, json):
     """
-    Creates a cluster in Databricks.
+    Creates a Databricks cluster.
 
     The specification for the request json can be found at
     https://docs.databricks.com/api/latest/clusters.html#create
@@ -51,13 +51,14 @@ def create_cli(json_file, json):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Starts a terminated Databricks cluster given its id.')
-@click.option('--cluster-id', required=True, type=ClusterIdClickType())
+               short_help='Starts a terminated Databricks cluster given its ID.')
+@click.option('--cluster-id', required=True, type=ClusterIdClickType(),
+              help=ClusterIdClickType.help)
 @require_config
 @eat_exceptions
 def start_cli(cluster_id):
     """
-    Starts a terminated Databricks cluster given its id.
+    Starts a terminated Databricks cluster given its ID.
 
     If the cluster is not currently in a TERMINATED state, nothing will happen.
 
@@ -66,12 +67,13 @@ def start_cli(cluster_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
-@click.option('--cluster-id', required=True, type=ClusterIdClickType())
+@click.option('--cluster-id', required=True, type=ClusterIdClickType(),
+              help=ClusterIdClickType.help)
 @require_config
 @eat_exceptions
 def restart_cli(cluster_id):
     """
-    Restarts a Databricks cluster given its id.
+    Restarts a Databricks cluster given its ID.
 
     If the cluster is not currently in a RUNNING state, nothing will happen
     """
@@ -79,12 +81,13 @@ def restart_cli(cluster_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
-@click.option('--cluster-id', required=True, type=ClusterIdClickType())
+@click.option('--cluster-id', required=True, type=ClusterIdClickType(),
+              help=ClusterIdClickType.help)
 @require_config
 @eat_exceptions
 def delete_cli(cluster_id):
     """
-    Removes a Databricks cluster given its id.
+    Removes a Databricks cluster given its ID.
 
     The cluster is removed asynchronously. Once the deletion has completed,
     the cluster will be in a TERMINATED state. If the cluster is already in
@@ -96,7 +99,8 @@ def delete_cli(cluster_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
-@click.option('--cluster-id', required=True, type=ClusterIdClickType())
+@click.option('--cluster-id', required=True, type=ClusterIdClickType(),
+              help=ClusterIdClickType.help)
 @require_config
 @eat_exceptions
 def get_cli(cluster_id):
@@ -172,7 +176,7 @@ def list_node_types_cli():
 @eat_exceptions
 def spark_versions_cli():
     """
-    Lists possible spark versions for a cluster.
+    Lists possible Databricks Runtime versions for a cluster.
 
     The output format is specified in
     https://docs.databricks.com/api/latest/clusters.html#spark-versions
@@ -181,14 +185,14 @@ def spark_versions_cli():
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
-             short_help='Utility to interact with the Clusters service.')
+             short_help='Utility to interact with Databricks clusters.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
 @require_config
 @eat_exceptions
 def clusters_group():
     """
-    Utility to interact with the Clusters service.
+    Utility to interact with Databricks clusters.
     """
     pass
 
