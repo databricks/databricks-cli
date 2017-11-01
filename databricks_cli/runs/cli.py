@@ -54,7 +54,8 @@ def _runs_to_table(runs_json):
         run_name = r.get('run_name', 'no_run_name')
         life_cycle_state = r.get('state', {}).get('life_cycle_state', 'no_life_cycle_state')
         result_state = r.get('state', {}).get('result_state', 'no_result_state')
-        ret.append((run_id, run_name, life_cycle_state, result_state))
+        run_page_url = r.get('run_page_url', 'no_run_page_url')
+        ret.append((run_id, run_name, life_cycle_state, result_state, run_page_url))
     return ret
 
 
