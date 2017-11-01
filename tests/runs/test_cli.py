@@ -42,13 +42,15 @@ def test_submit_cli_json():
             assert echo_mock.call_args[0][0] == pretty_format(SUBMIT_RETURN)
 
 
+RUN_PAGE_URL = 'https://databricks.com/#job/1/run/1'
 LIST_RETURN = {
     'runs': [{
         'run_id': 1,
         'run_name': 'name',
         'state': {
             'life_cycle_state': 'RUNNING'
-        }
+        },
+        'run_page_url': RUN_PAGE_URL
     }]
 }
 
@@ -58,8 +60,8 @@ def test_list_runs():
         with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock:
             list_runs_mock.return_value = LIST_RETURN
             get_callback(cli.list_cli)(None, None, None, None, None, None)
-            assert echo_mock.call_args[0][0] == \
-                tabulate([(1, 'name', 'RUNNING', 'no_result_state')], tablefmt='plain')
+            rows = [(1, 'name', 'RUNNING', 'no_result_state', RUN_PAGE_URL)]
+            assert echo_mock.call_args[0][0] == tabulate(rows, tablefmt='plain')
 
 
 def test_list_runs_output_json():
