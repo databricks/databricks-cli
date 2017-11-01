@@ -54,8 +54,8 @@ def _runs_to_table(runs_json):
     for r in runs_json.get('runs', []):
         run_id = r.get('run_id', 'no_run_id')
         run_name = r.get('run_name', 'no_run_name')
-        life_cycle_state = r.get('state', {}).get('life_cycle_state', 'no_life_cycle_state')
-        result_state = r.get('state', {}).get('result_state', 'no_result_state')
+        life_cycle_state = r.get('state', {}).get('life_cycle_state', 'n/a')
+        result_state = r.get('state', {}).get('result_state', 'n/a')
         ret.append((run_id, truncate_string(run_name), life_cycle_state, result_state))
     return ret
 
@@ -81,6 +81,16 @@ def list_cli(job_id, active_only, completed_only, offset, limit, output): # noqa
 
     The limit and offset determine which runs will be listed. Runs are always listed
     by descending order of run start time or run_id.
+
+    In the TABLE output mode, the columns are as follows.
+
+      - Run ID
+
+      - Run name
+
+      - Life cycle state
+
+      - Result state
     """
     runs_json = list_runs(job_id, active_only, completed_only, offset, limit)
     if OutputClickType.is_json(output):
