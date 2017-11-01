@@ -137,7 +137,7 @@ def delete_cli(job_id):
 @eat_exceptions
 def get_cli(job_id):
     """
-    Describe the metadata for a job.
+    Describes the metadata for a job.
     """
     click.echo(pretty_format(get_job(job_id)))
 
@@ -158,7 +158,7 @@ def get_cli(job_id):
 @eat_exceptions
 def run_now_cli(job_id, jar_params, notebook_params, python_params, spark_submit_params):
     """
-    Runs a job with the specified parameters.
+    Runs a job with optional per-run parameters.
 
     Parameter options are specified in json and the format is documented in
     https://docs.databricks.com/api/latest/jobs.html#jobsrunnow.
