@@ -85,7 +85,7 @@ def _jobs_to_table(jobs_json):
     ret = []
     for j in jobs_json['jobs']:
         ret.append((j['job_id'], j['settings']['name']))
-    return sorted(ret, key=lambda t: t[1])
+    return sorted(ret, key=lambda t: t[1].lower())
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
