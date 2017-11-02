@@ -65,10 +65,16 @@ def json_cli_base(json_file, json, api):
     Takes json_file or json string and calls an function "api" with the json
     deserialized
     """
-    if not bool(json_file) ^ bool(json):
+    if not (json_file is None) ^ (json is None):
         raise RuntimeError('Either --json-file or --json should be provided')
     if json_file:
         with open(json_file, 'r') as f:
             json = f.read()
     res = api(json_loads(json))
     click.echo(pretty_format(res))
+
+
+def truncate_string(s, length=100):
+    if len(s) <= length:
+        return s
+    return s[:length] + '...'

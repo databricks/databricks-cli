@@ -60,7 +60,7 @@ def test_list_runs():
         with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock:
             list_runs_mock.return_value = LIST_RETURN
             get_callback(cli.list_cli)(None, None, None, None, None, None)
-            rows = [(1, 'name', 'RUNNING', 'no_result_state', RUN_PAGE_URL)]
+            rows = [(1, 'name', 'RUNNING', 'n/a', RUN_PAGE_URL)]
             assert echo_mock.call_args[0][0] == tabulate(rows, tablefmt='plain')
 
 

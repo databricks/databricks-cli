@@ -63,3 +63,8 @@ def test_json_cli_base_both_args():
 def test_json_cli_base_no_args():
     with pytest.raises(RuntimeError):
         utils.json_cli_base('a', 'b', mock.Mock())
+
+
+def test_truncate_string():
+    assert utils.truncate_string('apple', 3) == 'app...'
+    assert utils.truncate_string('apple') == 'apple'

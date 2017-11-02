@@ -27,7 +27,7 @@ from tabulate import tabulate
 from requests.exceptions import HTTPError
 
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS
-from databricks_cli.version import print_version_callback
+from databricks_cli.version import print_version_callback, version
 from databricks_cli.configure.config import require_config
 from databricks_cli.dbfs.exceptions import LocalFileExistsException
 from databricks_cli.workspace.api import list_objects, mkdirs, import_workspace, export_workspace, \
@@ -47,7 +47,7 @@ from databricks_cli.workspace.types import LanguageClickType, FormatClickType, W
 @eat_exceptions
 def ls_cli(l, absolute, workspace_path):
     """
-    List objects in the Databricks Workspace
+    List objects in the Databricks Workspace.
     """
     if len(workspace_path) == 0:
         workspace_path = '/'
@@ -221,12 +221,13 @@ def import_dir_cli(source_path, target_path, overwrite):
     _import_dir_helper(source_path, target_path, overwrite)
 
 
-@click.group(context_settings=CONTEXT_SETTINGS)
+@click.group(context_settings=CONTEXT_SETTINGS,
+             short_help='Utility to interact with the Databricks workspace.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
-              expose_value=False, is_eager=True)
+              expose_value=False, is_eager=True, help=version)
 def workspace_group():
     """
-    Utility to interact with the Databricks Workspace.
+    Utility to interact with the Databricks workspace.
     Workspace paths must be absolute and be prefixed with `/`.
     """
     pass

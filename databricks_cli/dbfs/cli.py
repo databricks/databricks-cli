@@ -27,7 +27,7 @@ from tabulate import tabulate
 from requests.exceptions import HTTPError
 
 from databricks_cli.utils import eat_exceptions, error_and_quit, CONTEXT_SETTINGS
-from databricks_cli.version import print_version_callback
+from databricks_cli.version import print_version_callback, version
 from databricks_cli.configure.cli import configure_cli
 from databricks_cli.configure.config import require_config
 from databricks_cli.dbfs.api import put_file, get_file, list_files, \
@@ -229,12 +229,13 @@ def mv_cli(src, dst):
     move(src, dst)
 
 
-@click.group(context_settings=CONTEXT_SETTINGS)
+@click.group(context_settings=CONTEXT_SETTINGS, short_help='Utility to interact with DBFS.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
-              expose_value=False, is_eager=True)
+              expose_value=False, is_eager=True, help=version)
 def dbfs_group():
     """
     Utility to interact with DBFS.
+
     DBFS paths are all prefixed with dbfs:/. Local paths can be absolute or local.
     """
     pass
