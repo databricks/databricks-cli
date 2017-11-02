@@ -25,18 +25,43 @@ from click import ParamType
 
 
 class OutputClickType(ParamType):
-    name = 'Output type'
-    help = 'can be "json" or "table"'
+    name = 'FORMAT'
+    help = 'can be "JSON" or "TABLE". Set to TABLE by default.'
 
     def convert(self, value, param, ctx):
-        if value != 'json' and value != 'table':
+        if value is None:
+            return value
+        if value.lower() != 'json' and value.lower() != 'table':
             raise RuntimeError('output must be "json" or "table"')
         return value
 
     @classmethod
     def is_json(cls, value):
-        return value == 'json'
+        return value is not None and value.lower() == 'json'
 
     @classmethod
     def is_table(cls, value):
-        return value == 'table'
+        return value is not None and value.lower() == 'table'
+
+
+class JsonClickType(ParamType):
+    name = 'JSON'
+
+    @classmethod
+    def help(cls, endpoint):
+        return 'JSON string to POST to {}.'.format(endpoint)
+
+
+class JobIdClickType(ParamType):
+    name = 'JOB_ID'
+    help = 'Can be found in the URL at https://*.cloud.databricks.com/#job/$JOB_ID.'
+
+
+class RunIdClickType(ParamType):
+    name = 'RUN_ID'
+
+
+class ClusterIdClickType(ParamType):
+    name = 'CLUSTER_ID'
+    help = ('Can be found in the URL at '
+            'https://*.cloud.databricks.com/#/setting/clusters/$CLUSTER_ID/configuration.')
