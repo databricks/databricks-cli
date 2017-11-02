@@ -108,7 +108,7 @@ def list_cli(output):
 
       - Job name
 
-    A JSON formatted output can also be requested by setting the --output parameter to "json"
+    A JSON formatted output can also be requested by setting the --output parameter to "JSON"
 
     In table mode, the jobs are sorted by their name.
     """
@@ -147,12 +147,12 @@ def get_cli(job_id):
 @click.option('--jar-params', default=None, type=JsonClickType(),
               help='JSON string specifying an array of parameters. i.e. ["param1", "param2"]')
 @click.option('--notebook-params', default=None, type=JsonClickType(),
-              help='JSON string specifying map of key-value pairs. '
+              help='JSON string specifying a map of key-value pairs. '
                    'i.e. {"name": "john doe", "age": 35}')
 @click.option('--python-params', default=None, type=JsonClickType(),
-              help='JSON string specifying array of parameters. i.e. ["param1", "param2"]')
+              help='JSON string specifying an array of parameters. i.e. ["param1", "param2"]')
 @click.option('--spark-submit-params', default=None, type=JsonClickType(),
-              help='JSON string specifying array of parameters. i.e. '
+              help='JSON string specifying an array of parameters. i.e. '
                    '["--class", "org.apache.spark.examples.SparkPi"]')
 @require_config
 @eat_exceptions
