@@ -36,6 +36,7 @@ setup(
         'click>=6.7',
         'requests>=2.17.3',
         'tabulate>=0.7.7',
+        'six>=1.10.0',
     ],
     entry_points='''
         [console_scripts]
