@@ -116,7 +116,7 @@ def list_cli(output):
     if OutputClickType.is_json(output):
         click.echo(pretty_format(jobs_json))
     else:
-        click.echo(tabulate(_jobs_to_table(jobs_json), tablefmt='plain'))
+        click.echo(tabulate(_jobs_to_table(jobs_json), tablefmt='plain', disable_numparse=True))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,

@@ -78,7 +78,7 @@ LIST_RETURN = {
             'name': 'a'
         }
     }, {
-        'job_id': 3,
+        'job_id': 30,
         'settings': {
             # Normally 'C' < 'a' < 'b' -- we should do case insensitive sorting though.
             'name': 'C'
@@ -93,8 +93,9 @@ def test_list_jobs():
             list_jobs_mock.return_value = LIST_RETURN
             get_callback(cli.list_cli)(None)
             # Output should be sorted here.
-            rows = [(2, 'a'), (1, 'b'), (3, 'C')]
-            assert echo_mock.call_args[0][0] == tabulate(rows, tablefmt='plain')
+            rows = [(2, 'a'), (1, 'b'), (30, 'C')]
+            assert echo_mock.call_args[0][0] == \
+                tabulate(rows, tablefmt='plain', disable_numparse=True)
 
 
 def test_list_jobs_output_json():
