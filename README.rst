@@ -28,10 +28,11 @@ To install simply run
 
 Then set up authentication using username/password or `authentication token <https://docs.databricks.com/api/latest/authentication.html#token-management>`_. Credentials are stored at ``~/.databrickscfg``.
 
-- ``databricks configure`` (username/password)
-- ``databricks configure --token`` (auth token)
+- ``databricks configure`` (enter hostname/username/password at prompt)
+- ``databricks configure --token`` (enter hostname/auth-token at prompt)
 
-Then you're all set to go! Check out some examples below.
+Then you're all set to go! Try a quick test like
+``databricks workspace ls`` to verify that your authentication info is working.
 
 Known Issues
 ---------------
