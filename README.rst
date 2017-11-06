@@ -24,10 +24,14 @@ Installation
 ---------------
 
 To install simply run
-``pip install databricks-cli``
-
-In order to upgrade your databricks-cli installation please run
 ``pip install --upgrade databricks-cli``
+
+Then set up authentication using username/password or `authentication token <https://docs.databricks.com/api/latest/authentication.html#token-management>`_. Credentials are stored at ``~/.databrickscfg``.
+
+- ``databricks configure`` (username/password)
+- ``databricks configure --token`` (auth token)
+
+Then you're all set to go! Check out some examples below.
 
 Known Issues
 ---------------
@@ -38,16 +42,6 @@ version of Python for MacOS does not have this version of TLS built in.
 
 To use databricks-cli you should install a version of Python which has ``ssl.PROTOCOL_TLSv1_2``.
 For MacOS, the easiest way may be to install Python with `Homebrew <https://brew.sh/>`_.
-
-Setting Up Authentication
---------------------------
-There are two ways to authenticate to Databricks. The first way is to use your username and password pair.
-To do this run ``databricks configure`` and follow the prompts. The second and recommended way is to use
-an access token generated from Databricks. To configure the CLI to use the access token run
-``databricks configure --token``. After following the prompts, your access credentials will be stored
-in the file ``~/.databrickscfg``.
-
-Read `Token Management <https://docs.databricks.com/api/latest/authentication.html#token-management>`_ for more information about Databricks Access Tokens.
 
 Workspace CLI Examples
 -----------------------
