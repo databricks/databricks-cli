@@ -31,8 +31,8 @@ Then set up authentication using username/password or `authentication token <htt
 - ``databricks configure`` (enter hostname/username/password at prompt)
 - ``databricks configure --token`` (enter hostname/auth-token at prompt)
 
-Then you're all set to go! Try a quick test like
-``databricks workspace ls`` to verify that your authentication info is working.
+Then you're all set to go! To test that your authentication information is working, try a quick test like
+``databricks workspace ls``.
 
 Known Issues
 ---------------
