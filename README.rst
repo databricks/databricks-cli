@@ -49,7 +49,7 @@ Workspace CLI Examples
 The implemented commands for the Workspace CLI can be listed by running ``databricks workspace -h``.
 Commands are run by appending them to ``databricks workspace``. To make it easier to use the workspace
 CLI, feel free to alias ``databricks workspace`` to something shorter. For more information
-reference `Aliasing Command Groups <https://github.com/andrewmchen/databricks-cli/tree/docs#aliasing-command-groups>`_.
+reference `Aliasing Command Groups <#aliasing-command-groups>`_.
 
 .. code::
 
@@ -171,6 +171,123 @@ Copying a file from DBFS
     # Or recursively
     dbfs cp -r dbfs:/test-dir ./test-dir
 
+Jobs CLI Examples
+--------------------
+The implemented commands for the jobs CLI can be listed by running ``databricks jobs -h``.
+Job run commands are handled by ``databricks runs -h``.
+
+.. code::
+
+    $ databricks jobs -h
+    Usage: databricks jobs [OPTIONS] COMMAND [ARGS]...
+
+      Utility to interact with jobs.
+
+      This is a wrapper around the jobs API
+      (https://docs.databricks.com/api/latest/jobs.html). Job runs are handled
+      by ``databricks runs``.
+
+    Options:
+      -v, --version  [VERSION]
+      -h, --help     Show this message and exit.
+
+    Commands:
+      create   Creates a job.
+      delete   Deletes the specified job.
+      get      Describes the metadata for a job.
+      list     Lists the jobs in the Databricks Job Service.
+      reset    Resets (edits) the definition of a job.
+      run-now  Runs a job with optional per-run parameters.
+
+.. code::
+
+    $ databricks runs -h
+    Usage: databricks runs [OPTIONS] COMMAND [ARGS]...
+
+      Utility to interact with job runs.
+
+    Options:
+      -v, --version  [VERSION]
+      -h, --help     Show this message and exit.
+
+    Commands:
+      cancel  Cancels the run specified.
+      get     Gets the metadata about a run in json form.
+      list    Lists job runs.
+      submit  Submits a one-time run.
+
+Listing and finding jobs
+^^^^^^^^^^^^^^^^^^^^^^^^^
+The ``databricks jobs list`` command has two output formats, ``JSON`` and ``TABLE``.
+The ``TABLE`` format is outputted by default and returns a two column table (job ID, job name).
+
+To find a job by name
+
+.. code::
+
+    databricks jobs list | grep "JOB_NAME"
+
+Copying a job
+^^^^^^^^^^^^^^^^^^^^^^^^
+This example requires the program `jq <#jq>`_.
+
+.. code::
+
+    SETTINGS_JSON=$(databricks jobs get --job-id 284907 | jq .settings)
+    # JQ Explanation:
+    #   - peek into top level `settings` field.
+    databricks jobs create --json "$SETTINGS_JSON"
+
+Deleting "Untitled" Jobs
+^^^^^^^^^^^^^^^^^^^^^^^^
+.. code::
+
+    databricks jobs list --output json | jq '.jobs[] | select(.settings.name == "Untitled") | .job_id' | xargs -n 1 databricks jobs delete --job-id
+    # Explanation:
+    #   - List jobs in JSON.
+    #   - Peek into top level `jobs` field.
+    #   - Select only jobs with name equal to "Untitled"
+    #   - Print those job ID's out.
+    #   - Invoke `databricks jobs delete --job-id` once per row with the $job_id appended as an argument to the end of the command.
+
+Clusters CLI Examples
+-----------------------
+The implemented commands for the clusters CLI can be listed by running ``databricks clusters -h``.
+
+.. code::
+
+    $ databricks clusters -h
+    Usage: databricks clusters [OPTIONS] COMMAND [ARGS]...
+
+      Utility to interact with Databricks clusters.
+
+    Options:
+      -v, --version  [VERSION]
+      -h, --help     Show this message and exit.
+
+    Commands:
+      create           Creates a Databricks cluster.
+      delete           Removes a Databricks cluster given its ID.
+      get              Retrieves metadata about a cluster.
+      list             Lists active and recently terminated clusters.
+      list-node-types  Lists possible node types for a cluster.
+      list-zones       Lists zones where clusters can be created.
+      restart          Restarts a Databricks cluster given its ID.
+      spark-versions   Lists possible Databricks Runtime versions...
+      start            Starts a terminated Databricks cluster given its ID.
+
+Listing runtime versions
+^^^^^^^^^^^^^^^^^^^^^^^^^
+.. code::
+
+    databricks clusters spark-versions
+
+Listing node types
+^^^^^^^^^^^^^^^^^^^
+.. code::
+
+    databricks clusters list-node-types
+
 
 .. _alias_databricks_cli:
 
@@ -182,15 +299,29 @@ command groups to shorter commands. For example to shorten ``databricks workspac
 Bourne again shell, you can add ``alias dw="databricks workspace"`` to the appropriate bash profile. Typically,
 this file is located at ``~/.bash_profile``.
 
+.. _jq:
+
+jq
+---
+Some Databricks CLI commands will output the JSON response from the API endpoint. Sometimes it can be
+useful to parse out parts of the JSON to pipe into other commands. For example, to copy a job
+definition, we must take the ``settings`` field of ``/api/2.0/jobs/get`` use that as an argument
+to the ``databricks jobs create`` command.
+
+In these cases, we recommend you to use the utility ``jq``. MacOS users can install ``jq`` through
+Homebrew with ``brew install jq``.
+
+For more information on ``jq`` reference its `documentation <https://stedolan.github.io/jq/>`_.
+
 Using Docker
 ------------
 .. code::
 
     # build image
     docker build -t docker build -t databricks-cli .
-    
+
     # run container
     docker run -it databricks-cli
-    
+
     # run command in docker
     docker run -it databricks-cli fs --help
