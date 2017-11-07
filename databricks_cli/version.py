@@ -21,7 +21,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-version = '0.4.1-SNAPSHOT' #  NOQA
+version = '0.4.1.dev0' #  NOQA
 
 
 def print_version_callback(ctx, param, value): #  NOQA
