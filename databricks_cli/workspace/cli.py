@@ -151,9 +151,9 @@ def _export_dir_helper(source_path, target_path, overwrite):
             cur_dst = cur_dst + WorkspaceLanguage.to_extension(obj.language)
             try:
                 export_workspace(cur_src, cur_dst, WorkspaceFormat.SOURCE, overwrite)
+                click.echo('{} -> {}'.format(cur_src, cur_dst))
             except LocalFileExistsException:
                 click.echo('{} already exists locally as {}. Skip.'.format(cur_src, cur_dst))
-            click.echo('{} -> {}'.format(cur_src, cur_dst))
         else:
             click.echo('{} is neither a dir or a notebook. Skip.'.format(cur_src))
 
