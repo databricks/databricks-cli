@@ -49,7 +49,7 @@ Workspace CLI Examples
 The implemented commands for the Workspace CLI can be listed by running ``databricks workspace -h``.
 Commands are run by appending them to ``databricks workspace``. To make it easier to use the workspace
 CLI, feel free to alias ``databricks workspace`` to something shorter. For more information
-reference, read :ref:`alias_databricks_cli`.
+reference `Aliasing Command Groups <#aliasing-command-groups>`_.
 
 .. code::
 
@@ -229,8 +229,7 @@ To find a job by name
 
 Copying a job
 ^^^^^^^^^^^^^^^^^^^^^^^^
-.. note::
-    This example requires the program :ref:`jq`.
+This example requires the program `jq <#jq>`_.
 
 .. code::
 
