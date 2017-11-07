@@ -280,11 +280,13 @@ The implemented commands for the clusters CLI can be listed by running ``databri
 Listing runtime versions
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 .. code::
+
     databricks clusters spark-versions
 
 Listing node types
 ^^^^^^^^^^^^^^^^^^^
 .. code::
+
     databricks clusters list-node-types
 
 
