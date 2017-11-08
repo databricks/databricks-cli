@@ -93,10 +93,10 @@ def test_import_dir_helper(tmpdir):
     """
     Copy from directory ``tmpdir`` with structure as follows
     - a (directory)
-      - b (scala)
-      - c (python)
-      - d (r)
-      - e (sql)
+      - b.scala (scala)
+      - c.py (python)
+      - d.r (r)
+      - e.sql (sql)
     - f (directory)
       - g (directory)
     """
@@ -144,3 +144,25 @@ def test_import_dir_helper(tmpdir):
             assert any([ca[0][2] == WorkspaceLanguage.SQL \
                     for ca in import_workspace.call_args_list])
 
+
+def test_import_dir_rstrip(tmpdir):
+    """
+    Copy from directory ``tmpdir`` with structure as follows
+    - a (directory)
+      - test-py.py (python)
+    """
+    os.makedirs(os.path.join(tmpdir.strpath, 'a'))
+    with open(os.path.join(tmpdir.strpath, 'a', 'test-py.py'), 'wb'):
+        pass
+    with mock.patch('databricks_cli.workspace.cli.mkdirs') as mkdirs_mock:
+        with mock.patch('databricks_cli.workspace.cli.import_workspace') as import_workspace:
+            cli._import_dir_helper(tmpdir.strpath, '/', False)
+            assert mkdirs_mock.call_count == 2
+            assert any([ca[0][0] == '/' for ca in mkdirs_mock.call_args_list])
+            assert any([ca[0][0] == '/a' for ca in mkdirs_mock.call_args_list])
+
+            # Verify that we imported the correct files with the right names
+            assert import_workspace.call_count == 1
+            assert any([ca[0][0] == tmpdir.strpath + '/a/test-py.py' \
+                    for ca in import_workspace.call_args_list])
+            assert any([ca[0][1] == '/a/test-py' for ca in import_workspace.call_args_list])
