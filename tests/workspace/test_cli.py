@@ -152,8 +152,8 @@ def test_import_dir_rstrip(tmpdir):
       - test-py.py (python)
     """
     os.makedirs(os.path.join(tmpdir.strpath, 'a'))
-    with open(os.path.join(tmpdir.strpath, 'a', 'test-py.py'), 'wb') as f:
-        f.write('print 1 + 1')
+    with open(os.path.join(tmpdir.strpath, 'a', 'test-py.py'), 'wb'):
+        pass
     with mock.patch('databricks_cli.workspace.cli.mkdirs') as mkdirs_mock:
         with mock.patch('databricks_cli.workspace.cli.import_workspace') as import_workspace:
             cli._import_dir_helper(tmpdir.strpath, '/', False)
