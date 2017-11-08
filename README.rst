@@ -38,7 +38,7 @@ Known Issues
 ---------------
 ``AttributeError: 'module' object has no attribute 'PROTOCOL_TLSv1_2'``
 
-For compliance reasons, our webapp requires the client to speak TLSV1.2. The built in
+The Databricks web service requires clients speak TLSV1.2. The built in
 version of Python for MacOS does not have this version of TLS built in.
 
 To use databricks-cli you should install a version of Python which has ``ssl.PROTOCOL_TLSv1_2``.
