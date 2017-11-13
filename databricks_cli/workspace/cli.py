@@ -41,7 +41,7 @@ from databricks_cli.workspace.types import LanguageClickType, FormatClickType, W
 @click.option('--absolute', is_flag=True, default=False,
               help='Displays absolute paths.')
 @click.option('-l', is_flag=True, default=False,
-              help='Displays full information including ObjectType, Language, Path')
+              help='Displays full information including ObjectType, Path, Language')
 @click.argument('workspace_path', type=str, nargs=-1)
 @require_config
 @eat_exceptions
