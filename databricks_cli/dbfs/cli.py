@@ -125,7 +125,7 @@ def copy_to_dbfs_recursive(src, dbfs_path_dst, overwrite):
                 click.echo('{} -> {}'.format(cur_src, cur_dbfs_dst))
             except HTTPError as e:
                 if e.response.json()['error_code'] == DbfsErrorCodes.RESOURCE_ALREADY_EXISTS:
-                    click.echo(e.response.json())
+                    click.echo('{} already exists. Skip.'.format(cur_dbfs_dst))
                 else:
                     raise e
 
@@ -147,7 +147,8 @@ def copy_from_dbfs_recursive(dbfs_path_src, dst, overwrite):
                 get_file(cur_dbfs_src, cur_dst, overwrite)
                 click.echo('{} -> {}'.format(cur_dbfs_src, cur_dst))
             except LocalFileExistsException:
-                click.echo('{} already exists locally as {}. Skip.'.format(cur_dbfs_src, cur_dst))
+                click.echo(('{} already exists locally as {}. Skip. To overwrite, you' +
+                            'should provide the --overwrite flag.').format(cur_dbfs_src, cur_dst))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
