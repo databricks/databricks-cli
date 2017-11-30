@@ -1,6 +1,0 @@
-To run tests:
-
-* python -m pytest
-
-If using pydev you may see "undefined variable" errors when viewing some of the test files. Those can be
-safely ignored. 

@@ -74,17 +74,6 @@ reference `Aliasing Command Groups <#aliasing-command-groups>`_.
       mkdirs      Make directories in the Databricks Workspace.
       rm          Deletes objects from the Databricks...
 
-Each of the commands may have options of their own.  To see them, run, e.g.
-	$ datbricks workspace ls -h
-	Usage: databricks workspace ls [OPTIONS] [WORKSPACE_PATH]...
-
-	  List objects in the Databricks Workspace.
-	
-	Options:
-	  --absolute  Displays absolute paths.
-	  -l          Displays full information including ObjectType, Path, Language
-	  -h, --help  Show this message and exit.
-
 Listing Workspace Files
 ^^^^^^^^^^^^^^^^^^^^^^^^
 .. code::
