@@ -106,7 +106,7 @@ def put_file(src_path, dbfs_path, overwrite):
 
 def get_file(dbfs_path, dst_path, overwrite):
     if os.path.exists(dst_path) and not overwrite:
-        raise LocalFileExistsException()
+        raise LocalFileExistsException('{} exists already.'.format(dst_path))
     dbfs_api = get_dbfs_client()
     file_info = get_status(dbfs_path)
     if file_info.is_dir:
