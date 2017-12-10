@@ -27,6 +27,7 @@
 """
 A common class to be used by client of different APIs
 """
+from __future__ import absolute_import
 
 import base64
 import json
@@ -34,7 +35,7 @@ import warnings
 import requests
 import ssl
 
-import version
+from . import version
 
 from requests.adapters import HTTPAdapter
 
@@ -108,7 +109,7 @@ class ApiClient(object):
 
         try:
             resp.raise_for_status()
-        except requests.exceptions.HTTPError, e:
+        except requests.exceptions.HTTPError as e:
             raise e
         return resp.json()
 

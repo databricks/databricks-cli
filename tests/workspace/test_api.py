@@ -97,22 +97,22 @@ def test_mkdirs():
 def test_import_workspace(tmpdir):
     with mock.patch('databricks_cli.workspace.api.get_workspace_client') as get_workspace_client:
         test_file_path = os.path.join(tmpdir.strpath, 'test')
-        with open(test_file_path, 'w') as f:
-            f.write('test')
+        with open(test_file_path, 'wb') as f:
+            f.write(b'test')
         api.import_workspace(test_file_path, TEST_WORKSPACE_PATH, TEST_LANGUAGE, TEST_FMT, is_overwrite=False)
         import_workspace_mock = get_workspace_client.return_value.import_workspace
         assert import_workspace_mock.call_count == 1
         assert import_workspace_mock.call_args[0][0] == TEST_WORKSPACE_PATH
         assert import_workspace_mock.call_args[0][1] == TEST_FMT
         assert import_workspace_mock.call_args[0][2] == TEST_LANGUAGE
-        assert import_workspace_mock.call_args[0][3] == b64encode('test')
+        assert import_workspace_mock.call_args[0][3] == b64encode(b'test')
         assert import_workspace_mock.call_args[0][4] == False
 
 
 def test_export_workspace(tmpdir):
     with mock.patch('databricks_cli.workspace.api.get_workspace_client') as get_workspace_client:
         test_file_path = os.path.join(tmpdir.strpath, 'test')
-        get_workspace_client.return_value.export_workspace.return_value = {'content': b64encode('test')}
+        get_workspace_client.return_value.export_workspace.return_value = {'content': b64encode(b'test')}
         api.export_workspace(TEST_WORKSPACE_PATH, test_file_path, TEST_FMT, is_overwrite=False)
         with open(test_file_path, 'r') as f:
             contents = f.read()

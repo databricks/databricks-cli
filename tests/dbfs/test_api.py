@@ -43,7 +43,10 @@ TEST_FILE_INFO = api.FileInfo(TEST_DBFS_PATH, False, 1)
 
 def get_resource_does_not_exist_exception():
     response = requests.Response()
-    response._content = '{"error_code": "' + api.DbfsErrorCodes.RESOURCE_DOES_NOT_EXIST + '"}' #  NOQA
+    # Response._content is bytes not string, see
+    # http://docs.python-requests.org/en/master/api/#requests.Response.cookies
+    _content = '{"error_code": "' + api.DbfsErrorCodes.RESOURCE_DOES_NOT_EXIST + '"}' #  NOQA
+    response._content = _content.encode()
     return requests.exceptions.HTTPError(response=response)
 
 
@@ -119,8 +122,8 @@ def test_get_status_fail():
 
 def test_put_file(tmpdir):
     test_file_path = os.path.join(tmpdir.strpath, 'test')
-    with open(test_file_path, 'w') as f:
-        f.write('test')
+    with open(test_file_path, 'wb') as f:
+        f.write(b'test')
 
     with mock.patch('databricks_cli.dbfs.api.get_dbfs_client') as get_dbfs_client:
         api_mock = get_dbfs_client.return_value
@@ -130,13 +133,13 @@ def test_put_file(tmpdir):
 
         assert api_mock.add_block.call_count == 1
         assert test_handle == api_mock.add_block.call_args[0][0]
-        assert b64encode('test') == api_mock.add_block.call_args[0][1]
+        assert b64encode(b'test') == api_mock.add_block.call_args[0][1]
 
 
 def test_get_file_check_overwrite(tmpdir):
     test_file_path = os.path.join(tmpdir.strpath, 'test')
-    with open(test_file_path, 'w') as f:
-        f.write('test')
+    with open(test_file_path, 'wb') as f:
+        f.write(b'test')
     with pytest.raises(LocalFileExistsException):
         api.get_file(TEST_DBFS_PATH, test_file_path, False)
 
@@ -147,7 +150,7 @@ def test_get_file(tmpdir):
         api_mock.get_status.return_value = TEST_FILE_JSON
         api_mock.read.return_value = {
             'bytes_read': 1,
-            'data': b64encode('x'),
+            'data': b64encode(b'x'),
         }
 
         test_file_path = os.path.join(tmpdir.strpath, 'test')

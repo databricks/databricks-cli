@@ -21,13 +21,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ConfigParser
 import sys
 import os
 
 from os.path import expanduser, join
 
 import six
+from six.moves import configparser
 
 from databricks_cli.utils import error_and_quit
 from databricks_cli.sdk import ApiClient, DbfsService, WorkspaceService, JobsService, ClusterService
@@ -82,11 +82,11 @@ class DatabricksConfig(object):
     home = expanduser('~')
 
     def __init__(self):
-        self._config = ConfigParser.RawConfigParser()
+        self._config = configparser.RawConfigParser()
 
     def overwrite(self):
         config_path = self.get_path()
-        with open(config_path, 'wb') as cfg:
+        with open(config_path, 'w') as cfg:
             self._config.write(cfg)
         os.chmod(config_path, 0o600)
 
