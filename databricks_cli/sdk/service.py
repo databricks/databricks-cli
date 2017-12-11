@@ -22,7 +22,7 @@
 # limitations under the License.
 
 import base64
-import StringIO
+from six import StringIO
 
 class JobsService(object):
     def __init__(self, client):
@@ -70,7 +70,7 @@ class JobsService(object):
         if max_concurrent_runs is not None:
             _data['max_concurrent_runs'] = max_concurrent_runs
         return self.client.perform_query('POST', '/jobs/create', data=_data)
-    
+
     def submit_run(self, run_name=None, existing_cluster_id=None, new_cluster=None, libraries=None,
                    notebook_task=None, spark_jar_task=None, timeout_seconds=None):
         _data = {}
@@ -95,7 +95,7 @@ class JobsService(object):
         if timeout_seconds is not None:
             _data['timeout_seconds'] = timeout_seconds
         return self.client.perform_query('POST', '/jobs/runs/submit', data=_data)
-    
+
     def reset_job(self, job_id, new_settings):
         _data = {}
         if job_id is not None:
@@ -105,24 +105,24 @@ class JobsService(object):
             if not isinstance(new_settings, dict):
                 raise TypeError('Expected databricks.JobSettings() or dict for field new_settings')
         return self.client.perform_query('POST', '/jobs/reset', data=_data)
-    
+
     def delete_job(self, job_id):
         _data = {}
         if job_id is not None:
             _data['job_id'] = job_id
         return self.client.perform_query('POST', '/jobs/delete', data=_data)
-    
+
     def get_job(self, job_id):
         _data = {}
         if job_id is not None:
             _data['job_id'] = job_id
         return self.client.perform_query('GET', '/jobs/get', data=_data)
-    
+
     def list_jobs(self):
         _data = {}
-    
+
         return self.client.perform_query('GET', '/jobs/list', data=_data)
-    
+
     def run_now(self, job_id=None, jar_params=None, notebook_params=None, python_params=None,
                 spark_submit_params=None):
         _data = {}
@@ -137,7 +137,7 @@ class JobsService(object):
         if spark_submit_params is not None:
             _data['spark_submit_params'] = spark_submit_params
         return self.client.perform_query('POST', '/jobs/run-now', data=_data)
-    
+
     def list_runs(self, job_id=None, active_only=None, completed_only=None, offset=None,
                   limit=None):
         _data = {}
@@ -152,19 +152,19 @@ class JobsService(object):
         if limit is not None:
             _data['limit'] = limit
         return self.client.perform_query('GET', '/jobs/runs/list', data=_data)
-    
+
     def get_run(self, run_id=None):
         _data = {}
         if run_id is not None:
             _data['run_id'] = run_id
         return self.client.perform_query('GET', '/jobs/runs/get', data=_data)
-    
+
     def cancel_run(self, run_id):
         _data = {}
         if run_id is not None:
             _data['run_id'] = run_id
         return self.client.perform_query('POST', '/jobs/runs/cancel', data=_data)
-     
+
 
 class ClusterService(object):
     def __init__(self, client):
@@ -172,9 +172,9 @@ class ClusterService(object):
 
     def list_clusters(self):
         _data = {}
-    
+
         return self.client.perform_query('GET', '/clusters/list', data=_data)
-    
+
     def create_cluster(self, num_workers=None, autoscale=None, cluster_name=None, spark_version=None,
                        spark_conf=None, aws_attributes=None, node_type_id=None,
                        driver_node_type_id=None, ssh_public_keys=None, custom_tags=None,
@@ -216,30 +216,30 @@ class ClusterService(object):
         if enable_elastic_disk is not None:
             _data['enable_elastic_disk'] = enable_elastic_disk
         return self.client.perform_query('POST', '/clusters/create', data=_data)
-    
+
     def start_cluster(self, cluster_id):
         _data = {}
         if cluster_id is not None:
             _data['cluster_id'] = cluster_id
         return self.client.perform_query('POST', '/clusters/start', data=_data)
-    
+
     def list_spark_versions(self):
         _data = {}
-    
+
         return self.client.perform_query('GET', '/clusters/spark-versions', data=_data)
-    
+
     def delete_cluster(self, cluster_id):
         _data = {}
         if cluster_id is not None:
             _data['cluster_id'] = cluster_id
         return self.client.perform_query('POST', '/clusters/delete', data=_data)
-    
+
     def restart_cluster(self, cluster_id):
         _data = {}
         if cluster_id is not None:
             _data['cluster_id'] = cluster_id
         return self.client.perform_query('POST', '/clusters/restart', data=_data)
-    
+
     def resize_cluster(self, cluster_id, num_workers=None, autoscale=None):
         _data = {}
         if cluster_id is not None:
@@ -251,23 +251,23 @@ class ClusterService(object):
             if not isinstance(autoscale, dict):
                 raise TypeError('Expected databricks.AutoScale() or dict for field autoscale')
         return self.client.perform_query('POST', '/clusters/resize', data=_data)
-    
+
     def get_cluster(self, cluster_id):
         _data = {}
         if cluster_id is not None:
             _data['cluster_id'] = cluster_id
         return self.client.perform_query('GET', '/clusters/get', data=_data)
-    
+
     def list_node_types(self):
         _data = {}
-    
+
         return self.client.perform_query('GET', '/clusters/list-node-types', data=_data)
-    
+
     def list_available_zones(self):
         _data = {}
-    
+
         return self.client.perform_query('GET', '/clusters/list-zones', data=_data)
-     
+
 
 class LibraryService(object):
     def __init__(self, client):
@@ -275,9 +275,9 @@ class LibraryService(object):
 
     def list_libraries(self):
         _data = {}
-    
+
         return self.client.perform_query('GET', '/libraries/list', data=_data)
-    
+
     def get_library_cluster_status(self, library_id, cluster_id):
         _data = {}
         if library_id is not None:
@@ -285,7 +285,7 @@ class LibraryService(object):
         if cluster_id is not None:
             _data['cluster_id'] = cluster_id
         return self.client.perform_query('GET', '/libraries/get-cluster-status', data=_data)
-    
+
     def create_library(self, path, jar_specification=None, egg_specification=None,
                        pip_specification=None, maven_specification=None):
         _data = {}
@@ -308,7 +308,7 @@ class LibraryService(object):
             if not isinstance(maven_specification, dict):
                 raise TypeError('Expected databricks.MavenSpecification() or dict for field maven_specification')
         return self.client.perform_query('POST', '/libraries/create', data=_data)
-    
+
     def attach_library(self, library_id, cluster_id):
         _data = {}
         if library_id is not None:
@@ -316,7 +316,7 @@ class LibraryService(object):
         if cluster_id is not None:
             _data['cluster_id'] = cluster_id
         return self.client.perform_query('POST', '/libraries/attach', data=_data)
-    
+
     def detach_library(self, library_id, cluster_id):
         _data = {}
         if library_id is not None:
@@ -324,13 +324,13 @@ class LibraryService(object):
         if cluster_id is not None:
             _data['cluster_id'] = cluster_id
         return self.client.perform_query('POST', '/libraries/detach', data=_data)
-    
+
     def delete_library(self, library_id):
         _data = {}
         if library_id is not None:
             _data['library_id'] = library_id
         return self.client.perform_query('POST', '/libraries/delete', data=_data)
-     
+
 
 class DbfsService(object):
     def __init__(self, client):
@@ -345,19 +345,19 @@ class DbfsService(object):
         if length is not None:
             _data['length'] = length
         return self.client.perform_query('GET', '/dbfs/read', data=_data)
-    
+
     def get_status(self, path):
         _data = {}
         if path is not None:
             _data['path'] = path
         return self.client.perform_query('GET', '/dbfs/get-status', data=_data)
-    
+
     def list(self, path):
         _data = {}
         if path is not None:
             _data['path'] = path
         return self.client.perform_query('GET', '/dbfs/list', data=_data)
-    
+
     def put(self, path, contents=None, overwrite=None):
         _data = {}
         if path is not None:
@@ -367,13 +367,13 @@ class DbfsService(object):
         if overwrite is not None:
             _data['overwrite'] = overwrite
         return self.client.perform_query('POST', '/dbfs/put', data=_data)
-    
+
     def mkdirs(self, path):
         _data = {}
         if path is not None:
             _data['path'] = path
         return self.client.perform_query('POST', '/dbfs/mkdirs', data=_data)
-    
+
     def move(self, source_path, destination_path):
         _data = {}
         if source_path is not None:
@@ -381,7 +381,7 @@ class DbfsService(object):
         if destination_path is not None:
             _data['destination_path'] = destination_path
         return self.client.perform_query('POST', '/dbfs/move', data=_data)
-    
+
     def delete(self, path, recursive=None):
         _data = {}
         if path is not None:
@@ -389,7 +389,7 @@ class DbfsService(object):
         if recursive is not None:
             _data['recursive'] = recursive
         return self.client.perform_query('POST', '/dbfs/delete', data=_data)
-    
+
     def create(self, path, overwrite=None):
         _data = {}
         if path is not None:
@@ -397,7 +397,7 @@ class DbfsService(object):
         if overwrite is not None:
             _data['overwrite'] = overwrite
         return self.client.perform_query('POST', '/dbfs/create', data=_data)
-    
+
     def add_block(self, handle, data):
         _data = {}
         if handle is not None:
@@ -405,13 +405,13 @@ class DbfsService(object):
         if data is not None:
             _data['data'] = data
         return self.client.perform_query('POST', '/dbfs/add-block', data=_data)
-    
+
     def close(self, handle):
         _data = {}
         if handle is not None:
             _data['handle'] = handle
         return self.client.perform_query('POST', '/dbfs/close', data=_data)
-     
+
     def read_string(self, dbfs_path):
         """Reads an entire file from DBFS and decodes it into a Python string."""
         file_info = self.get_status(dbfs_path)
@@ -438,8 +438,7 @@ class DbfsService(object):
         """Uploads the input string into DBFS to the dbfs path provided."""
         result = self.create(dbfs_path, overwrite)
         handle = result['handle']
-        import StringIO
-        input_string = StringIO.StringIO(string)
+        input_string = StringIO(string)
         while True:
             block = input_string.read(1024 * 1024)
             if block == '':
@@ -471,13 +470,13 @@ class WorkspaceService(object):
         if path is not None:
             _data['path'] = path
         return self.client.perform_query('POST', '/workspace/mkdirs', data=_data)
-    
+
     def list(self, path):
         _data = {}
         if path is not None:
             _data['path'] = path
         return self.client.perform_query('GET', '/workspace/list', data=_data)
-    
+
     def import_workspace(self, path, format=None, language=None, content=None, overwrite=None):
         _data = {}
         if path is not None:
@@ -491,7 +490,7 @@ class WorkspaceService(object):
         if overwrite is not None:
             _data['overwrite'] = overwrite
         return self.client.perform_query('POST', '/workspace/import', data=_data)
-    
+
     def export_workspace(self, path, format=None, direct_download=None):
         _data = {}
         if path is not None:
@@ -501,7 +500,7 @@ class WorkspaceService(object):
         if direct_download is not None:
             _data['direct_download'] = direct_download
         return self.client.perform_query('GET', '/workspace/export', data=_data)
-    
+
     def delete(self, path, recursive=None):
         _data = {}
         if path is not None:
@@ -509,11 +508,11 @@ class WorkspaceService(object):
         if recursive is not None:
             _data['recursive'] = recursive
         return self.client.perform_query('POST', '/workspace/delete', data=_data)
-    
+
     def get_status(self, path):
         _data = {}
         if path is not None:
             _data['path'] = path
         return self.client.perform_query('GET', '/workspace/get-status', data=_data)
-     
+
 

@@ -103,13 +103,13 @@ def test_import_dir_helper(tmpdir):
     os.makedirs(os.path.join(tmpdir.strpath, 'a'))
     os.makedirs(os.path.join(tmpdir.strpath, 'f'))
     os.makedirs(os.path.join(tmpdir.strpath, 'f', 'g'))
-    with open(os.path.join(tmpdir.strpath, 'a', 'b.scala'), 'wb') as f:
+    with open(os.path.join(tmpdir.strpath, 'a', 'b.scala'), 'w') as f:
         f.write('println(1 + 1)')
-    with open(os.path.join(tmpdir.strpath, 'a', 'c.py'), 'wb') as f:
+    with open(os.path.join(tmpdir.strpath, 'a', 'c.py'), 'w') as f:
         f.write('print 1 + 1')
-    with open(os.path.join(tmpdir.strpath, 'a', 'd.r'), 'wb') as f:
+    with open(os.path.join(tmpdir.strpath, 'a', 'd.r'), 'w') as f:
         f.write('I don\'t know how to write r')
-    with open(os.path.join(tmpdir.strpath, 'a', 'e.sql'), 'wb') as f:
+    with open(os.path.join(tmpdir.strpath, 'a', 'e.sql'), 'w') as f:
         f.write('select 1+1 from table;')
     with mock.patch('databricks_cli.workspace.cli.mkdirs') as mkdirs_mock:
         with mock.patch('databricks_cli.workspace.cli.import_workspace') as import_workspace:

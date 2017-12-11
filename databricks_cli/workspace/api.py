@@ -99,7 +99,7 @@ def mkdirs(workspace_path):
 
 def import_workspace(source_path, target_path, language, fmt, is_overwrite):
     workspace_client = get_workspace_client()
-    with open(source_path, 'r') as f:
+    with open(source_path, 'rb') as f:
         content = b64encode(f.read())
         workspace_client.import_workspace(
             target_path,
