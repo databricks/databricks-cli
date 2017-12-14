@@ -1,4 +1,4 @@
-FROM python:2.7
+FROM python
 
 WORKDIR /usr/src/databricks-cli
 
