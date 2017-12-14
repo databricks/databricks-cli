@@ -43,7 +43,10 @@ TEST_FILE_INFO = api.FileInfo(TEST_DBFS_PATH, False, 1)
 
 def get_resource_does_not_exist_exception():
     response = requests.Response()
-    response._content = '{"error_code": "' + api.DbfsErrorCodes.RESOURCE_DOES_NOT_EXIST + '"}' #  NOQA
+    # Response._content is bytes not string, see
+    # http://docs.python-requests.org/en/master/api/#requests.Response.cookies
+    _content = '{"error_code": "' + api.DbfsErrorCodes.RESOURCE_DOES_NOT_EXIST + '"}' #  NOQA
+    response._content = _content.encode()
     return requests.exceptions.HTTPError(response=response)
 
 
