@@ -51,5 +51,6 @@ To get started, below is an example usage of the Python API client.
   # To examine the jobs API:
   help(JobsService)
 """
+from __future__ import unicode_literals
 from .service import *
 from .api_client import ApiClient

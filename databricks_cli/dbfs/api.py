@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 # Databricks CLI
 # Copyright 2017 Databricks, Inc.
 #
