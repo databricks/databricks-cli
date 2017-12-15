@@ -34,18 +34,14 @@ class WorkspaceLanguage(object):
 
     @classmethod
     def to_language_and_format(cls, path):
-        ext = cls.get_extension(path)
+        ext = cls.get_extension(path).lower()
         if ext == '.scala':
             return (cls.SCALA, WorkspaceFormat.SOURCE)
         elif ext == '.py':
             return (cls.PYTHON, WorkspaceFormat.SOURCE)
         elif ext == '.sql':
             return (cls.SQL, WorkspaceFormat.SOURCE)
-        elif ext == '.SQL':
-            return (cls.SQL, WorkspaceFormat.SOURCE)
         elif ext == '.r':
-            return (cls.R, WorkspaceFormat.SOURCE)
-        elif ext == '.R':
             return (cls.R, WorkspaceFormat.SOURCE)
         elif ext == '.ipynb':
             return (cls.PYTHON, WorkspaceFormat.JUPYTER)

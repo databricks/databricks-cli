@@ -195,8 +195,8 @@ def _import_dir_helper(source_path, target_path, overwrite):
             ext = WorkspaceLanguage.get_extension(cur_src)
             if ext != '':
                 cur_dst = cur_dst[:-len(ext)]
-                (language, format) = WorkspaceLanguage.to_language_and_format(cur_src)
-                import_workspace(cur_src, cur_dst, language, format, overwrite)
+                (language, file_format) = WorkspaceLanguage.to_language_and_format(cur_src)
+                import_workspace(cur_src, cur_dst, language, file_format, overwrite)
                 click.echo('{} -> {}'.format(cur_src, cur_dst))
             else:
                 extensions = ', '.join(WorkspaceLanguage.EXTENSIONS)
