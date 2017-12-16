@@ -215,7 +215,7 @@ def import_dir_cli(source_path, target_path, overwrite):
     """
     Recursively imports a directory from local to the Databricks workspace.
 
-    Only directories and files with the extensions .scala, .py, .sql, .r, .R are imported.
+    Only directories and files with the extensions .scala, .py, .sql, .r, .R, .ipynb are imported.
     When imported, these extensions will be stripped off the name of the notebook.
     """
     _import_dir_helper(source_path, target_path, overwrite)
