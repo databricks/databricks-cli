@@ -141,7 +141,7 @@ def _export_dir_helper(source_path, target_path, overwrite):
                    .format(target_path, source_path))
         return
     if not os.path.isdir(target_path):
-        os.makedirs(target_path)
+        os.makedirs(os.path.normpath(target_path))
     for obj in list_objects(source_path):
         cur_src = obj.path
         cur_dst = os.path.join(target_path, obj.basename)
@@ -180,8 +180,9 @@ def export_dir_cli(source_path, target_path, overwrite):
 
 def _import_dir_helper(source_path, target_path, overwrite):
     # Try doing the os.listdir before creating the dir in Databricks.
-    filenames = os.listdir(source_path)
+    filenames = [f for f in os.listdir(source_path) if not f.startswith('.')]
     try:
+        target_path = target_path.replace(os.path.sep, '/') if (os.path.sep != '/') else target_path
         mkdirs(target_path)
     except HTTPError as e:
         click.echo(e.response.json())
