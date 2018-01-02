@@ -22,12 +22,12 @@
 # limitations under the License.
 import decorator
 
-from databricks_cli.configure.config import DatabricksConfig
+from databricks_cli.configure.config import DatabricksConfig, DEFAULT_SECTION
 
 
 def provide_conf(test):
     def wrapper(test, *args, **kwargs):
-        conf = DatabricksConfig.construct_from_token("test-host", "test-token")
+        conf = DatabricksConfig().update_with_token(DEFAULT_SECTION, "test-host", "test-token")
         conf.overwrite()
         return test(*args, **kwargs)
     return decorator.decorator(wrapper, test)

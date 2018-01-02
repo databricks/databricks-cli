@@ -57,10 +57,12 @@ def test_require_config_invalid():
 
 
 class TestDatabricksConfig(object):
-    databricks_config_from_password = config.DatabricksConfig.construct_from_password(
-        'test-host', 'test-user', 'test-password')
-    databricks_config_from_token = config.DatabricksConfig.construct_from_token(
-        'test-host', 'test-token')
+    databricks_config_from_password = config.DatabricksConfig()
+    databricks_config_from_password.update_with_password(config.DEFAULT_SECTION, 'test-host',
+                                                         'test-user', 'test-password')
+    databricks_config_from_token = config.DatabricksConfig()
+    databricks_config_from_token.update_with_token(config.DEFAULT_SECTION, 'test-host',
+                                                   'test-token')
 
     def test_is_valid_true(self):
         assert self.databricks_config_from_password.is_valid
@@ -68,31 +70,32 @@ class TestDatabricksConfig(object):
 
     def test_is_valid_false(self):
         databricks_config = config.DatabricksConfig()
-        assert not databricks_config.is_valid
+        assert not databricks_config.is_valid(config.DEFAULT_SECTION)
 
     def test_is_valid_with_password(self):
-        assert self.databricks_config_from_password.is_valid_with_password
-        assert not self.databricks_config_from_token.is_valid_with_password
+        assert self.databricks_config_from_password.is_valid_with_password(config.DEFAULT_SECTION)
+        assert not self.databricks_config_from_token.is_valid_with_password(config.DEFAULT_SECTION)
 
     def test_is_valid_with_token(self):
-        assert self.databricks_config_from_token.is_valid_with_token
-        assert not self.databricks_config_from_password.is_valid_with_token
+        assert self.databricks_config_from_token.is_valid_with_token(config.DEFAULT_SECTION)
+        assert not self.databricks_config_from_password.is_valid_with_token(config.DEFAULT_SECTION)
 
     def test_host(self):
-        assert self.databricks_config_from_password.host == 'test-host'
-        assert self.databricks_config_from_token.host == 'test-host'
+        assert self.databricks_config_from_password.host(config.DEFAULT_SECTION) == 'test-host'
+        assert self.databricks_config_from_token.host(config.DEFAULT_SECTION) == 'test-host'
 
     def test_username(self):
-        assert self.databricks_config_from_password.username == 'test-user'
-        assert self.databricks_config_from_token.username is None
+        assert self.databricks_config_from_password.username(config.DEFAULT_SECTION) == 'test-user'
+        assert self.databricks_config_from_token.username(config.DEFAULT_SECTION) is None
 
     def test_password(self):
-        assert self.databricks_config_from_password.password == 'test-password'
-        assert self.databricks_config_from_token.password is None
+        assert self.databricks_config_from_password.password(config.DEFAULT_SECTION) == \
+            'test-password'
+        assert self.databricks_config_from_token.password(config.DEFAULT_SECTION) is None
 
     def test_token(self):
-        assert self.databricks_config_from_password.token is None
-        assert self.databricks_config_from_token.token == 'test-token'
+        assert self.databricks_config_from_password.token(config.DEFAULT_SECTION) is None
+        assert self.databricks_config_from_token.token(config.DEFAULT_SECTION) == 'test-token'
 
     def test_fetch_from_fs(self, tmpdir):
         with mock.patch.object(config.DatabricksConfig, 'get_path') as get_path_mock:
@@ -101,4 +104,5 @@ class TestDatabricksConfig(object):
 
             self.databricks_config_from_token.overwrite()
             from_fs = config.DatabricksConfig.fetch_from_fs()
-            assert self.databricks_config_from_token.token == from_fs.token
+            assert self.databricks_config_from_token.token(config.DEFAULT_SECTION) == \
+                from_fs.token(config.DEFAULT_SECTION)

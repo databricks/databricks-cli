@@ -27,6 +27,7 @@ import os
 
 from os.path import expanduser, join
 
+import click
 import six
 
 from databricks_cli.utils import error_and_quit
@@ -51,30 +52,35 @@ def require_config(function):
     return decorator
 
 
-def _get_api_client():
+def profile_option(f):
+    return click.option('--profile', required=False, default=DEFAULT_SECTION)(f)
+
+
+def _get_api_client(profile):
     conf = DatabricksConfig.fetch_from_fs()
     if conf.is_valid_with_token:
-        return ApiClient(host=conf.host, token=conf.token)
-    return ApiClient(user=conf.username, password=conf.password, host=conf.host)
+        return ApiClient(host=conf.host(profile), token=conf.token(profile))
+    return ApiClient(user=conf.username(profile), password=conf.password(profile),
+                     host=conf.host(profile))
 
 
-def get_dbfs_client():
-    api_client = _get_api_client()
+def get_dbfs_client(profile=DEFAULT_SECTION):
+    api_client = _get_api_client(profile)
     return DbfsService(api_client)
 
 
-def get_workspace_client():
-    api_client = _get_api_client()
+def get_workspace_client(profile=DEFAULT_SECTION):
+    api_client = _get_api_client(profile)
     return WorkspaceService(api_client)
 
 
-def get_jobs_client():
-    api_client = _get_api_client()
+def get_jobs_client(profile=DEFAULT_SECTION):
+    api_client = _get_api_client(profile)
     return JobsService(api_client)
 
 
-def get_clusters_client():
-    api_client = _get_api_client()
+def get_clusters_client(profile=DEFAULT_SECTION):
+    api_client = _get_api_client(profile)
     return ClusterService(api_client)
 
 
@@ -90,36 +96,29 @@ class DatabricksConfig(object):
             self._config.write(cfg)
         os.chmod(config_path, 0o600)
 
-    @property
-    def is_valid(self):
-        return self.is_valid_with_password or self.is_valid_with_token
+    def is_valid(self, profile):
+        return self.is_valid_with_password(profile) or self.is_valid_with_token(profile)
 
-    @property
-    def is_valid_with_password(self):
-        return self._config.has_option(DEFAULT_SECTION, USERNAME) and \
-            self._config.has_option(DEFAULT_SECTION, PASSWORD) and \
-            self._config.has_option(DEFAULT_SECTION, HOST)
+    def is_valid_with_password(self, profile):
+        return self._config.has_option(profile, USERNAME) and \
+            self._config.has_option(profile, PASSWORD) and \
+            self._config.has_option(profile, HOST)
 
-    @property
-    def is_valid_with_token(self):
-        return self._config.has_option(DEFAULT_SECTION, TOKEN) and \
-            self._config.has_option(DEFAULT_SECTION, HOST)
+    def is_valid_with_token(self, profile):
+        return self._config.has_option(profile, TOKEN) and \
+            self._config.has_option(profile, HOST)
 
-    @property
-    def host(self):
-        return self._config.get(DEFAULT_SECTION, HOST) if self.is_valid else None
+    def host(self, profile):
+        return self._config.get(profile, HOST) if self.is_valid(profile) else None
 
-    @property
-    def username(self):
-        return self._config.get(DEFAULT_SECTION, USERNAME) if self.is_valid_with_password else None
+    def username(self, profile):
+        return self._config.get(profile, USERNAME) if self.is_valid_with_password(profile) else None
 
-    @property
-    def password(self):
-        return self._config.get(DEFAULT_SECTION, PASSWORD) if self.is_valid_with_password else None
+    def password(self, profile):
+        return self._config.get(profile, PASSWORD) if self.is_valid_with_password(profile) else None
 
-    @property
-    def token(self):
-        return self._config.get(DEFAULT_SECTION, TOKEN) if self.is_valid_with_token else None
+    def token(self, profile):
+        return self._config.get(profile, TOKEN) if self.is_valid_with_token(profile) else None
 
     @classmethod
     def fetch_from_fs(cls):
@@ -127,20 +126,22 @@ class DatabricksConfig(object):
         databricks_config._config.read(cls.get_path())
         return databricks_config
 
-    @classmethod
-    def construct_from_password(cls, host, username, password):
-        databricks_config = cls()
-        databricks_config._config.set(DEFAULT_SECTION, HOST, host)
-        databricks_config._config.set(DEFAULT_SECTION, USERNAME, username)
-        databricks_config._config.set(DEFAULT_SECTION, PASSWORD, password)
-        return databricks_config
+    def _create_section_if_absent(self, profile):
+        if not self._config.has_section(profile) and profile != DEFAULT_SECTION:
+            self._config.add_section(profile)
 
-    @classmethod
-    def construct_from_token(cls, host, token):
-        databricks_config = cls()
-        databricks_config._config.set(DEFAULT_SECTION, HOST, host)
-        databricks_config._config.set(DEFAULT_SECTION, TOKEN, token)
-        return databricks_config
+    def update_with_password(self, profile, host, username, password):
+        self._create_section_if_absent(profile)
+        self._config.set(profile, HOST, host)
+        self._config.set(profile, USERNAME, username)
+        self._config.set(profile, PASSWORD, password)
+        return self
+
+    def update_with_token(self, profile, host, token):
+        self._create_section_if_absent(profile)
+        self._config.set(profile, HOST, host)
+        self._config.set(profile, TOKEN, token)
+        return self
 
     @classmethod
     def get_path(cls):

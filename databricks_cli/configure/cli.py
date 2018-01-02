@@ -26,7 +26,7 @@ import click
 from click import ParamType
 
 from databricks_cli.utils import CONTEXT_SETTINGS
-from databricks_cli.configure.config import DatabricksConfig
+from databricks_cli.configure.config import DatabricksConfig, profile_option
 
 
 PROMPT_HOST = 'Databricks Host (should begin with https://)'
@@ -35,41 +35,42 @@ PROMPT_PASSWORD = 'Password' #  NOQA
 PROMPT_TOKEN = 'Token' #  NOQA
 
 
-def _configure_cli_token():
+def _configure_cli_token(profile):
     conf = DatabricksConfig.fetch_from_fs()
-    host = click.prompt(PROMPT_HOST, default=conf.host, type=_DbfsHost())
-    token = click.prompt(PROMPT_TOKEN, default=conf.token)
-    config = DatabricksConfig.construct_from_token(host, token)
-    config.overwrite()
+    host = click.prompt(PROMPT_HOST, default=conf.host(profile), type=_DbfsHost())
+    token = click.prompt(PROMPT_TOKEN, default=conf.token(profile))
+    conf.update_with_token(profile, host, token)
+    conf.overwrite()
 
 
-def _configure_cli_password():
+def _configure_cli_password(profile):
     conf = DatabricksConfig.fetch_from_fs()
-    if conf.password:
-        default_password = '*' * len(conf.password)
+    if conf.password(profile):
+        default_password = '*' * len(conf.password(profile))
     else:
         default_password = None
-    host = click.prompt(PROMPT_HOST, default=conf.host, type=_DbfsHost())
-    username = click.prompt(PROMPT_USERNAME, default=conf.username)
+    host = click.prompt(PROMPT_HOST, default=conf.host(profile), type=_DbfsHost())
+    username = click.prompt(PROMPT_USERNAME, default=conf.username(profile))
     password = click.prompt(PROMPT_PASSWORD, default=default_password, hide_input=True,
                             confirmation_prompt=True)
     if password == default_password:
-        password = conf.password
-    config = DatabricksConfig.construct_from_password(host, username, password)
-    config.overwrite()
+        password = conf.password(profile)
+    conf.update_with_password(profile, host, username, password)
+    conf.overwrite()
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Configures host and authentication info for the CLI.')
 @click.option('--token', show_default=True, is_flag=True, default=False)
-def configure_cli(token):
+@profile_option
+def configure_cli(profile, token):
     """
     Configures host and authentication info for the CLI.
     """
     if token:
-        _configure_cli_token()
+        _configure_cli_token(profile)
     else:
-        _configure_cli_password()
+        _configure_cli_password(profile)
 
 
 class _DbfsHost(ParamType):
