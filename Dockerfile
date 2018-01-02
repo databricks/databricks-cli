@@ -6,6 +6,7 @@ COPY . .
 
 RUN pip install --upgrade pip && \
     pip install -r dev-requirements.txt && \
+    pip list && \
     ./lint.sh && \
     pip install . && \
     pytest tests
