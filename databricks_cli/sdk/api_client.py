@@ -29,7 +29,14 @@ A common class to be used by client of different APIs
 """
 from __future__ import absolute_import
 from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import *
+from builtins import object
 import base64
 import json
 import warnings
@@ -89,7 +96,7 @@ class ApiClient(object):
         else:
             auth = {}
         user_agent = {'user-agent': 'databricks-cli-{v}'.format(v=databricks_cli_version)}
-        self.default_headers = dict(auth.items() + default_headers.items() + user_agent.items())
+        self.default_headers = dict(list(auth.items()) + list(default_headers.items()) + list(user_agent.items()))
         self.verify = verify
 
     def close(self):

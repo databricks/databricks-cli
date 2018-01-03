@@ -1,4 +1,7 @@
 from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
 # Databricks CLI
 # Copyright 2017 Databricks, Inc.
 #
@@ -22,7 +25,11 @@ from __future__ import unicode_literals
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ConfigParser
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
+from builtins import object
+import configparser
 import sys
 import os
 
@@ -83,7 +90,7 @@ class DatabricksConfig(object):
     home = expanduser('~')
 
     def __init__(self):
-        self._config = ConfigParser.RawConfigParser()
+        self._config = configparser.RawConfigParser()
 
     def overwrite(self):
         config_path = self.get_path()

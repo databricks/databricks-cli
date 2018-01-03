@@ -52,5 +52,11 @@ To get started, below is an example usage of the Python API client.
   help(JobsService)
 """
 from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
 from .service import *
 from .api_client import ApiClient
