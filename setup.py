@@ -34,6 +34,7 @@ setup(
     packages=find_packages(exclude=['tests', 'tests.*']),
     install_requires=[
         'click>=6.7',
+        'future>=0.16.0',
         'requests>=2.17.3',
         'tabulate>=0.7.7',
         'six>=1.10.0',
