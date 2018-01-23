@@ -318,7 +318,7 @@ Using Docker
 .. code::
 
     # build image
-    docker build -t docker build -t databricks-cli .
+    docker build -t databricks-cli .
 
     # run container
     docker run -it databricks-cli
