@@ -195,8 +195,8 @@ def _import_dir_helper(source_path, target_path, overwrite):
             ext = WorkspaceLanguage.get_extension(cur_src)
             if ext != '':
                 cur_dst = cur_dst[:-len(ext)]
-                language = WorkspaceLanguage.to_language(cur_src)
-                import_workspace(cur_src, cur_dst, language, WorkspaceFormat.SOURCE, overwrite)
+                (language, file_format) = WorkspaceLanguage.to_language_and_format(cur_src)
+                import_workspace(cur_src, cur_dst, language, file_format, overwrite)
                 click.echo('{} -> {}'.format(cur_src, cur_dst))
             else:
                 extensions = ', '.join(WorkspaceLanguage.EXTENSIONS)
@@ -215,7 +215,7 @@ def import_dir_cli(source_path, target_path, overwrite):
     """
     Recursively imports a directory from local to the Databricks workspace.
 
-    Only directories and files with the extensions .scala, .py, .sql, .r, .R are imported.
+    Only directories and files with the extensions .scala, .py, .sql, .r, .R, .ipynb are imported.
     When imported, these extensions will be stripped off the name of the notebook.
     """
     _import_dir_helper(source_path, target_path, overwrite)
