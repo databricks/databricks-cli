@@ -79,13 +79,13 @@ def test_export_dir_helper(tmpdir):
             # Verify we exported files b, c, d, e with the correct names
             assert export_workspace_mock.call_count == 4
             assert export_workspace_mock.call_args_list[0][0][0] == '/a/b'
-            assert export_workspace_mock.call_args_list[0][0][1] == tmpdir.strpath + '/a/b.scala'
+            assert export_workspace_mock.call_args_list[0][0][1] == os.path.join(tmpdir.strpath, 'a', 'b.scala')
             assert export_workspace_mock.call_args_list[1][0][0] == '/a/c'
-            assert export_workspace_mock.call_args_list[1][0][1] == tmpdir.strpath + '/a/c.py'
+            assert export_workspace_mock.call_args_list[1][0][1] == os.path.join(tmpdir.strpath, 'a', 'c.py')
             assert export_workspace_mock.call_args_list[2][0][0] == '/a/d'
-            assert export_workspace_mock.call_args_list[2][0][1] == tmpdir.strpath + '/a/d.r'
+            assert export_workspace_mock.call_args_list[2][0][1] == os.path.join(tmpdir.strpath, 'a', 'd.r')
             assert export_workspace_mock.call_args_list[3][0][0] == '/a/e'
-            assert export_workspace_mock.call_args_list[3][0][1] == tmpdir.strpath + '/a/e.sql'
+            assert export_workspace_mock.call_args_list[3][0][1] == os.path.join(tmpdir.strpath, 'a', 'e.sql')
             # Verify that we only called list 4 times.
             assert list_objects_mock.call_count == 4
 
@@ -123,13 +123,13 @@ def test_import_dir_helper(tmpdir):
             assert any([ca[0][0] == '/f/g' for ca in mkdirs_mock.call_args_list])
             # Verify that we imported the correct files
             assert import_workspace.call_count == 4
-            assert any([ca[0][0] == tmpdir.strpath + '/a/b.scala' \
+            assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'b.scala') \
                     for ca in import_workspace.call_args_list])
-            assert any([ca[0][0] == tmpdir.strpath + '/a/c.py' \
+            assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'c.py') \
                     for ca in import_workspace.call_args_list])
-            assert any([ca[0][0] == tmpdir.strpath + '/a/d.r' \
+            assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'd.r') \
                     for ca in import_workspace.call_args_list])
-            assert any([ca[0][0] == tmpdir.strpath + '/a/e.sql' \
+            assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'e.sql') \
                     for ca in import_workspace.call_args_list])
             assert any([ca[0][1] == '/a/b' for ca in import_workspace.call_args_list])
             assert any([ca[0][1] == '/a/c' for ca in import_workspace.call_args_list])
@@ -163,6 +163,6 @@ def test_import_dir_rstrip(tmpdir):
 
             # Verify that we imported the correct files with the right names
             assert import_workspace.call_count == 1
-            assert any([ca[0][0] == tmpdir.strpath + '/a/test-py.py' \
+            assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'test-py.py') \
                     for ca in import_workspace.call_args_list])
             assert any([ca[0][1] == '/a/test-py' for ca in import_workspace.call_args_list])
