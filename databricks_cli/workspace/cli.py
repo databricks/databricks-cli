@@ -136,6 +136,8 @@ def delete_cli(workspace_path, recursive):
 
 
 def _export_dir_helper(source_path, target_path, overwrite):
+    # normalize path to local filesystem (e.g. for Windows)
+    target_path = os.path.normpath(target_path)
     if os.path.isfile(target_path):
         click.echo('{} exists as a file. Skipping this subtree {}'
                    .format(target_path, source_path))
@@ -188,7 +190,8 @@ def _import_dir_helper(source_path, target_path, overwrite):
         return
     for filename in filenames:
         cur_src = os.path.join(source_path, filename)
-        cur_dst = os.path.join(target_path, filename)
+        # don't use os.path.join here since it will set \ on Windows
+        cur_dst = target_path + '/' + filename
         if os.path.isdir(cur_src):
             _import_dir_helper(cur_src, cur_dst, overwrite)
         elif os.path.isfile(cur_src):
