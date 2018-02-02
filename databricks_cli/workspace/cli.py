@@ -188,7 +188,8 @@ def _import_dir_helper(source_path, target_path, overwrite):
         return
     for filename in filenames:
         cur_src = os.path.join(source_path, filename)
-        cur_dst = os.path.join(target_path, filename)
+        # don't use os.path.join here since it will set \ on Windows
+        cur_dst = target_path.rstrip('/') + '/' + filename
         if os.path.isdir(cur_src):
             _import_dir_helper(cur_src, cur_dst, overwrite)
         elif os.path.isfile(cur_src):
