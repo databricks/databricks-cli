@@ -178,9 +178,12 @@ def export_dir_cli(source_path, target_path, overwrite):
     _export_dir_helper(source_path, target_path, overwrite)
 
 
-def _import_dir_helper(source_path, target_path, overwrite):
+def _import_dir_helper(source_path, target_path, overwrite, exclude_hidden_files):
     # Try doing the os.listdir before creating the dir in Databricks.
     filenames = os.listdir(source_path)
+    if exclude_hidden_files:
+        # for now, just exclude hidden files or directories based on starting '.'
+        filenames = [f for f in filenames if not f.startswith('.')]
     try:
         mkdirs(target_path)
     except HTTPError as e:
@@ -191,7 +194,7 @@ def _import_dir_helper(source_path, target_path, overwrite):
         # don't use os.path.join here since it will set \ on Windows
         cur_dst = target_path.rstrip('/') + '/' + filename
         if os.path.isdir(cur_src):
-            _import_dir_helper(cur_src, cur_dst, overwrite)
+            _import_dir_helper(cur_src, cur_dst, overwrite, exclude_hidden_files)
         elif os.path.isfile(cur_src):
             ext = WorkspaceLanguage.get_extension(cur_src)
             if ext != '':
@@ -210,16 +213,17 @@ def _import_dir_helper(source_path, target_path, overwrite):
 @click.argument('source_path')
 @click.argument('target_path')
 @click.option('--overwrite', '-o', is_flag=True, default=False)
+@click.option('--exclude-hidden-files', '-e', is_flag=True, default=False)
 @require_config
 @eat_exceptions
-def import_dir_cli(source_path, target_path, overwrite):
+def import_dir_cli(source_path, target_path, overwrite, exclude_hidden_files):
     """
     Recursively imports a directory from local to the Databricks workspace.
 
     Only directories and files with the extensions .scala, .py, .sql, .r, .R, .ipynb are imported.
     When imported, these extensions will be stripped off the name of the notebook.
     """
-    _import_dir_helper(source_path, target_path, overwrite)
+    _import_dir_helper(source_path, target_path, overwrite, exclude_hidden_files)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
