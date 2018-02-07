@@ -354,67 +354,36 @@ class ClusterService(object):
         return self.client.perform_query('GET', '/clusters/list-zones', data=_data)
      
 
-class LibraryService(object):
+class ManagedLibraryService(object):
     def __init__(self, client):
         self.client = client
 
-    def list_libraries(self):
+    def cluster_status(self, cluster_id):
         _data = {}
-    
-        return self.client.perform_query('GET', '/libraries/list', data=_data)
-    
-    def get_library_cluster_status(self, library_id, cluster_id):
-        _data = {}
-        if library_id is not None:
-            _data['library_id'] = library_id
         if cluster_id is not None:
             _data['cluster_id'] = cluster_id
-        return self.client.perform_query('GET', '/libraries/get-cluster-status', data=_data)
+        return self.client.perform_query('GET', '/libraries/cluster-status', data=_data)
     
-    def create_library(self, path, jar_specification=None, egg_specification=None,
-                       pip_specification=None, maven_specification=None):
+    def all_cluster_statuses(self):
         _data = {}
-        if path is not None:
-            _data['path'] = path
-        if jar_specification is not None:
-            _data['jar_specification'] = jar_specification
-            if not isinstance(jar_specification, dict):
-                raise TypeError('Expected databricks.JarSpecification() or dict for field jar_specification')
-        if egg_specification is not None:
-            _data['egg_specification'] = egg_specification
-            if not isinstance(egg_specification, dict):
-                raise TypeError('Expected databricks.EggSpecification() or dict for field egg_specification')
-        if pip_specification is not None:
-            _data['pip_specification'] = pip_specification
-            if not isinstance(pip_specification, dict):
-                raise TypeError('Expected databricks.PipSpecification() or dict for field pip_specification')
-        if maven_specification is not None:
-            _data['maven_specification'] = maven_specification
-            if not isinstance(maven_specification, dict):
-                raise TypeError('Expected databricks.MavenSpecification() or dict for field maven_specification')
-        return self.client.perform_query('POST', '/libraries/create', data=_data)
     
-    def attach_library(self, library_id, cluster_id):
+        return self.client.perform_query('GET', '/libraries/all-cluster-statuses', data=_data)
+    
+    def install_libraries(self, cluster_id, libraries=None):
         _data = {}
-        if library_id is not None:
-            _data['library_id'] = library_id
         if cluster_id is not None:
             _data['cluster_id'] = cluster_id
-        return self.client.perform_query('POST', '/libraries/attach', data=_data)
+        if libraries is not None:
+            _data['libraries'] = libraries
+        return self.client.perform_query('POST', '/libraries/install', data=_data)
     
-    def detach_library(self, library_id, cluster_id):
+    def uninstall_libraries(self, cluster_id, libraries=None):
         _data = {}
-        if library_id is not None:
-            _data['library_id'] = library_id
         if cluster_id is not None:
             _data['cluster_id'] = cluster_id
-        return self.client.perform_query('POST', '/libraries/detach', data=_data)
-    
-    def delete_library(self, library_id):
-        _data = {}
-        if library_id is not None:
-            _data['library_id'] = library_id
-        return self.client.perform_query('POST', '/libraries/delete', data=_data)
+        if libraries is not None:
+            _data['libraries'] = libraries
+        return self.client.perform_query('POST', '/libraries/uninstall', data=_data)
      
 
 class DbfsService(object):
@@ -552,3 +521,4 @@ class WorkspaceService(object):
             _data['path'] = path
         return self.client.perform_query('GET', '/workspace/get-status', data=_data)
      
+
