@@ -28,11 +28,13 @@ from click.testing import CliRunner
 
 import databricks_cli.clusters.cli as cli
 from databricks_cli.utils import pretty_format
+from tests.utils import provide_conf
 
 CREATE_RETURN = {'cluster_id': 'test'}
 CREATE_JSON = '{"name": "test_cluster"}'
 
 
+@provide_conf
 def test_create_cli_json():
     with mock.patch('databricks_cli.clusters.cli.create_cluster') as create_cluster_mock:
         with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
@@ -46,6 +48,7 @@ def test_create_cli_json():
 CLUSTER_ID = 'test'
 
 
+@provide_conf
 def test_start_cli():
     with mock.patch('databricks_cli.clusters.cli.start_cluster') as start_cluster_mock:
         runner = CliRunner()
@@ -53,6 +56,7 @@ def test_start_cli():
         assert start_cluster_mock.call_args[0][0] == CLUSTER_ID
 
 
+@provide_conf
 def test_restart_cli():
     with mock.patch('databricks_cli.clusters.cli.restart_cluster') as restart_cluster_mock:
         runner = CliRunner()
@@ -60,6 +64,7 @@ def test_restart_cli():
         assert restart_cluster_mock.call_args[0][0] == CLUSTER_ID
 
 
+@provide_conf
 def test_delete_cli():
     with mock.patch('databricks_cli.clusters.cli.delete_cluster') as delete_cluster_mock:
         runner = CliRunner()
@@ -67,6 +72,7 @@ def test_delete_cli():
         assert delete_cluster_mock.call_args[0][0] == CLUSTER_ID
 
 
+@provide_conf
 def test_get_cli():
     with mock.patch('databricks_cli.clusters.cli.get_cluster') as get_cluster_mock:
         get_cluster_mock.return_value = '{}'
@@ -84,6 +90,7 @@ LIST_RETURN = {
 }
 
 
+@provide_conf
 def test_list_jobs():
     with mock.patch('databricks_cli.clusters.cli.list_clusters') as list_clusters_mock:
         with mock.patch('databricks_cli.clusters.cli.click.echo') as echo_mock:
@@ -94,6 +101,7 @@ def test_list_jobs():
                 tabulate([('test_id', 'test_name', 'PENDING')], tablefmt='plain')
 
 
+@provide_conf
 def test_list_clusters_output_json():
     with mock.patch('databricks_cli.clusters.cli.list_clusters') as list_clusters_mock:
         with mock.patch('databricks_cli.clusters.cli.click.echo') as echo_mock:

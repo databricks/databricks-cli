@@ -29,8 +29,10 @@ import databricks_cli.workspace.cli as cli
 import databricks_cli.workspace.api as api
 from databricks_cli.workspace.api import WorkspaceFileInfo, NOTEBOOK
 from databricks_cli.workspace.types import WorkspaceLanguage
+from tests.utils import provide_conf
 
 
+@provide_conf
 def test_export_workspace_cli(tmpdir):
     path = tmpdir.strpath
     with mock.patch('databricks_cli.workspace.cli.get_status') as get_status_mock:

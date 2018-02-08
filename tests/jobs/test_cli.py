@@ -28,11 +28,13 @@ from click.testing import CliRunner
 
 import databricks_cli.jobs.cli as cli
 from databricks_cli.utils import pretty_format
+from tests.utils import provide_conf
 
 CREATE_RETURN = {'job_id': 5}
 CREATE_JSON = '{"name": "test_job"}'
 
 
+@provide_conf
 def test_create_cli_json():
     with mock.patch('databricks_cli.jobs.cli.create_job') as create_job_mock:
         with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
@@ -43,6 +45,7 @@ def test_create_cli_json():
             assert echo_mock.call_args[0][0] == pretty_format(CREATE_RETURN)
 
 
+@provide_conf
 def test_create_cli_json_file(tmpdir):
     path = tmpdir.join('job.json').strpath
     with open(path, 'w') as f:
@@ -59,6 +62,7 @@ def test_create_cli_json_file(tmpdir):
 RESET_JSON = '{"job_name": "test_job"}'
 
 
+@provide_conf
 def test_reset_cli_json():
     with mock.patch('databricks_cli.jobs.cli.reset_job') as reset_job_mock:
         runner = CliRunner()
@@ -90,6 +94,7 @@ LIST_RETURN = {
 }
 
 
+@provide_conf
 def test_list_jobs():
     with mock.patch('databricks_cli.jobs.cli.list_jobs') as list_jobs_mock:
         with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
@@ -102,6 +107,7 @@ def test_list_jobs():
                 tabulate(rows, tablefmt='plain', disable_numparse=True)
 
 
+@provide_conf
 def test_list_jobs_output_json():
     with mock.patch('databricks_cli.jobs.cli.list_jobs') as list_jobs_mock:
         with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
@@ -121,6 +127,7 @@ PYTHON_PARAMS = '["python", "params"]'
 SPARK_SUBMIT_PARAMS = '["--class", "org.apache.spark.examples.SparkPi"]'
 
 
+@provide_conf
 def test_run_now_no_params():
     with mock.patch('databricks_cli.jobs.cli.run_now') as run_now_mock:
         with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
@@ -135,6 +142,7 @@ def test_run_now_no_params():
             assert echo_mock.call_args[0][0] == pretty_format(RUN_NOW_RETURN)
 
 
+@provide_conf
 def test_run_now_with_params():
     with mock.patch('databricks_cli.jobs.cli.run_now') as run_now_mock:
         with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:

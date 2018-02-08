@@ -28,11 +28,13 @@ from click.testing import CliRunner
 
 import databricks_cli.runs.cli as cli
 from databricks_cli.utils import pretty_format
+from tests.utils import provide_conf
 
 SUBMIT_RETURN = {'run_id': 5}
 SUBMIT_JSON = '{"name": "test_run"}'
 
 
+@provide_conf
 def test_submit_cli_json():
     with mock.patch('databricks_cli.runs.cli.submit_run') as submit_run_mock:
         with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock:
@@ -56,6 +58,7 @@ LIST_RETURN = {
 }
 
 
+@provide_conf
 def test_list_runs():
     with mock.patch('databricks_cli.runs.cli.list_runs') as list_runs_mock:
         with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock:
@@ -66,6 +69,7 @@ def test_list_runs():
             assert echo_mock.call_args[0][0] == tabulate(rows, tablefmt='plain')
 
 
+@provide_conf
 def test_list_runs_output_json():
     with mock.patch('databricks_cli.runs.cli.list_runs') as list_runs_mock:
         with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock:
@@ -75,6 +79,7 @@ def test_list_runs_output_json():
             assert echo_mock.call_args[0][0] == pretty_format(LIST_RETURN)
 
 
+@provide_conf
 def test_get_cli():
     with mock.patch('databricks_cli.runs.cli.get_run') as get_run_mock:
         with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock:
@@ -85,6 +90,7 @@ def test_get_cli():
             assert echo_mock.call_args[0][0] == pretty_format({})
 
 
+@provide_conf
 def test_cancel_cli():
     with mock.patch('databricks_cli.runs.cli.cancel_run') as cancel_run_mock:
         with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock:
