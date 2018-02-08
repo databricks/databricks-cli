@@ -21,8 +21,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import shutil
-import pytest
 import tempfile
+import pytest
 import mock
 
 from databricks_cli.configure.config import DatabricksConfig

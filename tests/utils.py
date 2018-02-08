@@ -21,9 +21,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import decorator
-import mock
-import tempfile
-import pytest
 
 from databricks_cli.configure.config import DatabricksConfig
 
