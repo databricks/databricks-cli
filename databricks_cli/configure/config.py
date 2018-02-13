@@ -30,7 +30,8 @@ from os.path import expanduser, join
 import six
 
 from databricks_cli.utils import error_and_quit
-from databricks_cli.sdk import ApiClient, DbfsService, WorkspaceService, JobsService, ClusterService
+from databricks_cli.sdk import ApiClient, DbfsService, WorkspaceService, JobsService, \
+    ClusterService, ManagedLibraryService
 
 DEFAULT_SECTION = 'DEFAULT'
 HOST = 'host'
@@ -76,6 +77,11 @@ def get_jobs_client():
 def get_clusters_client():
     api_client = _get_api_client()
     return ClusterService(api_client)
+
+
+def get_libraries_client():
+    api_client = _get_api_client()
+    return ManagedLibraryService(api_client)
 
 
 class DatabricksConfig(object):

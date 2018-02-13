@@ -31,3 +31,15 @@ def provide_conf(test):
         conf.overwrite()
         return test(*args, **kwargs)
     return decorator.decorator(wrapper, test)
+
+
+def assert_cli_output(actual, expected):
+    """
+    Take runner stdout and assert it's value against an expected string. This just means appending
+    a newline to the expected string since ``click.echo`` adds a newline to the output.
+
+    >>> runner = CliRunner()
+    >>> res = runner.invoke(cli.list_cli, ['--cluster-id', TEST_CLUSTER_ID])
+    >>> assert_cli_output(res.output, 'EXPECTED-OUTPUT')
+    """
+    assert actual == expected + '\n'
