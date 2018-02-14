@@ -23,20 +23,25 @@
 
 import os
 import mock
+from click.testing import CliRunner
 
 import databricks_cli.workspace.cli as cli
 import databricks_cli.workspace.api as api
 from databricks_cli.workspace.api import WorkspaceFileInfo, NOTEBOOK
-from databricks_cli.workspace.types import WorkspaceLanguage, WorkspaceFormat
-from tests.utils import get_callback
+from databricks_cli.workspace.types import WorkspaceLanguage
+from tests.utils import provide_conf
 
+
+@provide_conf
 def test_export_workspace_cli(tmpdir):
     path = tmpdir.strpath
     with mock.patch('databricks_cli.workspace.cli.get_status') as get_status_mock:
         with mock.patch('databricks_cli.workspace.cli.export_workspace') as export_workspace_mock:
             get_status_mock.return_value = WorkspaceFileInfo('/notebook-name', NOTEBOOK, WorkspaceLanguage.SCALA)
-            get_callback(cli.export_workspace_cli)('/notebook-name', path, WorkspaceFormat.SOURCE, False)
+            runner = CliRunner()
+            runner.invoke(cli.export_workspace_cli, ['--format', 'SOURCE', '/notebook-name', path])
             assert export_workspace_mock.call_args[0][1] == os.path.join(path, 'notebook-name.scala')
+
 
 def test_export_dir_helper(tmpdir):
     """

@@ -20,14 +20,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import decorator
+import shutil
+import tempfile
+import pytest
+import mock
 
 from databricks_cli.configure.config import DatabricksConfig
 
 
-def provide_conf(test):
-    def wrapper(test, *args, **kwargs):
-        conf = DatabricksConfig.construct_from_token("test-host", "test-token")
-        conf.overwrite()
-        return test(*args, **kwargs)
-    return decorator.decorator(wrapper, test)
+@pytest.fixture(autouse=True)
+def mock_conf_dir():
+    path = tempfile.mkdtemp()
+    with mock.patch.object(DatabricksConfig, 'home', path):
+        yield
+    shutil.rmtree(path)
