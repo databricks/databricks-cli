@@ -3,7 +3,4 @@ prospector[with_pyroma]==0.12.7
 pylint==1.7.4
 pytest==3.2.1
 mock==2.0.0
-# Real reqs
-click>=6.7
-requests>=2.17.3
-tabulate>=0.7.7
+decorator==4.2.1
