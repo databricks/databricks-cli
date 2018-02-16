@@ -118,7 +118,7 @@ def test_import_dir_helper(tmpdir):
         f.write('select 1+1 from table;')
     with mock.patch('databricks_cli.workspace.cli.mkdirs') as mkdirs_mock:
         with mock.patch('databricks_cli.workspace.cli.import_workspace') as import_workspace:
-            cli._import_dir_helper(tmpdir.strpath, '/', False)
+            cli._import_dir_helper(tmpdir.strpath, '/', False, False)
             # Verify that the directories a, f, g exist.
             assert mkdirs_mock.call_count == 4
             # The order of list may be undeterminstic apparently. (It's different in Travis CI)
@@ -161,7 +161,34 @@ def test_import_dir_rstrip(tmpdir):
         pass
     with mock.patch('databricks_cli.workspace.cli.mkdirs') as mkdirs_mock:
         with mock.patch('databricks_cli.workspace.cli.import_workspace') as import_workspace:
-            cli._import_dir_helper(tmpdir.strpath, '/', False)
+            cli._import_dir_helper(tmpdir.strpath, '/', False, False)
+            assert mkdirs_mock.call_count == 2
+            assert any([ca[0][0] == '/' for ca in mkdirs_mock.call_args_list])
+            assert any([ca[0][0] == '/a' for ca in mkdirs_mock.call_args_list])
+
+            # Verify that we imported the correct files with the right names
+            assert import_workspace.call_count == 1
+            assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'test-py.py') \
+                    for ca in import_workspace.call_args_list])
+            assert any([ca[0][1] == '/a/test-py' for ca in import_workspace.call_args_list])
+
+def test_import_dir_hidden(tmpdir):
+    """
+    Copy from directory ``tmpdir`` with structure as follows
+    - a (directory)
+      - test-py.py (python)
+    - .ignore (directory)
+      - ignore.py
+    """
+    os.makedirs(os.path.join(tmpdir.strpath, 'a'))
+    os.makedirs(os.path.join(tmpdir.strpath, '.ignore'))
+    with open(os.path.join(tmpdir.strpath, 'a', 'test-py.py'), 'wb'):
+        pass
+    with open(os.path.join(tmpdir.strpath, '.ignore', 'ignore.py'), 'wb'):
+        pass
+    with mock.patch('databricks_cli.workspace.cli.mkdirs') as mkdirs_mock:
+        with mock.patch('databricks_cli.workspace.cli.import_workspace') as import_workspace:
+            cli._import_dir_helper(tmpdir.strpath, '/', False, True)
             assert mkdirs_mock.call_count == 2
             assert any([ca[0][0] == '/' for ca in mkdirs_mock.call_args_list])
             assert any([ca[0][0] == '/a' for ca in mkdirs_mock.call_args_list])
