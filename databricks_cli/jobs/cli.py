@@ -156,7 +156,7 @@ def get_cli(job_id):
                    '["--class", "org.apache.spark.examples.SparkPi"]')
 @require_config
 @eat_exceptions
-def run_now_cli(job_id, jar_params, notebook_params, python_params, spark_submit_params):
+def run_now_cli(job_id, jar_params, notebook_params, python_params, spark_submit_params, json_file):
     """
     Runs a job with optional per-run parameters.
 
@@ -167,6 +167,7 @@ def run_now_cli(job_id, jar_params, notebook_params, python_params, spark_submit
     notebook_params_json = json_loads(notebook_params) if notebook_params else None
     python_params = json_loads(python_params) if python_params else None
     spark_submit_params = json_loads(spark_submit_params) if spark_submit_params else None
+    json_file_params = (json_file, json) if jar_params else None
     res = run_now(job_id, jar_params_json, notebook_params_json, python_params, spark_submit_params)
     click.echo(pretty_format(res))
 
