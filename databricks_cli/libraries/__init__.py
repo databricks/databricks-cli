@@ -20,31 +20,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-import click
-
-from databricks_cli.libraries.cli import libraries_group
-from databricks_cli.version import print_version_callback, version
-from databricks_cli.utils import CONTEXT_SETTINGS
-from databricks_cli.configure.cli import configure_cli
-from databricks_cli.dbfs.cli import dbfs_group
-from databricks_cli.workspace.cli import workspace_group
-from databricks_cli.jobs.cli import jobs_group
-from databricks_cli.clusters.cli import clusters_group
-from databricks_cli.runs.cli import runs_group
-
-
-@click.group(context_settings=CONTEXT_SETTINGS)
-@click.option('--version', '-v', is_flag=True, callback=print_version_callback,
-              expose_value=False, is_eager=True, help=version)
-def cli():
-    pass
-
-
-cli.add_command(configure_cli, name='configure')
-cli.add_command(dbfs_group, name='fs')
-cli.add_command(workspace_group, name='workspace')
-cli.add_command(jobs_group, name='jobs')
-cli.add_command(clusters_group, name='clusters')
-cli.add_command(runs_group, name='runs')
-cli.add_command(libraries_group, name='libraries')

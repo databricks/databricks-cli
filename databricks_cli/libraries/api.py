@@ -21,30 +21,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import click
-
-from databricks_cli.libraries.cli import libraries_group
-from databricks_cli.version import print_version_callback, version
-from databricks_cli.utils import CONTEXT_SETTINGS
-from databricks_cli.configure.cli import configure_cli
-from databricks_cli.dbfs.cli import dbfs_group
-from databricks_cli.workspace.cli import workspace_group
-from databricks_cli.jobs.cli import jobs_group
-from databricks_cli.clusters.cli import clusters_group
-from databricks_cli.runs.cli import runs_group
+from databricks_cli.configure.config import get_libraries_client
 
 
-@click.group(context_settings=CONTEXT_SETTINGS)
-@click.option('--version', '-v', is_flag=True, callback=print_version_callback,
-              expose_value=False, is_eager=True, help=version)
-def cli():
-    pass
+def all_cluster_statuses():
+    return get_libraries_client().all_cluster_statuses()
 
 
-cli.add_command(configure_cli, name='configure')
-cli.add_command(dbfs_group, name='fs')
-cli.add_command(workspace_group, name='workspace')
-cli.add_command(jobs_group, name='jobs')
-cli.add_command(clusters_group, name='clusters')
-cli.add_command(runs_group, name='runs')
-cli.add_command(libraries_group, name='libraries')
+def cluster_status(cluster_id):
+    return get_libraries_client().cluster_status(cluster_id)
+
+
+def install_libraries(cluster_id, libraries):
+    return get_libraries_client().install_libraries(cluster_id, libraries)
+
+
+def uninstall_libraries(cluster_id, libraries):
+    return get_libraries_client().uninstall_libraries(cluster_id, libraries)
