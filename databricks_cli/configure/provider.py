@@ -66,15 +66,15 @@ def _overwrite_config(raw_config):
     os.chmod(config_path, 0o600)
 
 
-def update_and_persist_config(databricks_config):
+def update_and_persist_config(profile, databricks_config):
     """
     Takes a DatabricksConfig and adds the in memory contents to the persisted version of the
     config. This will overwrite any other config that was persisted to the file system under the
     same profile.
     :param databricks_config: DatabricksConfig
     """
+    profile = profile.upper()
     raw_config = _fetch_from_fs()
-    profile = databricks_config.profile.upper()
     _create_section_if_absent(raw_config, profile)
     _set_option(raw_config, profile, HOST, databricks_config.host)
     _set_option(raw_config, profile, USERNAME, databricks_config.username)
@@ -95,24 +95,23 @@ def get_config_for_profile(profile):
     username = _get_option_if_exists(raw_config, profile, USERNAME)
     password = _get_option_if_exists(raw_config, profile, PASSWORD)
     token = _get_option_if_exists(raw_config, profile, TOKEN)
-    return DatabricksConfig(profile, host, username, password, token)
+    return DatabricksConfig(host, username, password, token)
 
 
 class DatabricksConfig(object):
-    def __init__(self, profile, host, username, password, token): # noqa
-        self.profile = profile
+    def __init__(self, host, username, password, token): # noqa
         self.host = host
         self.username = username
         self.password = password
         self.token = token
 
     @classmethod
-    def from_token(cls, profile, host, token):
-        return DatabricksConfig(profile, host, None, None, token)
+    def from_token(cls, host, token):
+        return DatabricksConfig(host, None, None, token)
 
     @classmethod
-    def from_password(cls, profile, host, username, password):
-        return DatabricksConfig(profile, host, username, password, None)
+    def from_password(cls, host, username, password):
+        return DatabricksConfig(host, username, password, None)
 
     @property
     def is_valid_with_token(self):

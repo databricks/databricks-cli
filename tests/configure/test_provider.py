@@ -31,16 +31,16 @@ TEST_PROFILE = 'testing-profile'
 
 
 def test_update_and_persist_config():
-    config = DatabricksConfig.from_token(DEFAULT_SECTION, TEST_HOST, TEST_TOKEN)
-    update_and_persist_config(config)
+    config = DatabricksConfig.from_token(TEST_HOST, TEST_TOKEN)
+    update_and_persist_config(DEFAULT_SECTION, config)
     config = get_config_for_profile(DEFAULT_SECTION)
     assert config.is_valid_with_token
     assert config.host == TEST_HOST
     assert config.token == TEST_TOKEN
 
     # Overwrite conf for same section.
-    config = DatabricksConfig.from_password(DEFAULT_SECTION, TEST_HOST, TEST_USER, TEST_PASSWORD)
-    update_and_persist_config(config)
+    config = DatabricksConfig.from_password(TEST_HOST, TEST_USER, TEST_PASSWORD)
+    update_and_persist_config(DEFAULT_SECTION, config)
     config = get_config_for_profile(DEFAULT_SECTION)
     assert config.is_valid_with_password
     assert not config.is_valid_with_token
@@ -50,12 +50,12 @@ def test_update_and_persist_config():
 
 
 def test_update_and_persist_config_two_sections():
-    config = DatabricksConfig.from_token(DEFAULT_SECTION, TEST_HOST, TEST_TOKEN)
-    update_and_persist_config(config)
+    config = DatabricksConfig.from_token(TEST_HOST, TEST_TOKEN)
+    update_and_persist_config(DEFAULT_SECTION, config)
 
     # Overwrite conf for same section.
-    config = DatabricksConfig.from_password(TEST_PROFILE, TEST_HOST, TEST_USER, TEST_PASSWORD)
-    update_and_persist_config(config)
+    config = DatabricksConfig.from_password(TEST_HOST, TEST_USER, TEST_PASSWORD)
+    update_and_persist_config(TEST_PROFILE, config)
 
     config = get_config_for_profile(DEFAULT_SECTION)
     assert config.is_valid_with_token
@@ -70,11 +70,10 @@ def test_update_and_persist_config_two_sections():
 
 
 def test_update_and_persist_config_case_insensitive():
-    config = DatabricksConfig.from_token(TEST_PROFILE, TEST_HOST, TEST_TOKEN)
-    update_and_persist_config(config)
-    config = DatabricksConfig.from_password(
-        TEST_PROFILE.upper(), TEST_HOST, TEST_USER, TEST_PASSWORD)
-    update_and_persist_config(config)
+    config = DatabricksConfig.from_token(TEST_HOST, TEST_TOKEN)
+    update_and_persist_config(TEST_PROFILE, config)
+    config = DatabricksConfig.from_password(TEST_HOST, TEST_USER, TEST_PASSWORD)
+    update_and_persist_config(TEST_PROFILE.upper(), config)
 
     config = get_config_for_profile(TEST_PROFILE)
     assert config.is_valid_with_password
@@ -85,7 +84,6 @@ def test_get_config_for_profile_empty():
     config = get_config_for_profile(TEST_PROFILE)
     assert not config.is_valid_with_password
     assert not config.is_valid_with_token
-    assert config.profile == TEST_PROFILE.upper()
     assert config.host is None
     assert config.username is None
     assert config.password is None
@@ -94,32 +92,28 @@ def test_get_config_for_profile_empty():
 
 class TestDatabricksConfig(object):
     def test_from_token(self):
-        config = DatabricksConfig.from_token(TEST_PROFILE, TEST_HOST, TEST_TOKEN)
-        assert config.profile == TEST_PROFILE
+        config = DatabricksConfig.from_token(TEST_HOST, TEST_TOKEN)
         assert config.host == TEST_HOST
         assert config.token == TEST_TOKEN
 
     def test_from_password(self):
-        config = DatabricksConfig.from_password(TEST_PROFILE, TEST_HOST, TEST_USER, TEST_PASSWORD)
-        assert config.profile == TEST_PROFILE
+        config = DatabricksConfig.from_password(TEST_HOST, TEST_USER, TEST_PASSWORD)
         assert config.host == TEST_HOST
         assert config.username == TEST_USER
         assert config.password == TEST_PASSWORD
 
     def test_is_valid_with_token(self):
-        config = DatabricksConfig.from_token(TEST_PROFILE, TEST_HOST, TEST_TOKEN)
+        config = DatabricksConfig.from_token(TEST_HOST, TEST_TOKEN)
         assert not config.is_valid_with_password
-        assert config.profile == TEST_PROFILE
         assert config.is_valid_with_token
 
     def test_is_valid_with_password(self):
-        config = DatabricksConfig.from_password(TEST_PROFILE, TEST_HOST, TEST_USER, TEST_PASSWORD)
+        config = DatabricksConfig.from_password(TEST_HOST, TEST_USER, TEST_PASSWORD)
         assert config.is_valid_with_password
-        assert config.profile == TEST_PROFILE
         assert not config.is_valid_with_token
 
     def test_is_valid(self):
-        config = DatabricksConfig.from_password(TEST_PROFILE, TEST_HOST, TEST_USER, TEST_PASSWORD)
+        config = DatabricksConfig.from_password(TEST_HOST, TEST_USER, TEST_PASSWORD)
         assert config.is_valid
-        config = DatabricksConfig.from_token(TEST_PROFILE, TEST_HOST, TEST_TOKEN)
+        config = DatabricksConfig.from_token(TEST_HOST, TEST_TOKEN)
         assert config.is_valid

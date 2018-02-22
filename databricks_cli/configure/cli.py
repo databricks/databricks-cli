@@ -41,8 +41,8 @@ def _configure_cli_token(profile):
     config = get_config_for_profile(profile)
     host = click.prompt(PROMPT_HOST, default=config.host, type=_DbfsHost())
     token = click.prompt(PROMPT_TOKEN, default=config.token)
-    new_config = DatabricksConfig.from_token(profile, host, token)
-    update_and_persist_config(new_config)
+    new_config = DatabricksConfig.from_token(host, token)
+    update_and_persist_config(profile, new_config)
 
 
 def _configure_cli_password(profile):
@@ -57,8 +57,8 @@ def _configure_cli_password(profile):
                             confirmation_prompt=True)
     if password == default_password:
         password = config.password
-    new_config = DatabricksConfig.from_password(profile, host, username, password)
-    update_and_persist_config(new_config)
+    new_config = DatabricksConfig.from_password(host, username, password)
+    update_and_persist_config(profile, new_config)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
