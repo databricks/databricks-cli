@@ -21,7 +21,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from click import ParamType
+from click import ParamType, Option, MissingParameter, UsageError
 
 
 class OutputClickType(ParamType):
@@ -65,3 +65,17 @@ class ClusterIdClickType(ParamType):
     name = 'CLUSTER_ID'
     help = ('Can be found in the URL at '
             'https://*.cloud.databricks.com/#/setting/clusters/$CLUSTER_ID/configuration.')
+
+
+class OneOfOption(Option):
+    def __init__(self, *args, **kwargs):
+        self.one_of = kwargs.pop('one_of')
+        super(OneOfOption, self).__init__(*args, **kwargs)
+
+    def handle_parse_result(self, ctx, opts, args):
+        cleaned_opts = set([o.replace('_', '-') for o in opts.keys()])
+        if len(cleaned_opts.intersection(set(self.one_of))) == 0:
+            raise MissingParameter('One of {} must be provided.'.format(self.one_of))
+        if len(cleaned_opts.intersection(set(self.one_of))) > 1:
+            raise UsageError('Only one of {} should be provided.'.format(self.one_of))
+        return super(OneOfOption, self).handle_parse_result(ctx, opts, args)

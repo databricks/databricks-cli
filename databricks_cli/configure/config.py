@@ -28,7 +28,8 @@ import six
 
 from databricks_cli.configure.provider import DEFAULT_SECTION, get_config_for_profile
 from databricks_cli.utils import error_and_quit
-from databricks_cli.sdk import ApiClient, DbfsService, WorkspaceService, JobsService, ClusterService
+from databricks_cli.sdk import ApiClient, DbfsService, WorkspaceService, JobsService, \
+    ClusterService, ManagedLibraryService
 
 
 def require_config(function):
@@ -73,3 +74,8 @@ def get_jobs_client(profile=DEFAULT_SECTION):
 def get_clusters_client(profile=DEFAULT_SECTION):
     api_client = _get_api_client(profile)
     return ClusterService(api_client)
+
+
+def get_libraries_client():
+    api_client = _get_api_client()
+    return ManagedLibraryService(api_client)
