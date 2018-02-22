@@ -25,8 +25,10 @@ import click
 
 from click import ParamType
 
+from databricks_cli.configure.provider import DatabricksConfig, update_and_persist_config, \
+    get_config_for_profile
 from databricks_cli.utils import CONTEXT_SETTINGS
-from databricks_cli.configure.config import DatabricksConfig, profile_option
+from databricks_cli.configure.config import profile_option
 
 
 PROMPT_HOST = 'Databricks Host (should begin with https://)'
@@ -36,27 +38,27 @@ PROMPT_TOKEN = 'Token' #  NOQA
 
 
 def _configure_cli_token(profile):
-    conf = DatabricksConfig.fetch_from_fs()
-    host = click.prompt(PROMPT_HOST, default=conf.host(profile), type=_DbfsHost())
-    token = click.prompt(PROMPT_TOKEN, default=conf.token(profile))
-    conf.update_with_token(profile, host, token)
-    conf.overwrite()
+    config = get_config_for_profile(profile)
+    host = click.prompt(PROMPT_HOST, default=config.host, type=_DbfsHost())
+    token = click.prompt(PROMPT_TOKEN, default=config.token)
+    new_config = DatabricksConfig.from_token(profile, host, token)
+    update_and_persist_config(new_config)
 
 
 def _configure_cli_password(profile):
-    conf = DatabricksConfig.fetch_from_fs()
-    if conf.password(profile):
-        default_password = '*' * len(conf.password(profile))
+    config = get_config_for_profile(profile)
+    if config.password:
+        default_password = '*' * len(config.password)
     else:
         default_password = None
-    host = click.prompt(PROMPT_HOST, default=conf.host(profile), type=_DbfsHost())
-    username = click.prompt(PROMPT_USERNAME, default=conf.username(profile))
+    host = click.prompt(PROMPT_HOST, default=config.host, type=_DbfsHost())
+    username = click.prompt(PROMPT_USERNAME, default=config.username)
     password = click.prompt(PROMPT_PASSWORD, default=default_password, hide_input=True,
                             confirmation_prompt=True)
     if password == default_password:
-        password = conf.password(profile)
-    conf.update_with_password(profile, host, username, password)
-    conf.overwrite()
+        password = config.password
+    new_config = DatabricksConfig.from_password(profile, host, username, password)
+    update_and_persist_config(new_config)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,

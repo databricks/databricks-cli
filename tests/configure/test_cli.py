@@ -23,12 +23,10 @@
 
 # pylint:disable=protected-access
 
-import mock
 from click.testing import CliRunner
 
-from databricks_cli.configure.config import DEFAULT_SECTION, DatabricksConfig
 import databricks_cli.configure.cli as cli
-
+from databricks_cli.configure.provider import get_config_for_profile, DEFAULT_SECTION
 
 TEST_HOST = 'https://test.cloud.databricks.com'
 TEST_USER = 'monkey@databricks.com'
@@ -39,39 +37,33 @@ TEST_PROFILE = 'dev'
 TEST_HOST_2 = 'https://test2.cloud.databricks.com'
 
 
-def test_configure_cli(tmpdir):
-    path = tmpdir.strpath
-    with mock.patch.object(DatabricksConfig, 'home', path):
-        runner = CliRunner()
-        runner.invoke(cli.configure_cli,
-                      input=(TEST_HOST + '\n' +
-                             TEST_USER + '\n' +
-                             TEST_PASSWORD + '\n' +
-                             TEST_PASSWORD + '\n'))
-        assert DatabricksConfig.fetch_from_fs().host(DEFAULT_SECTION) == TEST_HOST
-        assert DatabricksConfig.fetch_from_fs().username(DEFAULT_SECTION) == TEST_USER
-        assert DatabricksConfig.fetch_from_fs().password(DEFAULT_SECTION) == TEST_PASSWORD
+def test_configure_cli():
+    runner = CliRunner()
+    runner.invoke(cli.configure_cli,
+                  input=(TEST_HOST + '\n' +
+                         TEST_USER + '\n' +
+                         TEST_PASSWORD + '\n' +
+                         TEST_PASSWORD + '\n'))
+    assert get_config_for_profile(DEFAULT_SECTION).host == TEST_HOST
+    assert get_config_for_profile(DEFAULT_SECTION).username == TEST_USER
+    assert get_config_for_profile(DEFAULT_SECTION).password == TEST_PASSWORD
 
 
-def test_configure_cli_token(tmpdir):
-    path = tmpdir.strpath
-    with mock.patch.object(DatabricksConfig, 'home', path):
-        runner = CliRunner()
-        runner.invoke(cli.configure_cli, ['--token'],
-                      input=(TEST_HOST + '\n' + TEST_TOKEN + '\n'))
-        assert DatabricksConfig.fetch_from_fs().host(DEFAULT_SECTION) == TEST_HOST
-        assert DatabricksConfig.fetch_from_fs().token(DEFAULT_SECTION) == TEST_TOKEN
+def test_configure_cli_token():
+    runner = CliRunner()
+    runner.invoke(cli.configure_cli, ['--token'],
+                  input=(TEST_HOST + '\n' + TEST_TOKEN + '\n'))
+    assert get_config_for_profile(DEFAULT_SECTION).host == TEST_HOST
+    assert get_config_for_profile(DEFAULT_SECTION).token == TEST_TOKEN
 
 
-def test_configure_two_sections(tmpdir):
-    path = tmpdir.strpath
-    with mock.patch.object(DatabricksConfig, 'home', path):
-        runner = CliRunner()
-        runner.invoke(cli.configure_cli, ['--token'],
-                      input=(TEST_HOST + '\n' + TEST_TOKEN + '\n'))
-        runner.invoke(cli.configure_cli, ['--token', '--profile', TEST_PROFILE],
-                      input=(TEST_HOST_2 + '\n' + TEST_TOKEN + '\n'))
-        assert DatabricksConfig.fetch_from_fs().host(DEFAULT_SECTION) == TEST_HOST
-        assert DatabricksConfig.fetch_from_fs().token(DEFAULT_SECTION) == TEST_TOKEN
-        assert DatabricksConfig.fetch_from_fs().host(TEST_PROFILE) == TEST_HOST_2
-        assert DatabricksConfig.fetch_from_fs().token(TEST_PROFILE) == TEST_TOKEN
+def test_configure_two_sections():
+    runner = CliRunner()
+    runner.invoke(cli.configure_cli, ['--token'],
+                  input=(TEST_HOST + '\n' + TEST_TOKEN + '\n'))
+    runner.invoke(cli.configure_cli, ['--token', '--profile', TEST_PROFILE],
+                  input=(TEST_HOST_2 + '\n' + TEST_TOKEN + '\n'))
+    assert get_config_for_profile(DEFAULT_SECTION).host == TEST_HOST
+    assert get_config_for_profile(DEFAULT_SECTION).token == TEST_TOKEN
+    assert get_config_for_profile(TEST_PROFILE).host == TEST_HOST_2
+    assert get_config_for_profile(TEST_PROFILE).token == TEST_TOKEN

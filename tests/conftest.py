@@ -23,14 +23,13 @@
 import shutil
 import tempfile
 import pytest
-import mock
 
-from databricks_cli.configure.config import DatabricksConfig
+import databricks_cli.configure.provider as provider
 
 
 @pytest.fixture(autouse=True)
 def mock_conf_dir():
     path = tempfile.mkdtemp()
-    with mock.patch.object(DatabricksConfig, 'home', path):
-        yield
+    provider._home = path
+    yield
     shutil.rmtree(path)
