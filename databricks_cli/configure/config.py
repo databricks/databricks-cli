@@ -76,6 +76,6 @@ def get_clusters_client(profile=DEFAULT_SECTION):
     return ClusterService(api_client)
 
 
-def get_libraries_client():
-    api_client = _get_api_client()
+def get_libraries_client(profile=DEFAULT_SECTION):
+    api_client = _get_api_client(profile)
     return ManagedLibraryService(api_client)
