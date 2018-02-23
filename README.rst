@@ -49,7 +49,7 @@ Workspace CLI Examples
 The implemented commands for the Workspace CLI can be listed by running ``databricks workspace -h``.
 Commands are run by appending them to ``databricks workspace``. To make it easier to use the workspace
 CLI, feel free to alias ``databricks workspace`` to something shorter. For more information
-reference `Aliasing Command Groups <#aliasing-command-groups>`_.
+reference `Aliasing Command Groups section <#aliasing-command-groups>`_.
 
 .. code::
 
@@ -229,7 +229,8 @@ To find a job by name
 
 Copying a job
 ^^^^^^^^^^^^^^^^^^^^^^^^
-This example requires the program `jq <#jq>`_.
+This example requires the program ``jq``.
+See `jq section <#jq>`_ for more details.
 
 .. code::
 
@@ -289,8 +290,6 @@ Listing node types
     databricks clusters list-node-types
 
 
-.. _alias_databricks_cli:
-
 Aliasing Command Groups
 --------------------------
 Sometimes it can be inconvenient to prefix each CLI invocation with the name of a command group. Writing
@@ -298,8 +297,6 @@ Sometimes it can be inconvenient to prefix each CLI invocation with the name of 
 command groups to shorter commands. For example to shorten ``databricks workspace ls`` to ``dw ls`` in the
 Bourne again shell, you can add ``alias dw="databricks workspace"`` to the appropriate bash profile. Typically,
 this file is located at ``~/.bash_profile``.
-
-.. _jq:
 
 jq
 ---
