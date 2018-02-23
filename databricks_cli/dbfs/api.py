@@ -28,7 +28,6 @@ import click
 
 from requests.exceptions import HTTPError
 from databricks_cli.utils import error_and_quit
-from databricks_cli.configure.config import get_dbfs_client
 from databricks_cli.dbfs.dbfs_path import DbfsPath
 from databricks_cli.dbfs.exceptions import LocalFileExistsException
 
