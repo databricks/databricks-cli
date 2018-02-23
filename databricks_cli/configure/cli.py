@@ -25,8 +25,10 @@ import click
 
 from click import ParamType
 
+from databricks_cli.configure.provider import DatabricksConfig, update_and_persist_config, \
+    get_config_for_profile
 from databricks_cli.utils import CONTEXT_SETTINGS
-from databricks_cli.configure.config import DatabricksConfig
+from databricks_cli.configure.config import profile_option
 
 
 PROMPT_HOST = 'Databricks Host (should begin with https://)'
@@ -35,41 +37,42 @@ PROMPT_PASSWORD = 'Password' #  NOQA
 PROMPT_TOKEN = 'Token' #  NOQA
 
 
-def _configure_cli_token():
-    conf = DatabricksConfig.fetch_from_fs()
-    host = click.prompt(PROMPT_HOST, default=conf.host, type=_DbfsHost())
-    token = click.prompt(PROMPT_TOKEN, default=conf.token)
-    config = DatabricksConfig.construct_from_token(host, token)
-    config.overwrite()
+def _configure_cli_token(profile):
+    config = get_config_for_profile(profile)
+    host = click.prompt(PROMPT_HOST, default=config.host, type=_DbfsHost())
+    token = click.prompt(PROMPT_TOKEN, default=config.token)
+    new_config = DatabricksConfig.from_token(host, token)
+    update_and_persist_config(profile, new_config)
 
 
-def _configure_cli_password():
-    conf = DatabricksConfig.fetch_from_fs()
-    if conf.password:
-        default_password = '*' * len(conf.password)
+def _configure_cli_password(profile):
+    config = get_config_for_profile(profile)
+    if config.password:
+        default_password = '*' * len(config.password)
     else:
         default_password = None
-    host = click.prompt(PROMPT_HOST, default=conf.host, type=_DbfsHost())
-    username = click.prompt(PROMPT_USERNAME, default=conf.username)
+    host = click.prompt(PROMPT_HOST, default=config.host, type=_DbfsHost())
+    username = click.prompt(PROMPT_USERNAME, default=config.username)
     password = click.prompt(PROMPT_PASSWORD, default=default_password, hide_input=True,
                             confirmation_prompt=True)
     if password == default_password:
-        password = conf.password
-    config = DatabricksConfig.construct_from_password(host, username, password)
-    config.overwrite()
+        password = config.password
+    new_config = DatabricksConfig.from_password(host, username, password)
+    update_and_persist_config(profile, new_config)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Configures host and authentication info for the CLI.')
 @click.option('--token', show_default=True, is_flag=True, default=False)
-def configure_cli(token):
+@profile_option
+def configure_cli(profile, token):
     """
     Configures host and authentication info for the CLI.
     """
     if token:
-        _configure_cli_token()
+        _configure_cli_token(profile)
     else:
-        _configure_cli_password()
+        _configure_cli_password(profile)
 
 
 class _DbfsHost(ParamType):
