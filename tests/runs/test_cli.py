@@ -21,8 +21,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint:disable=redefined-outer-name
+
 import json
 import mock
+import pytest
 from tabulate import tabulate
 from click.testing import CliRunner
 
@@ -34,15 +37,22 @@ SUBMIT_RETURN = {'run_id': 5}
 SUBMIT_JSON = '{"name": "test_run"}'
 
 
+@pytest.fixture()
+def runs_api_mock():
+    with mock.patch('databricks_cli.runs.cli.RunsApi') as RunsApiMock:
+        _runs_api_mock = mock.MagicMock()
+        RunsApiMock.return_value = _runs_api_mock
+        yield _runs_api_mock
+
+
 @provide_conf
-def test_submit_cli_json():
-    with mock.patch('databricks_cli.runs.cli.submit_run') as submit_run_mock:
-        with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock:
-            submit_run_mock.return_value = SUBMIT_RETURN
-            runner = CliRunner()
-            runner.invoke(cli.submit_cli, ['--json', SUBMIT_JSON])
-            assert submit_run_mock.call_args[0][0] == json.loads(SUBMIT_JSON)
-            assert echo_mock.call_args[0][0] == pretty_format(SUBMIT_RETURN)
+def test_submit_cli_json(runs_api_mock):
+    with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock:
+        runs_api_mock.submit_run.return_value = SUBMIT_RETURN
+        runner = CliRunner()
+        runner.invoke(cli.submit_cli, ['--json', SUBMIT_JSON])
+        assert runs_api_mock.submit_run.call_args[0][0] == json.loads(SUBMIT_JSON)
+        assert echo_mock.call_args[0][0] == pretty_format(SUBMIT_RETURN)
 
 
 RUN_PAGE_URL = 'https://databricks.com/#job/1/run/1'
@@ -59,43 +69,39 @@ LIST_RETURN = {
 
 
 @provide_conf
-def test_list_runs():
-    with mock.patch('databricks_cli.runs.cli.list_runs') as list_runs_mock:
-        with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock:
-            list_runs_mock.return_value = LIST_RETURN
-            runner = CliRunner()
-            runner.invoke(cli.list_cli)
-            rows = [(1, 'name', 'RUNNING', 'n/a', RUN_PAGE_URL)]
-            assert echo_mock.call_args[0][0] == tabulate(rows, tablefmt='plain')
+def test_list_runs(runs_api_mock):
+    with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock:
+        runs_api_mock.list_runs.return_value = LIST_RETURN
+        runner = CliRunner()
+        runner.invoke(cli.list_cli)
+        rows = [(1, 'name', 'RUNNING', 'n/a', RUN_PAGE_URL)]
+        assert echo_mock.call_args[0][0] == tabulate(rows, tablefmt='plain')
 
 
 @provide_conf
-def test_list_runs_output_json():
-    with mock.patch('databricks_cli.runs.cli.list_runs') as list_runs_mock:
-        with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock:
-            list_runs_mock.return_value = LIST_RETURN
-            runner = CliRunner()
-            runner.invoke(cli.list_cli, ['--output', 'json'])
-            assert echo_mock.call_args[0][0] == pretty_format(LIST_RETURN)
+def test_list_runs_output_json(runs_api_mock):
+    with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock:
+        runs_api_mock.list_runs.return_value = LIST_RETURN
+        runner = CliRunner()
+        runner.invoke(cli.list_cli, ['--output', 'json'])
+        assert echo_mock.call_args[0][0] == pretty_format(LIST_RETURN)
 
 
 @provide_conf
-def test_get_cli():
-    with mock.patch('databricks_cli.runs.cli.get_run') as get_run_mock:
-        with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock:
-            get_run_mock.return_value = {}
-            runner = CliRunner()
-            runner.invoke(cli.get_cli, ['--run-id', 1])
-            assert get_run_mock.call_args[0][0] == 1
-            assert echo_mock.call_args[0][0] == pretty_format({})
+def test_get_cli(runs_api_mock):
+    with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock:
+        runs_api_mock.get_run.return_value = {}
+        runner = CliRunner()
+        runner.invoke(cli.get_cli, ['--run-id', 1])
+        assert runs_api_mock.get_run.call_args[0][0] == 1
+        assert echo_mock.call_args[0][0] == pretty_format({})
 
 
 @provide_conf
-def test_cancel_cli():
-    with mock.patch('databricks_cli.runs.cli.cancel_run') as cancel_run_mock:
-        with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock:
-            cancel_run_mock.return_value = {}
-            runner = CliRunner()
-            runner.invoke(cli.cancel_cli, ['--run-id', 1])
-            assert cancel_run_mock.call_args[0][0] == 1
-            assert echo_mock.call_args[0][0] == pretty_format({})
+def test_cancel_cli(runs_api_mock):
+    with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock:
+        runs_api_mock.cancel_run.return_value = {}
+        runner = CliRunner()
+        runner.invoke(cli.cancel_cli, ['--run-id', 1])
+        assert runs_api_mock.cancel_run.call_args[0][0] == 1
+        assert echo_mock.call_args[0][0] == pretty_format({})

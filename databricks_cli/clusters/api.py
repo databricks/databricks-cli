@@ -20,41 +20,36 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from databricks_cli.configure.config import get_clusters_client
-
-
-def create_cluster(json):
-    return get_clusters_client().client.perform_query('POST', '/clusters/create', data=json)
+from databricks_cli.sdk import ClusterService
 
 
-def start_cluster(cluster_id):
-    return get_clusters_client().start_cluster(cluster_id)
+class ClusterApi(object):
+    def __init__(self, api_client):
+        self.client = ClusterService(api_client)
 
+    def create_cluster(self, json):
+        return self.client.client.perform_query('POST', '/clusters/create', data=json)
 
-def restart_cluster(cluster_id):
-    return get_clusters_client().restart_cluster(cluster_id)
+    def start_cluster(self, cluster_id):
+        return self.client.start_cluster(cluster_id)
 
+    def restart_cluster(self, cluster_id):
+        return self.client.restart_cluster(cluster_id)
 
-def delete_cluster(cluster_id):
-    return get_clusters_client().delete_cluster(cluster_id)
+    def delete_cluster(self, cluster_id):
+        return self.client.delete_cluster(cluster_id)
 
+    def get_cluster(self, cluster_id):
+        return self.client.get_cluster(cluster_id)
 
-def get_cluster(cluster_id):
-    return get_clusters_client().get_cluster(cluster_id)
+    def list_clusters(self):
+        return self.client.list_clusters()
 
+    def list_zones(self):
+        return self.client.list_available_zones()
 
-def list_clusters():
-    return get_clusters_client().list_clusters()
+    def list_node_types(self):
+        return self.client.list_node_types()
 
-
-def list_zones():
-    return get_clusters_client().list_available_zones()
-
-
-def list_node_types():
-    return get_clusters_client().list_node_types()
-
-
-def spark_versions():
-    return get_clusters_client().list_spark_versions()
+    def spark_versions(self):
+        return self.client.list_spark_versions()
