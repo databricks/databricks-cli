@@ -22,13 +22,14 @@
 # limitations under the License.
 import decorator
 
-from databricks_cli.configure.config import DatabricksConfig
+from databricks_cli.configure.provider import DatabricksConfig, DEFAULT_SECTION, \
+    update_and_persist_config
 
 
 def provide_conf(test):
     def wrapper(test, *args, **kwargs):
-        conf = DatabricksConfig.construct_from_token("test-host", "test-token")
-        conf.overwrite()
+        config = DatabricksConfig.from_token('test-host', 'test-token')
+        update_and_persist_config(DEFAULT_SECTION, config)
         return test(*args, **kwargs)
     return decorator.decorator(wrapper, test)
 
