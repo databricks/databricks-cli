@@ -24,9 +24,11 @@
 # pylint:disable=protected-access
 
 import mock
+import pytest
 
 import databricks_cli.configure.config as config
 from databricks_cli.configure.provider import DatabricksConfig, DEFAULT_SECTION
+from databricks_cli.utils import InvalidConfigurationError
 
 
 def test_require_config_valid():
@@ -35,7 +37,7 @@ def test_require_config_valid():
         get_config_for_profile_mock.return_value = DatabricksConfig(
             'test-host', None, None, 'test-token')
 
-        @config.require_config
+        @config.provide_api_client
         def test_function(api_client, x): # noqa
             return x
 
@@ -50,11 +52,9 @@ def test_require_config_invalid():
                     get_api_client_mock: # noqa
                 get_config_for_profile_mock.return_value = DatabricksConfig(None, None, None, None)
 
-                @config.require_config
+                @config.provide_api_client
                 def test_function(api_client, x): # noqa
                     return x
 
-                test_function(x=1, profile=DEFAULT_SECTION) # noqa
-
-                assert error_and_quit_mock.call_count == 1
-                assert 'You haven\'t configured the CLI' in error_and_quit_mock.call_args[0][0]
+                with pytest.raises(InvalidConfigurationError):
+                    test_function(x=1, profile=DEFAULT_SECTION) # noqa

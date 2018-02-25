@@ -27,11 +27,11 @@ import click
 import six
 
 from databricks_cli.configure.provider import DEFAULT_SECTION, get_config_for_profile
-from databricks_cli.utils import error_and_quit
+from databricks_cli.utils import error_and_quit, InvalidConfigurationError
 from databricks_cli.sdk import ApiClient
 
 
-def require_config(function):
+def provide_api_client(function):
     """
     All callbacks wrapped by require_config expect the argument ``profile`` to be passed in.
     """
@@ -40,13 +40,7 @@ def require_config(function):
         profile = kwargs.pop('profile')
         config = get_config_for_profile(profile)
         if not config.is_valid:
-            if profile == DEFAULT_SECTION:
-                error_and_quit(('You haven\'t configured the CLI yet! ' +
-                                'Please configure by entering `{} configure`').format(sys.argv[0]))
-            else:
-                error_and_quit(('You haven\'t configured the CLI yet for the ' +
-                                'profile {}! '.format(profile) +
-                                'Please configure by entering `{} configure --profile {}`').format(sys.argv[0], profile)) # noqa
+            raise InvalidConfigurationError(profile)
         kwargs['api_client'] = _get_api_client(config)
 
         return function(*args, **kwargs)
@@ -56,7 +50,7 @@ def require_config(function):
 
 def profile_option(f):
     return click.option('--profile', required=False, default=DEFAULT_SECTION,
-                        help='Connection configuration to use.')(f)
+                        help='CLI connection profile to use.')(f)
 
 
 def _get_api_client(config):

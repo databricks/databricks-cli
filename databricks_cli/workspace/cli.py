@@ -28,7 +28,7 @@ from requests.exceptions import HTTPError
 
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS
 from databricks_cli.version import print_version_callback, version
-from databricks_cli.configure.config import require_config, profile_option
+from databricks_cli.configure.config import provide_api_client, profile_option
 from databricks_cli.dbfs.exceptions import LocalFileExistsException
 from databricks_cli.workspace.api import WorkspaceApi
 from databricks_cli.workspace.types import LanguageClickType, FormatClickType, WorkspaceFormat, \
@@ -43,8 +43,8 @@ from databricks_cli.workspace.types import LanguageClickType, FormatClickType, W
               help='Displays full information including ObjectType, Path, Language')
 @click.argument('workspace_path', type=str, nargs=-1)
 @profile_option
-@require_config
 @eat_exceptions
+@provide_api_client
 def ls_cli(api_client, l, absolute, workspace_path):
     """
     List objects in the Databricks Workspace.
@@ -63,8 +63,8 @@ def ls_cli(api_client, l, absolute, workspace_path):
                short_help='Make directories in the Databricks Workspace.')
 @click.argument('workspace_path')
 @profile_option
-@require_config
 @eat_exceptions
+@provide_api_client
 def mkdirs_cli(api_client, workspace_path):
     """
     Make directories in the Databricks Workspace.
@@ -83,8 +83,8 @@ def mkdirs_cli(api_client, workspace_path):
 @click.option('--format', '-f', default=WorkspaceFormat.SOURCE, type=FormatClickType())
 @click.option('--overwrite', '-o', is_flag=True, default=False)
 @profile_option
-@require_config
 @eat_exceptions
+@provide_api_client
 def import_workspace_cli(api_client, source_path, target_path, language, format, overwrite): # NOQA
     """
     Imports a file from local to the Databricks workspace.
@@ -103,8 +103,8 @@ def import_workspace_cli(api_client, source_path, target_path, language, format,
 @click.option('--format', '-f', default=WorkspaceFormat.SOURCE, type=FormatClickType())
 @click.option('--overwrite', '-o', is_flag=True, default=False)
 @profile_option
-@require_config
 @eat_exceptions
+@provide_api_client
 def export_workspace_cli(api_client, source_path, target_path, format, overwrite): # NOQA
     """
     Exports a notebook from the Databricks workspace.
@@ -128,8 +128,8 @@ def export_workspace_cli(api_client, source_path, target_path, format, overwrite
 @click.argument('workspace_path')
 @click.option('--recursive', '-r', is_flag=True, default=False)
 @profile_option
-@require_config
 @eat_exceptions
+@provide_api_client
 def delete_cli(api_client, workspace_path, recursive):
     """
     Deletes objects from the Databricks workspace.
@@ -168,8 +168,8 @@ def _export_dir_helper(workspace_api, source_path, target_path, overwrite):
 @click.argument('target_path')
 @click.option('--overwrite', '-o', is_flag=True, default=False)
 @profile_option
-@require_config
 @eat_exceptions
+@provide_api_client
 def export_dir_cli(api_client, source_path, target_path, overwrite):
     """
     Recursively exports a directory from the Databricks workspace.
@@ -221,8 +221,8 @@ def _import_dir_helper(workspace_api, source_path, target_path, overwrite, exclu
 @click.option('--overwrite', '-o', is_flag=True, default=False)
 @click.option('--exclude-hidden-files', '-e', is_flag=True, default=False)
 @profile_option
-@require_config
 @eat_exceptions
+@provide_api_client
 def import_dir_cli(api_client, source_path, target_path, overwrite, exclude_hidden_files):
     """
     Recursively imports a directory from local to the Databricks workspace.

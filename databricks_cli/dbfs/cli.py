@@ -29,7 +29,7 @@ from requests.exceptions import HTTPError
 from databricks_cli.utils import eat_exceptions, error_and_quit, CONTEXT_SETTINGS
 from databricks_cli.version import print_version_callback, version
 from databricks_cli.configure.cli import configure_cli
-from databricks_cli.configure.config import require_config, profile_option
+from databricks_cli.configure.config import provide_api_client, profile_option
 from databricks_cli.dbfs.api import DbfsErrorCodes, DbfsApi
 from databricks_cli.dbfs.dbfs_path import DbfsPath, DbfsPathClickType
 from databricks_cli.dbfs.exceptions import LocalFileExistsException
@@ -42,8 +42,8 @@ from databricks_cli.dbfs.exceptions import LocalFileExistsException
               help='Displays full information including size and file type.')
 @click.argument('dbfs_path', nargs=-1, type=DbfsPathClickType())
 @profile_option
-@require_config
 @eat_exceptions
+@provide_api_client
 def ls_cli(api_client, l, absolute, dbfs_path): #  NOQA
     """
     List files in DBFS.
@@ -63,8 +63,8 @@ def ls_cli(api_client, l, absolute, dbfs_path): #  NOQA
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.argument('dbfs_path', type=DbfsPathClickType())
 @profile_option
-@require_config
 @eat_exceptions
+@provide_api_client
 def mkdirs_cli(api_client, dbfs_path):
     """
     Make directories in DBFS.
@@ -78,8 +78,8 @@ def mkdirs_cli(api_client, dbfs_path):
 @click.option('--recursive', '-r', is_flag=True, default=False)
 @click.argument('dbfs_path', type=DbfsPathClickType())
 @profile_option
-@require_config
 @eat_exceptions
+@provide_api_client
 def rm_cli(api_client, recursive, dbfs_path):
     """
     Remove files from dbfs.
@@ -159,8 +159,8 @@ def copy_from_dbfs_recursive(dbfs_api, dbfs_path_src, dst, overwrite):
 @click.argument('src')
 @click.argument('dst')
 @profile_option
-@require_config
 @eat_exceptions
+@provide_api_client
 def cp_cli(api_client, recursive, overwrite, src, dst):
     """
     Copy files to and from DBFS.
@@ -217,8 +217,8 @@ def cp_cli(api_client, recursive, overwrite, src, dst):
 @click.argument('src', type=DbfsPathClickType())
 @click.argument('dst', type=DbfsPathClickType())
 @profile_option
-@require_config
 @eat_exceptions
+@provide_api_client
 def mv_cli(api_client, src, dst):
     """
     Moves a file between two DBFS paths.

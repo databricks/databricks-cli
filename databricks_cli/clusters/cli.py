@@ -28,7 +28,7 @@ from databricks_cli.click_types import OutputClickType, JsonClickType, ClusterId
 from databricks_cli.clusters.api import ClusterApi
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base, \
     truncate_string
-from databricks_cli.configure.config import require_config, profile_option
+from databricks_cli.configure.config import provide_api_client, profile_option
 from databricks_cli.version import print_version_callback, version
 
 
@@ -38,8 +38,8 @@ from databricks_cli.version import print_version_callback, version
 @click.option('--json', default=None, type=JsonClickType(),
               help=JsonClickType.help('/api/2.0/clusters/create'))
 @profile_option
-@require_config
 @eat_exceptions
+@provide_api_client
 def create_cli(api_client, json_file, json):
     """
     Creates a Databricks cluster.
@@ -55,8 +55,8 @@ def create_cli(api_client, json_file, json):
 @click.option('--cluster-id', required=True, type=ClusterIdClickType(),
               help=ClusterIdClickType.help)
 @profile_option
-@require_config
 @eat_exceptions
+@provide_api_client
 def start_cli(api_client, cluster_id):
     """
     Starts a terminated Databricks cluster given its ID.
@@ -71,7 +71,7 @@ def start_cli(api_client, cluster_id):
 @click.option('--cluster-id', required=True, type=ClusterIdClickType(),
               help=ClusterIdClickType.help)
 @profile_option
-@require_config
+@provide_api_client
 @eat_exceptions
 def restart_cli(api_client, cluster_id):
     """
@@ -86,8 +86,8 @@ def restart_cli(api_client, cluster_id):
 @click.option('--cluster-id', required=True, type=ClusterIdClickType(),
               help=ClusterIdClickType.help)
 @profile_option
-@require_config
 @eat_exceptions
+@provide_api_client
 def delete_cli(api_client, cluster_id):
     """
     Removes a Databricks cluster given its ID.
@@ -105,8 +105,8 @@ def delete_cli(api_client, cluster_id):
 @click.option('--cluster-id', required=True, type=ClusterIdClickType(),
               help=ClusterIdClickType.help)
 @profile_option
-@require_config
 @eat_exceptions
+@provide_api_client
 def get_cli(api_client, cluster_id):
     """
     Retrieves metadata about a cluster.
@@ -125,8 +125,8 @@ def _clusters_to_table(clusters_json):
                short_help='Lists active and recently terminated clusters.')
 @click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
 @profile_option
-@require_config
 @eat_exceptions
+@provide_api_client
 def list_cli(api_client, output):
     """
     Lists active and recently terminated clusters.
@@ -151,8 +151,8 @@ def list_cli(api_client, output):
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @profile_option
-@require_config
 @eat_exceptions
+@provide_api_client
 def list_zones_cli(api_client):
     """
     Lists zones where clusters can be created.
@@ -166,8 +166,8 @@ def list_zones_cli(api_client):
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Lists possible node types for a cluster.')
 @profile_option
-@require_config
 @eat_exceptions
+@provide_api_client
 def list_node_types_cli(api_client):
     """
     Lists possible node types for a cluster.
@@ -180,8 +180,8 @@ def list_node_types_cli(api_client):
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @profile_option
-@require_config
 @eat_exceptions
+@provide_api_client
 def spark_versions_cli(api_client):
     """
     Lists possible Databricks Runtime versions for a cluster.
