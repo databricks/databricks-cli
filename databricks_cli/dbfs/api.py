@@ -27,8 +27,9 @@ import os
 import click
 
 from requests.exceptions import HTTPError
+
+from databricks_cli.sdk import DbfsService
 from databricks_cli.utils import error_and_quit
-from databricks_cli.configure.config import get_dbfs_client
 from databricks_cli.dbfs.dbfs_path import DbfsPath
 from databricks_cli.dbfs.exceptions import LocalFileExistsException
 
@@ -67,71 +68,61 @@ class DbfsErrorCodes(object):
     RESOURCE_ALREADY_EXISTS = 'RESOURCE_ALREADY_EXISTS'
 
 
-def list_files(dbfs_path):
-    dbfs_api = get_dbfs_client()
-    list_response = dbfs_api.list(dbfs_path.absolute_path)
-    if 'files' in list_response:
-        return [FileInfo.from_json(f) for f in list_response['files']]
-    else:
-        return []
+class DbfsApi(object):
+    def __init__(self, api_client):
+        self.client = DbfsService(api_client)
 
+    def list_files(self, dbfs_path):
+        list_response = self.client.list(dbfs_path.absolute_path)
+        if 'files' in list_response:
+            return [FileInfo.from_json(f) for f in list_response['files']]
+        else:
+            return []
 
-def file_exists(dbfs_path):
-    try:
-        get_status(dbfs_path)
-    except HTTPError as e:
-        if e.response.json()['error_code'] == DbfsErrorCodes.RESOURCE_DOES_NOT_EXIST:
-            return False
-        raise e
-    return True
+    def file_exists(self, dbfs_path):
+        try:
+            self.get_status(dbfs_path)
+        except HTTPError as e:
+            if e.response.json()['error_code'] == DbfsErrorCodes.RESOURCE_DOES_NOT_EXIST:
+                return False
+            raise e
+        return True
 
+    def get_status(self, dbfs_path):
+        json = self.client.get_status(dbfs_path.absolute_path)
+        return FileInfo.from_json(json)
 
-def get_status(dbfs_path):
-    dbfs_api = get_dbfs_client()
-    json = dbfs_api.get_status(dbfs_path.absolute_path)
-    return FileInfo.from_json(json)
+    def put_file(self, src_path, dbfs_path, overwrite):
+        handle = self.client.create(dbfs_path.absolute_path, overwrite)['handle']
+        with open(src_path, 'rb') as local_file:
+            while True:
+                contents = local_file.read(BUFFER_SIZE_BYTES)
+                if len(contents) == 0:
+                    break
+                self.client.add_block(handle, b64encode(contents))
+            self.client.close(handle)
 
+    def get_file(self, dbfs_path, dst_path, overwrite):
+        if os.path.exists(dst_path) and not overwrite:
+            raise LocalFileExistsException('{} exists already.'.format(dst_path))
+        file_info = self.get_status(dbfs_path)
+        if file_info.is_dir:
+            error_and_quit(('The dbfs file {} is a directory.').format(repr(dbfs_path)))
+        length = file_info.file_size
+        offset = 0
+        with open(dst_path, 'wb') as local_file:
+            while offset < length:
+                response = self.client.read(dbfs_path.absolute_path, offset, BUFFER_SIZE_BYTES)
+                bytes_read = response['bytes_read']
+                data = response['data']
+                offset += bytes_read
+                local_file.write(b64decode(data))
 
-def put_file(src_path, dbfs_path, overwrite):
-    dbfs_api = get_dbfs_client()
-    handle = dbfs_api.create(dbfs_path.absolute_path, overwrite)['handle']
-    with open(src_path, 'rb') as local_file:
-        while True:
-            contents = local_file.read(BUFFER_SIZE_BYTES)
-            if len(contents) == 0:
-                break
-            dbfs_api.add_block(handle, b64encode(contents))
-        dbfs_api.close(handle)
+    def delete(self, dbfs_path, recursive):
+        self.client.delete(dbfs_path.absolute_path, recursive=recursive)
 
+    def mkdirs(self, dbfs_path):
+        self.client.mkdirs(dbfs_path.absolute_path)
 
-def get_file(dbfs_path, dst_path, overwrite):
-    if os.path.exists(dst_path) and not overwrite:
-        raise LocalFileExistsException('{} exists already.'.format(dst_path))
-    dbfs_api = get_dbfs_client()
-    file_info = get_status(dbfs_path)
-    if file_info.is_dir:
-        error_and_quit(('The dbfs file {} is a directory.').format(repr(dbfs_path)))
-    length = file_info.file_size
-    offset = 0
-    with open(dst_path, 'wb') as local_file:
-        while offset < length:
-            response = dbfs_api.read(dbfs_path.absolute_path, offset, BUFFER_SIZE_BYTES)
-            bytes_read = response['bytes_read']
-            data = response['data']
-            offset += bytes_read
-            local_file.write(b64decode(data))
-
-
-def delete(dbfs_path, recursive):
-    dbfs_api = get_dbfs_client()
-    dbfs_api.delete(dbfs_path.absolute_path, recursive=recursive)
-
-
-def mkdirs(dbfs_path):
-    dbfs_api = get_dbfs_client()
-    dbfs_api.mkdirs(dbfs_path.absolute_path)
-
-
-def move(dbfs_src, dbfs_dst):
-    dbfs_api = get_dbfs_client()
-    dbfs_api.move(dbfs_src.absolute_path, dbfs_dst.absolute_path)
+    def move(self, dbfs_src, dbfs_dst):
+        self.client.move(dbfs_src.absolute_path, dbfs_dst.absolute_path)

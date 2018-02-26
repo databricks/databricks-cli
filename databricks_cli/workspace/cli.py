@@ -28,10 +28,9 @@ from requests.exceptions import HTTPError
 
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS
 from databricks_cli.version import print_version_callback, version
-from databricks_cli.configure.config import require_config
+from databricks_cli.configure.config import provide_api_client, profile_option
 from databricks_cli.dbfs.exceptions import LocalFileExistsException
-from databricks_cli.workspace.api import list_objects, mkdirs, import_workspace, export_workspace, \
-    delete, get_status
+from databricks_cli.workspace.api import WorkspaceApi
 from databricks_cli.workspace.types import LanguageClickType, FormatClickType, WorkspaceFormat, \
     WorkspaceLanguage
 
@@ -43,9 +42,10 @@ from databricks_cli.workspace.types import LanguageClickType, FormatClickType, W
 @click.option('-l', is_flag=True, default=False,
               help='Displays full information including ObjectType, Path, Language')
 @click.argument('workspace_path', type=str, nargs=-1)
-@require_config
+@profile_option
 @eat_exceptions
-def ls_cli(l, absolute, workspace_path):
+@provide_api_client
+def ls_cli(api_client, l, absolute, workspace_path):
     """
     List objects in the Databricks Workspace.
     """
@@ -53,7 +53,7 @@ def ls_cli(l, absolute, workspace_path):
         workspace_path = '/'
     else:
         workspace_path = workspace_path[0]
-    objects = list_objects(workspace_path)
+    objects = WorkspaceApi(api_client).list_objects(workspace_path)
     table = tabulate([obj.to_row(is_long_form=l, is_absolute=absolute) for obj in objects],
                      tablefmt='plain')
     click.echo(table)
@@ -62,15 +62,16 @@ def ls_cli(l, absolute, workspace_path):
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Make directories in the Databricks Workspace.')
 @click.argument('workspace_path')
-@require_config
+@profile_option
 @eat_exceptions
-def mkdirs_cli(workspace_path):
+@provide_api_client
+def mkdirs_cli(api_client, workspace_path):
     """
     Make directories in the Databricks Workspace.
 
     Mkdirs will create directories along the path to the argument directory.
     """
-    mkdirs(workspace_path)
+    WorkspaceApi(api_client).mkdirs(workspace_path)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -81,9 +82,10 @@ def mkdirs_cli(workspace_path):
               help=', '.join(WorkspaceLanguage.ALL))
 @click.option('--format', '-f', default=WorkspaceFormat.SOURCE, type=FormatClickType())
 @click.option('--overwrite', '-o', is_flag=True, default=False)
-@require_config
+@profile_option
 @eat_exceptions
-def import_workspace_cli(source_path, target_path, language, format, overwrite): # NOQA
+@provide_api_client
+def import_workspace_cli(api_client, source_path, target_path, language, format, overwrite): # NOQA
     """
     Imports a file from local to the Databricks workspace.
 
@@ -91,7 +93,7 @@ def import_workspace_cli(source_path, target_path, language, format, overwrite):
     format is documented at
     https://docs.databricks.com/api/latest/workspace.html#notebookexportformat.
     """
-    import_workspace(source_path, target_path, language, format, overwrite) # NOQA
+    WorkspaceApi(api_client).import_workspace(source_path, target_path, language, format, overwrite) # NOQA
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -100,9 +102,10 @@ def import_workspace_cli(source_path, target_path, language, format, overwrite):
 @click.argument('target_path')
 @click.option('--format', '-f', default=WorkspaceFormat.SOURCE, type=FormatClickType())
 @click.option('--overwrite', '-o', is_flag=True, default=False)
-@require_config
+@profile_option
 @eat_exceptions
-def export_workspace_cli(source_path, target_path, format, overwrite): # NOQA
+@provide_api_client
+def export_workspace_cli(api_client, source_path, target_path, format, overwrite): # NOQA
     """
     Exports a notebook from the Databricks workspace.
 
@@ -111,12 +114,12 @@ def export_workspace_cli(source_path, target_path, format, overwrite): # NOQA
     https://docs.databricks.com/api/latest/workspace.html#notebookexportformat.
     """
     if os.path.isdir(target_path):
-        file_info = get_status(source_path)
+        file_info = WorkspaceApi(api_client).get_status(source_path)
         if not file_info.is_notebook:
             raise RuntimeError('Export can only be called on a notebook.')
         extension = WorkspaceLanguage.to_extension(file_info.language)
         target_path = os.path.join(target_path, file_info.basename + extension)
-    export_workspace(source_path, target_path, format, overwrite) # NOQA
+    WorkspaceApi(api_client).export_workspace(source_path, target_path, format, overwrite) # NOQA
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -124,33 +127,34 @@ def export_workspace_cli(source_path, target_path, format, overwrite): # NOQA
                           'rm and delete are synonyms.')
 @click.argument('workspace_path')
 @click.option('--recursive', '-r', is_flag=True, default=False)
-@require_config
+@profile_option
 @eat_exceptions
-def delete_cli(workspace_path, recursive):
+@provide_api_client
+def delete_cli(api_client, workspace_path, recursive):
     """
     Deletes objects from the Databricks workspace.
 
     To delete a folder add the recursive flag.
     """
-    delete(workspace_path, recursive)
+    WorkspaceApi(api_client).delete(workspace_path, recursive)
 
 
-def _export_dir_helper(source_path, target_path, overwrite):
+def _export_dir_helper(workspace_api, source_path, target_path, overwrite):
     if os.path.isfile(target_path):
         click.echo('{} exists as a file. Skipping this subtree {}'
                    .format(target_path, source_path))
         return
     if not os.path.isdir(target_path):
         os.makedirs(target_path)
-    for obj in list_objects(source_path):
+    for obj in workspace_api.list_objects(source_path):
         cur_src = obj.path
         cur_dst = os.path.join(target_path, obj.basename)
         if obj.is_dir:
-            _export_dir_helper(cur_src, cur_dst, overwrite)
+            _export_dir_helper(workspace_api, cur_src, cur_dst, overwrite)
         elif obj.is_notebook:
             cur_dst = cur_dst + WorkspaceLanguage.to_extension(obj.language)
             try:
-                export_workspace(cur_src, cur_dst, WorkspaceFormat.SOURCE, overwrite)
+                workspace_api.export_workspace(cur_src, cur_dst, WorkspaceFormat.SOURCE, overwrite)
                 click.echo('{} -> {}'.format(cur_src, cur_dst))
             except LocalFileExistsException:
                 click.echo('{} already exists locally as {}. Skip.'.format(cur_src, cur_dst))
@@ -163,9 +167,10 @@ def _export_dir_helper(source_path, target_path, overwrite):
 @click.argument('source_path')
 @click.argument('target_path')
 @click.option('--overwrite', '-o', is_flag=True, default=False)
-@require_config
+@profile_option
 @eat_exceptions
-def export_dir_cli(source_path, target_path, overwrite):
+@provide_api_client
+def export_dir_cli(api_client, source_path, target_path, overwrite):
     """
     Recursively exports a directory from the Databricks workspace.
 
@@ -173,19 +178,20 @@ def export_dir_cli(source_path, target_path, overwrite):
     format. Notebooks will also have the extension of .scala, .py, .sql, or .r appended
     depending on the language type.
     """
-    assert get_status(source_path).is_dir, 'The source path must be a directory. {}' \
+    workspace_api = WorkspaceApi(api_client)
+    assert workspace_api.get_status(source_path).is_dir, 'The source path must be a directory. {}' \
         .format(source_path)
-    _export_dir_helper(source_path, target_path, overwrite)
+    _export_dir_helper(workspace_api, source_path, target_path, overwrite)
 
 
-def _import_dir_helper(source_path, target_path, overwrite, exclude_hidden_files):
+def _import_dir_helper(workspace_api, source_path, target_path, overwrite, exclude_hidden_files):
     # Try doing the os.listdir before creating the dir in Databricks.
     filenames = os.listdir(source_path)
     if exclude_hidden_files:
         # for now, just exclude hidden files or directories based on starting '.'
         filenames = [f for f in filenames if not f.startswith('.')]
     try:
-        mkdirs(target_path)
+        workspace_api.mkdirs(target_path)
     except HTTPError as e:
         click.echo(e.response.json())
         return
@@ -194,13 +200,13 @@ def _import_dir_helper(source_path, target_path, overwrite, exclude_hidden_files
         # don't use os.path.join here since it will set \ on Windows
         cur_dst = target_path.rstrip('/') + '/' + filename
         if os.path.isdir(cur_src):
-            _import_dir_helper(cur_src, cur_dst, overwrite, exclude_hidden_files)
+            _import_dir_helper(workspace_api, cur_src, cur_dst, overwrite, exclude_hidden_files)
         elif os.path.isfile(cur_src):
             ext = WorkspaceLanguage.get_extension(cur_src)
             if ext != '':
                 cur_dst = cur_dst[:-len(ext)]
                 (language, file_format) = WorkspaceLanguage.to_language_and_format(cur_src)
-                import_workspace(cur_src, cur_dst, language, file_format, overwrite)
+                workspace_api.import_workspace(cur_src, cur_dst, language, file_format, overwrite)
                 click.echo('{} -> {}'.format(cur_src, cur_dst))
             else:
                 extensions = ', '.join(WorkspaceLanguage.EXTENSIONS)
@@ -214,16 +220,18 @@ def _import_dir_helper(source_path, target_path, overwrite, exclude_hidden_files
 @click.argument('target_path')
 @click.option('--overwrite', '-o', is_flag=True, default=False)
 @click.option('--exclude-hidden-files', '-e', is_flag=True, default=False)
-@require_config
+@profile_option
 @eat_exceptions
-def import_dir_cli(source_path, target_path, overwrite, exclude_hidden_files):
+@provide_api_client
+def import_dir_cli(api_client, source_path, target_path, overwrite, exclude_hidden_files):
     """
     Recursively imports a directory from local to the Databricks workspace.
 
     Only directories and files with the extensions .scala, .py, .sql, .r, .R, .ipynb are imported.
     When imported, these extensions will be stripped off the name of the notebook.
     """
-    _import_dir_helper(source_path, target_path, overwrite, exclude_hidden_files)
+    _import_dir_helper(WorkspaceApi(api_client), source_path, target_path, overwrite,
+                       exclude_hidden_files)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,

@@ -28,6 +28,7 @@ import click
 import six
 from requests.exceptions import HTTPError
 
+from databricks_cli.configure.provider import DEFAULT_SECTION
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 DEBUG_MODE = False
@@ -78,3 +79,16 @@ def truncate_string(s, length=100):
     if len(s) <= length:
         return s
     return s[:length] + '...'
+
+
+class InvalidConfigurationError(RuntimeError):
+    def __init__(self, profile=DEFAULT_SECTION):
+        if profile == DEFAULT_SECTION:
+            message = ('You haven\'t configured the CLI yet! '
+                       'Please configure by entering `{} configure`'.format(sys.argv[0]))
+        else:
+            message = ('You haven\'t configured the CLI yet for the profile {profile}! '
+                       'Please configure by entering '
+                       '`{argv} configure --profile {profile}`').format(
+                profile=profile, argv=sys.argv[0])
+        super(InvalidConfigurationError, self).__init__(message)

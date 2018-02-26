@@ -27,10 +27,10 @@ import click
 from tabulate import tabulate
 
 from databricks_cli.click_types import OutputClickType, JsonClickType, JobIdClickType
-from databricks_cli.jobs.api import create_job, list_jobs, delete_job, get_job, reset_job, run_now
+from databricks_cli.jobs.api import JobsApi
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base, \
     truncate_string
-from databricks_cli.configure.config import require_config
+from databricks_cli.configure.config import provide_api_client, profile_option
 from databricks_cli.version import print_version_callback, version
 
 
@@ -39,16 +39,17 @@ from databricks_cli.version import print_version_callback, version
               help='File containing JSON request to POST to /api/2.0/jobs/create.')
 @click.option('--json', default=None, type=JsonClickType(),
               help=JsonClickType.help('/api/2.0/jobs/create'))
-@require_config
+@profile_option
 @eat_exceptions
-def create_cli(json_file, json):
+@provide_api_client
+def create_cli(api_client, json_file, json):
     """
     Creates a job.
 
     The specification for the json option can be found
     https://docs.databricks.com/api/latest/jobs.html#create
     """
-    json_cli_base(json_file, json, create_job)
+    json_cli_base(json_file, json, lambda json: JobsApi(api_client).create_job(json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
@@ -59,9 +60,10 @@ def create_cli(json_file, json):
 @click.option('--json', default=None, type=JsonClickType(),
               help='Partial JSON string to POST to /api/2.0/jobs/reset. '
                    'For more, read full help message.')
-@require_config
+@profile_option
 @eat_exceptions
-def reset_cli(json_file, json, job_id):
+@provide_api_client
+def reset_cli(api_client, json_file, json, job_id):
     """
     Resets (edits) the definition of a job.
 
@@ -83,7 +85,7 @@ def reset_cli(json_file, json, job_id):
         'job_id': job_id,
         'new_settings': deser_json
     }
-    reset_job(request_body)
+    JobsApi(api_client).reset_job(request_body)
 
 
 def _jobs_to_table(jobs_json):
@@ -96,9 +98,10 @@ def _jobs_to_table(jobs_json):
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Lists the jobs in the Databricks Job Service.')
 @click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
-@require_config
+@profile_option
 @eat_exceptions
-def list_cli(output):
+@provide_api_client
+def list_cli(api_client, output):
     """
     Lists the jobs in the Databricks Job Service.
 
@@ -112,7 +115,8 @@ def list_cli(output):
 
     In table mode, the jobs are sorted by their name.
     """
-    jobs_json = list_jobs()
+    jobs_api = JobsApi(api_client)
+    jobs_json = jobs_api.list_jobs()
     if OutputClickType.is_json(output):
         click.echo(pretty_format(jobs_json))
     else:
@@ -122,24 +126,26 @@ def list_cli(output):
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Deletes the specified job.')
 @click.option('--job-id', required=True, type=JobIdClickType(), help=JobIdClickType.help)
-@require_config
+@profile_option
 @eat_exceptions
-def delete_cli(job_id):
+@provide_api_client
+def delete_cli(api_client, job_id):
     """
     Deletes the specified job.
     """
-    delete_job(job_id)
+    JobsApi(api_client).delete_job(job_id)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--job-id', required=True, type=JobIdClickType(), help=JobIdClickType.help)
-@require_config
+@profile_option
 @eat_exceptions
-def get_cli(job_id):
+@provide_api_client
+def get_cli(api_client, job_id):
     """
     Describes the metadata for a job.
     """
-    click.echo(pretty_format(get_job(job_id)))
+    click.echo(pretty_format(JobsApi(api_client).get_job(job_id)))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
@@ -154,9 +160,11 @@ def get_cli(job_id):
 @click.option('--spark-submit-params', default=None, type=JsonClickType(),
               help='JSON string specifying an array of parameters. i.e. '
                    '["--class", "org.apache.spark.examples.SparkPi"]')
-@require_config
+@profile_option
 @eat_exceptions
-def run_now_cli(job_id, jar_params, notebook_params, python_params, spark_submit_params):
+@provide_api_client
+def run_now_cli(api_client, job_id, jar_params, notebook_params, python_params,
+                spark_submit_params):
     """
     Runs a job with optional per-run parameters.
 
@@ -167,7 +175,8 @@ def run_now_cli(job_id, jar_params, notebook_params, python_params, spark_submit
     notebook_params_json = json_loads(notebook_params) if notebook_params else None
     python_params = json_loads(python_params) if python_params else None
     spark_submit_params = json_loads(spark_submit_params) if spark_submit_params else None
-    res = run_now(job_id, jar_params_json, notebook_params_json, python_params, spark_submit_params)
+    res = JobsApi(api_client).run_now(
+        job_id, jar_params_json, notebook_params_json, python_params, spark_submit_params)
     click.echo(pretty_format(res))
 
 
@@ -175,7 +184,6 @@ def run_now_cli(job_id, jar_params, notebook_params, python_params, spark_submit
              short_help='Utility to interact with jobs.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
-@require_config
 @eat_exceptions
 def jobs_group():
     """

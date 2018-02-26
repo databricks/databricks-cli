@@ -21,6 +21,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint:disable=redefined-outer-name
+
 from base64 import b64encode
 
 import os
@@ -69,81 +71,74 @@ class TestFileInfo(object):
         assert file_info.file_size == 1
 
 
-def test_list_files_exists():
-    with mock.patch('databricks_cli.dbfs.api.get_dbfs_client') as get_dbfs_client:
+@pytest.fixture()
+def dbfs_api():
+    with mock.patch('databricks_cli.dbfs.api.DbfsService') as DbfsServiceMock:
+        DbfsServiceMock.return_value = mock.MagicMock()
+        _dbfs_api = api.DbfsApi(None)
+        yield _dbfs_api
+
+
+class TestDbfsApi(object):
+    def test_list_files_exists(self, dbfs_api):
         json = {
             'files': [TEST_FILE_JSON]
         }
-        get_dbfs_client.return_value.list.return_value = json
-        files = api.list_files(TEST_DBFS_PATH)
+        dbfs_api.client.list.return_value = json
+        files = dbfs_api.list_files(TEST_DBFS_PATH)
 
         assert len(files) == 1
         assert TEST_FILE_INFO == files[0]
 
-
-def test_list_files_does_not_exist():
-    with mock.patch('databricks_cli.dbfs.api.get_dbfs_client') as get_dbfs_client:
+    def test_list_files_does_not_exist(self, dbfs_api):
         json = {}
-        get_dbfs_client.return_value.list.return_value = json
-        files = api.list_files(TEST_DBFS_PATH)
+        dbfs_api.client.list.return_value = json
+        files = dbfs_api.list_files(TEST_DBFS_PATH)
 
         assert len(files) == 0
 
+    def test_file_exists_true(self, dbfs_api):
+        dbfs_api.client.get_status.return_value = TEST_FILE_JSON
+        assert dbfs_api.file_exists(TEST_DBFS_PATH)
 
-def test_file_exists_true():
-    with mock.patch('databricks_cli.dbfs.api.get_dbfs_client') as get_dbfs_client:
-        get_dbfs_client.return_value.get_status.return_value = TEST_FILE_JSON
-        assert api.file_exists(TEST_DBFS_PATH)
-
-
-def test_file_exists_false():
-    with mock.patch('databricks_cli.dbfs.api.get_dbfs_client') as get_dbfs_client:
+    def test_file_exists_false(self, dbfs_api):
         exception = get_resource_does_not_exist_exception()
-        get_dbfs_client.return_value.get_status = mock.Mock(side_effect=exception)
-        assert not api.file_exists(TEST_DBFS_PATH)
+        dbfs_api.client.get_status = mock.Mock(side_effect=exception)
+        assert not dbfs_api.file_exists(TEST_DBFS_PATH)
 
+    def test_get_status(self, dbfs_api):
+        dbfs_api.client.get_status.return_value = TEST_FILE_JSON
+        assert dbfs_api.get_status(TEST_DBFS_PATH) == TEST_FILE_INFO
 
-def test_get_status():
-    with mock.patch('databricks_cli.dbfs.api.get_dbfs_client') as get_dbfs_client:
-        get_dbfs_client.return_value.get_status.return_value = TEST_FILE_JSON
-        assert api.get_status(TEST_DBFS_PATH) == TEST_FILE_INFO
-
-
-def test_get_status_fail():
-    with mock.patch('databricks_cli.dbfs.api.get_dbfs_client') as get_dbfs_client:
+    def test_get_status_fail(self, dbfs_api):
         exception = get_resource_does_not_exist_exception()
-        get_dbfs_client.return_value.get_status = mock.Mock(side_effect=exception)
+        dbfs_api.client.get_status = mock.Mock(side_effect=exception)
         with pytest.raises(exception.__class__):
-            api.get_status(TEST_DBFS_PATH)
+            dbfs_api.get_status(TEST_DBFS_PATH)
 
+    def test_put_file(self, dbfs_api, tmpdir):
+        test_file_path = os.path.join(tmpdir.strpath, 'test')
+        with open(test_file_path, 'w') as f:
+            f.write('test')
 
-def test_put_file(tmpdir):
-    test_file_path = os.path.join(tmpdir.strpath, 'test')
-    with open(test_file_path, 'w') as f:
-        f.write('test')
-
-    with mock.patch('databricks_cli.dbfs.api.get_dbfs_client') as get_dbfs_client:
-        api_mock = get_dbfs_client.return_value
+        api_mock = dbfs_api.client
         test_handle = 0
         api_mock.create.return_value = {'handle': test_handle}
-        api.put_file(test_file_path, TEST_DBFS_PATH, True)
+        dbfs_api.put_file(test_file_path, TEST_DBFS_PATH, True)
 
         assert api_mock.add_block.call_count == 1
         assert test_handle == api_mock.add_block.call_args[0][0]
         assert b64encode('test') == api_mock.add_block.call_args[0][1]
 
+    def test_get_file_check_overwrite(self, dbfs_api, tmpdir):
+        test_file_path = os.path.join(tmpdir.strpath, 'test')
+        with open(test_file_path, 'w') as f:
+            f.write('test')
+        with pytest.raises(LocalFileExistsException):
+            dbfs_api.get_file(TEST_DBFS_PATH, test_file_path, False)
 
-def test_get_file_check_overwrite(tmpdir):
-    test_file_path = os.path.join(tmpdir.strpath, 'test')
-    with open(test_file_path, 'w') as f:
-        f.write('test')
-    with pytest.raises(LocalFileExistsException):
-        api.get_file(TEST_DBFS_PATH, test_file_path, False)
-
-
-def test_get_file(tmpdir):
-    with mock.patch('databricks_cli.dbfs.api.get_dbfs_client') as get_dbfs_client:
-        api_mock = get_dbfs_client.return_value
+    def test_get_file(self, dbfs_api, tmpdir):
+        api_mock = dbfs_api.client
         api_mock.get_status.return_value = TEST_FILE_JSON
         api_mock.read.return_value = {
             'bytes_read': 1,
@@ -151,7 +146,7 @@ def test_get_file(tmpdir):
         }
 
         test_file_path = os.path.join(tmpdir.strpath, 'test')
-        api.get_file(TEST_DBFS_PATH, test_file_path, True)
+        dbfs_api.get_file(TEST_DBFS_PATH, test_file_path, True)
 
         with open(test_file_path, 'r') as f:
             assert f.read() == 'x'

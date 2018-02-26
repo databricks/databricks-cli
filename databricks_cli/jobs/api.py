@@ -20,30 +20,28 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from databricks_cli.configure.config import get_jobs_client
-
-
-def create_job(json):
-    return get_jobs_client().client.perform_query('POST', '/jobs/create', data=json)
+from databricks_cli.sdk import JobsService
 
 
-def list_jobs():
-    return get_jobs_client().list_jobs()
+class JobsApi(object):
+    def __init__(self, api_client):
+        self.client = JobsService(api_client)
 
+    def create_job(self, json):
+        return self.client.client.perform_query('POST', '/jobs/create', data=json)
 
-def delete_job(job_id):
-    return get_jobs_client().delete_job(job_id)
+    def list_jobs(self):
+        return self.client.list_jobs()
 
+    def delete_job(self, job_id):
+        return self.client.delete_job(job_id)
 
-def get_job(job_id):
-    return get_jobs_client().get_job(job_id)
+    def get_job(self, job_id):
+        return self.client.get_job(job_id)
 
+    def reset_job(self, json):
+        return self.client.client.perform_query('POST', '/jobs/reset', data=json)
 
-def reset_job(json):
-    return get_jobs_client().client.perform_query('POST', '/jobs/reset', data=json)
-
-
-def run_now(job_id, jar_params, notebook_params, python_params, spark_submit_params):
-    return get_jobs_client().run_now(job_id, jar_params, notebook_params, python_params,
-                                     spark_submit_params)
+    def run_now(self, job_id, jar_params, notebook_params, python_params, spark_submit_params):
+        return self.client.run_now(job_id, jar_params, notebook_params, python_params,
+                                   spark_submit_params)

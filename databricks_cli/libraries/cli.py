@@ -24,58 +24,60 @@
 import click
 
 from databricks_cli.click_types import ClusterIdClickType, OneOfOption
-from databricks_cli.configure.config import require_config
-from databricks_cli.libraries.api import all_cluster_statuses, cluster_status, install_libraries, \
-    uninstall_libraries
+from databricks_cli.configure.config import provide_api_client, profile_option
+from databricks_cli.libraries.api import LibrariesApi
 from databricks_cli.utils import CONTEXT_SETTINGS, eat_exceptions, pretty_format
 from databricks_cli.version import print_version_callback, version
 
 
-def _all_cluster_statuses():
-    click.echo(pretty_format(all_cluster_statuses()))
+def _all_cluster_statuses(config):
+    click.echo(pretty_format(LibrariesApi(config).all_cluster_statuses()))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Get the status of all libraries.')
-@require_config
+@profile_option
 @eat_exceptions # noqa
-def all_cluster_statuses_cli():
+@provide_api_client
+def all_cluster_statuses_cli(api_client):
     """
     Get the status of all libraries on all clusters. A status will be available for all libraries
     installed on this cluster via the API or the libraries UI as well as libraries set to be
     installed on all clusters via the libraries UI. If a library has been set to be installed on
     all clusters, is_library_for_all_clusters will be true.
     """
-    _all_cluster_statuses()
+    _all_cluster_statuses(api_client)
 
 
-def _cluster_status(cluster_id):
-    click.echo(pretty_format(cluster_status(cluster_id)))
+def _cluster_status(api_client, cluster_id):
+    click.echo(pretty_format(LibrariesApi(api_client).cluster_status(cluster_id)))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Get the status of all libraries for a specified cluster.')
 @click.option('--cluster-id', required=True, type=ClusterIdClickType(),
               help=ClusterIdClickType.help)
-@require_config
+@profile_option
 @eat_exceptions # noqa
-def cluster_status_cli(cluster_id):
+@provide_api_client
+def cluster_status_cli(api_client, cluster_id):
     """
     Get the status of all libraries for a specified cluster. A status will be available for all
     libraries installed on this cluster via the API or the libraries UI as well as libraries set to
     be installed on all clusters via the libraries UI. If a library has been set to be installed on
     all clusters, is_library_for_all_clusters will be true.
     """
-    _cluster_status(cluster_id)
+    _cluster_status(api_client, cluster_id)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Shortcut to `all-cluster-statuses` or `cluster-status`.')
 @click.option('--cluster-id', type=ClusterIdClickType(), default=None,
               help=ClusterIdClickType.help)
-@require_config
+@profile_option
 @eat_exceptions # noqa
-def list_cli(cluster_id):
+@provide_api_client
+def list_cli(api_client, cluster_id):
     """
     Get the statsus of all libraries for all clusters or for a specified cluster.
     If the option --cluster-id is provided, then all libraries on that cluster will be listed,
@@ -83,9 +85,9 @@ def list_cli(cluster_id):
     will be listed (all-cluster-statuses).
     """
     if cluster_id is not None:
-        _cluster_status(cluster_id)
+        _cluster_status(api_client, cluster_id)
     else:
-        _all_cluster_statuses()
+        _all_cluster_statuses(api_client)
 
 
 INSTALL_OPTIONS = ['jar', 'egg', 'maven-coordinates', 'pypi-package', 'cran-package']
@@ -158,10 +160,11 @@ def _get_library_from_options(jar, egg, maven_coordinates, maven_repo, maven_exc
 @click.option('--pypi-repo', help=PYPI_REPO_HELP)
 @click.option('--cran-package', cls=OneOfOption, one_of=INSTALL_OPTIONS, help=CRAN_PACKAGE_HELP)
 @click.option('--cran-repo', help=CRAN_REPO_HELP)
-@require_config
+@profile_option
 @eat_exceptions # noqa
-def install_cli(cluster_id, jar, egg, maven_coordinates, maven_repo, maven_exclusion, pypi_package, # noqa
-                pypi_repo, cran_package, cran_repo):
+@provide_api_client
+def install_cli(api_client, cluster_id, jar, egg, maven_coordinates, maven_repo, maven_exclusion, # noqa
+                pypi_package, pypi_repo, cran_package, cran_repo):
     """
     Install a library ona a cluster. Libraries must be first uploaded to dbfs or s3
     (see `dbfs cp -h`). Unlike the API, only one library can be installed for each execution of
@@ -172,7 +175,7 @@ def install_cli(cluster_id, jar, egg, maven_coordinates, maven_repo, maven_exclu
     """
     library = _get_library_from_options(jar, egg, maven_coordinates, maven_repo, maven_exclusion,
                                         pypi_package, pypi_repo, cran_package, cran_repo)
-    install_libraries(cluster_id, [library])
+    LibrariesApi(api_client).install_libraries(cluster_id, [library])
 
 
 def _uninstall_cli_exit_help(cluster_id):
@@ -196,23 +199,24 @@ def _uninstall_cli_exit_help(cluster_id):
 @click.option('--pypi-repo', help=PYPI_REPO_HELP)
 @click.option('--cran-package', cls=OneOfOption, one_of=INSTALL_OPTIONS, help=CRAN_PACKAGE_HELP)
 @click.option('--cran-repo', help=CRAN_REPO_HELP)
-@require_config
+@profile_option
 @eat_exceptions # noqa
-def uninstall_cli(cluster_id, all, jar, egg, maven_coordinates, maven_repo, maven_exclusion, # noqa
-                  pypi_package, pypi_repo, cran_package, cran_repo):
+@provide_api_client
+def uninstall_cli(api_client, cluster_id, all, jar, egg, maven_coordinates, maven_repo, # noqa
+                  maven_exclusion, pypi_package, pypi_repo, cran_package, cran_repo):
     """
     Mark libraries on a cluster to be uninstalled. Libraries which are marked to be uninstalled
     will stay attached until the cluster is restarted. (see `databricks clusters restart -h`).
     """
     if all:
-        library_statuses = _cluster_status(cluster_id).get('library_statuses', [])
+        library_statuses = _cluster_status(api_client, cluster_id).get('library_statuses', [])
         libraries = [l_status['library'] for l_status in library_statuses]
-        uninstall_libraries(cluster_id, libraries)
+        LibrariesApi(api_client).uninstall_libraries(cluster_id, libraries)
         _uninstall_cli_exit_help(cluster_id)
         return
     library = _get_library_from_options(jar, egg, maven_coordinates, maven_repo, maven_exclusion,
                                         pypi_package, pypi_repo, cran_package, cran_repo)
-    uninstall_libraries(cluster_id, [library])
+    LibrariesApi(api_client).uninstall_libraries(cluster_id, [library])
     _uninstall_cli_exit_help(cluster_id)
 
 
@@ -220,7 +224,6 @@ def uninstall_cli(cluster_id, all, jar, egg, maven_coordinates, maven_repo, mave
              short_help='Utility to interact with libraries.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
-@require_config
 @eat_exceptions
 def libraries_group():
     """

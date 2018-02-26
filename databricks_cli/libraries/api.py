@@ -21,20 +21,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from databricks_cli.configure.config import get_libraries_client
+from databricks_cli.sdk import ManagedLibraryService
 
 
-def all_cluster_statuses():
-    return get_libraries_client().all_cluster_statuses()
+class LibrariesApi(object):
+    def __init__(self, api_client):
+        self.client = ManagedLibraryService(api_client)
 
+    def all_cluster_statuses(self):
+        return self.client.all_cluster_statuses()
 
-def cluster_status(cluster_id):
-    return get_libraries_client().cluster_status(cluster_id)
+    def cluster_status(self, cluster_id):
+        return self.client.cluster_status(cluster_id)
 
+    def install_libraries(self, cluster_id, libraries):
+        return self.client.install_libraries(cluster_id, libraries)
 
-def install_libraries(cluster_id, libraries):
-    return get_libraries_client().install_libraries(cluster_id, libraries)
-
-
-def uninstall_libraries(cluster_id, libraries):
-    return get_libraries_client().uninstall_libraries(cluster_id, libraries)
+    def uninstall_libraries(self, cluster_id, libraries):
+        return self.client.uninstall_libraries(cluster_id, libraries)
