@@ -9,4 +9,6 @@ install:
 script:
   - pip list
   - ./lint.sh
-  - pytest tests
+  - pytest tests --cov=./
+after_success:
+  - codecov

@@ -5,3 +5,5 @@ pytest==3.2.1
 mock==2.0.0
 decorator==4.2.1
 rstcheck==3.2
+pytest-cov
+codecov
