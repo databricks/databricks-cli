@@ -33,7 +33,8 @@ from databricks_cli.sdk import ApiClient
 
 def provide_api_client(function):
     """
-    All callbacks wrapped by require_config expect the argument ``profile`` to be passed in.
+    Injects the api_client keyword argument to the wrapped function.
+    All callbacks wrapped by provide_api_client expect the argument ``profile`` to be passed in.
     """
     @six.wraps(function)
     def decorator(*args, **kwargs):

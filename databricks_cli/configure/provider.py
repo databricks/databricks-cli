@@ -73,7 +73,6 @@ def update_and_persist_config(profile, databricks_config):
     same profile.
     :param databricks_config: DatabricksConfig
     """
-    profile = profile.upper()
     raw_config = _fetch_from_fs()
     _create_section_if_absent(raw_config, profile)
     _set_option(raw_config, profile, HOST, databricks_config.host)
@@ -89,7 +88,6 @@ def get_config_for_profile(profile):
     exist, then return a DatabricksConfig with fields set.
     :return: DatabricksConfig
     """
-    profile = profile.upper()
     raw_config = _fetch_from_fs()
     host = _get_option_if_exists(raw_config, profile, HOST)
     username = _get_option_if_exists(raw_config, profile, USERNAME)
