@@ -184,7 +184,7 @@ def _uninstall_cli_exit_help(cluster_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Uninstall libraries on a cluster.')
+               short_help='Uninstall a library on a cluster.')
 @click.option('--cluster-id', required=True, type=ClusterIdClickType(),
               help=ClusterIdClickType.help)
 @click.option('--all', is_flag=True, default=False, help='If set, uninstall all libraries.')
