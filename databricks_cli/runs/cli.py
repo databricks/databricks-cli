@@ -27,8 +27,8 @@ from tabulate import tabulate
 from databricks_cli.click_types import OutputClickType, JsonClickType, RunIdClickType
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base, \
     truncate_string
-from databricks_cli.configure.config import require_config
-from databricks_cli.runs.api import submit_run, list_runs, get_run, cancel_run
+from databricks_cli.configure.config import provide_api_client, profile_option
+from databricks_cli.runs.api import RunsApi
 from databricks_cli.version import print_version_callback, version
 
 
@@ -37,16 +37,17 @@ from databricks_cli.version import print_version_callback, version
               help='File containing JSON request to POST to /api/2.0/jobs/runs/submit.')
 @click.option('--json', default=None, type=JsonClickType(),
               help=JsonClickType.help('/api/2.0/jobs/runs/submit'))
-@require_config
+@profile_option
 @eat_exceptions
-def submit_cli(json_file, json):
+@provide_api_client
+def submit_cli(api_client, json_file, json):
     """
     Submits a one-time run.
 
     The specification for the request json can be found
     https://docs.databricks.com/api/latest/jobs.html#runs-submit
     """
-    json_cli_base(json_file, json, submit_run)
+    json_cli_base(json_file, json, lambda json: RunsApi(api_client).submit_run(json))
 
 
 def _runs_to_table(runs_json):
@@ -75,9 +76,10 @@ def _runs_to_table(runs_json):
               help='The limit determines the number of runs listed. '
                    'Limit must be between 0 and 1000. Set to 20 runs by default.')
 @click.option('--output', help=OutputClickType.help, type=OutputClickType())
-@require_config
+@profile_option
 @eat_exceptions # noqa
-def list_cli(job_id, active_only, completed_only, offset, limit, output): # noqa
+@provide_api_client
+def list_cli(api_client, job_id, active_only, completed_only, offset, limit, output): # noqa
     """
     Lists job runs.
 
@@ -94,7 +96,7 @@ def list_cli(job_id, active_only, completed_only, offset, limit, output): # noqa
 
       - Result state (can be n/a)
     """
-    runs_json = list_runs(job_id, active_only, completed_only, offset, limit)
+    runs_json = RunsApi(api_client).list_runs(job_id, active_only, completed_only, offset, limit)
     if OutputClickType.is_json(output):
         click.echo(pretty_format(runs_json))
     else:
@@ -103,33 +105,34 @@ def list_cli(job_id, active_only, completed_only, offset, limit, output): # noqa
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--run-id', required=True, type=RunIdClickType())
-@require_config
+@profile_option
 @eat_exceptions
-def get_cli(run_id):
+@provide_api_client
+def get_cli(api_client, run_id):
     """
     Gets the metadata about a run in json form.
 
     The output schema is documented https://docs.databricks.com/api/latest/jobs.html#runs-get.
     """
-    click.echo(pretty_format(get_run(run_id)))
+    click.echo(pretty_format(RunsApi(api_client).get_run(run_id)))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--run-id', required=True, type=RunIdClickType())
-@require_config
+@profile_option
 @eat_exceptions
-def cancel_cli(run_id):
+@provide_api_client
+def cancel_cli(api_client, run_id):
     """
     Cancels the run specified.
     """
-    click.echo(pretty_format(cancel_run(run_id)))
+    click.echo(pretty_format(RunsApi(api_client).cancel_run(run_id)))
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
              short_help='Utility to interact with the jobs runs.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
-@require_config
 @eat_exceptions
 def runs_group():
     """

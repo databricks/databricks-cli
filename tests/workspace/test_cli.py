@@ -23,6 +23,7 @@
 
 import os
 import mock
+import pytest
 from click.testing import CliRunner
 
 import databricks_cli.workspace.cli as cli
@@ -32,18 +33,26 @@ from databricks_cli.workspace.types import WorkspaceLanguage
 from tests.utils import provide_conf
 
 
+@pytest.fixture()
+def workspace_api_mock():
+    with mock.patch('databricks_cli.workspace.cli.WorkspaceApi') as WorkspaceApiMock:
+        workspace_api_mock = mock.MagicMock()
+        WorkspaceApiMock.return_value = workspace_api_mock
+        yield workspace_api_mock
+
+
 @provide_conf
-def test_export_workspace_cli(tmpdir):
+def test_export_workspace_cli(workspace_api_mock, tmpdir):
     path = tmpdir.strpath
-    with mock.patch('databricks_cli.workspace.cli.get_status') as get_status_mock:
-        with mock.patch('databricks_cli.workspace.cli.export_workspace') as export_workspace_mock:
-            get_status_mock.return_value = WorkspaceFileInfo('/notebook-name', NOTEBOOK, WorkspaceLanguage.SCALA)
-            runner = CliRunner()
-            runner.invoke(cli.export_workspace_cli, ['--format', 'SOURCE', '/notebook-name', path])
-            assert export_workspace_mock.call_args[0][1] == os.path.join(path, 'notebook-name.scala')
+    workspace_api_mock.get_status.return_value = \
+        WorkspaceFileInfo('/notebook-name', NOTEBOOK, WorkspaceLanguage.SCALA)
+    runner = CliRunner()
+    runner.invoke(cli.export_workspace_cli, ['--format', 'SOURCE', '/notebook-name', path])
+    assert workspace_api_mock.export_workspace.call_args[0][1] == \
+           os.path.join(path, 'notebook-name.scala')
 
 
-def test_export_dir_helper(tmpdir):
+def test_export_dir_helper(workspace_api_mock, tmpdir):
     """
     Copy to directory ``tmpdir`` with structure as follows
     - a (directory)
@@ -74,27 +83,26 @@ def test_export_dir_helper(tmpdir):
         else:
             assert False, 'We shouldn\'t reach this case...'
 
-    with mock.patch('databricks_cli.workspace.cli.list_objects', new=mock.Mock(wraps=_list_objects_mock)) as list_objects_mock:
-        with mock.patch('databricks_cli.workspace.cli.export_workspace') as export_workspace_mock:
-            cli._export_dir_helper('/', tmpdir.strpath, False)
-            # Verify that the directories a, f, g exist.
-            assert os.path.isdir(os.path.join(tmpdir.strpath, 'a'))
-            assert os.path.isdir(os.path.join(tmpdir.strpath, 'f'))
-            assert os.path.isdir(os.path.join(tmpdir.strpath, 'f', 'g'))
-            # Verify we exported files b, c, d, e with the correct names
-            assert export_workspace_mock.call_count == 4
-            assert export_workspace_mock.call_args_list[0][0][0] == '/a/b'
-            assert export_workspace_mock.call_args_list[0][0][1] == os.path.join(tmpdir.strpath, 'a', 'b.scala')
-            assert export_workspace_mock.call_args_list[1][0][0] == '/a/c'
-            assert export_workspace_mock.call_args_list[1][0][1] == os.path.join(tmpdir.strpath, 'a', 'c.py')
-            assert export_workspace_mock.call_args_list[2][0][0] == '/a/d'
-            assert export_workspace_mock.call_args_list[2][0][1] == os.path.join(tmpdir.strpath, 'a', 'd.r')
-            assert export_workspace_mock.call_args_list[3][0][0] == '/a/e'
-            assert export_workspace_mock.call_args_list[3][0][1] == os.path.join(tmpdir.strpath, 'a', 'e.sql')
-            # Verify that we only called list 4 times.
-            assert list_objects_mock.call_count == 4
+    workspace_api_mock.list_objects = mock.Mock(wraps=_list_objects_mock)
+    cli._export_dir_helper(workspace_api_mock, '/', tmpdir.strpath, False)
+    # Verify that the directories a, f, g exist.
+    assert os.path.isdir(os.path.join(tmpdir.strpath, 'a'))
+    assert os.path.isdir(os.path.join(tmpdir.strpath, 'f'))
+    assert os.path.isdir(os.path.join(tmpdir.strpath, 'f', 'g'))
+    # Verify we exported files b, c, d, e with the correct names
+    assert workspace_api_mock.export_workspace.call_count == 4
+    assert workspace_api_mock.export_workspace.call_args_list[0][0][0] == '/a/b'
+    assert workspace_api_mock.export_workspace.call_args_list[0][0][1] == os.path.join(tmpdir.strpath, 'a', 'b.scala')
+    assert workspace_api_mock.export_workspace.call_args_list[1][0][0] == '/a/c'
+    assert workspace_api_mock.export_workspace.call_args_list[1][0][1] == os.path.join(tmpdir.strpath, 'a', 'c.py')
+    assert workspace_api_mock.export_workspace.call_args_list[2][0][0] == '/a/d'
+    assert workspace_api_mock.export_workspace.call_args_list[2][0][1] == os.path.join(tmpdir.strpath, 'a', 'd.r')
+    assert workspace_api_mock.export_workspace.call_args_list[3][0][0] == '/a/e'
+    assert workspace_api_mock.export_workspace.call_args_list[3][0][1] == os.path.join(tmpdir.strpath, 'a', 'e.sql')
+    # Verify that we only called list 4 times.
+    assert workspace_api_mock.list_objects.call_count == 4
 
-def test_import_dir_helper(tmpdir):
+def test_import_dir_helper(workspace_api_mock, tmpdir):
     """
     Copy from directory ``tmpdir`` with structure as follows
     - a (directory)
@@ -116,41 +124,39 @@ def test_import_dir_helper(tmpdir):
         f.write('I don\'t know how to write r')
     with open(os.path.join(tmpdir.strpath, 'a', 'e.sql'), 'wb') as f:
         f.write('select 1+1 from table;')
-    with mock.patch('databricks_cli.workspace.cli.mkdirs') as mkdirs_mock:
-        with mock.patch('databricks_cli.workspace.cli.import_workspace') as import_workspace:
-            cli._import_dir_helper(tmpdir.strpath, '/', False, False)
-            # Verify that the directories a, f, g exist.
-            assert mkdirs_mock.call_count == 4
-            # The order of list may be undeterminstic apparently. (It's different in Travis CI)
-            assert any([ca[0][0] == '/' for ca in mkdirs_mock.call_args_list])
-            assert any([ca[0][0] == '/a' for ca in mkdirs_mock.call_args_list])
-            assert any([ca[0][0] == '/f' for ca in mkdirs_mock.call_args_list])
-            assert any([ca[0][0] == '/f/g' for ca in mkdirs_mock.call_args_list])
-            # Verify that we imported the correct files
-            assert import_workspace.call_count == 4
-            assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'b.scala') \
-                    for ca in import_workspace.call_args_list])
-            assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'c.py') \
-                    for ca in import_workspace.call_args_list])
-            assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'd.r') \
-                    for ca in import_workspace.call_args_list])
-            assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'e.sql') \
-                    for ca in import_workspace.call_args_list])
-            assert any([ca[0][1] == '/a/b' for ca in import_workspace.call_args_list])
-            assert any([ca[0][1] == '/a/c' for ca in import_workspace.call_args_list])
-            assert any([ca[0][1] == '/a/d' for ca in import_workspace.call_args_list])
-            assert any([ca[0][1] == '/a/e' for ca in import_workspace.call_args_list])
-            assert any([ca[0][2] == WorkspaceLanguage.SCALA \
-                    for ca in import_workspace.call_args_list])
-            assert any([ca[0][2] == WorkspaceLanguage.PYTHON \
-                    for ca in import_workspace.call_args_list])
-            assert any([ca[0][2] == WorkspaceLanguage.R \
-                    for ca in import_workspace.call_args_list])
-            assert any([ca[0][2] == WorkspaceLanguage.SQL \
-                    for ca in import_workspace.call_args_list])
+    cli._import_dir_helper(workspace_api_mock, tmpdir.strpath, '/', False, False)
+    # Verify that the directories a, f, g exist.
+    assert workspace_api_mock.mkdirs.call_count == 4
+    # The order of list may be undeterminstic apparently. (It's different in Travis CI)
+    assert any([ca[0][0] == '/' for ca in workspace_api_mock.mkdirs.call_args_list])
+    assert any([ca[0][0] == '/a' for ca in workspace_api_mock.mkdirs.call_args_list])
+    assert any([ca[0][0] == '/f' for ca in workspace_api_mock.mkdirs.call_args_list])
+    assert any([ca[0][0] == '/f/g' for ca in workspace_api_mock.mkdirs.call_args_list])
+    # Verify that we imported the correct files
+    assert workspace_api_mock.import_workspace.call_count == 4
+    assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'b.scala') \
+            for ca in workspace_api_mock.import_workspace.call_args_list])
+    assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'c.py') \
+            for ca in workspace_api_mock.import_workspace.call_args_list])
+    assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'd.r') \
+            for ca in workspace_api_mock.import_workspace.call_args_list])
+    assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'e.sql') \
+            for ca in workspace_api_mock.import_workspace.call_args_list])
+    assert any([ca[0][1] == '/a/b' for ca in workspace_api_mock.import_workspace.call_args_list])
+    assert any([ca[0][1] == '/a/c' for ca in workspace_api_mock.import_workspace.call_args_list])
+    assert any([ca[0][1] == '/a/d' for ca in workspace_api_mock.import_workspace.call_args_list])
+    assert any([ca[0][1] == '/a/e' for ca in workspace_api_mock.import_workspace.call_args_list])
+    assert any([ca[0][2] == WorkspaceLanguage.SCALA \
+            for ca in workspace_api_mock.import_workspace.call_args_list])
+    assert any([ca[0][2] == WorkspaceLanguage.PYTHON \
+            for ca in workspace_api_mock.import_workspace.call_args_list])
+    assert any([ca[0][2] == WorkspaceLanguage.R \
+            for ca in workspace_api_mock.import_workspace.call_args_list])
+    assert any([ca[0][2] == WorkspaceLanguage.SQL \
+            for ca in workspace_api_mock.import_workspace.call_args_list])
 
 
-def test_import_dir_rstrip(tmpdir):
+def test_import_dir_rstrip(workspace_api_mock, tmpdir):
     """
     Copy from directory ``tmpdir`` with structure as follows
     - a (directory)
@@ -159,20 +165,18 @@ def test_import_dir_rstrip(tmpdir):
     os.makedirs(os.path.join(tmpdir.strpath, 'a'))
     with open(os.path.join(tmpdir.strpath, 'a', 'test-py.py'), 'wb'):
         pass
-    with mock.patch('databricks_cli.workspace.cli.mkdirs') as mkdirs_mock:
-        with mock.patch('databricks_cli.workspace.cli.import_workspace') as import_workspace:
-            cli._import_dir_helper(tmpdir.strpath, '/', False, False)
-            assert mkdirs_mock.call_count == 2
-            assert any([ca[0][0] == '/' for ca in mkdirs_mock.call_args_list])
-            assert any([ca[0][0] == '/a' for ca in mkdirs_mock.call_args_list])
+    cli._import_dir_helper(workspace_api_mock, tmpdir.strpath, '/', False, False)
+    assert workspace_api_mock.mkdirs.call_count == 2
+    assert any([ca[0][0] == '/' for ca in workspace_api_mock.mkdirs.call_args_list])
+    assert any([ca[0][0] == '/a' for ca in workspace_api_mock.mkdirs.call_args_list])
 
-            # Verify that we imported the correct files with the right names
-            assert import_workspace.call_count == 1
-            assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'test-py.py') \
-                    for ca in import_workspace.call_args_list])
-            assert any([ca[0][1] == '/a/test-py' for ca in import_workspace.call_args_list])
+    # Verify that we imported the correct files with the right names
+    assert workspace_api_mock.import_workspace.call_count == 1
+    assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'test-py.py') \
+            for ca in workspace_api_mock.import_workspace.call_args_list])
+    assert any([ca[0][1] == '/a/test-py' for ca in workspace_api_mock.import_workspace.call_args_list])
 
-def test_import_dir_hidden(tmpdir):
+def test_import_dir_hidden(workspace_api_mock, tmpdir):
     """
     Copy from directory ``tmpdir`` with structure as follows
     - a (directory)
@@ -186,15 +190,13 @@ def test_import_dir_hidden(tmpdir):
         pass
     with open(os.path.join(tmpdir.strpath, '.ignore', 'ignore.py'), 'wb'):
         pass
-    with mock.patch('databricks_cli.workspace.cli.mkdirs') as mkdirs_mock:
-        with mock.patch('databricks_cli.workspace.cli.import_workspace') as import_workspace:
-            cli._import_dir_helper(tmpdir.strpath, '/', False, True)
-            assert mkdirs_mock.call_count == 2
-            assert any([ca[0][0] == '/' for ca in mkdirs_mock.call_args_list])
-            assert any([ca[0][0] == '/a' for ca in mkdirs_mock.call_args_list])
+    cli._import_dir_helper(workspace_api_mock, tmpdir.strpath, '/', False, True)
+    assert workspace_api_mock.mkdirs.call_count == 2
+    assert any([ca[0][0] == '/' for ca in workspace_api_mock.mkdirs.call_args_list])
+    assert any([ca[0][0] == '/a' for ca in workspace_api_mock.mkdirs.call_args_list])
 
-            # Verify that we imported the correct files with the right names
-            assert import_workspace.call_count == 1
-            assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'test-py.py') \
-                    for ca in import_workspace.call_args_list])
-            assert any([ca[0][1] == '/a/test-py' for ca in import_workspace.call_args_list])
+    # Verify that we imported the correct files with the right names
+    assert workspace_api_mock.import_workspace.call_count == 1
+    assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'test-py.py') \
+            for ca in workspace_api_mock.import_workspace.call_args_list])
+    assert any([ca[0][1] == '/a/test-py' for ca in workspace_api_mock.import_workspace.call_args_list])

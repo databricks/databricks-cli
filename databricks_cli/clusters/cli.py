@@ -25,11 +25,10 @@ import click
 from tabulate import tabulate
 
 from databricks_cli.click_types import OutputClickType, JsonClickType, ClusterIdClickType
-from databricks_cli.clusters.api import create_cluster, start_cluster, restart_cluster, \
-    delete_cluster, get_cluster, list_clusters, list_zones, list_node_types, spark_versions
+from databricks_cli.clusters.api import ClusterApi
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base, \
     truncate_string
-from databricks_cli.configure.config import require_config
+from databricks_cli.configure.config import provide_api_client, profile_option
 from databricks_cli.version import print_version_callback, version
 
 
@@ -38,54 +37,58 @@ from databricks_cli.version import print_version_callback, version
               help='File containing JSON request to POST to /api/2.0/clusters/create.')
 @click.option('--json', default=None, type=JsonClickType(),
               help=JsonClickType.help('/api/2.0/clusters/create'))
-@require_config
+@profile_option
 @eat_exceptions
-def create_cli(json_file, json):
+@provide_api_client
+def create_cli(api_client, json_file, json):
     """
     Creates a Databricks cluster.
 
     The specification for the request json can be found at
     https://docs.databricks.com/api/latest/clusters.html#create
     """
-    json_cli_base(json_file, json, create_cluster)
+    json_cli_base(json_file, json, lambda json: ClusterApi(api_client).create_cluster(json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Starts a terminated Databricks cluster given its ID.')
 @click.option('--cluster-id', required=True, type=ClusterIdClickType(),
               help=ClusterIdClickType.help)
-@require_config
+@profile_option
 @eat_exceptions
-def start_cli(cluster_id):
+@provide_api_client
+def start_cli(api_client, cluster_id):
     """
     Starts a terminated Databricks cluster given its ID.
 
     If the cluster is not currently in a TERMINATED state, nothing will happen.
 
     """
-    start_cluster(cluster_id)
+    ClusterApi(api_client).start_cluster(cluster_id)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--cluster-id', required=True, type=ClusterIdClickType(),
               help=ClusterIdClickType.help)
-@require_config
+@profile_option
+@provide_api_client
 @eat_exceptions
-def restart_cli(cluster_id):
+def restart_cli(api_client, cluster_id):
     """
     Restarts a Databricks cluster given its ID.
 
     If the cluster is not currently in a RUNNING state, nothing will happen
     """
-    restart_cluster(cluster_id)
+    ClusterApi(api_client).restart_cluster(cluster_id)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--cluster-id', required=True, type=ClusterIdClickType(),
               help=ClusterIdClickType.help)
-@require_config
+@profile_option
 @eat_exceptions
-def delete_cli(cluster_id):
+@provide_api_client
+def delete_cli(api_client, cluster_id):
     """
     Removes a Databricks cluster given its ID.
 
@@ -95,19 +98,20 @@ def delete_cli(cluster_id):
 
     Use ``databricks clusters get --cluster-id CLUSTER_ID`` to check termination states.
     """
-    delete_cluster(cluster_id)
+    ClusterApi(api_client).delete_cluster(cluster_id)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--cluster-id', required=True, type=ClusterIdClickType(),
               help=ClusterIdClickType.help)
-@require_config
+@profile_option
 @eat_exceptions
-def get_cli(cluster_id):
+@provide_api_client
+def get_cli(api_client, cluster_id):
     """
     Retrieves metadata about a cluster.
     """
-    click.echo(pretty_format(get_cluster(cluster_id)))
+    click.echo(pretty_format(ClusterApi(api_client).get_cluster(cluster_id)))
 
 
 def _clusters_to_table(clusters_json):
@@ -120,9 +124,10 @@ def _clusters_to_table(clusters_json):
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Lists active and recently terminated clusters.')
 @click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
-@require_config
+@profile_option
 @eat_exceptions
-def list_cli(output):
+@provide_api_client
+def list_cli(api_client, output):
     """
     Lists active and recently terminated clusters.
 
@@ -137,7 +142,7 @@ def list_cli(output):
 
       - Cluster state
     """
-    clusters_json = list_clusters()
+    clusters_json = ClusterApi(api_client).list_clusters()
     if OutputClickType.is_json(output):
         click.echo(pretty_format(clusters_json))
     else:
@@ -145,50 +150,52 @@ def list_cli(output):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
-@require_config
+@profile_option
 @eat_exceptions
-def list_zones_cli():
+@provide_api_client
+def list_zones_cli(api_client):
     """
     Lists zones where clusters can be created.
 
     The output format is specified in
     https://docs.databricks.com/api/latest/clusters.html#list-zones
     """
-    click.echo(pretty_format(list_zones()))
+    click.echo(pretty_format(ClusterApi(api_client).list_zones()))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Lists possible node types for a cluster.')
-@require_config
+@profile_option
 @eat_exceptions
-def list_node_types_cli():
+@provide_api_client
+def list_node_types_cli(api_client):
     """
     Lists possible node types for a cluster.
 
     The output format is specified in
     https://docs.databricks.com/api/latest/clusters.html#list-node-types
     """
-    click.echo(pretty_format(list_node_types()))
+    click.echo(pretty_format(ClusterApi(api_client).list_node_types()))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
-@require_config
+@profile_option
 @eat_exceptions
-def spark_versions_cli():
+@provide_api_client
+def spark_versions_cli(api_client):
     """
     Lists possible Databricks Runtime versions for a cluster.
 
     The output format is specified in
     https://docs.databricks.com/api/latest/clusters.html#spark-versions
     """
-    click.echo(pretty_format(spark_versions()))
+    click.echo(pretty_format(ClusterApi(api_client).spark_versions()))
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
              short_help='Utility to interact with Databricks clusters.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
-@require_config
 @eat_exceptions
 def clusters_group():
     """

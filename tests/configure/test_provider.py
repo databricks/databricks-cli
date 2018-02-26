@@ -69,15 +69,20 @@ def test_update_and_persist_config_two_sections():
     assert config.password == TEST_PASSWORD
 
 
-def test_update_and_persist_config_case_insensitive():
+def test_update_and_persist_config_case_sensitive():
     config = DatabricksConfig.from_token(TEST_HOST, TEST_TOKEN)
     update_and_persist_config(TEST_PROFILE, config)
-    config = DatabricksConfig.from_password(TEST_HOST, TEST_USER, TEST_PASSWORD)
-    update_and_persist_config(TEST_PROFILE.upper(), config)
+
+    config_2 = DatabricksConfig.from_password(TEST_HOST, TEST_USER, TEST_PASSWORD)
+    update_and_persist_config(TEST_PROFILE.upper(), config_2)
 
     config = get_config_for_profile(TEST_PROFILE)
-    assert config.is_valid_with_password
-    assert not config.is_valid_with_token
+    assert config.is_valid_with_token
+    assert not config.is_valid_with_password
+
+    config_2 = get_config_for_profile(TEST_PROFILE.upper())
+    assert config_2.is_valid_with_password
+    assert not config_2.is_valid_with_token
 
 
 def test_get_config_for_profile_empty():

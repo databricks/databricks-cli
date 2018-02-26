@@ -29,9 +29,8 @@ from requests.exceptions import HTTPError
 from databricks_cli.utils import eat_exceptions, error_and_quit, CONTEXT_SETTINGS
 from databricks_cli.version import print_version_callback, version
 from databricks_cli.configure.cli import configure_cli
-from databricks_cli.configure.config import require_config
-from databricks_cli.dbfs.api import put_file, get_file, list_files, \
-    delete, mkdirs, get_status, DbfsErrorCodes, move
+from databricks_cli.configure.config import provide_api_client, profile_option
+from databricks_cli.dbfs.api import DbfsErrorCodes, DbfsApi
 from databricks_cli.dbfs.dbfs_path import DbfsPath, DbfsPathClickType
 from databricks_cli.dbfs.exceptions import LocalFileExistsException
 
@@ -42,9 +41,10 @@ from databricks_cli.dbfs.exceptions import LocalFileExistsException
 @click.option('-l', is_flag=True, default=False,
               help='Displays full information including size and file type.')
 @click.argument('dbfs_path', nargs=-1, type=DbfsPathClickType())
-@require_config
+@profile_option
 @eat_exceptions
-def ls_cli(l, absolute, dbfs_path): #  NOQA
+@provide_api_client
+def ls_cli(api_client, l, absolute, dbfs_path): #  NOQA
     """
     List files in DBFS.
     """
@@ -54,7 +54,7 @@ def ls_cli(l, absolute, dbfs_path): #  NOQA
         dbfs_path = dbfs_path[0]
     else:
         error_and_quit('ls can take a maximum of one path.')
-    files = list_files(dbfs_path)
+    files = DbfsApi(api_client).list_files(dbfs_path)
     table = tabulate([f.to_row(is_long_form=l, is_absolute=absolute) for f in files],
                      tablefmt='plain')
     click.echo(table)
@@ -62,54 +62,56 @@ def ls_cli(l, absolute, dbfs_path): #  NOQA
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.argument('dbfs_path', type=DbfsPathClickType())
-@require_config
+@profile_option
 @eat_exceptions
-def mkdirs_cli(dbfs_path):
+@provide_api_client
+def mkdirs_cli(api_client, dbfs_path):
     """
     Make directories in DBFS.
 
     Mkdirs will create directories along the path to the argument directory.
     """
-    mkdirs(dbfs_path)
+    DbfsApi(api_client).mkdirs(dbfs_path)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--recursive', '-r', is_flag=True, default=False)
 @click.argument('dbfs_path', type=DbfsPathClickType())
-@require_config
+@profile_option
 @eat_exceptions
-def rm_cli(recursive, dbfs_path):
+@provide_api_client
+def rm_cli(api_client, recursive, dbfs_path):
     """
     Remove files from dbfs.
 
     To remove a directory you must provide the --recursive flag.
     """
-    delete(dbfs_path, recursive)
+    DbfsApi(api_client).delete(dbfs_path, recursive)
 
 
-def copy_to_dbfs_non_recursive(src, dbfs_path_dst, overwrite):
+def copy_to_dbfs_non_recursive(dbfs_api, src, dbfs_path_dst, overwrite):
     # Munge dst path in case dbfs_path_dst is a dir
     try:
-        if get_status(dbfs_path_dst).is_dir:
+        if dbfs_api.get_status(dbfs_path_dst).is_dir:
             dbfs_path_dst = dbfs_path_dst.join(os.path.basename(src))
     except HTTPError as e:
         if e.response.json()['error_code'] == DbfsErrorCodes.RESOURCE_DOES_NOT_EXIST:
             pass
         else:
             raise e
-    put_file(src, dbfs_path_dst, overwrite)
+    dbfs_api.put_file(src, dbfs_path_dst, overwrite)
 
 
-def copy_from_dbfs_non_recursive(dbfs_path_src, dst, overwrite):
+def copy_from_dbfs_non_recursive(dbfs_api, dbfs_path_src, dst, overwrite):
     # Munge dst path in case dst is a dir
     if os.path.isdir(dst):
         dst = os.path.join(dst, dbfs_path_src.basename)
-    get_file(dbfs_path_src, dst, overwrite)
+    dbfs_api.get_file(dbfs_path_src, dst, overwrite)
 
 
-def copy_to_dbfs_recursive(src, dbfs_path_dst, overwrite):
+def copy_to_dbfs_recursive(dbfs_api, src, dbfs_path_dst, overwrite):
     try:
-        mkdirs(dbfs_path_dst)
+        dbfs_api.mkdirs(dbfs_path_dst)
     except HTTPError as e:
         if e.response.json()['error_code'] == DbfsErrorCodes.RESOURCE_ALREADY_EXISTS:
             click.echo(e.response.json())
@@ -118,10 +120,10 @@ def copy_to_dbfs_recursive(src, dbfs_path_dst, overwrite):
         cur_src = os.path.join(src, filename)
         cur_dbfs_dst = dbfs_path_dst.join(filename)
         if os.path.isdir(cur_src):
-            copy_to_dbfs_recursive(cur_src, cur_dbfs_dst, overwrite)
+            copy_to_dbfs_recursive(dbfs_api, cur_src, cur_dbfs_dst, overwrite)
         elif os.path.isfile(cur_src):
             try:
-                put_file(cur_src, cur_dbfs_dst, overwrite)
+                dbfs_api.put_file(cur_src, cur_dbfs_dst, overwrite)
                 click.echo('{} -> {}'.format(cur_src, cur_dbfs_dst))
             except HTTPError as e:
                 if e.response.json()['error_code'] == DbfsErrorCodes.RESOURCE_ALREADY_EXISTS:
@@ -130,21 +132,21 @@ def copy_to_dbfs_recursive(src, dbfs_path_dst, overwrite):
                     raise e
 
 
-def copy_from_dbfs_recursive(dbfs_path_src, dst, overwrite):
+def copy_from_dbfs_recursive(dbfs_api, dbfs_path_src, dst, overwrite):
     if os.path.isfile(dst):
         click.echo('{} exists as a file. Skipping this subtree {}'.format(dst, repr(dbfs_path_src)))
         return
     elif not os.path.isdir(dst):
         os.makedirs(dst)
 
-    for dbfs_src_file_info in list_files(dbfs_path_src):
+    for dbfs_src_file_info in dbfs_api.list_files(dbfs_path_src):
         cur_dbfs_src = dbfs_src_file_info.dbfs_path
         cur_dst = os.path.join(dst, cur_dbfs_src.basename)
         if dbfs_src_file_info.is_dir:
-            copy_from_dbfs_recursive(cur_dbfs_src, cur_dst, overwrite)
+            copy_from_dbfs_recursive(dbfs_api, cur_dbfs_src, cur_dst, overwrite)
         else:
             try:
-                get_file(cur_dbfs_src, cur_dst, overwrite)
+                dbfs_api.get_file(cur_dbfs_src, cur_dst, overwrite)
                 click.echo('{} -> {}'.format(cur_dbfs_src, cur_dst))
             except LocalFileExistsException:
                 click.echo(('{} already exists locally as {}. Skip. To overwrite, you' +
@@ -156,9 +158,10 @@ def copy_from_dbfs_recursive(dbfs_path_src, dst, overwrite):
 @click.option('--overwrite', is_flag=True, default=False)
 @click.argument('src')
 @click.argument('dst')
-@require_config
+@profile_option
 @eat_exceptions
-def cp_cli(recursive, overwrite, src, dst):
+@provide_api_client
+def cp_cli(api_client, recursive, overwrite, src, dst):
     """
     Copy files to and from DBFS.
 
@@ -175,6 +178,7 @@ def cp_cli(recursive, overwrite, src, dst):
     flag is provided -- however, dbfs cp --recursive will continue to try and copy other files.
     """
     # Copy to DBFS in this case
+    dbfs_api = DbfsApi(api_client)
     if not DbfsPath.is_valid(src) and DbfsPath.is_valid(dst):
         if not os.path.exists(src):
             error_and_quit('The local file {} does not exist.'.format(src))
@@ -182,21 +186,21 @@ def cp_cli(recursive, overwrite, src, dst):
             if os.path.isdir(src):
                 error_and_quit(('The local file {} is a directory. You must provide --recursive')
                                .format(src))
-            copy_to_dbfs_non_recursive(src, DbfsPath(dst), overwrite)
+            copy_to_dbfs_non_recursive(dbfs_api, src, DbfsPath(dst), overwrite)
         else:
             if not os.path.isdir(src):
-                copy_to_dbfs_non_recursive(src, DbfsPath(dst), overwrite)
+                copy_to_dbfs_non_recursive(dbfs_api, src, DbfsPath(dst), overwrite)
                 return
-            copy_to_dbfs_recursive(src, DbfsPath(dst), overwrite)
+            copy_to_dbfs_recursive(dbfs_api, src, DbfsPath(dst), overwrite)
     # Copy from DBFS in this case
     elif DbfsPath.is_valid(src) and not DbfsPath.is_valid(dst):
         if not recursive:
-            copy_from_dbfs_non_recursive(DbfsPath(src), dst, overwrite)
+            copy_from_dbfs_non_recursive(dbfs_api, DbfsPath(src), dst, overwrite)
         else:
             dbfs_path_src = DbfsPath(src)
-            if not get_status(dbfs_path_src).is_dir:
-                copy_from_dbfs_non_recursive(dbfs_path_src, dst, overwrite)
-            copy_from_dbfs_recursive(dbfs_path_src, dst, overwrite)
+            if not dbfs_api.get_status(dbfs_path_src).is_dir:
+                copy_from_dbfs_non_recursive(dbfs_api, dbfs_path_src, dst, overwrite)
+            copy_from_dbfs_recursive(dbfs_api, dbfs_path_src, dst, overwrite)
     elif not DbfsPath.is_valid(src) and not DbfsPath.is_valid(dst):
         error_and_quit('Both paths provided are from your local filesystem. '
                        'To use this utility, one of the src or dst must be prefixed '
@@ -212,13 +216,14 @@ def cp_cli(recursive, overwrite, src, dst):
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.argument('src', type=DbfsPathClickType())
 @click.argument('dst', type=DbfsPathClickType())
-@require_config
+@profile_option
 @eat_exceptions
-def mv_cli(src, dst):
+@provide_api_client
+def mv_cli(api_client, src, dst):
     """
     Moves a file between two DBFS paths.
     """
-    move(src, dst)
+    DbfsApi(api_client).move(src, dst)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS, short_help='Utility to interact with DBFS.')

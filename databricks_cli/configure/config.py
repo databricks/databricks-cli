@@ -27,55 +27,35 @@ import click
 import six
 
 from databricks_cli.configure.provider import DEFAULT_SECTION, get_config_for_profile
-from databricks_cli.utils import error_and_quit
-from databricks_cli.sdk import ApiClient, DbfsService, WorkspaceService, JobsService, \
-    ClusterService, ManagedLibraryService
+from databricks_cli.utils import error_and_quit, InvalidConfigurationError
+from databricks_cli.sdk import ApiClient
 
 
-def require_config(function):
+def provide_api_client(function):
+    """
+    Injects the api_client keyword argument to the wrapped function.
+    All callbacks wrapped by provide_api_client expect the argument ``profile`` to be passed in.
+    """
     @six.wraps(function)
     def decorator(*args, **kwargs):
-        config = get_config_for_profile(DEFAULT_SECTION)
+        profile = kwargs.pop('profile')
+        config = get_config_for_profile(profile)
         if not config.is_valid:
-            error_and_quit(('You haven\'t configured the CLI yet! '
-                            'Please configure by entering `{} configure`').format(sys.argv[0]))
+            raise InvalidConfigurationError(profile)
+        kwargs['api_client'] = _get_api_client(config)
+
         return function(*args, **kwargs)
     decorator.__doc__ = function.__doc__
     return decorator
 
 
 def profile_option(f):
-    return click.option('--profile', required=False, default=DEFAULT_SECTION)(f)
+    return click.option('--profile', required=False, default=DEFAULT_SECTION,
+                        help='CLI connection profile to use.')(f)
 
 
-def _get_api_client(profile):
-    config = get_config_for_profile(profile)
+def _get_api_client(config):
     if config.is_valid_with_token:
         return ApiClient(host=config.host, token=config.token)
     return ApiClient(user=config.username, password=config.password,
                      host=config.host)
-
-
-def get_dbfs_client(profile=DEFAULT_SECTION):
-    api_client = _get_api_client(profile)
-    return DbfsService(api_client)
-
-
-def get_workspace_client(profile=DEFAULT_SECTION):
-    api_client = _get_api_client(profile)
-    return WorkspaceService(api_client)
-
-
-def get_jobs_client(profile=DEFAULT_SECTION):
-    api_client = _get_api_client(profile)
-    return JobsService(api_client)
-
-
-def get_clusters_client(profile=DEFAULT_SECTION):
-    api_client = _get_api_client(profile)
-    return ClusterService(api_client)
-
-
-def get_libraries_client(profile=DEFAULT_SECTION):
-    api_client = _get_api_client(profile)
-    return ManagedLibraryService(api_client)

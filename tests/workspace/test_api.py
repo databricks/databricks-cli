@@ -25,6 +25,8 @@ import os
 import mock
 from base64 import b64encode
 
+import pytest
+
 import databricks_cli.workspace.api as api
 
 TEST_WORKSPACE_PATH = '/test/workspace/path'
@@ -66,41 +68,42 @@ class TestWorkspaceFileInfo(object):
         assert file_info.path == TEST_WORKSPACE_PATH
 
 
-def test_get_status():
-    with mock.patch('databricks_cli.workspace.api.get_workspace_client') as get_workspace_client:
-        get_workspace_client.return_value.get_status.return_value = TEST_JSON_RESPONSE
-        file_info = api.get_status(TEST_WORKSPACE_PATH)
+@pytest.fixture()
+def workspace_api():
+    with mock.patch('databricks_cli.workspace.api.WorkspaceService') as WorkspaceServiceMock:
+        WorkspaceServiceMock.return_value = mock.MagicMock()
+        workspace_api = api.WorkspaceApi(None)
+        yield workspace_api
+
+
+class TestWorkspaceApi(object):
+    def test_get_status(self, workspace_api):
+        workspace_api.client.get_status.return_value = TEST_JSON_RESPONSE
+        file_info = workspace_api.get_status(TEST_WORKSPACE_PATH)
         assert file_info.path == TEST_WORKSPACE_PATH
 
-
-def test_list_objects():
-    with mock.patch('databricks_cli.workspace.api.get_workspace_client') as get_workspace_client:
-        get_workspace_client.return_value.list.return_value = {'objects': [TEST_JSON_RESPONSE]}
-        files = api.list_objects(TEST_WORKSPACE_PATH)
+    def test_list_objects(self, workspace_api):
+        workspace_api.client.list.return_value = {'objects': [TEST_JSON_RESPONSE]}
+        files = workspace_api.list_objects(TEST_WORKSPACE_PATH)
         assert len(files) == 1
         assert files[0].path == TEST_WORKSPACE_PATH
-    # Test case where API returns {}
-    with mock.patch('databricks_cli.workspace.api.get_workspace_client') as get_workspace_client:
-        get_workspace_client.return_value.list.return_value = {}
-        files = api.list_objects(TEST_WORKSPACE_PATH)
+        # Test case where API returns {}
+        workspace_api.client.list.return_value = {}
+        files = workspace_api.list_objects(TEST_WORKSPACE_PATH)
         assert len(files) == 0
 
-
-def test_mkdirs():
-    with mock.patch('databricks_cli.workspace.api.get_workspace_client') as get_workspace_client:
-        api.mkdirs(TEST_WORKSPACE_PATH)
-        mkdirs_mock = get_workspace_client.return_value.mkdirs
+    def test_mkdirs(self, workspace_api):
+        workspace_api.mkdirs(TEST_WORKSPACE_PATH)
+        mkdirs_mock = workspace_api.client.mkdirs
         assert mkdirs_mock.call_count == 1
         assert mkdirs_mock.call_args[0][0] == TEST_WORKSPACE_PATH
 
-
-def test_import_workspace(tmpdir):
-    with mock.patch('databricks_cli.workspace.api.get_workspace_client') as get_workspace_client:
+    def test_import_workspace(self, workspace_api, tmpdir):
         test_file_path = os.path.join(tmpdir.strpath, 'test')
         with open(test_file_path, 'w') as f:
             f.write('test')
-        api.import_workspace(test_file_path, TEST_WORKSPACE_PATH, TEST_LANGUAGE, TEST_FMT, is_overwrite=False)
-        import_workspace_mock = get_workspace_client.return_value.import_workspace
+        workspace_api.import_workspace(test_file_path, TEST_WORKSPACE_PATH, TEST_LANGUAGE, TEST_FMT, is_overwrite=False)
+        import_workspace_mock = workspace_api.client.import_workspace
         assert import_workspace_mock.call_count == 1
         assert import_workspace_mock.call_args[0][0] == TEST_WORKSPACE_PATH
         assert import_workspace_mock.call_args[0][1] == TEST_FMT
@@ -108,21 +111,17 @@ def test_import_workspace(tmpdir):
         assert import_workspace_mock.call_args[0][3] == b64encode('test')
         assert import_workspace_mock.call_args[0][4] == False
 
-
-def test_export_workspace(tmpdir):
-    with mock.patch('databricks_cli.workspace.api.get_workspace_client') as get_workspace_client:
+    def test_export_workspace(self, workspace_api, tmpdir):
         test_file_path = os.path.join(tmpdir.strpath, 'test')
-        get_workspace_client.return_value.export_workspace.return_value = {'content': b64encode('test')}
-        api.export_workspace(TEST_WORKSPACE_PATH, test_file_path, TEST_FMT, is_overwrite=False)
+        workspace_api.client.export_workspace.return_value = {'content': b64encode('test')}
+        workspace_api.export_workspace(TEST_WORKSPACE_PATH, test_file_path, TEST_FMT, is_overwrite=False)
         with open(test_file_path, 'r') as f:
             contents = f.read()
             assert contents == 'test'
 
-
-def test_delete():
-    with mock.patch('databricks_cli.workspace.api.get_workspace_client') as get_workspace_client:
-        api.delete(TEST_WORKSPACE_PATH, is_recursive=True)
-        delete_mock = get_workspace_client.return_value.delete
+    def test_delete(self, workspace_api):
+        workspace_api.delete(TEST_WORKSPACE_PATH, is_recursive=True)
+        delete_mock = workspace_api.client.delete
         assert delete_mock.call_count == 1
         assert delete_mock.call_args[0][0] == TEST_WORKSPACE_PATH
         assert delete_mock.call_args[0][1] == True
