@@ -45,16 +45,15 @@ def test_require_config_valid():
 
 
 def test_require_config_invalid():
-    with mock.patch('databricks_cli.configure.config.error_and_quit') as error_and_quit_mock:
-        with mock.patch('databricks_cli.configure.config.get_config_for_profile') as \
-                get_config_for_profile_mock:
-            with mock.patch('databricks_cli.configure.config._get_api_client') as \
-                    get_api_client_mock: # noqa
-                get_config_for_profile_mock.return_value = DatabricksConfig(None, None, None, None)
+    with mock.patch('databricks_cli.configure.config.get_config_for_profile') as \
+            get_config_for_profile_mock:
+        with mock.patch('databricks_cli.configure.config._get_api_client') as \
+                get_api_client_mock: # noqa
+            get_config_for_profile_mock.return_value = DatabricksConfig(None, None, None, None)
 
-                @config.provide_api_client
-                def test_function(api_client, x): # noqa
-                    return x
+            @config.provide_api_client
+            def test_function(api_client, x): # noqa
+                return x
 
-                with pytest.raises(InvalidConfigurationError):
-                    test_function(x=1, profile=DEFAULT_SECTION) # noqa
+            with pytest.raises(InvalidConfigurationError):
+                test_function(x=1, profile=DEFAULT_SECTION) # noqa
