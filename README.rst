@@ -31,6 +31,9 @@ Then set up authentication using username/password or `authentication token <htt
 - ``databricks configure`` (enter hostname/username/password at prompt)
 - ``databricks configure --token`` (enter hostname/auth-token at prompt)
 
+Multiple connection profiles are also supported with ``databricks configure --profile <profile> [--token]``.
+The connection profile can be used as such: ``databricks workspace ls --profile <profile>``.
+
 Then you're all set to go! To test that your authentication information is working, try a quick test like
 ``databricks workspace ls``.
 
@@ -288,6 +291,48 @@ Listing node types
 .. code::
 
     databricks clusters list-node-types
+
+Libraries CLI
+--------------
+
+You run library subcommands by appending them to ``databricks libraries``.
+
+.. code::
+
+  $ databricks libraries -h
+  Usage: databricks libraries [OPTIONS] COMMAND [ARGS]...
+
+    Utility to interact with libraries.
+
+    This is a wrapper around the libraries API
+    (https://docs.databricks.com/api/latest/libraries.html).
+
+  Options:
+    -v, --version  [VERSION]
+    -h, --help     Show this message and exit.
+
+  Commands:
+    all-cluster-statuses  Get the status of all libraries.
+    cluster-status        Get the status of all libraries for a specified
+                          cluster.
+    install               Install a library on a cluster.
+    list                  Shortcut to `all-cluster-statuses` or `cluster-
+                          status`.
+    uninstall             Uninstall a library on a cluster.
+
+Install a JAR from DBFS
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code::
+
+    databricks libraries install --cluster-id $CLUSTER_ID --jar dbfs:/test-dir/test.jar
+
+List library statuses for a cluster
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code::
+
+    databricks libraries list --cluster-id $CLUSTER_ID
 
 
 Aliasing Command Groups
