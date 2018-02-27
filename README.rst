@@ -31,7 +31,8 @@ Then set up authentication using username/password or `authentication token <htt
 - ``databricks configure`` (enter hostname/username/password at prompt)
 - ``databricks configure --token`` (enter hostname/auth-token at prompt)
 
-Multiple connection profiles are also supported with ``databricks configure --profile $PROFILE --token``.
+Multiple connection profiles are also supported with ``databricks configure --profile <profile> [--token]``.
+The connection profile can be used as such: ``databricks workspace ls --profile <profile>``.
 
 Then you're all set to go! To test that your authentication information is working, try a quick test like
 ``databricks workspace ls``.
