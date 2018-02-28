@@ -20,7 +20,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import os
 import mock
 from base64 import b64encode
@@ -108,12 +107,12 @@ class TestWorkspaceApi(object):
         assert import_workspace_mock.call_args[0][0] == TEST_WORKSPACE_PATH
         assert import_workspace_mock.call_args[0][1] == TEST_FMT
         assert import_workspace_mock.call_args[0][2] == TEST_LANGUAGE
-        assert import_workspace_mock.call_args[0][3] == b64encode('test')
+        assert import_workspace_mock.call_args[0][3] == b64encode(b'test').decode()
         assert import_workspace_mock.call_args[0][4] == False
 
     def test_export_workspace(self, workspace_api, tmpdir):
         test_file_path = os.path.join(tmpdir.strpath, 'test')
-        workspace_api.client.export_workspace.return_value = {'content': b64encode('test')}
+        workspace_api.client.export_workspace.return_value = {'content': b64encode(b'test')}
         workspace_api.export_workspace(TEST_WORKSPACE_PATH, test_file_path, TEST_FMT, is_overwrite=False)
         with open(test_file_path, 'r') as f:
             contents = f.read()

@@ -34,7 +34,7 @@ import warnings
 import requests
 import ssl
 
-import version
+from . import version
 
 from requests.adapters import HTTPAdapter
 
@@ -62,16 +62,8 @@ class ApiClient(object):
     A partial Python implementation of dbc rest api
     to be used by different versions of the client.
     """
-    def __init__(self, user = None, password = None, host = None, token = None, configUrl = None,
-            apiVersion = version.API_VERSION, default_headers = {}, verify = True):
-        if configUrl:
-            self.url = configUrl
-            params = self.performQuery("/", headers = {})[1]
-            params = credential.json
-            user = str(params["user"])
-            password = str(params["password"])
-            host = str(params["apiUrl"].split("/api")[0])
-
+    def __init__(self, user = None, password = None, host = None, token = None,
+                 apiVersion = version.API_VERSION, default_headers = {}, verify = True):
         if host[-1] == "/":
             host = host[:-1]
 
@@ -87,7 +79,10 @@ class ApiClient(object):
         else:
             auth = {}
         user_agent = {'user-agent': 'databricks-cli-{v}'.format(v=databricks_cli_version)}
-        self.default_headers = dict(auth.items() + default_headers.items() + user_agent.items())
+        self.default_headers = {}
+        self.default_headers.update(auth)
+        self.default_headers.update(default_headers)
+        self.default_headers.update(user_agent)
         self.verify = verify
 
     def close(self):
@@ -108,6 +103,6 @@ class ApiClient(object):
 
         try:
             resp.raise_for_status()
-        except requests.exceptions.HTTPError, e:
+        except requests.exceptions.HTTPError as e:
             raise e
         return resp.json()

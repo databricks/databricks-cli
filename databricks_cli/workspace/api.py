@@ -95,8 +95,9 @@ class WorkspaceApi(object):
         self.client.mkdirs(workspace_path)
 
     def import_workspace(self, source_path, target_path, language, fmt, is_overwrite):
-        with open(source_path, 'r') as f:
-            content = b64encode(f.read())
+        with open(source_path, 'rb') as f:
+            # import_workspace must take content that is typed str.
+            content = b64encode(f.read()).decode()
             self.client.import_workspace(
                 target_path,
                 fmt,

@@ -99,7 +99,8 @@ class DbfsApi(object):
                 contents = local_file.read(BUFFER_SIZE_BYTES)
                 if len(contents) == 0:
                     break
-                self.client.add_block(handle, b64encode(contents))
+                # add_block should not take a bytes object.
+                self.client.add_block(handle, b64encode(contents).decode())
             self.client.close(handle)
 
     def get_file(self, dbfs_path, dst_path, overwrite):
