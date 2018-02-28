@@ -20,7 +20,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import os
 import mock
 import pytest
@@ -116,13 +115,13 @@ def test_import_dir_helper(workspace_api_mock, tmpdir):
     os.makedirs(os.path.join(tmpdir.strpath, 'a'))
     os.makedirs(os.path.join(tmpdir.strpath, 'f'))
     os.makedirs(os.path.join(tmpdir.strpath, 'f', 'g'))
-    with open(os.path.join(tmpdir.strpath, 'a', 'b.scala'), 'wb') as f:
+    with open(os.path.join(tmpdir.strpath, 'a', 'b.scala'), 'wt') as f:
         f.write('println(1 + 1)')
-    with open(os.path.join(tmpdir.strpath, 'a', 'c.py'), 'wb') as f:
+    with open(os.path.join(tmpdir.strpath, 'a', 'c.py'), 'wt') as f:
         f.write('print 1 + 1')
-    with open(os.path.join(tmpdir.strpath, 'a', 'd.r'), 'wb') as f:
+    with open(os.path.join(tmpdir.strpath, 'a', 'd.r'), 'wt') as f:
         f.write('I don\'t know how to write r')
-    with open(os.path.join(tmpdir.strpath, 'a', 'e.sql'), 'wb') as f:
+    with open(os.path.join(tmpdir.strpath, 'a', 'e.sql'), 'wt') as f:
         f.write('select 1+1 from table;')
     cli._import_dir_helper(workspace_api_mock, tmpdir.strpath, '/', False, False)
     # Verify that the directories a, f, g exist.
@@ -163,7 +162,7 @@ def test_import_dir_rstrip(workspace_api_mock, tmpdir):
       - test-py.py (python)
     """
     os.makedirs(os.path.join(tmpdir.strpath, 'a'))
-    with open(os.path.join(tmpdir.strpath, 'a', 'test-py.py'), 'wb'):
+    with open(os.path.join(tmpdir.strpath, 'a', 'test-py.py'), 'wt'):
         pass
     cli._import_dir_helper(workspace_api_mock, tmpdir.strpath, '/', False, False)
     assert workspace_api_mock.mkdirs.call_count == 2

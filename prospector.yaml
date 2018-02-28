@@ -18,6 +18,7 @@ pylint:
     - no-self-use
     - protected-access
     - too-many-arguments
+    - inconsistent-return-statements
 
 mccabe:
   disable:

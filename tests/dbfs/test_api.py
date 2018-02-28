@@ -22,7 +22,6 @@
 # limitations under the License.
 
 # pylint:disable=redefined-outer-name
-
 from base64 import b64encode
 
 import os
@@ -45,7 +44,7 @@ TEST_FILE_INFO = api.FileInfo(TEST_DBFS_PATH, False, 1)
 
 def get_resource_does_not_exist_exception():
     response = requests.Response()
-    response._content = '{"error_code": "' + api.DbfsErrorCodes.RESOURCE_DOES_NOT_EXIST + '"}' #  NOQA
+    response._content = ('{"error_code": "' + api.DbfsErrorCodes.RESOURCE_DOES_NOT_EXIST + '"}').encode() #  NOQA
     return requests.exceptions.HTTPError(response=response)
 
 
@@ -118,7 +117,7 @@ class TestDbfsApi(object):
 
     def test_put_file(self, dbfs_api, tmpdir):
         test_file_path = os.path.join(tmpdir.strpath, 'test')
-        with open(test_file_path, 'w') as f:
+        with open(test_file_path, 'wt') as f:
             f.write('test')
 
         api_mock = dbfs_api.client
@@ -128,7 +127,7 @@ class TestDbfsApi(object):
 
         assert api_mock.add_block.call_count == 1
         assert test_handle == api_mock.add_block.call_args[0][0]
-        assert b64encode('test') == api_mock.add_block.call_args[0][1]
+        assert b64encode(b'test').decode() == api_mock.add_block.call_args[0][1]
 
     def test_get_file_check_overwrite(self, dbfs_api, tmpdir):
         test_file_path = os.path.join(tmpdir.strpath, 'test')
@@ -142,7 +141,7 @@ class TestDbfsApi(object):
         api_mock.get_status.return_value = TEST_FILE_JSON
         api_mock.read.return_value = {
             'bytes_read': 1,
-            'data': b64encode('x'),
+            'data': b64encode(b'x'),
         }
 
         test_file_path = os.path.join(tmpdir.strpath, 'test')
