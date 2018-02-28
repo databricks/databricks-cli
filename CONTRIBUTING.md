@@ -5,10 +5,11 @@ To isolate dependencies from your global python installation, it is important to
 
 - `pip install -e .`
 - `pip install -r dev-requirements.txt`
+- `pip install -r tox-requirements.txt`
 
 To verify that the installation of `databricks-cli` is the one checked out from VCS, you can check by doing `python -c "import databricks_cli; print databricks_cli.__file__"`.
 
 Running Tests
 ----------------
-- `pytest tests`
+- `tox`
 

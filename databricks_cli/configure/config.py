@@ -21,13 +21,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-
 import click
 import six
 
 from databricks_cli.configure.provider import DEFAULT_SECTION, get_config_for_profile
-from databricks_cli.utils import error_and_quit, InvalidConfigurationError
+from databricks_cli.utils import InvalidConfigurationError
 from databricks_cli.sdk import ApiClient
 
 
