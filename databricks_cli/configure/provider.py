@@ -20,7 +20,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import ConfigParser
+from configparser import ConfigParser
 from os.path import expanduser, join
 
 import os
@@ -38,7 +38,7 @@ def _get_path():
 
 
 def _fetch_from_fs():
-    raw_config = ConfigParser.RawConfigParser()
+    raw_config = ConfigParser()
     raw_config.read(_get_path())
     return raw_config
 
@@ -61,7 +61,7 @@ def _set_option(raw_config, profile, option, value):
 
 def _overwrite_config(raw_config):
     config_path = _get_path()
-    with open(config_path, 'wb') as cfg:
+    with open(config_path, 'w') as cfg:
         raw_config.write(cfg)
     os.chmod(config_path, 0o600)
 
