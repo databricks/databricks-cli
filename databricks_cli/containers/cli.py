@@ -21,14 +21,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import click
 import tempfile
+import click
 
-from databricks_cli.containers.utils import build_image, export_image, get_dbfs_path, upload_image_to_dbfs, upload_image_to_s3
+from databricks_cli.containers.utils import build_image, export_image, get_dbfs_path, \
+    upload_image_to_dbfs, upload_image_to_s3
 from databricks_cli.configure.config import provide_api_client, profile_option
 from databricks_cli.dbfs.dbfs_path import DbfsPathClickType
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS
 from databricks_cli.version import print_version_callback, version
+
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.argument('dockerfile')
@@ -68,6 +70,7 @@ def export(image_id, exported_image):
 @click.argument('secret_key')
 def upload_s3(exported_image, s3_bucket, s3_path, access_key, secret_key):
     upload_image_to_s3(exported_image, s3_bucket, s3_path, access_key, secret_key)
+
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.argument('exported_image')

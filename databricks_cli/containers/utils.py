@@ -23,12 +23,12 @@
 
 import boto3
 from botocore.client import Config
-from click import ClickException
-import datetime
 import lz4.frame
 import os
 import subprocess
 import tempfile
+
+from click import ClickException
 
 from databricks_cli.dbfs.api import DbfsApi
 from databricks_cli.dbfs.cli import copy_to_dbfs_non_recursive
