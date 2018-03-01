@@ -79,6 +79,7 @@ def upload_s3(exported_image, s3_bucket, s3_path, access_key, secret_key):
     """
     upload_image_to_s3(exported_image, s3_bucket, s3_path, access_key, secret_key)
 
+
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.argument('exported_image')
 @click.argument('dbfs_path', default=None, type=DbfsPathClickType())

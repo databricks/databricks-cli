@@ -85,7 +85,7 @@ def export_image(image_id, exported_image):
     print "Finished image export to compressed tarball {}".format(exported_image)
 
 
-def upload_image_to_dbfs(api_client, exported_image, dbfs_path = None):
+def upload_image_to_dbfs(api_client, exported_image, dbfs_path=None):
     """
     Uploads the compressed exported custom image to DBFS, given the current CLI user's context.
     :param: dbfs_path if None, this will generate an unique DBFS path to upload to
@@ -160,19 +160,21 @@ def validate_s3_path(s3_path):
 
 
 def validate_lz4_extension(name, error_message):
-    if name.strip().endswith(".lz4") == False:
+    if not name.strip().endswith(".lz4"):
         raise ClickException(error_message)
 
 
 FIRST_LINE_OF_DOCKERFILE = "FROM {}".format(DBR)
+
+
 def validate_dockerfile(dockerfile):
     """
     Validates that the docker file starts with "FROM databricks/4.0.x-scala2.11"
     """
     content = get_file_content(dockerfile)
-    if content.strip().startswith(FIRST_LINE_OF_DOCKERFILE) == False:
-        raise ClickException('The first line of the dockerfile should start with:\n' + \
-            FIRST_LINE_OF_DOCKERFILE)
+    if not content.strip().startswith(FIRST_LINE_OF_DOCKERFILE):
+        raise ClickException('The first line of the dockerfile should start with:\n' +
+                             FIRST_LINE_OF_DOCKERFILE)
 
 
 def get_file_content(filename):
