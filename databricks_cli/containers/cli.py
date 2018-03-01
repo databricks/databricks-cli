@@ -39,19 +39,21 @@ from databricks_cli.version import print_version_callback, version
 @provide_api_client
 def build_export_upload(api_client, dockerfile):
     """
-    Builds, exports, and uploads your custom container to DBFS at a random path.
+    Builds, exports, and uploads a custom container to DBFS at a random path.
     """
     image_id = build_image(dockerfile)
     with tempfile.NamedTemporaryFile(suffix='.lz4') as temp:
         export_image(image_id, temp.name)
         filename = temp.name.split("/")[-1]
-        uploaded_path = upload_image_to_dbfs(api_client, temp, get_dbfs_path(filename))
-        print "Uploaded to {}".format(uploaded_path)
+        upload_image_to_dbfs(api_client, temp.name, get_dbfs_path(filename))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.argument('dockerfile')
 def build(dockerfile):
+    """
+    Builds a custom image with a Dockerfile
+    """
     build_image(dockerfile)
 
 
@@ -59,6 +61,9 @@ def build(dockerfile):
 @click.argument('image_id')
 @click.argument('exported_image')
 def export(image_id, exported_image):
+    """
+    Exports and compresses a custom image
+    """
     export_image(image_id, exported_image)
 
 
@@ -69,8 +74,10 @@ def export(image_id, exported_image):
 @click.argument('access_key')
 @click.argument('secret_key')
 def upload_s3(exported_image, s3_bucket, s3_path, access_key, secret_key):
+    """
+    Uploads and presigns a custom image to s3
+    """
     upload_image_to_s3(exported_image, s3_bucket, s3_path, access_key, secret_key)
-
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.argument('exported_image')
@@ -79,6 +86,9 @@ def upload_s3(exported_image, s3_bucket, s3_path, access_key, secret_key):
 @eat_exceptions
 @provide_api_client
 def upload_dbfs(api_client, exported_image, dbfs_path):
+    """
+    Uploads a custom image to DBFS
+    """
     upload_image_to_dbfs(api_client, exported_image, dbfs_path)
 
 
