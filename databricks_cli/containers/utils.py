@@ -54,11 +54,11 @@ def build_image(dockerfile):
     :return: the image id of the custom image
     """
     validate_dockerfile(dockerfile)
-    print "Building custom image with dockerfile: {}".format(dockerfile)
+    print("Building custom image with dockerfile: {}".format(dockerfile))
     dockerfile_folder = os.path.dirname(dockerfile)
     docker_build_command = ["docker", "build", dockerfile_folder]
     image_id = run_cmd(docker_build_command)
-    print "Built custom image with id: {}".format(image_id)
+    print("Built custom image with id: {}".format(image_id))
     return image_id
 
 
@@ -98,9 +98,9 @@ def upload_image_to_dbfs(api_client, exported_image, dbfs_path=None):
     else:
         validate_dbfs_path(dbfs_path.absolute_path)
 
-    print 'Uploading custom image from "{0}" to DBFS at: {1}'.format(exported_image, dbfs_path)
+    print('Uploading custom image from "{0}" to DBFS at: {1}'.format(exported_image, dbfs_path))
     copy_to_dbfs_non_recursive(dbfs_api, exported_image, dbfs_path, False)
-    print 'Uploaded custom image to DBFS at: {}'.format(dbfs_path)
+    print('Uploaded custom image to DBFS at: {}'.format(dbfs_path))
     return dbfs_path
 
 
@@ -111,7 +111,7 @@ def upload_image_to_s3(exported_image, s3_bucket, s3_path, access_key, secret_ke
     """
     validate_exported_image(exported_image)
     validate_s3_path(s3_path)
-    print 'Uploading custom image to s3://{0}/{1}'.format(s3_bucket, s3_path)
+    print('Uploading custom image to s3://{0}/{1}'.format(s3_bucket, s3_path))
     s3_client = boto3.client('s3', aws_access_key_id=access_key, aws_secret_access_key=secret_key,
                              config=Config(signature_version='s3'))
     s3_client.upload_file(exported_image, s3_bucket, s3_path)
@@ -124,7 +124,7 @@ def upload_image_to_s3(exported_image, s3_bucket, s3_path, access_key, secret_ke
         # 1 Year in Seconds
         ExpiresIn=31536000,
     )
-    print "Presigned url: {}".format(url)
+    print('Presigned url: {}'.format(url))
 
 
 ### Helper methods
