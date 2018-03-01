@@ -33,7 +33,7 @@ setup(
     version=version,
     packages=find_packages(exclude=['tests', 'tests.*']),
     install_requires=[
-        'boto3==1.6.3',
+        'boto3==1.6.2',
         'click>=6.7',
         'lz4==1.0.0',
         'requests>=2.17.3',
