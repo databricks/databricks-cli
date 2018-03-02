@@ -20,22 +20,25 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 # pylint:disable=redefined-outer-name
+
 import os
+from random import random
 
 import pytest
 
 from databricks_cli.workspace import cli
 from tests.utils import invoke_cli_runner
 
-WORKSPACE_TEST_PATH = '/databricks-cli-test'
+WORKSPACE_TEST_PATH = '/databricks-cli-test' + str(int(random() * 1000))
 LOCAL_TEMP_FILE = 'temp-file.txt'
 LOCAL_TEMP_DIR = 'temp-dir'
 
 SCALA_FILE = 'test-a.scala'
 SQL_FILE = 'test-b.sql'
 PYTHON_FILE = 'test-c.py'
-R_FILE = 'test-d.r'
+R_FILE = 'test-d.R'
 
 SCALA_CONTENTS = "println(1+1)"
 SQL_CONTENTS = "select 1+1"
@@ -86,21 +89,16 @@ def assert_local_file_contains(local_path, expected_contents):
 
 
 def assert_workspace_file_exists(workspace_path):
-    remote_dir, basename = os.path.split(workspace_path)
-    res = invoke_cli_runner(cli.ls_cli, [remote_dir])
-    files = res.output.split('\n')
-    assert basename in files
+    dirname, basename = os.path.split(workspace_path)
+    res = invoke_cli_runner(cli.ls_cli, [dirname])
+    assert basename in res.output.split("\n")
 
 
 def strip_suffix(filename):
-    return filename.split('.')[0]
+    return os.path.splitext(filename)[0]
 
 
-class TestDbfsCli(object):
-    """
-    - tmpdir
-      - test-file.txt
-    """
+class TestWorkspaceCli(object):
     @pytest.mark.usefixtures('workspace_dir')
     def test_mkdirs(self):
         pass

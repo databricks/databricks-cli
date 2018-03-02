@@ -20,8 +20,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 # pylint:disable=redefined-outer-name
+
 import os
+from random import random
 
 import pytest
 
@@ -29,7 +32,7 @@ from databricks_cli.dbfs import cli
 from databricks_cli.dbfs.dbfs_path import DbfsPath
 from tests.utils import invoke_cli_runner
 
-DBFS_TEST_PATH = 'dbfs:/databricks-cli-test'
+DBFS_TEST_PATH = 'dbfs:/databricks-cli-test-' + str(int(random() * 1000))
 LOCAL_TEMP_FILE = 'temp-file.txt'
 LOCAL_TEMP_DIR = 'temp-dir'
 LOCAL_TEST_FILE = 'test-file.txt'
@@ -52,7 +55,7 @@ def local_dir(tmpdir):
     - tmpdir
       - test-file.txt
       - test-dir
-        - test-file-in-dir.txt
+        - test-file.txt
     """
     path = tmpdir.strpath
     with open(os.path.join(path, LOCAL_TEST_FILE), 'wt') as f:
@@ -63,7 +66,7 @@ def local_dir(tmpdir):
     yield tmpdir
 
 
-def assert_local_file_exists(local_path, expected_contents):
+def assert_local_file_content(local_path, expected_contents):
     assert os.path.exists(local_path)
     with open(local_path, 'rt') as f:
         assert f.read() == expected_contents
@@ -78,10 +81,6 @@ def assert_dbfs_file_exists(dbfs_path):
 
 
 class TestDbfsCli(object):
-    """
-    - tmpdir
-      - test-file.txt
-    """
     @pytest.mark.usefixtures('dbfs_dir')
     def test_mkdirs(self):
         pass
@@ -105,7 +104,7 @@ class TestDbfsCli(object):
         invoke_cli_runner(cli.cp_cli, [os.path.join(DBFS_TEST_PATH, LOCAL_TEST_FILE),
                                        temp_file_path])
 
-        assert_local_file_exists(temp_file_path, TEST_FILE_CONTENTS)
+        assert_local_file_content(temp_file_path, TEST_FILE_CONTENTS)
 
     @pytest.mark.usefixtures('dbfs_dir')
     def test_cp_recursive(self, local_dir):
@@ -119,6 +118,6 @@ class TestDbfsCli(object):
         # Copy the data back to `temp-dir`.
         local_temp_dir = os.path.join(path, LOCAL_TEMP_DIR)
         invoke_cli_runner(cli.cp_cli, ['-r', DBFS_TEST_PATH, local_temp_dir])
-        assert_local_file_exists(os.path.join(local_temp_dir, LOCAL_TEST_FILE), TEST_FILE_CONTENTS)
-        assert_local_file_exists(os.path.join(local_temp_dir, LOCAL_TEST_FILE_IN_DIR),
-                                 TEST_FILE_CONTENTS)
+        assert_local_file_content(os.path.join(local_temp_dir, LOCAL_TEST_FILE), TEST_FILE_CONTENTS)
+        assert_local_file_content(os.path.join(local_temp_dir, LOCAL_TEST_FILE_IN_DIR),
+                                  TEST_FILE_CONTENTS)
