@@ -21,6 +21,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import decorator
+from click.testing import CliRunner
 
 from databricks_cli.configure.provider import DatabricksConfig, DEFAULT_SECTION, \
     update_and_persist_config
@@ -44,3 +45,12 @@ def assert_cli_output(actual, expected):
     >>> assert_cli_output(res.output, 'EXPECTED-OUTPUT')
     """
     assert actual == expected + '\n'
+
+
+def invoke_cli_runner(*args, **kwargs):
+    """
+    Helper method to invoke the CliRunner while asserting that the exit code is actually 0.
+    """
+    res = CliRunner().invoke(*args, **kwargs)
+    assert res.exit_code == 0, 'Exit code was not 0. Output is: {}'.format(res.output)
+    return res
