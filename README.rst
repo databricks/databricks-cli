@@ -17,8 +17,7 @@ In addition, please leave bug reports as issues on our `Github project <https://
 Requirements
 ------------
 
--  Python Version > 2.7.9
--  Python 3 is not supported
+-  Python Version > 2.7.9 or > 3.6
 
 Installation
 ---------------

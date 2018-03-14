@@ -54,6 +54,7 @@ setup(
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.6',
     ],
     keywords='databricks cli',
     url='https://github.com/databricks/databricks-cli'
