@@ -91,6 +91,7 @@ def list_cli(api_client, cluster_id):
 
 
 INSTALL_OPTIONS = ['jar', 'egg', 'maven-coordinates', 'pypi-package', 'cran-package']
+UNINSTALL_OPTIONS = ['all'] + INSTALL_OPTIONS
 JAR_HELP = 'JAR on DBFS or S3 or WASB.'
 EGG_HELP = 'Egg on DBFS or S3 or WASB.'
 MAVEN_COORDINATES_HELP = """
@@ -187,17 +188,18 @@ def _uninstall_cli_exit_help(cluster_id):
                short_help='Uninstall a library on a cluster.')
 @click.option('--cluster-id', required=True, type=ClusterIdClickType(),
               help=ClusterIdClickType.help)
-@click.option('--all', is_flag=True, default=False, help='If set, uninstall all libraries.')
-@click.option('--jar', cls=OneOfOption, one_of=INSTALL_OPTIONS, help=JAR_HELP)
-@click.option('--egg', cls=OneOfOption, one_of=INSTALL_OPTIONS, help=EGG_HELP)
-@click.option('--maven-coordinates', cls=OneOfOption, one_of=INSTALL_OPTIONS,
+@click.option('--all', is_flag=True, cls=OneOfOption, one_of=UNINSTALL_OPTIONS, default=False,
+              help='If set, uninstall all libraries.')
+@click.option('--jar', cls=OneOfOption, one_of=UNINSTALL_OPTIONS, help=JAR_HELP)
+@click.option('--egg', cls=OneOfOption, one_of=UNINSTALL_OPTIONS, help=EGG_HELP)
+@click.option('--maven-coordinates', cls=OneOfOption, one_of=UNINSTALL_OPTIONS,
               help=MAVEN_COORDINATES_HELP)
 @click.option('--maven-repo', help=MAVEN_REPO_HELP)
 @click.option('--maven-exclusion', multiple=True, help=MAVEN_EXCLUSION_HELP)
-@click.option('--pypi-package', cls=OneOfOption, one_of=INSTALL_OPTIONS,
+@click.option('--pypi-package', cls=OneOfOption, one_of=UNINSTALL_OPTIONS,
               help=PYPI_PACKAGE_HELP)
 @click.option('--pypi-repo', help=PYPI_REPO_HELP)
-@click.option('--cran-package', cls=OneOfOption, one_of=INSTALL_OPTIONS, help=CRAN_PACKAGE_HELP)
+@click.option('--cran-package', cls=OneOfOption, one_of=UNINSTALL_OPTIONS, help=CRAN_PACKAGE_HELP)
 @click.option('--cran-repo', help=CRAN_REPO_HELP)
 @profile_option
 @eat_exceptions # noqa
@@ -209,9 +211,10 @@ def uninstall_cli(api_client, cluster_id, all, jar, egg, maven_coordinates, mave
     will stay attached until the cluster is restarted. (see `databricks clusters restart -h`).
     """
     if all:
-        library_statuses = _cluster_status(api_client, cluster_id).get('library_statuses', [])
+        libraries_api = LibrariesApi(api_client)
+        library_statuses = libraries_api.cluster_status(cluster_id).get('library_statuses', [])
         libraries = [l_status['library'] for l_status in library_statuses]
-        LibrariesApi(api_client).uninstall_libraries(cluster_id, libraries)
+        libraries_api.uninstall_libraries(cluster_id, libraries)
         _uninstall_cli_exit_help(cluster_id)
         return
     library = _get_library_from_options(jar, egg, maven_coordinates, maven_repo, maven_exclusion,

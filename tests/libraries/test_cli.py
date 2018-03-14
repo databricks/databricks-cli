@@ -226,7 +226,29 @@ def test_uninstall_cli_with_multiple_oneof(libraries_api_mock):
             '--{}'.format(lib_b), 'test_b'])
         libraries_api_mock.uninstall_libraries.assert_not_called()
 
-        assert 'Only one of {} should be provided'.format(cli.INSTALL_OPTIONS) in res.output
+        assert 'Only one of {} should be provided'.format(cli.UNINSTALL_OPTIONS) in res.output
+
+
+@provide_conf
+def test_uninstall_cli_all(libraries_api_mock):
+    test_jar = 'dbfs:/test.jar'
+    runner = CliRunner()
+    libraries_api_mock.cluster_status.return_value = {
+        "library_statuses": [
+            {
+                "status": "INSTALLED",
+                "is_library_for_all_clusters": False,
+                "library": {
+                    "jar": test_jar
+                }
+            }
+        ],
+        "cluster_id": TEST_CLUSTER_ID,
+    }
+    runner.invoke(cli.uninstall_cli, [
+        '--cluster-id', TEST_CLUSTER_ID,
+        '--all'])
+    libraries_api_mock.uninstall_libraries.assert_called_with(TEST_CLUSTER_ID, [{'jar': test_jar}])
 
 
 @provide_conf
