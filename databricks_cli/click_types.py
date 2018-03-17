@@ -23,6 +23,8 @@
 
 from click import ParamType, Option, MissingParameter, UsageError
 
+from databricks_cli.configure.provider import DEFAULT_SECTION
+
 
 class OutputClickType(ParamType):
     name = 'FORMAT'
@@ -79,3 +81,12 @@ class OneOfOption(Option):
         if len(cleaned_opts.intersection(set(self.one_of))) > 1:
             raise UsageError('Only one of {} should be provided.'.format(self.one_of))
         return super(OneOfOption, self).handle_parse_result(ctx, opts, args)
+
+
+class ContextObject(object):
+    def __init__(self):
+        self.profile = DEFAULT_SECTION
+
+    def set_profile(self, profile):
+        if self.profile == DEFAULT_SECTION:
+            self.profile = profile

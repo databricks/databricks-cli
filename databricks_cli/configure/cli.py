@@ -28,8 +28,7 @@ from click import ParamType
 from databricks_cli.configure.provider import DatabricksConfig, update_and_persist_config, \
     get_config_for_profile
 from databricks_cli.utils import CONTEXT_SETTINGS
-from databricks_cli.configure.config import profile_option
-
+from databricks_cli.configure.config import profile_option_injected
 
 PROMPT_HOST = 'Databricks Host (should begin with https://)'
 PROMPT_USERNAME = 'Username'
@@ -64,7 +63,7 @@ def _configure_cli_password(profile):
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Configures host and authentication info for the CLI.')
 @click.option('--token', show_default=True, is_flag=True, default=False)
-@profile_option
+@profile_option_injected
 def configure_cli(profile, token):
     """
     Configures host and authentication info for the CLI.

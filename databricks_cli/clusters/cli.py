@@ -196,6 +196,7 @@ def spark_versions_cli(api_client):
              short_help='Utility to interact with Databricks clusters.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
+@profile_option
 @eat_exceptions
 def clusters_group():
     """
