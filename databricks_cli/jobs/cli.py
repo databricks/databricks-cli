@@ -184,6 +184,7 @@ def run_now_cli(api_client, job_id, jar_params, notebook_params, python_params,
              short_help='Utility to interact with jobs.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
+@profile_option
 @eat_exceptions
 def jobs_group():
     """

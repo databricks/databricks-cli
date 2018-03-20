@@ -24,6 +24,7 @@
 import click
 import six
 
+from databricks_cli.click_types import ContextObject
 from databricks_cli.configure.provider import DEFAULT_SECTION, get_config_for_profile
 from databricks_cli.utils import InvalidConfigurationError
 from databricks_cli.sdk import ApiClient
@@ -36,7 +37,7 @@ def provide_api_client(function):
     """
     @six.wraps(function)
     def decorator(*args, **kwargs):
-        profile = kwargs.pop('profile')
+        profile = get_profile_from_context()
         config = get_config_for_profile(profile)
         if not config.is_valid:
             raise InvalidConfigurationError(profile)
@@ -47,9 +48,20 @@ def provide_api_client(function):
     return decorator
 
 
+def get_profile_from_context():
+    ctx = click.get_current_context()
+    context_object = ctx.ensure_object(ContextObject)
+    return context_object.get_profile()
+
+
 def profile_option(f):
-    return click.option('--profile', required=False, default=DEFAULT_SECTION,
-                        help='CLI connection profile to use.')(f)
+    def callback(ctx, param, value): #  NOQA
+        if value is not None:
+            context_object = ctx.ensure_object(ContextObject)
+            context_object.set_profile(value)
+    return click.option('--profile', required=False, default=None, callback=callback,
+                        expose_value=False,
+                        help='CLI connection profile to use. The default profile is "DEFAULT".')(f)
 
 
 def _get_api_client(config):

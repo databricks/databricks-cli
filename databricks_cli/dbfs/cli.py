@@ -229,6 +229,7 @@ def mv_cli(api_client, src, dst):
 @click.group(context_settings=CONTEXT_SETTINGS, short_help='Utility to interact with DBFS.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
+@profile_option
 def dbfs_group():
     """
     Utility to interact with DBFS.

@@ -22,38 +22,59 @@
 # limitations under the License.
 
 # pylint:disable=protected-access
-
-import mock
-import pytest
+import click
+from click.testing import CliRunner
 
 import databricks_cli.configure.config as config
-from databricks_cli.configure.provider import DatabricksConfig, DEFAULT_SECTION
 from databricks_cli.utils import InvalidConfigurationError
+from tests.utils import provide_conf
 
 
-def test_require_config_valid():
-    with mock.patch('databricks_cli.configure.config.get_config_for_profile') as \
-            get_config_for_profile_mock:
-        get_config_for_profile_mock.return_value = DatabricksConfig(
-            'test-host', None, None, 'test-token')
+@provide_conf
+def test_provide_api_client():
+    @click.command()
+    @click.option('--x', required=True)
+    @config.profile_option
+    @config.provide_api_client
+    def test_command(api_client, x): # noqa
+        click.echo(x)
 
-        @config.provide_api_client
-        def test_function(api_client, x): # noqa
-            return x
-
-        assert test_function(x=1, profile=DEFAULT_SECTION) == 1 # noqa
+    result = CliRunner().invoke(test_command, ['--x', '1'])
+    assert result.exit_code == 0
+    assert result.output == '1\n'
 
 
-def test_require_config_invalid():
-    with mock.patch('databricks_cli.configure.config.get_config_for_profile') as \
-            get_config_for_profile_mock:
-        with mock.patch('databricks_cli.configure.config._get_api_client') as \
-                get_api_client_mock: # noqa
-            get_config_for_profile_mock.return_value = DatabricksConfig(None, None, None, None)
+def test_provide_api_client_invalid():
+    @click.command()
+    @click.option('--x', required=True)
+    @config.profile_option
+    @config.provide_api_client
+    def test_command(api_client, x): # noqa
+        click.echo(x)
 
-            @config.provide_api_client
-            def test_function(api_client, x): # noqa
-                return x
+    result = CliRunner().invoke(test_command, ['--x', '1'])
+    assert result.exit_code == -1
+    assert isinstance(result.exception, InvalidConfigurationError)
 
-            with pytest.raises(InvalidConfigurationError):
-                test_function(x=1, profile=DEFAULT_SECTION) # noqa
+
+TEST_PROFILE_1 = 'test-profile-1'
+TEST_PROFILE_2 = 'test-profile-2'
+
+
+def test_provide_profile_twice():
+    @click.group()
+    @config.profile_option
+    def test_group():
+        pass
+
+    @click.command()
+    @config.profile_option
+    def test_command(): # noqa
+        pass
+
+    test_group.add_command(test_command, 'test')
+
+    result = CliRunner().invoke(test_group, ['--profile', TEST_PROFILE_1, 'test', '--profile',
+                                             TEST_PROFILE_2])
+    assert '--profile can only be provided once. The profiles [{}, {}] were provided.'.format(
+        TEST_PROFILE_1, TEST_PROFILE_2) in result.output
