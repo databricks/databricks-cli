@@ -227,6 +227,7 @@ def uninstall_cli(api_client, cluster_id, all, jar, egg, maven_coordinates, mave
              short_help='Utility to interact with libraries.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
+@profile_option
 @eat_exceptions
 def libraries_group():
     """

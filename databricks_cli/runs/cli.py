@@ -133,6 +133,7 @@ def cancel_cli(api_client, run_id):
              short_help='Utility to interact with the jobs runs.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
+@profile_option
 @eat_exceptions
 def runs_group():
     """

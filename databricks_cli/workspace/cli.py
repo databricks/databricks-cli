@@ -238,6 +238,7 @@ def import_dir_cli(api_client, source_path, target_path, overwrite, exclude_hidd
              short_help='Utility to interact with the Databricks workspace.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
+@profile_option
 def workspace_group():
     """
     Utility to interact with the Databricks workspace.

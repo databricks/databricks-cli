@@ -23,6 +23,7 @@
 
 import click
 
+from databricks_cli.configure.config import profile_option
 from databricks_cli.libraries.cli import libraries_group
 from databricks_cli.version import print_version_callback, version
 from databricks_cli.utils import CONTEXT_SETTINGS
@@ -37,6 +38,7 @@ from databricks_cli.runs.cli import runs_group
 @click.group(context_settings=CONTEXT_SETTINGS)
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
+@profile_option
 def cli():
     pass
 
