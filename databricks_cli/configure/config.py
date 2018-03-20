@@ -37,8 +37,7 @@ def provide_api_client(function):
     """
     @six.wraps(function)
     def decorator(*args, **kwargs):
-        ctx = click.get_current_context()
-        profile = ctx.obj.profile
+        profile = get_profile_from_context()
         config = get_config_for_profile(profile)
         if not config.is_valid:
             raise InvalidConfigurationError(profile)
@@ -49,16 +48,18 @@ def provide_api_client(function):
     return decorator
 
 
-def profile_option_injected(f):
-    return click.option('--profile', required=False, default=DEFAULT_SECTION,
-                        help='CLI connection profile to use.')(f)
+def get_profile_from_context():
+    ctx = click.get_current_context()
+    context_object = ctx.ensure_object(ContextObject)
+    return context_object.get_profile()
 
 
 def profile_option(f):
     def callback(ctx, param, value): #  NOQA
-        context_object = ctx.ensure_object(ContextObject)
-        context_object.set_profile(value)
-    return click.option('--profile', required=False, default=DEFAULT_SECTION, callback=callback,
+        if value is not None:
+            context_object = ctx.ensure_object(ContextObject)
+            context_object.set_profile(value)
+    return click.option('--profile', required=False, default=None, callback=callback,
                         expose_value=False, help='CLI connection profile to use.')(f)
 
 

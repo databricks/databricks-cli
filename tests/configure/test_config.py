@@ -55,3 +55,21 @@ def test_provide_api_client_invalid():
     result = CliRunner().invoke(test_command, ['--x', '1'])
     assert result.exit_code == -1
     assert isinstance(result.exception, InvalidConfigurationError)
+
+
+def test_provide_profile_twice():
+    @click.group()
+    @config.profile_option
+    def test_group():
+        pass
+
+    @click.command()
+    @config.profile_option
+    def test_command(): # noqa
+        pass
+
+    test_group.add_command(test_command, 'test')
+
+    result = CliRunner().invoke(test_group, ['--profile', 'test-profile-1', 'test', '--profile',
+                                             'test-profile-2'])
+    assert '--profile can only be provided once.' in result.output

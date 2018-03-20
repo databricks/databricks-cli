@@ -85,8 +85,14 @@ class OneOfOption(Option):
 
 class ContextObject(object):
     def __init__(self):
-        self.profile = DEFAULT_SECTION
+        self._profile = None
 
     def set_profile(self, profile):
-        if self.profile == DEFAULT_SECTION:
-            self.profile = profile
+        if self._profile is not None:
+            raise UsageError('--profile can only be provided once.')
+        self._profile = profile
+
+    def get_profile(self):
+        if self._profile is None:
+            return DEFAULT_SECTION
+        return self._profile
