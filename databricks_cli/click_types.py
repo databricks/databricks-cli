@@ -89,7 +89,8 @@ class ContextObject(object):
 
     def set_profile(self, profile):
         if self._profile is not None:
-            raise UsageError('--profile can only be provided once.')
+            raise UsageError('--profile can only be provided once. '
+                             'The profiles [{}, {}] were provided.'.format(self._profile, profile))
         self._profile = profile
 
     def get_profile(self):

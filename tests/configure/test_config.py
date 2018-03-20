@@ -57,6 +57,10 @@ def test_provide_api_client_invalid():
     assert isinstance(result.exception, InvalidConfigurationError)
 
 
+TEST_PROFILE_1 = 'test-profile-1'
+TEST_PROFILE_2 = 'test-profile-2'
+
+
 def test_provide_profile_twice():
     @click.group()
     @config.profile_option
@@ -70,6 +74,7 @@ def test_provide_profile_twice():
 
     test_group.add_command(test_command, 'test')
 
-    result = CliRunner().invoke(test_group, ['--profile', 'test-profile-1', 'test', '--profile',
-                                             'test-profile-2'])
-    assert '--profile can only be provided once.' in result.output
+    result = CliRunner().invoke(test_group, ['--profile', TEST_PROFILE_1, 'test', '--profile',
+                                             TEST_PROFILE_2])
+    assert '--profile can only be provided once. The profiles [{}, {}] were provided.'.format(
+        TEST_PROFILE_1, TEST_PROFILE_2) in result.output

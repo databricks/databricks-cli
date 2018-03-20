@@ -60,7 +60,8 @@ def profile_option(f):
             context_object = ctx.ensure_object(ContextObject)
             context_object.set_profile(value)
     return click.option('--profile', required=False, default=None, callback=callback,
-                        expose_value=False, help='CLI connection profile to use.')(f)
+                        expose_value=False,
+                        help='CLI connection profile to use. The default profile is "DEFAULT".')(f)
 
 
 def _get_api_client(config):
