@@ -79,7 +79,10 @@ class ApiClient(object):
         else:
             auth = {}
         user_agent = {'user-agent': 'databricks-cli-{v}'.format(v=databricks_cli_version)}
-        self.default_headers = dict(auth.items() + default_headers.items() + user_agent.items())
+        self.default_headers = {}
+        self.default_headers.update(auth)
+        self.default_headers.update(default_headers)
+        self.default_headers.update(user_agent)
         self.verify = verify
 
     def close(self):
