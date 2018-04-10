@@ -32,6 +32,11 @@ from databricks_cli.configure.config import provide_api_client, profile_option
 from databricks_cli.version import print_version_callback, version
 
 
+SCOPE_HEADER = ('Scope', 'Backend')
+SECRET_HEADER = ('Key name', 'Last updated')
+ACL_HEADER = ('Principal', 'Permission')
+
+
 def _deleted_confirmation(resp_json, category, name):
     if 'deleted' in resp_json and resp_json['deleted']:
         click.echo('{} "{}" deleted'.format(category, name))
@@ -44,8 +49,8 @@ def _deleted_confirmation(resp_json, category, name):
 @click.option('--scope', required=True)
 @click.option('--initial-manage-acl',
               type=click.Choice(['creator-only', 'all-users']), default='creator-only',
-              help='The initial ACL applied to the scope. Must be either "creator-only" or "all-users".'
-                   ' Defaults to "creator-only".')
+              help='The initial ACL applied to the scope. Must be either "creator-only"'
+                   ' or "all-users". Defaults to "creator-only".')
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -81,7 +86,7 @@ def list_scopes(api_client, output):
     if OutputClickType.is_json(output):
         click.echo(pretty_format(scopes_json))
     else:
-        click.echo(tabulate(_scopes_to_table(scopes_json), headers=('Scope', 'Backend')))
+        click.echo(tabulate(_scopes_to_table(scopes_json), headers=SCOPE_HEADER))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -137,14 +142,16 @@ def write_secret(api_client, scope, key, string_value, bytes_value, no_strip, va
 
     You should specify exactly one flag to indicate the value is "string-value" or "bytes-value".
 
-    If VALUE is an empty string or not provided, an editor will be opened for you to enter your secret value.
-    If VALUE starts with '@', the rest of the string will be seen as a path to a file, the content of file will be
-    read as content.
+    If VALUE is an empty string or not provided, an editor will be opened for you to enter your
+    secret value.
+    If VALUE starts with '@', the rest of the string will be seen as a path to a file, the content
+    of file will be read as content.
     Otherwise, the VALUE itself will be seen as secret value.
 
     The specification for input can be found at:
     https://docs.azuredatabricks.net/api/latest/secrets.html#write-secret
     """
+    # TODO: investigate bytes_value input
     string_value, bytes_value = verify_and_read_value(string_value, bytes_value, value, no_strip)
     SecretApi(api_client).write_secret(scope, key, string_value, bytes_value)
 
@@ -158,8 +165,8 @@ def write_secret(api_client, scope, key, string_value, bytes_value, no_strip, va
 @provide_api_client
 def delete_secret(api_client, scope, key):
     """
-    Deletes the secret stored in this secret scope. You must have WRITE or MANAGE permission on the Secret Scope.
-    Print if the secret was successfully deleted.
+    Deletes the secret stored in this secret scope. You must have WRITE or MANAGE permission on
+    the Secret Scope. Print if the secret was successfully deleted.
     """
     deleted_json = SecretApi(api_client).delete_secret(scope, key)
     _deleted_confirmation(deleted_json, 'Secret', key)
@@ -181,13 +188,14 @@ def _secrets_to_table(secrets_json):
 @provide_api_client
 def list_secrets(api_client, scope, output):
     """
-    Lists the secret keys that are stored at this scope. Also lists the last updated timestamp if available.
+    Lists the secret keys that are stored at this scope. Also lists the last updated timestamp
+    if available.
     """
     secrets_json = SecretApi(api_client).list_secrets(scope)
     if OutputClickType.is_json(output):
         click.echo(pretty_format(secrets_json))
     else:
-        click.echo(tabulate(_secrets_to_table(secrets_json), headers=('Key name', 'Last updated')))
+        click.echo(tabulate(_secrets_to_table(secrets_json), headers=SECRET_HEADER))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -201,7 +209,8 @@ def list_secrets(api_client, scope, output):
 @provide_api_client
 def write_acl(api_client, scope, principal, permission):
     """
-    Creates or overwrites the ACL associated with the given principal (user or group) on the specified scope.
+    Creates or overwrites the ACL associated with the given principal (user or group) on the
+    specified scope.
     """
     SecretApi(api_client).write_acl(scope, principal, permission)
 
@@ -242,7 +251,7 @@ def list_acls(api_client, scope, output):
     if OutputClickType.is_json(output):
         click.echo(pretty_format(acls_json))
     else:
-        click.echo(tabulate(_acls_to_table(acls_json), headers=('Principal', 'Permission')))
+        click.echo(tabulate(_acls_to_table(acls_json), headers=ACL_HEADER))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -261,8 +270,8 @@ def get_acl(api_client, scope, principal, output):
     if OutputClickType.is_json(output):
         click.echo(pretty_format(acl_json))
     else:
-        acl_list = [(acl_json['principal'], acl_json['permission'])]
-        click.echo(tabulate(acl_list, headers=('Principal', 'Permission')))
+        acl_list = _acls_to_table({'items': [acl_json]})
+        click.echo(tabulate(acl_list, headers=ACL_HEADER))
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
