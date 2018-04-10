@@ -37,13 +37,6 @@ SECRET_HEADER = ('Key name', 'Last updated')
 ACL_HEADER = ('Principal', 'Permission')
 
 
-def _deleted_confirmation(resp_json, category, name):
-    if 'deleted' in resp_json and resp_json['deleted']:
-        click.echo('{} "{}" deleted'.format(category, name))
-    else:
-        click.echo('Deletion failed. Maybe {} "{}" does not exist?'.format(category, name))
-
-
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help="Creates a scope")
 @click.option('--scope', required=True)
@@ -97,10 +90,9 @@ def list_scopes(api_client, output):
 @provide_api_client
 def delete_scope(api_client, scope):
     """
-    Deletes a secret scope. Print if the secret was successfully deleted.
+    Deletes a secret scope.
     """
-    deleted_json = SecretApi(api_client).delete_scope(scope)
-    _deleted_confirmation(deleted_json, 'Scope', scope)
+    SecretApi(api_client).delete_scope(scope)
 
 
 def verify_and_read_value(string_value, bytes_value, value, no_strip):
@@ -166,10 +158,9 @@ def write_secret(api_client, scope, key, string_value, bytes_value, no_strip, va
 def delete_secret(api_client, scope, key):
     """
     Deletes the secret stored in this secret scope. You must have WRITE or MANAGE permission on
-    the Secret Scope. Print if the secret was successfully deleted.
+    the Secret Scope.
     """
-    deleted_json = SecretApi(api_client).delete_secret(scope, key)
-    _deleted_confirmation(deleted_json, 'Secret', key)
+    SecretApi(api_client).delete_secret(scope, key)
 
 
 def _secrets_to_table(secrets_json):
