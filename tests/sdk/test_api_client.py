@@ -23,5 +23,9 @@
 
 from databricks_cli.sdk.api_client import ApiClient
 
+
 def test_api_client_constructor():
-    ApiClient(user='apple', password='banana', host='https://databricks.com')
+    """This used to throw when we converted <user>:<password> to base64 encoded string."""
+    client = ApiClient(user='apple', password='banana', host='https://databricks.com')
+    # echo -n "apple:banana" | base64
+    assert client.default_headers['Authorization'] == 'Basic YXBwbGU6YmFuYW5h'
