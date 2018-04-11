@@ -352,7 +352,7 @@ class ClusterService(object):
         _data = {}
     
         return self.client.perform_query('GET', '/clusters/list-zones', data=_data)
-     
+
 
 class ManagedLibraryService(object):
     def __init__(self, client):
@@ -522,3 +522,83 @@ class WorkspaceService(object):
         return self.client.perform_query('GET', '/workspace/get-status', data=_data)
      
 
+class SecretService(object):
+    def __init__(self, client):
+        self.client = client
+
+    def create_scope(self, scope, initial_manage_acl=None):
+        _data = {}
+        if scope is not None:
+            _data['scope'] = scope
+        if initial_manage_acl is not None:
+            _data['initial_manage_acl'] = initial_manage_acl
+        return self.client.perform_query('POST', '/secret/scopes/create', data=_data)
+    
+    def delete_scope(self, scope):
+        _data = {}
+        if scope is not None:
+            _data['scope'] = scope
+        return self.client.perform_query('POST', '/secret/scopes/delete', data=_data)
+    
+    def list_scopes(self):
+        _data = {}
+    
+        return self.client.perform_query('GET', '/secret/scopes/list', data=_data)
+    
+    def write_secret(self, scope, key, string_value=None, bytes_value=None):
+        _data = {}
+        if scope is not None:
+            _data['scope'] = scope
+        if key is not None:
+            _data['key'] = key
+        if string_value is not None:
+            _data['string_value'] = string_value
+        if bytes_value is not None:
+            _data['bytes_value'] = bytes_value
+        return self.client.perform_query('POST', '/secret/secrets/write', data=_data)
+    
+    def delete_secret(self, scope, key):
+        _data = {}
+        if scope is not None:
+            _data['scope'] = scope
+        if key is not None:
+            _data['key'] = key
+        return self.client.perform_query('POST', '/secret/secrets/delete', data=_data)
+    
+    def list_secrets(self, scope):
+        _data = {}
+        if scope is not None:
+            _data['scope'] = scope
+        return self.client.perform_query('GET', '/secret/secrets/list', data=_data)
+    
+    def write_acl(self, scope, principal, permission):
+        _data = {}
+        if scope is not None:
+            _data['scope'] = scope
+        if principal is not None:
+            _data['principal'] = principal
+        if permission is not None:
+            _data['permission'] = permission
+        return self.client.perform_query('POST', '/secret/acls/write', data=_data)
+    
+    def delete_acl(self, scope, principal):
+        _data = {}
+        if scope is not None:
+            _data['scope'] = scope
+        if principal is not None:
+            _data['principal'] = principal
+        return self.client.perform_query('POST', '/secret/acls/delete', data=_data)
+    
+    def list_acls(self, scope):
+        _data = {}
+        if scope is not None:
+            _data['scope'] = scope
+        return self.client.perform_query('GET', '/secret/acls/list', data=_data)
+    
+    def get_acl(self, scope, principal):
+        _data = {}
+        if scope is not None:
+            _data['scope'] = scope
+        if principal is not None:
+            _data['principal'] = principal
+        return self.client.perform_query('GET', '/secret/acls/get', data=_data)
