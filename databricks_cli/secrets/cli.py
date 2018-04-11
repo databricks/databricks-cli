@@ -21,6 +21,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import base64
 import click
 from tabulate import tabulate
 
@@ -111,7 +112,7 @@ def verify_and_read_value(string_value, bytes_value, value, no_strip):
     if string_value:
         return translate_value(value, no_strip), None
     if bytes_value:
-        return None, translate_value(value, no_strip)
+        return None, base64.encodestring(translate_value(value, no_strip))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -143,7 +144,6 @@ def write_secret(api_client, scope, key, string_value, bytes_value, no_strip, va
     The specification for input can be found at:
     https://docs.azuredatabricks.net/api/latest/secrets.html#write-secret
     """
-    # TODO: investigate bytes_value input
     string_value, bytes_value = verify_and_read_value(string_value, bytes_value, value, no_strip)
     SecretApi(api_client).write_secret(scope, key, string_value, bytes_value)
 
