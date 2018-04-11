@@ -273,7 +273,8 @@ def get_acl(api_client, scope, principal, output):
 @eat_exceptions
 def secrets_group():
     """
-    Utility to interact with Databricks secret manager.
+    Utility to interact with Databricks secret manager. For now, secret manager is only
+    available on Azure workspace.
     """
     pass
 
