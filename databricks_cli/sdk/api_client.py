@@ -72,8 +72,9 @@ class ApiClient(object):
 
         self.url = "%s/api/%s" % (host, apiVersion)
         if user is not None and password is not None:
-            userHeaderData = "Basic " + base64.standard_b64encode(user + ":" + password)
-            auth = {'Authorization': userHeaderData, 'Content-Type': 'text/json'}
+            encoded_auth = (user + ":" + password).encode()
+            user_header_data = "Basic " + base64.standard_b64encode(encoded_auth).decode()
+            auth = {'Authorization': user_header_data, 'Content-Type': 'text/json'}
         elif token is not None:
             auth = {'Authorization': 'Bearer {}'.format(token), 'Content-Type': 'text/json'}
         else:
