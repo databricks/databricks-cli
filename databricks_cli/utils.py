@@ -99,7 +99,7 @@ def translate_value(value, no_strip):
                 content = f.read()
 
             if content.rstrip() == prompt:
-                error_and_quit("No change made. Please follow instructions to input value in editor")
+                error_and_quit("No change made. Please follow instruction to input value in editor")
     elif value.startswith('@'):
         filepath = os.path.expanduser(value[1:])
         try:
