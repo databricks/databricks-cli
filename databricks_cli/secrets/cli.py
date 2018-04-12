@@ -39,21 +39,24 @@ ACL_HEADER = ('Principal', 'Permission')
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help="Creates a scope")
+               short_help="Creates a secret scope.")
 @click.option('--scope', required=True)
 @click.option('--initial-manage-acl',
               type=click.Choice(['creator-only', 'all-users']), default='creator-only',
-              help='The initial ACL applied to the scope. Must be either "creator-only"'
+              help='The initial ACL applied to the secret scope. Must be either "creator-only"'
                    ' or "all-users". Defaults to "creator-only".')
 @profile_option
 @eat_exceptions
 @provide_api_client
 def create_scope(api_client, scope, initial_manage_acl):
     """
-    Creates a new scope.
+    Creates a new secret scope with given name.
 
-    The specification for the scope name and initial_manage_acl can be found at:
-    https://docs.azuredatabricks.net/api/latest/secrets.html#create-secret-scope
+    "initial_manage_acl" controls the initial ACL applied to the secret scope.
+    If "creator-only", the initial ACL applied to scope is MANAGE permission, assigned to
+    the request issuer's user id.
+    If "all_users", the initial ACL applied to scope is MANAGE permission, assigned to
+    the group "all_users".
     """
     initial_manage_acl = initial_manage_acl.replace('-', '_')
     SecretApi(api_client).create_scope(scope, initial_manage_acl)
@@ -67,7 +70,7 @@ def _scopes_to_table(scopes_json):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Lists all the scopes')
+               short_help='Lists all the secret scopes.')
 @click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
 @profile_option
 @eat_exceptions
@@ -84,7 +87,7 @@ def list_scopes(api_client, output):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Deletes a scope')
+               short_help='Deletes a secret scope.')
 @click.option('--scope', required=True)
 @profile_option
 @eat_exceptions
@@ -116,7 +119,7 @@ def verify_and_read_value(string_value, bytes_value, value, no_strip):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Writes a secret')
+               short_help='Writes a secret to a scope.')
 @click.option('--scope', required=True)
 @click.option('--key', required=True)
 @click.option('--string-value', is_flag=True, default=False,
@@ -131,7 +134,7 @@ def verify_and_read_value(string_value, bytes_value, value, no_strip):
 @provide_api_client
 def write_secret(api_client, scope, key, string_value, bytes_value, no_strip, value):
     """
-    Inserts a secret under the provided scope with the given name. Overwrite if the name exists.
+    Writes a secret to the provided scope with the given name. Overwrites if the name exists.
 
     You should specify exactly one flag to indicate the value is "string-value" or "bytes-value".
 
@@ -140,16 +143,13 @@ def write_secret(api_client, scope, key, string_value, bytes_value, no_strip, va
     If VALUE starts with '@', the rest of the string will be seen as a path to a file, the content
     of file will be read as content.
     Otherwise, the VALUE itself will be seen as secret value.
-
-    The specification for input can be found at:
-    https://docs.azuredatabricks.net/api/latest/secrets.html#write-secret
     """
     string_value, bytes_value = verify_and_read_value(string_value, bytes_value, value, no_strip)
     SecretApi(api_client).write_secret(scope, key, string_value, bytes_value)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Deletes a secret')
+               short_help='Deletes a secret.')
 @click.option('--scope', required=True)
 @click.option('--key', required=True)
 @profile_option
@@ -157,8 +157,7 @@ def write_secret(api_client, scope, key, string_value, bytes_value, no_strip, va
 @provide_api_client
 def delete_secret(api_client, scope, key):
     """
-    Deletes the secret stored in this secret scope. You must have WRITE or MANAGE permission on
-    the Secret Scope.
+    Deletes the secret stored in this scope.
     """
     SecretApi(api_client).delete_secret(scope, key)
 
@@ -171,7 +170,7 @@ def _secrets_to_table(secrets_json):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Lists all the secrets in a scope')
+               short_help='Lists all the secrets in a scope.')
 @click.option('--scope', required=True)
 @click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
 @profile_option
@@ -190,7 +189,8 @@ def list_secrets(api_client, scope, output):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Writes a ACL for a principal')
+               short_help='Writes an access control rule for a principal applied to '
+                          ' a given secret scope.')
 @click.option('--scope', required=True)
 @click.option('--principal', required=True)
 @click.option('--permission', type=click.Choice(['MANAGE', 'WRITE', 'READ']),
@@ -201,13 +201,13 @@ def list_secrets(api_client, scope, output):
 def write_acl(api_client, scope, principal, permission):
     """
     Creates or overwrites the ACL associated with the given principal (user or group) on the
-    specified scope.
+    specified secret scope.
     """
     SecretApi(api_client).write_acl(scope, principal, permission)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Deletes a ACL for a principal')
+               short_help='Deletes an access control rule for a principal.')
 @click.option('--scope', required=True)
 @click.option('--principal', required=True)
 @profile_option
@@ -215,7 +215,7 @@ def write_acl(api_client, scope, principal, permission):
 @provide_api_client
 def delete_acl(api_client, scope, principal):
     """
-    Deletes the given ACL on the given scope.
+    Deletes the given ACL on the given secret scope.
     """
     SecretApi(api_client).delete_acl(scope, principal)
 
@@ -228,7 +228,7 @@ def _acls_to_table(acls_json):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Lists ACLs in a scope')
+               short_help='Lists all access control rules for a given secret scope.')
 @click.option('--scope', required=True)
 @click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
 @profile_option
@@ -236,7 +236,7 @@ def _acls_to_table(acls_json):
 @provide_api_client
 def list_acls(api_client, scope, output):
     """
-    Lists the ACLs set on the given scope.
+    Lists the ACLs set on the given secret scope.
     """
     acls_json = SecretApi(api_client).list_acls(scope)
     if OutputClickType.is_json(output):
@@ -246,7 +246,7 @@ def list_acls(api_client, scope, output):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Gets details of ACL')
+               short_help='Gets the details for an access control rule.')
 @click.option('--scope', required=True)
 @click.option('--principal', required=True)
 @click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
@@ -273,7 +273,7 @@ def get_acl(api_client, scope, principal, output):
 @eat_exceptions
 def secrets_group():
     """
-    Utility to interact with Databricks secret manager. For now, secret manager is only
+    Utility to interact with Databricks secret manager. Currently, secret manager is only
     available on Azure workspace.
     """
     pass

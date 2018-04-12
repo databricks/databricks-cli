@@ -52,6 +52,13 @@ def test_create_scope(secrets_api_mock):
     assert secrets_api_mock.create_scope.call_args[0][1] == 'creator_only'
 
 
+@provide_conf
+def test_delete_scope(secrets_api_mock):
+    runner = CliRunner()
+    runner.invoke(cli.delete_scope, ['--scope', SCOPE])
+    assert secrets_api_mock.delete_scope.call_args[0][0] == SCOPE
+
+
 LIST_SCOPES_RETURN = {
     "scopes": [{
         "name": "my-scope",
@@ -124,11 +131,20 @@ def test_list_secrets(secrets_api_mock):
                      headers=SECRET_HEADER)
 
 
+@provide_conf
+def test_delete_secret(secrets_api_mock):
+    runner = CliRunner()
+    runner.invoke(cli.delete_secret, ['--scope', SCOPE, '--key', KEY])
+    assert secrets_api_mock.delete_secret.call_args[0][0] == SCOPE
+    assert secrets_api_mock.delete_secret.call_args[0][1] == KEY
+
+
 PRINCIPAL = "admins"
+PERMISSION = 'MANAGE'
 LIST_ACLS_RETURN = {
     "items": [{
         "principal": PRINCIPAL,
-        "permission": "MANAGE"
+        "permission": PERMISSION
     }]
 }
 
@@ -141,12 +157,12 @@ def test_list_acls(secrets_api_mock):
         runner.invoke(cli.list_acls, ['--scope', SCOPE])
         assert secrets_api_mock.list_acls.call_args[0][0] == SCOPE
         assert echo_mock.call_args[0][0] == \
-            tabulate([(PRINCIPAL, 'MANAGE')], headers=ACL_HEADER)
+            tabulate([(PRINCIPAL, PERMISSION)], headers=ACL_HEADER)
 
 
 GET_ACL_RETURN = {
     "principal": PRINCIPAL,
-    "permission": "MANAGE"
+    "permission": PERMISSION
 }
 
 
@@ -160,3 +176,21 @@ def test_get_acl(secrets_api_mock):
         assert secrets_api_mock.get_acl.call_args[0][1] == PRINCIPAL
         assert echo_mock.call_args[0][0] == \
             tabulate([(PRINCIPAL, 'MANAGE')], headers=ACL_HEADER)
+
+
+@provide_conf
+def test_delete_acl(secrets_api_mock):
+    runner = CliRunner()
+    runner.invoke(cli.delete_acl, ['--scope', SCOPE, '--principal', PRINCIPAL])
+    assert secrets_api_mock.delete_acl.call_args[0][0] == SCOPE
+    assert secrets_api_mock.delete_acl.call_args[0][1] == PRINCIPAL
+
+
+@provide_conf
+def test_write_acl(secrets_api_mock):
+    runner = CliRunner()
+    runner.invoke(cli.write_acl,
+                  ['--scope', SCOPE, '--principal', PRINCIPAL, '--permission', PERMISSION])
+    assert secrets_api_mock.write_acl.call_args[0][0] == SCOPE
+    assert secrets_api_mock.write_acl.call_args[0][1] == PRINCIPAL
+    assert secrets_api_mock.write_acl.call_args[0][2] == PERMISSION
