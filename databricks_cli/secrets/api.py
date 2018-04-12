@@ -35,8 +35,8 @@ def eat_404_exception(function):
             return function(*args, **kwargs)
         except HTTPError as exception:
             if exception.response.status_code == 404:
-                error_and_quit('Secrets API is not supported for this workspace.'
-                               ' Please contact Databricks support.')
+                error_and_quit('Secret manager API is not supported in this workspace.'
+                               ' Please try with different profile or contact Databricks support.')
             else:
                 raise exception
     decorator.__doc__ = function.__doc__

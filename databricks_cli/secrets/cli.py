@@ -101,7 +101,7 @@ def delete_scope(api_client, scope):
 
 def verify_and_read_value(string_value, bytes_value, value, no_strip):
     """
-    Verify exactly one among the options is set to True and translate the value
+    Verify exactly one among the options is set to True and translate value to actual secret value
     """
     valid_count = 0
     for v in [string_value, bytes_value]:
@@ -136,12 +136,12 @@ def write_secret(api_client, scope, key, string_value, bytes_value, no_strip, va
     """
     Writes a secret to the provided scope with the given name. Overwrites if the name exists.
 
-    You should specify exactly one flag to indicate the value is "string-value" or "bytes-value".
+    You should specify exactly one flag to indicate if the value is "string-value" or "bytes-value".
 
     If VALUE is an empty string or not provided, an editor will be opened for you to enter your
     secret value.
     If VALUE starts with '@', the rest of the string will be seen as a path to a file, the content
-    of file will be read as content.
+    of file will be read as secret value.
     Otherwise, the VALUE itself will be seen as secret value.
     """
     string_value, bytes_value = verify_and_read_value(string_value, bytes_value, value, no_strip)
@@ -255,7 +255,7 @@ def list_acls(api_client, scope, output):
 @provide_api_client
 def get_acl(api_client, scope, principal, output):
     """
-    Describes the details about the given ACL.
+    Describe the details about the given ACL for the principal and secret scope.
     """
     acl_json = SecretApi(api_client).get_acl(scope, principal)
     if OutputClickType.is_json(output):
@@ -266,15 +266,15 @@ def get_acl(api_client, scope, principal, output):
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
-             short_help='Utility to interact with Databricks secret manager.')
+             short_help='Utility to interact with Databricks secret manager. (Not fully available)')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
 @profile_option
 @eat_exceptions
 def secrets_group():
     """
-    Utility to interact with Databricks secret manager. Currently, secret manager is only
-    available on Azure workspace.
+    Utility to interact with Databricks secret manager. Currently, secret manager is not
+    available in all AWS workspaces.
     """
     pass
 
