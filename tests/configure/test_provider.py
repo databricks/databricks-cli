@@ -67,6 +67,7 @@ def test_update_and_persist_config_two_sections():
     assert config.host == TEST_HOST
     assert config.username == TEST_USER
     assert config.password == TEST_PASSWORD
+    assert config.token is None
 
 
 def test_update_and_persist_config_case_sensitive():

@@ -49,7 +49,14 @@ def _create_section_if_absent(raw_config, profile):
 
 
 def _get_option_if_exists(raw_config, profile, option):
-    return raw_config.get(profile, option) if raw_config.has_option(profile, option) else None
+    if profile == DEFAULT_SECTION:
+        # We must handle the DEFAULT_SECTION differently since it is not in the _sections property
+        # of raw config.
+        return raw_config.get(profile, option) if raw_config.has_option(profile, option) else None
+    # Check if option is defined in the profile.
+    elif not option in raw_config._sections.get(profile, {}).keys():
+        return None
+    return raw_config.get(profile, option)
 
 
 def _set_option(raw_config, profile, option, value):
