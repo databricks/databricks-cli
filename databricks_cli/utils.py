@@ -78,7 +78,7 @@ def json_cli_base(json_file, json, api):
     click.echo(pretty_format(res))
 
 
-def translate_value(value, no_strip):
+def translate_value(value, no_strip, read_bytes):
     """
     Generate content based on format of value. If value is None or empty string, open a temporary
     file for user to input the content. If value starts with a '@', treat the rest of string as
@@ -95,7 +95,7 @@ def translate_value(value, no_strip):
             subprocess.call([editor, tf.name])
 
             # reopen file to ensure we read user input
-            with open(tf.name) as f:
+            with open(tf.name, 'rb') as f:
                 content = f.read()
 
             if content.rstrip() == prompt:
@@ -103,7 +103,7 @@ def translate_value(value, no_strip):
     elif value.startswith('@'):
         filepath = os.path.expanduser(value[1:])
         try:
-            with open(filepath, 'r') as f:
+            with open(filepath, 'rb') as f:
                 content = f.read()
         except IOError:
             error_and_quit('Failed to read from file "{}"'.format(filepath))
@@ -112,7 +112,8 @@ def translate_value(value, no_strip):
 
     if not no_strip:
         content = content.rstrip('\n')
-    return content
+
+    return content.encode() if read_bytes else content
 
 
 def truncate_string(s, length=100):

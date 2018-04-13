@@ -47,9 +47,9 @@ def secrets_api_mock():
 @provide_conf
 def test_create_scope(secrets_api_mock):
     runner = CliRunner()
-    runner.invoke(cli.create_scope, ['--scope', SCOPE, '--initial-manage-acl', 'creator-only'])
+    runner.invoke(cli.create_scope, ['--scope', SCOPE, '--initial-manage-acl', 'CREATOR_ONLY'])
     assert secrets_api_mock.create_scope.call_args[0][0] == SCOPE
-    assert secrets_api_mock.create_scope.call_args[0][1] == 'creator_only'
+    assert secrets_api_mock.create_scope.call_args[0][1] == 'CREATOR_ONLY'
 
 
 @provide_conf
@@ -94,7 +94,7 @@ def test_write_secret_multiple_value(secrets_api_mock):
     result = runner.invoke(cli.write_secret,
                            ['--scope', SCOPE, '--key', KEY,
                             '--string-value', '--bytes-value', VALUE])
-    assert result.exit_code == 1
+    assert result.exit_code != 0
     assert secrets_api_mock.write_secret.call_count == 0
 
 
@@ -102,8 +102,18 @@ def test_write_secret_multiple_value(secrets_api_mock):
 def test_write_secret_no_value(secrets_api_mock):
     runner = CliRunner()
     result = runner.invoke(cli.write_secret, ['--scope', SCOPE, '--key', KEY, VALUE])
-    assert result.exit_code == 1
+    assert result.exit_code != 0
     assert secrets_api_mock.write_secret.call_count == 0
+
+
+def test_read_string_value():
+    res = cli._read_value(string_value=True, bytes_value=False, value='abc', no_strip=False)
+    assert res == ('abc', None)
+
+
+def test_read_bytes_value():
+    res = cli._read_value(string_value=False, bytes_value=True, value='aaaa\n', no_strip=False)
+    assert res == (None, 'YWFhYQ==')
 
 
 LIST_SECRETS_RETURN = {
