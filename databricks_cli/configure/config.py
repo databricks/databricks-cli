@@ -25,7 +25,7 @@ import click
 import six
 
 from databricks_cli.click_types import ContextObject
-from databricks_cli.configure.provider import DEFAULT_SECTION, get_config_for_profile
+from databricks_cli.configure.provider import get_config_for_profile
 from databricks_cli.utils import InvalidConfigurationError
 from databricks_cli.sdk import ApiClient
 
