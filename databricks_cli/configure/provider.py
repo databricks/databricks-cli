@@ -54,7 +54,7 @@ def _get_option_if_exists(raw_config, profile, option):
         # of raw config.
         return raw_config.get(profile, option) if raw_config.has_option(profile, option) else None
     # Check if option is defined in the profile.
-    elif not option in raw_config._sections.get(profile, {}).keys():
+    elif option not in raw_config._sections.get(profile, {}).keys():
         return None
     return raw_config.get(profile, option)
 
