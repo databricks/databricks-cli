@@ -21,10 +21,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import subprocess
+import base64
+import binascii
 import sys
-import tempfile
 from json import dumps as json_dumps, loads as json_loads
 
 import click
@@ -78,48 +77,17 @@ def json_cli_base(json_file, json, api):
     click.echo(pretty_format(res))
 
 
-def translate_value(value, no_strip, read_bytes):
-    """
-    Generate content based on format of value. If value is None or empty string, open a temporary
-    file for user to input the content. If value starts with a '@', treat the rest of string as
-    a path and read content from file. Otherwise, use the value itself as content.
-    Strip the trailing '\n' unless a no_strip flag is set to True.
-    """
-    prompt = "# Delete this line and paste your secret value." \
-             " Any trailing new lines will be stripped (unless --no-strip specified)."
-    if value is None or len(value) == 0:
-        editor = os.environ.get('EDITOR', 'vim')
-        with tempfile.NamedTemporaryFile(suffix=".tmp") as tf:
-            tf.write(prompt)
-            tf.flush()
-            subprocess.call([editor, tf.name])
-
-            # reopen file to ensure we read user input
-            with open(tf.name, 'rb') as f:
-                content = f.read()
-
-            if content.rstrip() == prompt:
-                error_and_quit("No change made. Please follow instruction to input value in editor")
-    elif value.startswith('@'):
-        filepath = os.path.expanduser(value[1:])
-        try:
-            with open(filepath, 'rb') as f:
-                content = f.read()
-        except IOError:
-            error_and_quit('Failed to read from file "{}"'.format(filepath))
-    else:
-        content = value
-
-    if not no_strip:
-        content = content.rstrip('\n')
-
-    return content.encode() if read_bytes else content
-
-
 def truncate_string(s, length=100):
     if len(s) <= length:
         return s
     return s[:length] + '...'
+
+
+def is_base64_str(content):
+    try:
+        return base64.b64encode(base64.b64decode(content)).decode() == content
+    except (binascii.Error, TypeError):
+        return False
 
 
 class InvalidConfigurationError(RuntimeError):

@@ -47,9 +47,9 @@ def secrets_api_mock():
 @provide_conf
 def test_create_scope(secrets_api_mock):
     runner = CliRunner()
-    runner.invoke(cli.create_scope, ['--scope', SCOPE, '--initial-manage-acl', 'CREATOR_ONLY'])
+    runner.invoke(cli.create_scope, ['--scope', SCOPE, '--initial-manage-principal', 'users'])
     assert secrets_api_mock.create_scope.call_args[0][0] == SCOPE
-    assert secrets_api_mock.create_scope.call_args[0][1] == 'CREATOR_ONLY'
+    assert secrets_api_mock.create_scope.call_args[0][1] == 'users'
 
 
 @provide_conf
@@ -69,7 +69,7 @@ LIST_SCOPES_RETURN = {
 
 @provide_conf
 def test_list_scope(secrets_api_mock):
-    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+    with mock.patch('databricks_cli.secrets.cli.click.echo') as echo_mock:
         secrets_api_mock.list_scopes.return_value = LIST_SCOPES_RETURN
         runner = CliRunner()
         runner.invoke(cli.list_scopes)
@@ -79,6 +79,7 @@ def test_list_scope(secrets_api_mock):
 
 KEY = 'test_key'
 VALUE = 'test_value'
+BINARY_VALUE = 'YWJjZGUK'
 
 
 @provide_conf
@@ -93,27 +94,28 @@ def test_write_secret_multiple_value(secrets_api_mock):
     runner = CliRunner()
     result = runner.invoke(cli.write_secret,
                            ['--scope', SCOPE, '--key', KEY,
-                            '--string-value', '--bytes-value', VALUE])
+                            '--string-value', VALUE, '--binary-file', VALUE])
     assert result.exit_code != 0
     assert secrets_api_mock.write_secret.call_count == 0
 
 
 @provide_conf
-def test_write_secret_no_value(secrets_api_mock):
-    runner = CliRunner()
-    result = runner.invoke(cli.write_secret, ['--scope', SCOPE, '--key', KEY, VALUE])
-    assert result.exit_code != 0
-    assert secrets_api_mock.write_secret.call_count == 0
+def test_write_secret_no_value_normal_input(secrets_api_mock):
+    with mock.patch('databricks_cli.secrets.cli.click.edit') as edit_mock:
+        edit_mock.return_value = VALUE + "\n"  # value with trailing new line
+        runner = CliRunner()
+        runner.invoke(cli.write_secret, ['--scope', SCOPE, '--key', KEY])
+        assert secrets_api_mock.write_secret.call_args[0] == (SCOPE, KEY, VALUE, None)
 
 
-def test_read_string_value():
-    res = cli._read_value(string_value=True, bytes_value=False, value='abc', no_strip=False)
-    assert res == ('abc', None)
-
-
-def test_read_bytes_value():
-    res = cli._read_value(string_value=False, bytes_value=True, value='aaaa\n', no_strip=False)
-    assert res == (None, 'YWFhYQ==')
+@provide_conf
+def test_write_secret_no_value_no_input(secrets_api_mock):
+    with mock.patch('databricks_cli.secrets.cli.click.edit') as edit_mock:
+        edit_mock.return_value = None
+        runner = CliRunner()
+        result = runner.invoke(cli.write_secret, ['--scope', SCOPE, '--key', KEY])
+        assert result.exit_code != 0
+        assert secrets_api_mock.write_secret.call_count == 0
 
 
 LIST_SECRETS_RETURN = {
@@ -131,7 +133,7 @@ LIST_SECRETS_RETURN = {
 
 @provide_conf
 def test_list_secrets(secrets_api_mock):
-    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+    with mock.patch('databricks_cli.secrets.cli.click.echo') as echo_mock:
         secrets_api_mock.list_secrets.return_value = LIST_SECRETS_RETURN
         runner = CliRunner()
         runner.invoke(cli.list_secrets, ['--scope', SCOPE])
@@ -161,7 +163,7 @@ LIST_ACLS_RETURN = {
 
 @provide_conf
 def test_list_acls(secrets_api_mock):
-    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+    with mock.patch('databricks_cli.secrets.cli.click.echo') as echo_mock:
         secrets_api_mock.list_acls.return_value = LIST_ACLS_RETURN
         runner = CliRunner()
         runner.invoke(cli.list_acls, ['--scope', SCOPE])
@@ -178,7 +180,7 @@ GET_ACL_RETURN = {
 
 @provide_conf
 def test_get_acl(secrets_api_mock):
-    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+    with mock.patch('databricks_cli.secrets.cli.click.echo') as echo_mock:
         secrets_api_mock.get_acl.return_value = GET_ACL_RETURN
         runner = CliRunner()
         runner.invoke(cli.get_acl, ['--scope', SCOPE, '--principal', PRINCIPAL])

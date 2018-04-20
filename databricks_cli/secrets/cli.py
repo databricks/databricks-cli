@@ -21,14 +21,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import base64
 import click
 from tabulate import tabulate
 
-from databricks_cli.click_types import OutputClickType, OneOfOption
+from databricks_cli.click_types import OutputClickType
 from databricks_cli.secrets.api import SecretApi
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, truncate_string, \
-    translate_value
+    error_and_quit, is_base64_str
 from databricks_cli.configure.config import provide_api_client, profile_option
 from databricks_cli.version import print_version_callback, version
 
@@ -42,24 +41,25 @@ VALUE_OPTIONS = ['string-value', 'bytes-value']
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help="Creates a secret scope.")
 @click.option('--scope', required=True)
-@click.option('--initial-manage-acl',
-              type=click.Choice(['CREATOR_ONLY', 'ALL_USERS']), default='CREATOR_ONLY',
-              help='The initial ACL applied to the secret scope. Must be either "CREATOR_ONLY"'
-                   ' or "ALL_USERS". Defaults to "CREATOR_ONLY".')
+@click.option('--initial-manage-principal',
+              help='The initial principal that can manage the created secret scope.')
 @profile_option
 @eat_exceptions
 @provide_api_client
-def create_scope(api_client, scope, initial_manage_acl):
+def create_scope(api_client, scope, initial_manage_principal):
     """
     Creates a new secret scope with given name.
 
-    "initial_manage_acl" controls the initial ACL applied to the secret scope.
-    If "CREATOR_ONLY", the initial ACL applied to scope is MANAGE permission, assigned to
-    the request issuer's user id.
-    If "ALL_USERS", the initial ACL applied to scope is MANAGE permission, assigned to
-    the group "all-users".
+    If "initial_manage_principal" is specified, the initial ACL applied to the scope is
+    applied to the supplied principal (user or group) with MANAGE permissions.
+    The only supported principal for this option is the group "users", which
+    contains all users in the workspace. If "initial_manage_principal" is not specified,
+    the initial ACL with MANAGE permission applied to the scope is assigned to the
+    API request issuer's user identity.
     """
-    SecretApi(api_client).create_scope(scope, initial_manage_acl)
+    if initial_manage_principal is not None and initial_manage_principal != "users":
+        error_and_quit("The only supported principal for --initial-manage-principal is users")
+    SecretApi(api_client).create_scope(scope, initial_manage_principal)
 
 
 def _scopes_to_table(scopes_json):
@@ -99,47 +99,69 @@ def delete_scope(api_client, scope):
     SecretApi(api_client).delete_scope(scope)
 
 
-def _read_value(string_value, bytes_value, value, no_strip):
+def _verify_and_translate_options(string_value, binary_file):
     """
-    Translates value to actual secret value
+    Translates options into actual parameters for API call.
+    Return tuple with two values representing (string_value, bytes_value).
     """
-    if string_value:
-        return translate_value(value, no_strip, read_bytes=False), None
-    if bytes_value:
-        secret_content = translate_value(value, no_strip, read_bytes=True)
-        base64_bytes = base64.b64encode(secret_content)
-        base64_str = base64_bytes.decode('utf-8')
-        return None, base64_str
+    if string_value and binary_file:
+        error_and_quit("At most one of {} should be provided."
+                       .format(['string-value', 'binary-file']))
+
+    if string_value is None and binary_file is None:
+        prompt = '# Remove this line and input your secret value.' + \
+            ' Any trailing new line will be stripped and text will be stored in' + \
+            ' UTF-8 (MB4) form. Exit without saving to abort writing secret.'
+
+        # underlying edit function made sure using a temporary file for editing
+        content = click.edit(prompt)
+        # return None means editor is closed without changes
+        if content is None:
+            error_and_quit('No changes made, write secret aborted.'
+                           ' Please follow the instruction to input secret value.')
+
+        return content.rstrip('\n'), None
+
+    if string_value is not None:
+        return string_value, None
+
+    if binary_file is not None:
+        with open(binary_file, 'rb') as f:
+            binary_content = f.read().rstrip('\n')
+
+        if not is_base64_str(binary_content):
+            error_and_quit("Content in file {} is probably not base64 encoded.".format(binary_file))
+
+        return None, binary_content
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Writes a secret to a scope.')
 @click.option('--scope', required=True)
 @click.option('--key', required=True)
-@click.option('--string-value', is_flag=True, cls=OneOfOption, one_of=VALUE_OPTIONS, default=False,
-              help='A flag indicates the value will be stored in UTF-8 (MB4) form')
-@click.option('--bytes-value', is_flag=True, cls=OneOfOption, one_of=VALUE_OPTIONS, default=False,
-              help='A flag indicates the value will be store as bytes')
-@click.option('--no-strip', is_flag=True, default=False,
-              help='Indicate the trailing \'\\n\' should not be stripped from input value')
-@click.argument('VALUE', required=False)
+@click.option('--string-value', default=None,
+              help='Read value from string and stored in UTF-8 (MB4) form')
+@click.option('--binary-file', default=None, type=click.Path(exists=True, readable=True),
+              help='Read value from binary-file and stored as bytes.')
 @profile_option
 @eat_exceptions
 @provide_api_client
-def write_secret(api_client, scope, key, string_value, bytes_value, no_strip, value):
+def write_secret(api_client, scope, key, string_value, binary_file):
     """
     Writes a secret to the provided scope with the given name. Overwrites if the name exists.
 
-    You should specify exactly one flag to indicate if the value is "string-value" or "bytes-value".
+    You should specify at most one option in "string-value" and "binary-file".
 
-    If VALUE is an empty string or not provided, an editor will be opened for you to enter your
-    secret value.
-    If VALUE starts with '@', the rest of the string will be seen as a path to a file, the content
-    of file will be read as secret value.
-    Otherwise, the VALUE itself will be seen as secret value.
+    If "string-value", the argument will be stored in UTF-8 (MB4) form.
+
+    If "binary-file", the argument should be a path to file. The file should store
+    base64 encoded data. File content will be read as secret value and stored as bytes.
+
+    If none of "string-value" and "binary-file" specified, an editor will be opened for
+    inputting secret value. The value will be stored in UTF-8 (MB4) form.
     """
-    string_value, bytes_value = _read_value(string_value, bytes_value, value, no_strip)
-    SecretApi(api_client).write_secret(scope, key, string_value, bytes_value)
+    string_param, bytes_param = _verify_and_translate_options(string_value, binary_file)
+    SecretApi(api_client).write_secret(scope, key, string_param, bytes_param)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,

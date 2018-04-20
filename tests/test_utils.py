@@ -68,3 +68,10 @@ def test_json_cli_base_no_args():
 def test_truncate_string():
     assert utils.truncate_string('apple', 3) == 'app...'
     assert utils.truncate_string('apple') == 'apple'
+
+
+def test_is_base64():
+    assert utils.is_base64_str('YWJjZGUK')
+    assert utils.is_base64_str('')
+    assert not utils.is_base64_str(None)
+    assert not utils.is_base64_str('hello')
