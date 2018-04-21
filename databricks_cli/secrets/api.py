@@ -57,3 +57,4 @@ class SecretApi(object):
 
     def get_acl(self, scope, principal):
         return self.client.get_acl(scope, principal)
+
