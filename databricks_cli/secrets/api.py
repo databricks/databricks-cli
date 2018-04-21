@@ -28,8 +28,8 @@ class SecretApi(object):
     def __init__(self, api_client):
         self.client = SecretService(api_client)
 
-    def create_scope(self, scope, initial_manage_acl):
-        return self.client.create_scope(scope, initial_manage_acl)
+    def create_scope(self, scope, initial_manage_principal):
+        return self.client.create_scope(scope, initial_manage_principal)
 
     def delete_scope(self, scope):
         return self.client.delete_scope(scope)

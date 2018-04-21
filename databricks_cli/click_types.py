@@ -69,6 +69,21 @@ class ClusterIdClickType(ParamType):
             'https://*.cloud.databricks.com/#/setting/clusters/$CLUSTER_ID/configuration.')
 
 
+class SecretScopeClickType(ParamType):
+    name = 'SCOPE'
+    help = 'The name of the secret scope.'
+
+
+class SecretKeyClickType(ParamType):
+    name = 'KEY'
+    help = 'The name of the secret key.'
+
+
+class SecretPrincipalClickType(ParamType):
+    name = 'PRINCIPAL'
+    help = 'The name of the principal.'
+
+
 class OneOfOption(Option):
     def __init__(self, *args, **kwargs):
         self.one_of = kwargs.pop('one_of')

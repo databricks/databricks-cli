@@ -24,7 +24,8 @@
 import click
 from tabulate import tabulate
 
-from databricks_cli.click_types import OutputClickType
+from databricks_cli.click_types import OutputClickType, SecretScopeClickType, SecretKeyClickType, \
+    SecretPrincipalClickType
 from databricks_cli.secrets.api import SecretApi
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, truncate_string, \
     error_and_quit, is_base64_str
@@ -40,7 +41,7 @@ VALUE_OPTIONS = ['string-value', 'bytes-value']
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help="Creates a secret scope.")
-@click.option('--scope', required=True)
+@click.option('--scope', required=True, type=SecretScopeClickType(), help=SecretScopeClickType.help)
 @click.option('--initial-manage-principal',
               help='The initial principal that can manage the created secret scope.')
 @profile_option
@@ -70,14 +71,14 @@ def _scopes_to_table(scopes_json):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Lists all the secret scopes.')
-@click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
+               short_help='Lists all secret scopes.')
+@click.option('--output', help=OutputClickType.help, type=OutputClickType())
 @profile_option
 @eat_exceptions
 @provide_api_client
 def list_scopes(api_client, output):
     """
-    Lists all secret scopes available in the workspace.
+    Lists all secret scopes.
     """
     scopes_json = SecretApi(api_client).list_scopes()
     if OutputClickType.is_json(output):
@@ -88,7 +89,7 @@ def list_scopes(api_client, output):
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Deletes a secret scope.')
-@click.option('--scope', required=True)
+@click.option('--scope', required=True, type=SecretScopeClickType(), help=SecretScopeClickType.help)
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -108,7 +109,7 @@ def _verify_and_translate_options(string_value, binary_file):
         error_and_quit("At most one of {} should be provided."
                        .format(['string-value', 'binary-file']))
 
-    if string_value is None and binary_file is None:
+    elif string_value is None and binary_file is None:
         prompt = '# Remove this line and input your secret value.' + \
             ' Any trailing new line will be stripped and text will be stored in' + \
             ' UTF-8 (MB4) form. Exit without saving to abort writing secret.'
@@ -122,10 +123,10 @@ def _verify_and_translate_options(string_value, binary_file):
 
         return content.rstrip('\n'), None
 
-    if string_value is not None:
+    elif string_value is not None:
         return string_value, None
 
-    if binary_file is not None:
+    elif binary_file is not None:
         with open(binary_file, 'rb') as f:
             binary_content = f.read().rstrip('\n')
 
@@ -137,8 +138,8 @@ def _verify_and_translate_options(string_value, binary_file):
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Writes a secret to a scope.')
-@click.option('--scope', required=True)
-@click.option('--key', required=True)
+@click.option('--scope', required=True, type=SecretScopeClickType(), help=SecretScopeClickType.help)
+@click.option('--key', required=True, type=SecretKeyClickType(), help=SecretKeyClickType.help)
 @click.option('--string-value', default=None,
               help='Read value from string and stored in UTF-8 (MB4) form')
 @click.option('--binary-file', default=None, type=click.Path(exists=True, readable=True),
@@ -166,8 +167,8 @@ def write_secret(api_client, scope, key, string_value, binary_file):
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Deletes a secret.')
-@click.option('--scope', required=True)
-@click.option('--key', required=True)
+@click.option('--scope', required=True, type=SecretScopeClickType(), help=SecretScopeClickType.help)
+@click.option('--key', required=True, type=SecretKeyClickType(), help=SecretKeyClickType.help)
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -187,8 +188,8 @@ def _secrets_to_table(secrets_json):
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Lists all the secrets in a scope.')
-@click.option('--scope', required=True)
-@click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
+@click.option('--scope', required=True, type=SecretScopeClickType(), help=SecretScopeClickType.help)
+@click.option('--output', help=OutputClickType.help, type=OutputClickType())
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -207,10 +208,11 @@ def list_secrets(api_client, scope, output):
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Writes an access control rule for a principal applied to '
                           ' a given secret scope.')
-@click.option('--scope', required=True)
-@click.option('--principal', required=True)
+@click.option('--scope', required=True, type=SecretScopeClickType(), help=SecretScopeClickType.help)
+@click.option('--principal', required=True, type=SecretPrincipalClickType(),
+              help=SecretPrincipalClickType.help)
 @click.option('--permission', type=click.Choice(['MANAGE', 'WRITE', 'READ']),
-              required=True)
+              required=True, help='The permission to apply.')
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -224,8 +226,10 @@ def write_acl(api_client, scope, principal, permission):
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Deletes an access control rule for a principal.')
-@click.option('--scope', required=True)
-@click.option('--principal', required=True)
+@click.option('--scope', required=True, type=SecretScopeClickType(),
+              help=SecretScopeClickType.help)
+@click.option('--principal', required=True, type=SecretPrincipalClickType(),
+              help=SecretPrincipalClickType.help)
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -245,8 +249,8 @@ def _acls_to_table(acls_json):
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Lists all access control rules for a given secret scope.')
-@click.option('--scope', required=True)
-@click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
+@click.option('--scope', required=True, type=SecretScopeClickType(), help=SecretScopeClickType.help)
+@click.option('--output', help=OutputClickType.help, type=OutputClickType())
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -263,9 +267,11 @@ def list_acls(api_client, scope, output):
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Gets the details for an access control rule.')
-@click.option('--scope', required=True)
-@click.option('--principal', required=True)
-@click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
+@click.option('--scope', required=True, type=SecretScopeClickType(),
+              help=SecretScopeClickType.help)
+@click.option('--principal', required=True, type=SecretPrincipalClickType(),
+              help=SecretPrincipalClickType.help)
+@click.option('--output', help=OutputClickType.help, type=OutputClickType())
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -282,16 +288,14 @@ def get_acl(api_client, scope, principal, output):
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
-             short_help='Utility to interact with Databricks secret API.'
-                        ' (Available only in Azure Databricks)')
+             short_help='Utility to interact with Databricks secret API.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
 @profile_option
 @eat_exceptions
 def secrets_group():
     """
-    Utility to interact with secret API. As of Apr 13, 2018, secrets API is only
-    available in Azure Databricks.
+    Utility to interact with secret API.
     """
     pass
 
