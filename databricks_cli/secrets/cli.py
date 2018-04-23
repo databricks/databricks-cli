@@ -106,18 +106,20 @@ def _verify_and_translate_options(string_value, binary_file):
                        .format(['string-value', 'binary-file']))
 
     elif string_value is None and binary_file is None:
-        prompt = '# Remove this line and input your secret value.' + \
-            ' Any trailing new line will be stripped and text will be stored in' + \
-            ' UTF-8 (MB4) form. Exit without saving to abort writing secret.'
+        marker = '# ' + '-' * 70 + '\n'
+        prompt = '# Do not edit the above line. Everything below it will be ignored.\n' + \
+            '# Please input your secret value above the line. Text will be stored in\n' + \
+            '# UTF-8 (MB4) form and any trailing new line will be stripped.\n' + \
+            '# Exit without saving will abort writing secret.'
 
         # underlying edit function made sure using a temporary file for editing
-        content = click.edit(prompt)
+        content = click.edit('\n\n' + marker + prompt)
         # return None means editor is closed without changes
         if content is None:
             error_and_quit('No changes made, write secret aborted.'
                            ' Please follow the instruction to input secret value.')
 
-        return content.rstrip('\n'), None
+        return content.split(marker, 1)[0].rstrip('\n'), None
 
     elif string_value is not None:
         return string_value, None
@@ -192,7 +194,7 @@ def _secrets_to_table(secrets_json):
 def list_secrets(api_client, scope, output):
     """
     Lists the secret keys that are stored at this scope. Also lists the last updated timestamp
-    if available.
+    (UNIX time in milliseconds) if available.
     """
     secrets_json = SecretApi(api_client).list_secrets(scope)
     if OutputClickType.is_json(output):
