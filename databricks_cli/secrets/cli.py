@@ -45,10 +45,10 @@ ACL_HEADER = ('Principal', 'Permission')
 @click.option('--initial-manage-principal',
               help='The initial principal that can manage the created secret scope.'
               ' If specified, the initial ACL with MANAGE permission applied to the scope is'
-              ' assigned to the supplied principal (user or group). The only supported principal'
-              ' for this option is the group "users", which contains all users in the workspace.'
-              ' If not specified, the initial ACL with MANAGE permission applied to the scope is'
-              ' assigned to the request issuer\'s user identity.')
+              ' assigned to the supplied principal (user or group). Currently, the only supported'
+              ' principal for this option is the group "users", which contains all users in the'
+              ' workspace. If not specified, the initial ACL with MANAGE permission applied to the'
+              ' scope is assigned to the request issuer\'s user identity.')
 @profile_option
 @eat_exceptions
 @provide_api_client
