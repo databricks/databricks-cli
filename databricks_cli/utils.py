@@ -21,8 +21,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import base64
-import binascii
 import sys
 from json import dumps as json_dumps, loads as json_loads
 
@@ -81,13 +79,6 @@ def truncate_string(s, length=100):
     if len(s) <= length:
         return s
     return s[:length] + '...'
-
-
-def is_base64_str(content):
-    try:
-        return base64.b64encode(base64.b64decode(content)).decode() == content
-    except (binascii.Error, TypeError):
-        return False
 
 
 class InvalidConfigurationError(RuntimeError):

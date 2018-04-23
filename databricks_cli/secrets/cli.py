@@ -21,6 +21,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import base64
 import click
 from tabulate import tabulate
 
@@ -28,7 +29,7 @@ from databricks_cli.click_types import OutputClickType, SecretScopeClickType, Se
     SecretPrincipalClickType
 from databricks_cli.secrets.api import SecretApi
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, truncate_string, \
-    error_and_quit, is_base64_str
+    error_and_quit
 from databricks_cli.configure.config import provide_api_client, profile_option
 from databricks_cli.version import print_version_callback, version
 
@@ -36,30 +37,25 @@ from databricks_cli.version import print_version_callback, version
 SCOPE_HEADER = ('Scope', 'Backend')
 SECRET_HEADER = ('Key name', 'Last updated')
 ACL_HEADER = ('Principal', 'Permission')
-VALUE_OPTIONS = ['string-value', 'bytes-value']
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help="Creates a secret scope.")
 @click.option('--scope', required=True, type=SecretScopeClickType(), help=SecretScopeClickType.help)
 @click.option('--initial-manage-principal',
-              help='The initial principal that can manage the created secret scope.')
+              help='The initial principal that can manage the created secret scope.'
+              ' If specified, the initial ACL with MANAGE permission applied to the scope is'
+              ' assigned to the supplied principal (user or group). The only supported principal'
+              ' for this option is the group "users", which contains all users in the workspace.'
+              ' If not specified, the initial ACL with MANAGE permission applied to the scope is'
+              ' assigned to the request issuer\'s user identity.')
 @profile_option
 @eat_exceptions
 @provide_api_client
 def create_scope(api_client, scope, initial_manage_principal):
     """
     Creates a new secret scope with given name.
-
-    If "initial_manage_principal" is specified, the initial ACL applied to the scope is
-    applied to the supplied principal (user or group) with MANAGE permissions.
-    The only supported principal for this option is the group "users", which
-    contains all users in the workspace. If "initial_manage_principal" is not specified,
-    the initial ACL with MANAGE permission applied to the scope is assigned to the
-    API request issuer's user identity.
     """
-    if initial_manage_principal is not None and initial_manage_principal != "users":
-        error_and_quit("The only supported principal for --initial-manage-principal is users")
     SecretApi(api_client).create_scope(scope, initial_manage_principal)
 
 
@@ -128,12 +124,12 @@ def _verify_and_translate_options(string_value, binary_file):
 
     elif binary_file is not None:
         with open(binary_file, 'rb') as f:
-            binary_content = f.read().rstrip('\n')
+            binary_content = f.read()
 
-        if not is_base64_str(binary_content):
-            error_and_quit("Content in file {} is probably not base64 encoded.".format(binary_file))
+        base64_bytes = base64.b64encode(binary_content)
+        base64_str = base64_bytes.decode('utf-8')
 
-        return None, binary_content
+        return None, base64_str
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -155,8 +151,8 @@ def write_secret(api_client, scope, key, string_value, binary_file):
 
     If "string-value", the argument will be stored in UTF-8 (MB4) form.
 
-    If "binary-file", the argument should be a path to file. The file should store
-    base64 encoded data. File content will be read as secret value and stored as bytes.
+    If "binary-file", the argument should be a path to file. File content will be read as secret
+    value and stored as bytes.
 
     If none of "string-value" and "binary-file" specified, an editor will be opened for
     inputting secret value. The value will be stored in UTF-8 (MB4) form.
