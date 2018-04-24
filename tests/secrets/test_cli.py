@@ -29,7 +29,7 @@ from tabulate import tabulate
 from click.testing import CliRunner
 
 import databricks_cli.secrets.cli as cli
-from databricks_cli.secrets.cli import SCOPE_HEADER, SECRET_HEADER, ACL_HEADER
+from databricks_cli.secrets.cli import SCOPE_HEADER, SECRET_HEADER, ACL_HEADER, DASH_MARKER
 from tests.utils import provide_conf
 
 
@@ -79,7 +79,6 @@ def test_list_scope(secrets_api_mock):
 
 KEY = 'test_key'
 VALUE = 'test_value'
-BINARY_VALUE = 'YWJjZGUK'
 
 
 @provide_conf
@@ -100,22 +99,55 @@ def test_write_secret_multiple_value(secrets_api_mock):
 
 
 @provide_conf
-def test_write_secret_no_value_normal_input(secrets_api_mock):
+def test_write_secret_editor_input_correct_split(secrets_api_mock):
     with mock.patch('databricks_cli.secrets.cli.click.edit') as edit_mock:
-        edit_mock.return_value = VALUE + "\n"  # value with trailing new line
+        # normal input with trailing new lines
+        edit_mock.return_value = VALUE + '\n' + DASH_MARKER
         runner = CliRunner()
         runner.invoke(cli.write_secret, ['--scope', SCOPE, '--key', KEY])
         assert secrets_api_mock.write_secret.call_args[0] == (SCOPE, KEY, VALUE, None)
 
 
 @provide_conf
-def test_write_secret_no_value_no_input(secrets_api_mock):
+def test_write_secret_editor_input_no_value(secrets_api_mock):
     with mock.patch('databricks_cli.secrets.cli.click.edit') as edit_mock:
+        # file not saved
         edit_mock.return_value = None
         runner = CliRunner()
         result = runner.invoke(cli.write_secret, ['--scope', SCOPE, '--key', KEY])
         assert result.exit_code != 0
         assert secrets_api_mock.write_secret.call_count == 0
+
+
+@provide_conf
+def test_write_secret_editor_input_edited_marker(secrets_api_mock):
+    with mock.patch('databricks_cli.secrets.cli.click.edit') as edit_mock:
+        # input with marker line edited
+        edit_mock.return_value = VALUE + '\n' + '# ----------\n'
+        runner = CliRunner()
+        result = runner.invoke(cli.write_secret, ['--scope', SCOPE, '--key', KEY])
+        assert result.exit_code != 0
+        assert secrets_api_mock.write_secret.call_count == 0
+
+
+@provide_conf
+def test_write_secrets_binary_file(secrets_api_mock):
+    import os
+    import tempfile
+
+    # using tempfile to make sure passing click.Path check
+    fd, name = tempfile.mkstemp(prefix='test-cli', suffix='.tmp')
+    try:
+        f = os.fdopen(fd, 'wb')
+        f.write((VALUE + '\n\n').encode())
+        f.close()
+
+        runner = CliRunner()
+        runner.invoke(cli.write_secret,
+                      ['--scope', SCOPE, '--key', KEY, '--binary-file', name])
+        assert secrets_api_mock.write_secret.call_args[0] == (SCOPE, KEY, None, 'dGVzdF92YWx1ZQoK')
+    finally:
+        os.unlink(name)
 
 
 LIST_SECRETS_RETURN = {

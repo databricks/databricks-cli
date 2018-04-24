@@ -37,6 +37,7 @@ from databricks_cli.version import print_version_callback, version
 SCOPE_HEADER = ('Scope', 'Backend')
 SECRET_HEADER = ('Key name', 'Last updated')
 ACL_HEADER = ('Principal', 'Permission')
+DASH_MARKER = '# ' + '-' * 70 + '\n'
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -106,20 +107,22 @@ def _verify_and_translate_options(string_value, binary_file):
                        .format(['string-value', 'binary-file']))
 
     elif string_value is None and binary_file is None:
-        marker = '# ' + '-' * 70 + '\n'
         prompt = '# Do not edit the above line. Everything below it will be ignored.\n' + \
             '# Please input your secret value above the line. Text will be stored in\n' + \
             '# UTF-8 (MB4) form and any trailing new line will be stripped.\n' + \
             '# Exit without saving will abort writing secret.'
 
         # underlying edit function made sure using a temporary file for editing
-        content = click.edit('\n\n' + marker + prompt)
+        content = click.edit('\n\n' + DASH_MARKER + prompt)
         # return None means editor is closed without changes
         if content is None:
             error_and_quit('No changes made, write secret aborted.'
                            ' Please follow the instruction to input secret value.')
 
-        return content.split(marker, 1)[0].rstrip('\n'), None
+        elif DASH_MARKER not in content:
+            error_and_quit('Please DO NOT edit the line with dashes. Write secret aborted.')
+
+        return content.split(DASH_MARKER, 1)[0].rstrip('\n'), None
 
     elif string_value is not None:
         return string_value, None
