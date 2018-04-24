@@ -526,12 +526,12 @@ class SecretService(object):
     def __init__(self, client):
         self.client = client
 
-    def create_scope(self, scope, initial_manage_acl=None):
+    def create_scope(self, scope, initial_manage_principal=None):
         _data = {}
         if scope is not None:
             _data['scope'] = scope
-        if initial_manage_acl is not None:
-            _data['initial_manage_acl'] = initial_manage_acl
+        if initial_manage_principal is not None:
+            _data['initial_manage_principal'] = initial_manage_principal
         return self.client.perform_query('POST', '/secret/scopes/create', data=_data)
     
     def delete_scope(self, scope):
