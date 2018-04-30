@@ -37,8 +37,8 @@ class SecretApi(object):
     def list_scopes(self):
         return self.client.list_scopes()
 
-    def write_secret(self, scope, key, string_value, bytes_value):
-        return self.client.write_secret(scope, key, string_value, bytes_value)
+    def put_secret(self, scope, key, string_value, bytes_value):
+        return self.client.put_secret(scope, key, string_value, bytes_value)
 
     def delete_secret(self, scope, key):
         return self.client.delete_secret(scope, key)
@@ -46,8 +46,8 @@ class SecretApi(object):
     def list_secrets(self, scope):
         return self.client.list_secrets(scope)
 
-    def write_acl(self, scope, principal, permission):
-        return self.client.write_acl(scope, principal, permission)
+    def put_acl(self, scope, principal, permission):
+        return self.client.put_acl(scope, principal, permission)
 
     def delete_acl(self, scope, principal):
         return self.client.delete_acl(scope, principal)

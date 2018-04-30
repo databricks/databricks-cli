@@ -532,20 +532,20 @@ class SecretService(object):
             _data['scope'] = scope
         if initial_manage_principal is not None:
             _data['initial_manage_principal'] = initial_manage_principal
-        return self.client.perform_query('POST', '/secret/scopes/create', data=_data)
+        return self.client.perform_query('POST', '/secrets/scopes/create', data=_data)
     
     def delete_scope(self, scope):
         _data = {}
         if scope is not None:
             _data['scope'] = scope
-        return self.client.perform_query('POST', '/secret/scopes/delete', data=_data)
+        return self.client.perform_query('POST', '/secrets/scopes/delete', data=_data)
     
     def list_scopes(self):
         _data = {}
     
-        return self.client.perform_query('GET', '/secret/scopes/list', data=_data)
+        return self.client.perform_query('GET', '/secrets/scopes/list', data=_data)
     
-    def write_secret(self, scope, key, string_value=None, bytes_value=None):
+    def put_secret(self, scope, key, string_value=None, bytes_value=None):
         _data = {}
         if scope is not None:
             _data['scope'] = scope
@@ -555,7 +555,7 @@ class SecretService(object):
             _data['string_value'] = string_value
         if bytes_value is not None:
             _data['bytes_value'] = bytes_value
-        return self.client.perform_query('POST', '/secret/secrets/write', data=_data)
+        return self.client.perform_query('POST', '/secrets/put', data=_data)
     
     def delete_secret(self, scope, key):
         _data = {}
@@ -563,15 +563,15 @@ class SecretService(object):
             _data['scope'] = scope
         if key is not None:
             _data['key'] = key
-        return self.client.perform_query('POST', '/secret/secrets/delete', data=_data)
+        return self.client.perform_query('POST', '/secrets/delete', data=_data)
     
     def list_secrets(self, scope):
         _data = {}
         if scope is not None:
             _data['scope'] = scope
-        return self.client.perform_query('GET', '/secret/secrets/list', data=_data)
+        return self.client.perform_query('GET', '/secrets/list', data=_data)
     
-    def write_acl(self, scope, principal, permission):
+    def put_acl(self, scope, principal, permission):
         _data = {}
         if scope is not None:
             _data['scope'] = scope
@@ -579,7 +579,7 @@ class SecretService(object):
             _data['principal'] = principal
         if permission is not None:
             _data['permission'] = permission
-        return self.client.perform_query('POST', '/secret/acls/write', data=_data)
+        return self.client.perform_query('POST', '/secrets/acls/put', data=_data)
     
     def delete_acl(self, scope, principal):
         _data = {}
@@ -587,13 +587,13 @@ class SecretService(object):
             _data['scope'] = scope
         if principal is not None:
             _data['principal'] = principal
-        return self.client.perform_query('POST', '/secret/acls/delete', data=_data)
+        return self.client.perform_query('POST', '/secrets/acls/delete', data=_data)
     
     def list_acls(self, scope):
         _data = {}
         if scope is not None:
             _data['scope'] = scope
-        return self.client.perform_query('GET', '/secret/acls/list', data=_data)
+        return self.client.perform_query('GET', '/secrets/acls/list', data=_data)
     
     def get_acl(self, scope, principal):
         _data = {}
@@ -601,7 +601,7 @@ class SecretService(object):
             _data['scope'] = scope
         if principal is not None:
             _data['principal'] = principal
-        return self.client.perform_query('GET', '/secret/acls/get', data=_data)
+        return self.client.perform_query('GET', '/secrets/acls/get', data=_data)
 
 
 class GroupsService(object):
@@ -658,4 +658,4 @@ class GroupsService(object):
         if group_name is not None:
             _data['group_name'] = group_name
         return self.client.perform_query('GET', '/groups/list-parents', data=_data)
-     
+

@@ -138,7 +138,7 @@ def _verify_and_translate_options(string_value, binary_file):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Writes a secret to a scope.')
+               short_help='Puts a secret in a scope. "write" is an alias for "put".')
 @click.option('--scope', required=True, type=SecretScopeClickType(), help=SecretScopeClickType.help)
 @click.option('--key', required=True, type=SecretKeyClickType(), help=SecretKeyClickType.help)
 @click.option('--string-value', default=None,
@@ -148,9 +148,10 @@ def _verify_and_translate_options(string_value, binary_file):
 @profile_option
 @eat_exceptions
 @provide_api_client
-def write_secret(api_client, scope, key, string_value, binary_file):
+def put_secret(api_client, scope, key, string_value, binary_file):
     """
-    Writes a secret to the provided scope with the given name. Overwrites if the name exists.
+    Puts a secret in the provided scope with the given name.
+    Overwrites any existing value if the name exists.
 
     You should specify at most one option in "string-value" and "binary-file".
 
@@ -161,9 +162,12 @@ def write_secret(api_client, scope, key, string_value, binary_file):
 
     If none of "string-value" and "binary-file" specified, an editor will be opened for
     inputting secret value. The value will be stored in UTF-8 (MB4) form.
+
+    "databricks secrets write" is an alias for "databricks secrets put", and will be
+    deprecated in a future release.
     """
     string_param, bytes_param = _verify_and_translate_options(string_value, binary_file)
-    SecretApi(api_client).write_secret(scope, key, string_param, bytes_param)
+    SecretApi(api_client).put_secret(scope, key, string_param, bytes_param)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -207,8 +211,8 @@ def list_secrets(api_client, scope, output):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Writes an access control rule for a principal applied to '
-                          ' a given secret scope.')
+               short_help='Creates or overwrites an access control rule for a principal applied to '
+                          'a given secret scope. "write-acl" is an alias for "put-acl".')
 @click.option('--scope', required=True, type=SecretScopeClickType(), help=SecretScopeClickType.help)
 @click.option('--principal', required=True, type=SecretPrincipalClickType(),
               help=SecretPrincipalClickType.help)
@@ -217,12 +221,15 @@ def list_secrets(api_client, scope, output):
 @profile_option
 @eat_exceptions
 @provide_api_client
-def write_acl(api_client, scope, principal, permission):
+def put_acl(api_client, scope, principal, permission):
     """
     Creates or overwrites the ACL associated with the given principal (user or group) on the
     specified secret scope.
+
+    "databricks secrets write-acl" is an alias for "databricks secrets put-acl",
+    and will be deprecated in a future release.
     """
-    SecretApi(api_client).write_acl(scope, principal, permission)
+    SecretApi(api_client).put_acl(scope, principal, permission)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -304,10 +311,12 @@ def secrets_group():
 secrets_group.add_command(create_scope, name='create-scope')
 secrets_group.add_command(list_scopes, name='list-scopes')
 secrets_group.add_command(delete_scope, name='delete-scope')
-secrets_group.add_command(write_secret, name='write')
+secrets_group.add_command(put_secret, name='put')
+secrets_group.add_command(put_secret, name='write')
 secrets_group.add_command(delete_secret, name='delete')
 secrets_group.add_command(list_secrets, name='list')
-secrets_group.add_command(write_acl, name='write-acl')
+secrets_group.add_command(put_acl, name='put-acl')
+secrets_group.add_command(put_acl, name='write-acl')
 secrets_group.add_command(delete_acl, name='delete-acl')
 secrets_group.add_command(list_acls, name='list-acls')
 secrets_group.add_command(get_acl, name='get-acl')
