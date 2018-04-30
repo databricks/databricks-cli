@@ -30,6 +30,7 @@ HOST = 'host'
 USERNAME = 'username'
 PASSWORD = 'password' # NOQA
 TOKEN = 'token'
+INSECURE = 'insecure'
 DEFAULT_SECTION = 'DEFAULT'
 
 
@@ -86,6 +87,7 @@ def update_and_persist_config(profile, databricks_config):
     _set_option(raw_config, profile, USERNAME, databricks_config.username)
     _set_option(raw_config, profile, PASSWORD, databricks_config.password)
     _set_option(raw_config, profile, TOKEN, databricks_config.token)
+    _set_option(raw_config, profile, INSECURE, databricks_config.insecure)
     _overwrite_config(raw_config)
 
 
@@ -100,23 +102,25 @@ def get_config_for_profile(profile):
     username = _get_option_if_exists(raw_config, profile, USERNAME)
     password = _get_option_if_exists(raw_config, profile, PASSWORD)
     token = _get_option_if_exists(raw_config, profile, TOKEN)
-    return DatabricksConfig(host, username, password, token)
+    insecure = _get_option_if_exists(raw_config, profile, INSECURE)
+    return DatabricksConfig(host, username, password, token, insecure)
 
 
 class DatabricksConfig(object):
-    def __init__(self, host, username, password, token): # noqa
+    def __init__(self, host, username, password, token, insecure): # noqa
         self.host = host
         self.username = username
         self.password = password
         self.token = token
+        self.insecure = insecure
 
     @classmethod
-    def from_token(cls, host, token):
-        return DatabricksConfig(host, None, None, token)
+    def from_token(cls, host, token, insecure=None):
+        return DatabricksConfig(host, None, None, token, insecure)
 
     @classmethod
-    def from_password(cls, host, username, password):
-        return DatabricksConfig(host, username, password, None)
+    def from_password(cls, host, username, password, insecure=None):
+        return DatabricksConfig(host, username, password, None, insecure)
 
     @property
     def is_valid_with_token(self):
