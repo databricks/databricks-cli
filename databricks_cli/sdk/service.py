@@ -602,3 +602,60 @@ class SecretService(object):
         if principal is not None:
             _data['principal'] = principal
         return self.client.perform_query('GET', '/secret/acls/get', data=_data)
+
+
+class GroupsService(object):
+    def __init__(self, client):
+        self.client = client
+
+    def create_group(self, group_name):
+        _data = {}
+        if group_name is not None:
+            _data['group_name'] = group_name
+        return self.client.perform_query('POST', '/groups/create', data=_data)
+    
+    def add_to_group(self, parent_name, user_name=None, group_name=None):
+        _data = {}
+        if user_name is not None:
+            _data['user_name'] = user_name
+        if group_name is not None:
+            _data['group_name'] = group_name
+        if parent_name is not None:
+            _data['parent_name'] = parent_name
+        return self.client.perform_query('POST', '/groups/add-member', data=_data)
+    
+    def remove_from_group(self, parent_name, user_name=None, group_name=None):
+        _data = {}
+        if user_name is not None:
+            _data['user_name'] = user_name
+        if group_name is not None:
+            _data['group_name'] = group_name
+        if parent_name is not None:
+            _data['parent_name'] = parent_name
+        return self.client.perform_query('POST', '/groups/remove-member', data=_data)
+    
+    def get_groups(self):
+        _data = {}
+    
+        return self.client.perform_query('GET', '/groups/list', data=_data)
+    
+    def get_group_members(self, group_name):
+        _data = {}
+        if group_name is not None:
+            _data['group_name'] = group_name
+        return self.client.perform_query('GET', '/groups/list-members', data=_data)
+    
+    def remove_group(self, group_name):
+        _data = {}
+        if group_name is not None:
+            _data['group_name'] = group_name
+        return self.client.perform_query('POST', '/groups/delete', data=_data)
+    
+    def get_groups_for_principal(self, user_name=None, group_name=None):
+        _data = {}
+        if user_name is not None:
+            _data['user_name'] = user_name
+        if group_name is not None:
+            _data['group_name'] = group_name
+        return self.client.perform_query('GET', '/groups/list-parents', data=_data)
+     
