@@ -82,56 +82,56 @@ VALUE = 'test_value'
 
 
 @provide_conf
-def test_write_secret_string_value(secrets_api_mock):
+def test_put_secret_string_value(secrets_api_mock):
     runner = CliRunner()
-    runner.invoke(cli.write_secret, ['--scope', SCOPE, '--key', KEY, '--string-value', VALUE])
-    assert secrets_api_mock.write_secret.call_args[0] == (SCOPE, KEY, VALUE, None)
+    runner.invoke(cli.put_secret, ['--scope', SCOPE, '--key', KEY, '--string-value', VALUE])
+    assert secrets_api_mock.put_secret.call_args[0] == (SCOPE, KEY, VALUE, None)
 
 
 @provide_conf
-def test_write_secret_multiple_value(secrets_api_mock):
+def test_put_secret_multiple_value(secrets_api_mock):
     runner = CliRunner()
-    result = runner.invoke(cli.write_secret,
+    result = runner.invoke(cli.put_secret,
                            ['--scope', SCOPE, '--key', KEY,
                             '--string-value', VALUE, '--binary-file', VALUE])
     assert result.exit_code != 0
-    assert secrets_api_mock.write_secret.call_count == 0
+    assert secrets_api_mock.put_secret.call_count == 0
 
 
 @provide_conf
-def test_write_secret_editor_input_correct_split(secrets_api_mock):
+def test_put_secret_editor_input_correct_split(secrets_api_mock):
     with mock.patch('databricks_cli.secrets.cli.click.edit') as edit_mock:
         # normal input with trailing new lines
         edit_mock.return_value = VALUE + '\n' + DASH_MARKER
         runner = CliRunner()
-        runner.invoke(cli.write_secret, ['--scope', SCOPE, '--key', KEY])
-        assert secrets_api_mock.write_secret.call_args[0] == (SCOPE, KEY, VALUE, None)
+        runner.invoke(cli.put_secret, ['--scope', SCOPE, '--key', KEY])
+        assert secrets_api_mock.put_secret.call_args[0] == (SCOPE, KEY, VALUE, None)
 
 
 @provide_conf
-def test_write_secret_editor_input_no_value(secrets_api_mock):
+def test_put_secret_editor_input_no_value(secrets_api_mock):
     with mock.patch('databricks_cli.secrets.cli.click.edit') as edit_mock:
         # file not saved
         edit_mock.return_value = None
         runner = CliRunner()
-        result = runner.invoke(cli.write_secret, ['--scope', SCOPE, '--key', KEY])
+        result = runner.invoke(cli.put_secret, ['--scope', SCOPE, '--key', KEY])
         assert result.exit_code != 0
-        assert secrets_api_mock.write_secret.call_count == 0
+        assert secrets_api_mock.put_secret.call_count == 0
 
 
 @provide_conf
-def test_write_secret_editor_input_edited_marker(secrets_api_mock):
+def test_put_secret_editor_input_edited_marker(secrets_api_mock):
     with mock.patch('databricks_cli.secrets.cli.click.edit') as edit_mock:
         # input with marker line edited
         edit_mock.return_value = VALUE + '\n' + '# ----------\n'
         runner = CliRunner()
-        result = runner.invoke(cli.write_secret, ['--scope', SCOPE, '--key', KEY])
+        result = runner.invoke(cli.put_secret, ['--scope', SCOPE, '--key', KEY])
         assert result.exit_code != 0
-        assert secrets_api_mock.write_secret.call_count == 0
+        assert secrets_api_mock.put_secret.call_count == 0
 
 
 @provide_conf
-def test_write_secrets_binary_file(secrets_api_mock):
+def test_put_secrets_binary_file(secrets_api_mock):
     import os
     import tempfile
 
@@ -143,9 +143,9 @@ def test_write_secrets_binary_file(secrets_api_mock):
         f.close()
 
         runner = CliRunner()
-        runner.invoke(cli.write_secret,
+        runner.invoke(cli.put_secret,
                       ['--scope', SCOPE, '--key', KEY, '--binary-file', name])
-        assert secrets_api_mock.write_secret.call_args[0] == (SCOPE, KEY, None, 'dGVzdF92YWx1ZQoK')
+        assert secrets_api_mock.put_secret.call_args[0] == (SCOPE, KEY, None, 'dGVzdF92YWx1ZQoK')
     finally:
         os.unlink(name)
 
@@ -231,10 +231,10 @@ def test_delete_acl(secrets_api_mock):
 
 
 @provide_conf
-def test_write_acl(secrets_api_mock):
+def test_put_acl(secrets_api_mock):
     runner = CliRunner()
-    runner.invoke(cli.write_acl,
+    runner.invoke(cli.put_acl,
                   ['--scope', SCOPE, '--principal', PRINCIPAL, '--permission', PERMISSION])
-    assert secrets_api_mock.write_acl.call_args[0][0] == SCOPE
-    assert secrets_api_mock.write_acl.call_args[0][1] == PRINCIPAL
-    assert secrets_api_mock.write_acl.call_args[0][2] == PERMISSION
+    assert secrets_api_mock.put_acl.call_args[0][0] == SCOPE
+    assert secrets_api_mock.put_acl.call_args[0][1] == PRINCIPAL
+    assert secrets_api_mock.put_acl.call_args[0][2] == PERMISSION
