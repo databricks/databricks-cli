@@ -56,6 +56,11 @@ def test_configure_cli_token():
     assert get_config_for_profile(DEFAULT_SECTION).host == TEST_HOST
     assert get_config_for_profile(DEFAULT_SECTION).token == TEST_TOKEN
 
+    runner.invoke(cli.configure_cli, ['--token'],
+                  input=(TEST_HOST + '\n' + '\n'))
+    assert get_config_for_profile(DEFAULT_SECTION).host == TEST_HOST
+    assert get_config_for_profile(DEFAULT_SECTION).token == TEST_TOKEN
+
 
 def test_configure_two_sections():
     runner = CliRunner()
