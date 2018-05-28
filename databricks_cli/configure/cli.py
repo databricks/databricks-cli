@@ -38,8 +38,14 @@ PROMPT_TOKEN = 'Token' #  NOQA
 
 def _configure_cli_token(profile):
     config = get_config_for_profile(profile)
+    if config.token:
+        default_token = '*' * len(config.token)
+    else:
+        default_token = None
     host = click.prompt(PROMPT_HOST, default=config.host, type=_DbfsHost())
-    token = click.prompt(PROMPT_TOKEN, default=config.token)
+    token = click.prompt(PROMPT_TOKEN, default=default_token, hide_input=True)
+    if token == default_token:
+        token = config.token
     new_config = DatabricksConfig.from_token(host, token)
     update_and_persist_config(profile, new_config)
 
