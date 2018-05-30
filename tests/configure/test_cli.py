@@ -55,6 +55,7 @@ def test_configure_cli_token():
                   input=(TEST_HOST + '\n' + TEST_TOKEN + '\n'))
     assert get_config_for_profile(DEFAULT_SECTION).host == TEST_HOST
     assert get_config_for_profile(DEFAULT_SECTION).token == TEST_TOKEN
+    assert get_config_for_profile(DEFAULT_SECTION).insecure is None
 
 
 def test_configure_two_sections():
@@ -67,3 +68,12 @@ def test_configure_two_sections():
     assert get_config_for_profile(DEFAULT_SECTION).token == TEST_TOKEN
     assert get_config_for_profile(TEST_PROFILE).host == TEST_HOST_2
     assert get_config_for_profile(TEST_PROFILE).token == TEST_TOKEN
+
+
+def test_configure_cli_insecure():
+    runner = CliRunner()
+    runner.invoke(cli.configure_cli, ['--token', '--insecure'],
+                  input=(TEST_HOST + '\n' + TEST_TOKEN + '\n'))
+    assert get_config_for_profile(DEFAULT_SECTION).host == TEST_HOST
+    assert get_config_for_profile(DEFAULT_SECTION).token == TEST_TOKEN
+    assert get_config_for_profile(DEFAULT_SECTION).insecure == 'True'
