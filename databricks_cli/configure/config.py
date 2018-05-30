@@ -65,7 +65,8 @@ def profile_option(f):
 
 
 def _get_api_client(config):
+    verify = config.insecure is None
     if config.is_valid_with_token:
-        return ApiClient(host=config.host, token=config.token)
+        return ApiClient(host=config.host, token=config.token, verify=verify)
     return ApiClient(user=config.username, password=config.password,
-                     host=config.host)
+                     host=config.host, verify=verify)
