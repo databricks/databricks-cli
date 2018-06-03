@@ -22,6 +22,7 @@
 # limitations under the License.
 
 import imp
+import io
 import os
 from setuptools import setup, find_packages
 
@@ -48,7 +49,7 @@ setup(
     author='Andrew Chen',
     author_email='andrewchen@databricks.com',
     description='A command line interface for Databricks',
-    long_description=open('README.rst').read(),
+    long_description=io.open('README.rst', encoding='utf-8').read(),
     license='Apache License 2.0',
     classifiers=[
         'Intended Audience :: Developers',
