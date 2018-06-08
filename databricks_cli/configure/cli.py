@@ -36,7 +36,7 @@ PROMPT_PASSWORD = 'Password' #  NOQA
 PROMPT_TOKEN = 'Token' #  NOQA
 
 
-def _configure_cli_token(profile):
+def _configure_cli_token(profile, insecure):
     config = get_config_for_profile(profile)
     if config.token:
         default_token = '*' * len(config.token)
@@ -46,11 +46,11 @@ def _configure_cli_token(profile):
     token = click.prompt(PROMPT_TOKEN, default=default_token, hide_input=True)
     if token == default_token:
         token = config.token
-    new_config = DatabricksConfig.from_token(host, token)
+    new_config = DatabricksConfig.from_token(host, token, insecure)
     update_and_persist_config(profile, new_config)
 
 
-def _configure_cli_password(profile):
+def _configure_cli_password(profile, insecure):
     config = get_config_for_profile(profile)
     if config.password:
         default_password = '*' * len(config.password)
@@ -62,23 +62,25 @@ def _configure_cli_password(profile):
                             confirmation_prompt=True)
     if password == default_password:
         password = config.password
-    new_config = DatabricksConfig.from_password(host, username, password)
+    new_config = DatabricksConfig.from_password(host, username, password, insecure)
     update_and_persist_config(profile, new_config)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Configures host and authentication info for the CLI.')
 @click.option('--token', show_default=True, is_flag=True, default=False)
+@click.option('--insecure', show_default=True, is_flag=True, default=None)
 @profile_option
-def configure_cli(token):
+def configure_cli(token, insecure):
     """
     Configures host and authentication info for the CLI.
     """
     profile = get_profile_from_context()
+    insecure_str = str(insecure) if insecure is not None else None
     if token:
-        _configure_cli_token(profile)
+        _configure_cli_token(profile, insecure_str)
     else:
-        _configure_cli_password(profile)
+        _configure_cli_password(profile, insecure_str)
 
 
 class _DbfsHost(ParamType):
