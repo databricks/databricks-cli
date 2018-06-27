@@ -27,7 +27,6 @@ import pytest
 from click.testing import CliRunner
 
 import databricks_cli.workspace.cli as cli
-import databricks_cli.workspace.api as api
 from databricks_cli.workspace.api import WorkspaceFileInfo, NOTEBOOK
 from databricks_cli.workspace.types import WorkspaceLanguage
 from tests.utils import provide_conf
@@ -48,5 +47,5 @@ def test_export_workspace_cli(workspace_api_mock, tmpdir):
         WorkspaceFileInfo('/notebook-name', NOTEBOOK, WorkspaceLanguage.SCALA)
     runner = CliRunner()
     runner.invoke(cli.export_workspace_cli, ['--format', 'SOURCE', '/notebook-name', path])
-    assert workspace_api_mock.export_workspace.call_args[0][1] == \
-           os.path.join(path, 'notebook-name.scala')
+    assert workspace_api_mock.export_workspace.call_args[0][1] == os.path.join(
+        path, 'notebook-name.scala')

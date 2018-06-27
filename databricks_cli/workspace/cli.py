@@ -28,7 +28,6 @@ from tabulate import tabulate
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS
 from databricks_cli.version import print_version_callback, version
 from databricks_cli.configure.config import provide_api_client, profile_option
-from databricks_cli.dbfs.exceptions import LocalFileExistsException
 from databricks_cli.workspace.api import WorkspaceApi
 from databricks_cli.workspace.types import LanguageClickType, FormatClickType, WorkspaceFormat, \
     WorkspaceLanguage
@@ -178,6 +177,7 @@ def import_dir_cli(api_client, source_path, target_path, overwrite, exclude_hidd
     """
     WorkspaceApi(api_client).import_workspace_dir(source_path, target_path, overwrite,
                                                   exclude_hidden_files)
+
 
 @click.group(context_settings=CONTEXT_SETTINGS,
              short_help='Utility to interact with the Databricks workspace.')

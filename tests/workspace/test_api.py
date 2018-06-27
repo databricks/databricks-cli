@@ -27,7 +27,7 @@ from base64 import b64encode
 import pytest
 
 import databricks_cli.workspace.api as api
-from databricks_cli.workspace.api import WorkspaceFileInfo, NOTEBOOK
+from databricks_cli.workspace.api import WorkspaceFileInfo
 from databricks_cli.workspace.types import WorkspaceLanguage
 
 TEST_WORKSPACE_PATH = '/test/workspace/path'
@@ -76,6 +76,7 @@ def workspace_api():
         workspace_api = api.WorkspaceApi(None)
         yield workspace_api
 
+
 class TestWorkspaceApi(object):
     def test_get_status(self, workspace_api):
         workspace_api.client.get_status.return_value = TEST_JSON_RESPONSE
@@ -102,19 +103,21 @@ class TestWorkspaceApi(object):
         test_file_path = os.path.join(tmpdir.strpath, 'test')
         with open(test_file_path, 'w') as f:
             f.write('test')
-        workspace_api.import_workspace(test_file_path, TEST_WORKSPACE_PATH, TEST_LANGUAGE, TEST_FMT, is_overwrite=False)
+        workspace_api.import_workspace(test_file_path, TEST_WORKSPACE_PATH, TEST_LANGUAGE, TEST_FMT,
+                                       is_overwrite=False)
         import_workspace_mock = workspace_api.client.import_workspace
         assert import_workspace_mock.call_count == 1
         assert import_workspace_mock.call_args[0][0] == TEST_WORKSPACE_PATH
         assert import_workspace_mock.call_args[0][1] == TEST_FMT
         assert import_workspace_mock.call_args[0][2] == TEST_LANGUAGE
         assert import_workspace_mock.call_args[0][3] == b64encode(b'test').decode()
-        assert import_workspace_mock.call_args[0][4] == False
+        assert import_workspace_mock.call_args[0][4] is False
 
     def test_export_workspace(self, workspace_api, tmpdir):
         test_file_path = os.path.join(tmpdir.strpath, 'test')
         workspace_api.client.export_workspace.return_value = {'content': b64encode(b'test')}
-        workspace_api.export_workspace(TEST_WORKSPACE_PATH, test_file_path, TEST_FMT, is_overwrite=False)
+        workspace_api.export_workspace(TEST_WORKSPACE_PATH, test_file_path, TEST_FMT,
+                                       is_overwrite=False)
         with open(test_file_path, 'r') as f:
             contents = f.read()
             assert contents == 'test'
@@ -124,7 +127,7 @@ class TestWorkspaceApi(object):
         delete_mock = workspace_api.client.delete
         assert delete_mock.call_count == 1
         assert delete_mock.call_args[0][0] == TEST_WORKSPACE_PATH
-        assert delete_mock.call_args[0][1] == True
+        assert delete_mock.call_args[0][1] is True
 
     def test_export_workspace_dir(self, workspace_api, tmpdir):
         """
@@ -139,6 +142,7 @@ class TestWorkspaceApi(object):
             """
 
         workspace_api.export_workspace = mock.MagicMock()
+
         def _list_objects_mock(path):
             if path == '/':
                 return [
@@ -168,14 +172,17 @@ class TestWorkspaceApi(object):
         # Verify we exported files b, c, d, e with the correct names
         assert workspace_api.export_workspace.call_count == 4
         assert workspace_api.export_workspace.call_args_list[0][0][0] == '/a/b'
-        assert workspace_api.export_workspace.call_args_list[0][0][1] == os.path.join(tmpdir.strpath, 'a',
-                                                                                           'b.scala')
+        assert workspace_api.export_workspace.call_args_list[0][0][1] == os.path.join(
+            tmpdir.strpath, 'a', 'b.scala')
         assert workspace_api.export_workspace.call_args_list[1][0][0] == '/a/c'
-        assert workspace_api.export_workspace.call_args_list[1][0][1] == os.path.join(tmpdir.strpath, 'a', 'c.py')
+        assert workspace_api.export_workspace.call_args_list[1][0][1] == os.path.join(
+            tmpdir.strpath, 'a', 'c.py')
         assert workspace_api.export_workspace.call_args_list[2][0][0] == '/a/d'
-        assert workspace_api.export_workspace.call_args_list[2][0][1] == os.path.join(tmpdir.strpath, 'a', 'd.r')
+        assert workspace_api.export_workspace.call_args_list[2][0][1] == os.path.join(
+            tmpdir.strpath, 'a', 'd.r')
         assert workspace_api.export_workspace.call_args_list[3][0][0] == '/a/e'
-        assert workspace_api.export_workspace.call_args_list[3][0][1] == os.path.join(tmpdir.strpath, 'a', 'e.sql')
+        assert workspace_api.export_workspace.call_args_list[3][0][1] == os.path.join(
+            tmpdir.strpath, 'a', 'e.sql')
         # Verify that we only called list 4 times.
         assert workspace_api.list_objects.call_count == 4
 
@@ -213,25 +220,25 @@ class TestWorkspaceApi(object):
         assert any([ca[0][0] == '/f/g' for ca in workspace_api.mkdirs.call_args_list])
         # Verify that we imported the correct files
         assert workspace_api.import_workspace.call_count == 4
-        assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'b.scala') \
+        assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'b.scala')
                     for ca in workspace_api.import_workspace.call_args_list])
-        assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'c.py') \
+        assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'c.py')
                     for ca in workspace_api.import_workspace.call_args_list])
-        assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'd.r') \
+        assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'd.r')
                     for ca in workspace_api.import_workspace.call_args_list])
-        assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'e.sql') \
+        assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'e.sql')
                     for ca in workspace_api.import_workspace.call_args_list])
         assert any([ca[0][1] == '/a/b' for ca in workspace_api.import_workspace.call_args_list])
         assert any([ca[0][1] == '/a/c' for ca in workspace_api.import_workspace.call_args_list])
         assert any([ca[0][1] == '/a/d' for ca in workspace_api.import_workspace.call_args_list])
         assert any([ca[0][1] == '/a/e' for ca in workspace_api.import_workspace.call_args_list])
-        assert any([ca[0][2] == WorkspaceLanguage.SCALA \
+        assert any([ca[0][2] == WorkspaceLanguage.SCALA
                     for ca in workspace_api.import_workspace.call_args_list])
-        assert any([ca[0][2] == WorkspaceLanguage.PYTHON \
+        assert any([ca[0][2] == WorkspaceLanguage.PYTHON
                     for ca in workspace_api.import_workspace.call_args_list])
-        assert any([ca[0][2] == WorkspaceLanguage.R \
+        assert any([ca[0][2] == WorkspaceLanguage.R
                     for ca in workspace_api.import_workspace.call_args_list])
-        assert any([ca[0][2] == WorkspaceLanguage.SQL \
+        assert any([ca[0][2] == WorkspaceLanguage.SQL
                     for ca in workspace_api.import_workspace.call_args_list])
 
     def test_import_dir_rstrip(self, workspace_api, tmpdir):
@@ -253,9 +260,10 @@ class TestWorkspaceApi(object):
 
         # Verify that we imported the correct files with the right names
         assert workspace_api.import_workspace.call_count == 1
-        assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'test-py.py') \
+        assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'test-py.py')
                     for ca in workspace_api.import_workspace.call_args_list])
-        assert any([ca[0][1] == '/a/test-py' for ca in workspace_api.import_workspace.call_args_list])
+        assert any([ca[0][1] == '/a/test-py'
+                    for ca in workspace_api.import_workspace.call_args_list])
 
     def test_import_dir_hidden(self, workspace_api, tmpdir):
         """
@@ -281,6 +289,7 @@ class TestWorkspaceApi(object):
 
         # Verify that we imported the correct files with the right names
         assert workspace_api.import_workspace.call_count == 1
-        assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'test-py.py') \
+        assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'test-py.py')
                     for ca in workspace_api.import_workspace.call_args_list])
-        assert any([ca[0][1] == '/a/test-py' for ca in workspace_api.import_workspace.call_args_list])
+        assert any([ca[0][1] == '/a/test-py'
+                    for ca in workspace_api.import_workspace.call_args_list])
