@@ -138,8 +138,7 @@ class TestWorkspaceApi(object):
               - g (directory)
             """
 
-        workspace_api.get_status.return_value = \
-            WorkspaceFileInfo('/notebook-name', NOTEBOOK, WorkspaceLanguage.SCALA)
+        workspace_api.export_workspace = mock.MagicMock()
         def _list_objects_mock(path):
             if path == '/':
                 return [
@@ -179,3 +178,109 @@ class TestWorkspaceApi(object):
         assert workspace_api.export_workspace.call_args_list[3][0][1] == os.path.join(tmpdir.strpath, 'a', 'e.sql')
         # Verify that we only called list 4 times.
         assert workspace_api.list_objects.call_count == 4
+
+    def test_import_workspace_dir(self, workspace_api, tmpdir):
+        """
+        Copy from directory ``tmpdir`` with structure as follows
+        - a (directory)
+          - b.scala (scala)
+          - c.py (python)
+          - d.r (r)
+          - e.sql (sql)
+        - f (directory)
+          - g (directory)
+        """
+        workspace_api.import_workspace = mock.MagicMock()
+        workspace_api.mkdirs = mock.MagicMock()
+        os.makedirs(os.path.join(tmpdir.strpath, 'a'))
+        os.makedirs(os.path.join(tmpdir.strpath, 'f'))
+        os.makedirs(os.path.join(tmpdir.strpath, 'f', 'g'))
+        with open(os.path.join(tmpdir.strpath, 'a', 'b.scala'), 'wt') as f:
+            f.write('println(1 + 1)')
+        with open(os.path.join(tmpdir.strpath, 'a', 'c.py'), 'wt') as f:
+            f.write('print 1 + 1')
+        with open(os.path.join(tmpdir.strpath, 'a', 'd.r'), 'wt') as f:
+            f.write('I don\'t know how to write r')
+        with open(os.path.join(tmpdir.strpath, 'a', 'e.sql'), 'wt') as f:
+            f.write('select 1+1 from table;')
+        workspace_api.import_workspace_dir(tmpdir.strpath, '/', False, False)
+        # Verify that the directories a, f, g exist.
+        assert workspace_api.mkdirs.call_count == 4
+        # The order of list may be undeterminstic apparently. (It's different in Travis CI)
+        assert any([ca[0][0] == '/' for ca in workspace_api.mkdirs.call_args_list])
+        assert any([ca[0][0] == '/a' for ca in workspace_api.mkdirs.call_args_list])
+        assert any([ca[0][0] == '/f' for ca in workspace_api.mkdirs.call_args_list])
+        assert any([ca[0][0] == '/f/g' for ca in workspace_api.mkdirs.call_args_list])
+        # Verify that we imported the correct files
+        assert workspace_api.import_workspace.call_count == 4
+        assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'b.scala') \
+                    for ca in workspace_api.import_workspace.call_args_list])
+        assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'c.py') \
+                    for ca in workspace_api.import_workspace.call_args_list])
+        assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'd.r') \
+                    for ca in workspace_api.import_workspace.call_args_list])
+        assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'e.sql') \
+                    for ca in workspace_api.import_workspace.call_args_list])
+        assert any([ca[0][1] == '/a/b' for ca in workspace_api.import_workspace.call_args_list])
+        assert any([ca[0][1] == '/a/c' for ca in workspace_api.import_workspace.call_args_list])
+        assert any([ca[0][1] == '/a/d' for ca in workspace_api.import_workspace.call_args_list])
+        assert any([ca[0][1] == '/a/e' for ca in workspace_api.import_workspace.call_args_list])
+        assert any([ca[0][2] == WorkspaceLanguage.SCALA \
+                    for ca in workspace_api.import_workspace.call_args_list])
+        assert any([ca[0][2] == WorkspaceLanguage.PYTHON \
+                    for ca in workspace_api.import_workspace.call_args_list])
+        assert any([ca[0][2] == WorkspaceLanguage.R \
+                    for ca in workspace_api.import_workspace.call_args_list])
+        assert any([ca[0][2] == WorkspaceLanguage.SQL \
+                    for ca in workspace_api.import_workspace.call_args_list])
+
+    def test_import_dir_rstrip(self, workspace_api, tmpdir):
+        """
+        Copy from directory ``tmpdir`` with structure as follows
+        - a (directory)
+          - test-py.py (python)
+        """
+
+        workspace_api.import_workspace = mock.MagicMock()
+        workspace_api.mkdirs = mock.MagicMock()
+        os.makedirs(os.path.join(tmpdir.strpath, 'a'))
+        with open(os.path.join(tmpdir.strpath, 'a', 'test-py.py'), 'wt'):
+            pass
+        workspace_api.import_workspace_dir(tmpdir.strpath, '/', False, False)
+        assert workspace_api.mkdirs.call_count == 2
+        assert any([ca[0][0] == '/' for ca in workspace_api.mkdirs.call_args_list])
+        assert any([ca[0][0] == '/a' for ca in workspace_api.mkdirs.call_args_list])
+
+        # Verify that we imported the correct files with the right names
+        assert workspace_api.import_workspace.call_count == 1
+        assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'test-py.py') \
+                    for ca in workspace_api.import_workspace.call_args_list])
+        assert any([ca[0][1] == '/a/test-py' for ca in workspace_api.import_workspace.call_args_list])
+
+    def test_import_dir_hidden(self, workspace_api, tmpdir):
+        """
+        Copy from directory ``tmpdir`` with structure as follows
+        - a (directory)
+          - test-py.py (python)
+        - .ignore (directory)
+          - ignore.py
+        """
+        workspace_api.import_workspace = mock.MagicMock()
+        workspace_api.mkdirs = mock.MagicMock()
+        workspace_api.import_workspace.return_value = None
+        os.makedirs(os.path.join(tmpdir.strpath, 'a'))
+        os.makedirs(os.path.join(tmpdir.strpath, '.ignore'))
+        with open(os.path.join(tmpdir.strpath, 'a', 'test-py.py'), 'wb'):
+            pass
+        with open(os.path.join(tmpdir.strpath, '.ignore', 'ignore.py'), 'wb'):
+            pass
+        workspace_api.import_workspace_dir(tmpdir.strpath, '/', False, True)
+        assert workspace_api.mkdirs.call_count == 2
+        assert any([ca[0][0] == '/' for ca in workspace_api.mkdirs.call_args_list])
+        assert any([ca[0][0] == '/a' for ca in workspace_api.mkdirs.call_args_list])
+
+        # Verify that we imported the correct files with the right names
+        assert workspace_api.import_workspace.call_count == 1
+        assert any([ca[0][0] == os.path.join(tmpdir.strpath, 'a', 'test-py.py') \
+                    for ca in workspace_api.import_workspace.call_args_list])
+        assert any([ca[0][1] == '/a/test-py' for ca in workspace_api.import_workspace.call_args_list])
