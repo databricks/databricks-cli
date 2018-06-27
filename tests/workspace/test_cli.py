@@ -84,7 +84,7 @@ def test_export_dir_helper(workspace_api_mock, tmpdir):
             assert False, 'We shouldn\'t reach this case...'
 
     workspace_api_mock.list_objects = mock.Mock(wraps=_list_objects_mock)
-    cli._export_dir_helper(workspace_api_mock, '/', tmpdir.strpath, False)
+    workspace_api_mock.export_workspace_dir('/', tmpdir.strpath, False)
     # Verify that the directories a, f, g exist.
     assert os.path.isdir(os.path.join(tmpdir.strpath, 'a'))
     assert os.path.isdir(os.path.join(tmpdir.strpath, 'f'))

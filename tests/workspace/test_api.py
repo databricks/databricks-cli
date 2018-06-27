@@ -27,6 +27,8 @@ from base64 import b64encode
 import pytest
 
 import databricks_cli.workspace.api as api
+from databricks_cli.workspace.api import WorkspaceFileInfo, NOTEBOOK
+from databricks_cli.workspace.types import WorkspaceLanguage
 
 TEST_WORKSPACE_PATH = '/test/workspace/path'
 TEST_JSON_RESPONSE = {
@@ -73,7 +75,6 @@ def workspace_api():
         WorkspaceServiceMock.return_value = mock.MagicMock()
         workspace_api = api.WorkspaceApi(None)
         yield workspace_api
-
 
 class TestWorkspaceApi(object):
     def test_get_status(self, workspace_api):
@@ -124,3 +125,57 @@ class TestWorkspaceApi(object):
         assert delete_mock.call_count == 1
         assert delete_mock.call_args[0][0] == TEST_WORKSPACE_PATH
         assert delete_mock.call_args[0][1] == True
+
+    def test_export_workspace_dir(self, workspace_api, tmpdir):
+        """
+            Copy to directory ``tmpdir`` with structure as follows
+            - a (directory)
+              - b (scala)
+              - c (python)
+              - d (r)
+              - e (sql)
+            - f (directory)
+              - g (directory)
+            """
+
+        workspace_api.get_status.return_value = \
+            WorkspaceFileInfo('/notebook-name', NOTEBOOK, WorkspaceLanguage.SCALA)
+        def _list_objects_mock(path):
+            if path == '/':
+                return [
+                    WorkspaceFileInfo('/a', api.DIRECTORY),
+                    WorkspaceFileInfo('/f', api.DIRECTORY)
+                ]
+            elif path == '/a':
+                return [
+                    WorkspaceFileInfo('/a/b', api.NOTEBOOK, WorkspaceLanguage.SCALA),
+                    WorkspaceFileInfo('/a/c', api.NOTEBOOK, WorkspaceLanguage.PYTHON),
+                    WorkspaceFileInfo('/a/d', api.NOTEBOOK, WorkspaceLanguage.R),
+                    WorkspaceFileInfo('/a/e', api.NOTEBOOK, WorkspaceLanguage.SQL),
+                ]
+            elif path == '/f':
+                return [WorkspaceFileInfo('/f/g', api.DIRECTORY)]
+            elif path == '/f/g':
+                return []
+            else:
+                assert False, 'We shouldn\'t reach this case...'
+
+        workspace_api.list_objects = mock.Mock(wraps=_list_objects_mock)
+        workspace_api.export_workspace_dir('/', tmpdir.strpath, False)
+        # Verify that the directories a, f, g exist.
+        assert os.path.isdir(os.path.join(tmpdir.strpath, 'a'))
+        assert os.path.isdir(os.path.join(tmpdir.strpath, 'f'))
+        assert os.path.isdir(os.path.join(tmpdir.strpath, 'f', 'g'))
+        # Verify we exported files b, c, d, e with the correct names
+        assert workspace_api.export_workspace.call_count == 4
+        assert workspace_api.export_workspace.call_args_list[0][0][0] == '/a/b'
+        assert workspace_api.export_workspace.call_args_list[0][0][1] == os.path.join(tmpdir.strpath, 'a',
+                                                                                           'b.scala')
+        assert workspace_api.export_workspace.call_args_list[1][0][0] == '/a/c'
+        assert workspace_api.export_workspace.call_args_list[1][0][1] == os.path.join(tmpdir.strpath, 'a', 'c.py')
+        assert workspace_api.export_workspace.call_args_list[2][0][0] == '/a/d'
+        assert workspace_api.export_workspace.call_args_list[2][0][1] == os.path.join(tmpdir.strpath, 'a', 'd.r')
+        assert workspace_api.export_workspace.call_args_list[3][0][0] == '/a/e'
+        assert workspace_api.export_workspace.call_args_list[3][0][1] == os.path.join(tmpdir.strpath, 'a', 'e.sql')
+        # Verify that we only called list 4 times.
+        assert workspace_api.list_objects.call_count == 4
