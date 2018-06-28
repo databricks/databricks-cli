@@ -35,14 +35,16 @@ def provide_api_client(function):
     Injects the api_client keyword argument to the wrapped function.
     All callbacks wrapped by provide_api_client expect the argument ``profile`` to be passed in.
     """
-    click.echo(function.__name__)
+    @click.pass_context
     @six.wraps(function)
-    def decorator(*args, **kwargs):
+    def decorator(ctx, *args, **kwargs):
+        command_name = "-".join(ctx.command_path.split(" ")[1:])
+        command_name += "_randomId"
         profile = get_profile_from_context()
         config = get_config_for_profile(profile)
         if not config.is_valid:
             raise InvalidConfigurationError(profile)
-        kwargs['api_client'] = _get_api_client(config)
+        kwargs['api_client'] = _get_api_client(config, command_name)
 
         return function(*args, **kwargs)
     decorator.__doc__ = function.__doc__
@@ -65,9 +67,11 @@ def profile_option(f):
                         help='CLI connection profile to use. The default profile is "DEFAULT".')(f)
 
 
-def _get_api_client(config, command_name=None):
+def _get_api_client(config, command_name=""):
+    default_headers = {"command_name": command_name}
     verify = config.insecure is None
     if config.is_valid_with_token:
-        return ApiClient(host=config.host, token=config.token, verify=verify)
+        return ApiClient(host=config.host, token=config.token, verify=verify,
+                         default_headers=default_headers)
     return ApiClient(user=config.username, password=config.password,
-                     host=config.host, verify=verify)
+                     host=config.host, verify=verify, default_headers=default_headers)
