@@ -36,7 +36,6 @@ def provide_api_client(function):
     Injects the api_client keyword argument to the wrapped function.
     All callbacks wrapped by provide_api_client expect the argument ``profile`` to be passed in.
     """
-    # @click.pass_context
     @six.wraps(function)
     def decorator(*args, **kwargs):
         ctx = click.get_current_context()
