@@ -21,6 +21,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import uuid
 import click
 import six
 
@@ -35,16 +36,18 @@ def provide_api_client(function):
     Injects the api_client keyword argument to the wrapped function.
     All callbacks wrapped by provide_api_client expect the argument ``profile`` to be passed in.
     """
-    @click.pass_context
+    # @click.pass_context
     @six.wraps(function)
-    def decorator(ctx, *args, **kwargs):
+    def decorator(*args, **kwargs):
+        ctx = click.get_current_context()
         command_name = "-".join(ctx.command_path.split(" ")[1:])
-        command_name += "_randomId"
+        command_uuid = str(uuid.uuid1())
+        default_headers = {"cli-command-name": command_name, "cli-command-uuid": command_uuid}
         profile = get_profile_from_context()
         config = get_config_for_profile(profile)
         if not config.is_valid:
             raise InvalidConfigurationError(profile)
-        kwargs['api_client'] = _get_api_client(config, command_name)
+        kwargs['api_client'] = _get_api_client(config, default_headers)
 
         return function(*args, **kwargs)
     decorator.__doc__ = function.__doc__
@@ -67,8 +70,8 @@ def profile_option(f):
                         help='CLI connection profile to use. The default profile is "DEFAULT".')(f)
 
 
-def _get_api_client(config, command_name=""):
-    default_headers = {"command_name": command_name}
+def _get_api_client(config, default_headers=None):
+    default_headers = {} if default_headers is None else default_headers
     verify = config.insecure is None
     if config.is_valid_with_token:
         return ApiClient(host=config.host, token=config.token, verify=verify,
