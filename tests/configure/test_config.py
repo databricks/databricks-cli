@@ -101,7 +101,7 @@ def test_command_headers():
     @click.command()
     @config.profile_option
     @config.provide_api_client
-    def test_command(api_client, x): # noqa
+    def test_command(api_client): # noqa
         click.echo(json.dumps(api_client.default_headers))
 
     with mock.patch("databricks_cli.configure.provider.DatabricksConfig") as ConfigMock:
@@ -110,7 +110,7 @@ def test_command_headers():
             uuid_mock.return_value = '1234'
             test_group_2.add_command(test_command, 'test')
             test_group.add_command(test_group_2, 'my')
-            result = CliRunner().invoke(test_group, ['my', 'test', '--x', '1'])
+            result = CliRunner().invoke(test_group, ['my', 'test'])
             default_headers = json.loads(result.output)
             assert 'cli-command-name' in default_headers
             assert 'cli-command-uuid' in default_headers
