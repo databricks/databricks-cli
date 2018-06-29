@@ -41,7 +41,7 @@ def provide_api_client(function):
         ctx = click.get_current_context()
         command_name = "-".join(ctx.command_path.split(" ")[1:])
         command_uuid = str(uuid.uuid1())
-        default_headers = {"cli-command-name": command_name, "cli-command-uuid": command_uuid}
+        default_headers = {'cli-command-name': command_name, 'cli-command-uuid': command_uuid}
         profile = get_profile_from_context()
         config = get_config_for_profile(profile)
         if not config.is_valid:
