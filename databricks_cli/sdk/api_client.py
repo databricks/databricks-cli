@@ -64,14 +64,14 @@ class ApiClient(object):
     """
     def __init__(self, user = None, password = None, host = None, token = None,
                  apiVersion = version.API_VERSION, default_headers = {}, verify = True):
-        self.host = host
-        if self.host[-1] == "/":
-            self.host = self.host[:-1]
+        host = host
+        if host[-1] == "/":
+            host = host[:-1]
 
         self.session = requests.Session()
         self.session.mount('https://', TlsV1HttpAdapter())
 
-        self.url = "%s/api/%s" % (self.host, apiVersion)
+        self.url = "%s/api/%s" % (host, apiVersion)
         if user is not None and password is not None:
             encoded_auth = (user + ":" + password).encode()
             user_header_data = "Basic " + base64.standard_b64encode(encoded_auth).decode()
