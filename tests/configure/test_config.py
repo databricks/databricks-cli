@@ -105,11 +105,14 @@ def test_command_headers():
         click.echo(json.dumps(api_client.default_headers))
 
     with mock.patch("databricks_cli.configure.provider.DatabricksConfig") as ConfigMock:
-        ConfigMock.return_value = DatabricksConfig.from_token(TEST_HOST, TEST_TOKEN)
-        test_group_2.add_command(test_command, 'test')
-        test_group.add_command(test_group_2, 'my')
-        result = CliRunner().invoke(test_group, ['my', 'test', '--x', '1'])
-        default_headers = json.loads(result.output)
-        assert 'cli-command-name' in default_headers
-        assert 'cli-command-uuid' in default_headers
-        assert default_headers['cli-command-name'] == "my-test"
+        with mock.patch("uuid.uuid1") as uuid_mock:
+            ConfigMock.return_value = DatabricksConfig.from_token(TEST_HOST, TEST_TOKEN)
+            uuid_mock.return_value = '1234'
+            test_group_2.add_command(test_command, 'test')
+            test_group.add_command(test_group_2, 'my')
+            result = CliRunner().invoke(test_group, ['my', 'test', '--x', '1'])
+            default_headers = json.loads(result.output)
+            assert 'cli-command-name' in default_headers
+            assert 'cli-command-uuid' in default_headers
+            assert default_headers['cli-command-name'] == "my-test"
+            assert default_headers['cli-command-uuid'] == '1234'
