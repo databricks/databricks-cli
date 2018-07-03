@@ -90,29 +90,29 @@ TEST_TOKEN = 'testtoken'
 def test_command_headers():
     @click.group()
     @config.profile_option
-    def test_group():
+    def outer_test_group():
         pass
 
     @click.group()
     @config.profile_option
-    def test_group_2():
+    def inner_test_group():
         pass
 
     @click.command()
+    @click.option('--x', required=True)
     @config.profile_option
     @config.provide_api_client
-    def test_command(api_client): # noqa
+    def test_command(api_client, x): # noqa
         click.echo(json.dumps(api_client.default_headers))
 
-    with mock.patch("databricks_cli.configure.provider.DatabricksConfig") as ConfigMock:
+    with mock.patch("databricks_cli.configure.provider.DatabricksConfig") as config_mock:
         with mock.patch("uuid.uuid1") as uuid_mock:
-            ConfigMock.return_value = DatabricksConfig.from_token(TEST_HOST, TEST_TOKEN)
+            config_mock.return_value = DatabricksConfig.from_token(TEST_HOST, TEST_TOKEN)
             uuid_mock.return_value = '1234'
-            test_group_2.add_command(test_command, 'test')
-            test_group.add_command(test_group_2, 'my')
-            result = CliRunner().invoke(test_group, ['my', 'test'])
+            inner_test_group.add_command(test_command, 'test-command')
+            outer_test_group.add_command(inner_test_group, 'my')
+            result = CliRunner().invoke(outer_test_group, ['my', 'test-command', '--x', '12'])
+            assert result.exception is None
             default_headers = json.loads(result.output)
-            assert 'cli-command-name' in default_headers
-            assert 'cli-command-uuid' in default_headers
-            assert default_headers['cli-command-name'] == "my-test"
-            assert default_headers['cli-command-uuid'] == '1234'
+            assert 'user-agent' in default_headers
+            assert "my-test-command-1234" in default_headers['user-agent']

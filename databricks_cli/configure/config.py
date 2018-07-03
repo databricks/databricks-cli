@@ -40,13 +40,12 @@ def provide_api_client(function):
     def decorator(*args, **kwargs):
         ctx = click.get_current_context()
         command_name = "-".join(ctx.command_path.split(" ")[1:])
-        command_uuid = str(uuid.uuid1())
-        default_headers = {'cli-command-name': command_name, 'cli-command-uuid': command_uuid}
+        command_name += "-" + str(uuid.uuid1())
         profile = get_profile_from_context()
         config = get_config_for_profile(profile)
         if not config.is_valid:
             raise InvalidConfigurationError(profile)
-        kwargs['api_client'] = _get_api_client(config, default_headers)
+        kwargs['api_client'] = _get_api_client(config, command_name)
 
         return function(*args, **kwargs)
     decorator.__doc__ = function.__doc__
@@ -69,11 +68,10 @@ def profile_option(f):
                         help='CLI connection profile to use. The default profile is "DEFAULT".')(f)
 
 
-def _get_api_client(config, default_headers=None):
-    default_headers = {} if default_headers is None else default_headers
+def _get_api_client(config, command_name=""):
     verify = config.insecure is None
     if config.is_valid_with_token:
         return ApiClient(host=config.host, token=config.token, verify=verify,
-                         default_headers=default_headers)
+                         command_name=command_name)
     return ApiClient(user=config.username, password=config.password,
-                     host=config.host, verify=verify, default_headers=default_headers)
+                     host=config.host, verify=verify, command_name=command_name)
