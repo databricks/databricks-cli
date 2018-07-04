@@ -89,7 +89,8 @@ class DbfsApi(object):
         return True
 
     def get_status(self, dbfs_path):
-        return FileInfo.from_json(self.client.get_status(dbfs_path.absolute_path))
+        json = self.client.get_status(dbfs_path.absolute_path)
+        return FileInfo.from_json(json)
 
     def get_status_json(self, dbfs_path):
         return self.client.get_status(dbfs_path.absolute_path)
