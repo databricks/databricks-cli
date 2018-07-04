@@ -89,8 +89,11 @@ class DbfsApi(object):
         return True
 
     def get_status(self, dbfs_path):
-        json = self.client.get_status(dbfs_path.absolute_path)
+        json = self.get_status_json(dbfs_path)
         return FileInfo.from_json(json)
+
+    def get_status_json(self, dbfs_path):
+        return self.client.get_status(dbfs_path.absolute_path)
 
     def put_file(self, src_path, dbfs_path, overwrite):
         handle = self.client.create(dbfs_path.absolute_path, overwrite)['handle']
