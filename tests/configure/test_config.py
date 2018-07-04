@@ -109,10 +109,10 @@ def test_command_headers():
         with mock.patch("uuid.uuid1") as uuid_mock:
             config_mock.return_value = DatabricksConfig.from_token(TEST_HOST, TEST_TOKEN)
             uuid_mock.return_value = '1234'
-            inner_test_group.add_command(test_command, 'test-command')
-            outer_test_group.add_command(inner_test_group, 'my')
-            result = CliRunner().invoke(outer_test_group, ['my', 'test-command', '--x', '12'])
+            inner_test_group.add_command(test_command, 'subcommand')
+            outer_test_group.add_command(inner_test_group, 'command')
+            result = CliRunner().invoke(outer_test_group, ['command', 'subcommand', '--x', '12'])
             assert result.exception is None
             default_headers = json.loads(result.output)
             assert 'user-agent' in default_headers
-            assert "my-test-command-1234" in default_headers['user-agent']
+            assert "command-subcommand-1234" in default_headers['user-agent']
