@@ -21,6 +21,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import uuid
 import click
 import six
 
@@ -37,11 +38,14 @@ def provide_api_client(function):
     """
     @six.wraps(function)
     def decorator(*args, **kwargs):
+        ctx = click.get_current_context()
+        command_name = "-".join(ctx.command_path.split(" ")[1:])
+        command_name += "-" + str(uuid.uuid1())
         profile = get_profile_from_context()
         config = get_config_for_profile(profile)
         if not config.is_valid:
             raise InvalidConfigurationError(profile)
-        kwargs['api_client'] = _get_api_client(config)
+        kwargs['api_client'] = _get_api_client(config, command_name)
 
         return function(*args, **kwargs)
     decorator.__doc__ = function.__doc__
@@ -64,9 +68,10 @@ def profile_option(f):
                         help='CLI connection profile to use. The default profile is "DEFAULT".')(f)
 
 
-def _get_api_client(config):
+def _get_api_client(config, command_name=""):
     verify = config.insecure is None
     if config.is_valid_with_token:
-        return ApiClient(host=config.host, token=config.token, verify=verify)
+        return ApiClient(host=config.host, token=config.token, verify=verify,
+                         command_name=command_name)
     return ApiClient(user=config.username, password=config.password,
-                     host=config.host, verify=verify)
+                     host=config.host, verify=verify, command_name=command_name)
