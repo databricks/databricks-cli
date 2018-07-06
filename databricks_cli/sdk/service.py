@@ -169,7 +169,7 @@ class JobsService(object):
         if limit is not None:
             _data['limit'] = limit
         return self.client.perform_query('GET', '/jobs/runs/list', data=_data)
-
+    
     def get_run(self, run_id=None):
         _data = {}
         if run_id is not None:
@@ -201,7 +201,7 @@ class JobsService(object):
         if views_to_export is not None:
             _data['views_to_export'] = views_to_export
         return self.client.perform_query('GET', '/jobs/runs/export', data=_data)
-
+     
 
 class ClusterService(object):
     def __init__(self, client):

@@ -4,8 +4,3 @@
 .cache
 .*project
 env
-*.DS_Store
-databricks_cli.egg-info
-.tox
-.coverage
-.idea

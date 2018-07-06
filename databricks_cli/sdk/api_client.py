@@ -62,7 +62,6 @@ class ApiClient(object):
     A partial Python implementation of dbc rest api
     to be used by different versions of the client.
     """
-
     def __init__(self, user=None, password=None, host=None, token=None,
                  apiVersion=version.API_VERSION, default_headers={}, verify=True, command_name=""):
         if host[-1] == "/":
