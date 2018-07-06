@@ -42,29 +42,15 @@ TEST_JOB_RESOURCE = {
     api.RESOURCE_TYPE: "job",
     api.RESOURCE_PROPERTIES: TEST_JOB_SETTINGS
 }
-TEST_WORKSPACE_RESOURCE_ID = "notebook 1"
-TEST_WORKSPACE_RESOURCE = {
-    api.RESOURCE_ID: TEST_WORKSPACE_RESOURCE_ID,
-    api.RESOURCE_TYPE: "workspace",
-    api.RESOURCE_PROPERTIES: {
-        "source_path": "dev/job1.py",
-        "workspace_path": "/Users/example@example.com.com/dev/job",
-        "object_type": "NOTEBOOK"
-    }
-}
-TEST_DBFS_RESOURCE = {}
 TEST_STACK = {
     api.STACK_NAME: "test-stack",
-    api.STACK_RESOURCES: [TEST_WORKSPACE_RESOURCE, TEST_JOB_RESOURCE, TEST_DBFS_RESOURCE]
+    api.STACK_RESOURCES: [TEST_JOB_RESOURCE]
 }
 TEST_STATUS = {
     api.STACK_NAME: "test-stack",
-    api.STACK_RESOURCES: [TEST_WORKSPACE_RESOURCE, TEST_JOB_RESOURCE, TEST_DBFS_RESOURCE],
+    api.STACK_RESOURCES: [TEST_JOB_RESOURCE],
     api.STACK_DEPLOYED: []
 }
-
-TEST_LANGUAGE = 'PYTHON'
-TEST_FMT = 'SOURCE'
 
 
 @pytest.fixture()
@@ -167,7 +153,7 @@ class TestStackApi(object):
 
         stack_api.deploy_resource = mock.Mock(wraps=_deploy_resource)
         stack_api.download_resource = mock.Mock(wraps=_download_resource)
-        stack_api.deploy(config_path, True)
+        stack_api.deploy(config_path)
         assert os.getcwd() == initial_cwd  # Make sure current working directory didn't change
 
     def deploy_error_path(self, stack_api, tmpdir):
@@ -243,110 +229,5 @@ class TestStackApi(object):
         assert stack_api.jobs_client.get_job.call_count == 5
         assert stack_api.jobs_client.reset_job.call_count == 1
         assert stack_api.jobs_client.create_job.call_count == 2
-<<<<<<< HEAD
-=======
 
-    def test_deploy_workspace(self, stack_api, tmpdir):
-        """
-            Test Deploy workspace functionality
-        """
-
-        filepath = os.path.join(tmpdir.strpath, 'dev', 'job.py')
-        dirpath = os.path.join(tmpdir.strpath, 'directory')
-        os.makedirs(os.path.dirname(filepath))
-        with open(filepath, 'w+') as f:
-            f.write('print("hi")')
-        os.makedirs(dirpath)
-
-        file_workspace_path = '/Users/jobs.py'
-        dir_workspace_path = '/Users/directory'
-
-        def _get_status_json(path):
-            if path == file_workspace_path:
-                return {}
-            elif path == dir_workspace_path:
-                return {}
-            else:
-                # Raise an error if the workspace path isn't correct
-                raise Exception('Cant Find File')
-
-        stack_api.workspace_client.get_status_json = mock.Mock(wraps=_get_status_json)
-        stack_api.workspace_client.import_workspace = mock.MagicMock()
-        stack_api.workspace_client.import_workspace_dir = mock.MagicMock()
-        stack_api.workspace_client.mkdirs = mock.MagicMock()
-
-        file_properties = {'source_path': filepath, 'workspace_path': file_workspace_path}
-        dir_properties = {'source_path': dirpath, 'workspace_path': dir_workspace_path}
-        # Test property inference
-        stack_api.deploy_workspace('file', file_properties, overwrite=False)
-        assert stack_api.workspace_client.import_workspace.call_count == 1
-        assert stack_api.workspace_client.import_workspace_dir.call_count == 0
-        assert stack_api.workspace_client.mkdirs.call_count == 1
-        assert stack_api.workspace_client.import_workspace.call_args[0][0] == filepath
-        assert stack_api.workspace_client.import_workspace.call_args[0][1] == file_workspace_path
-        assert stack_api.workspace_client.import_workspace.call_args[0][2] == 'PYTHON'
-        assert stack_api.workspace_client.import_workspace.call_args[0][3] == 'SOURCE'
-        assert stack_api.workspace_client.import_workspace.call_args[0][4] is False
-
-        stack_api.deploy_workspace('directory', dir_properties, overwrite=False)
-        assert stack_api.workspace_client.import_workspace.call_count == 1
-        assert stack_api.workspace_client.import_workspace_dir.call_count == 1
-        assert stack_api.workspace_client.mkdirs.call_count == 1
-        assert stack_api.workspace_client.import_workspace_dir.call_args[0][0] == dirpath
-        assert stack_api.workspace_client.import_workspace_dir.call_args[0][1] == dir_workspace_path
-        assert stack_api.workspace_client.import_workspace_dir.call_args[0][2] is False
-
-        # Test property inference
-        file_properties['language'] = 'SCALA'
-        file_properties['format'] = 'HTML'
-        file_properties['object_type'] = 'NOTEBOOK'
-        # Test property inference
-        stack_api.deploy_workspace('file', file_properties, overwrite=True)
-        assert stack_api.workspace_client.import_workspace.call_count == 2
-        assert stack_api.workspace_client.import_workspace_dir.call_count == 1
-        assert stack_api.workspace_client.import_workspace.call_args[0][0] == filepath
-        assert stack_api.workspace_client.import_workspace.call_args[0][1] == file_workspace_path
-        assert stack_api.workspace_client.import_workspace.call_args[0][2] == 'SCALA'
-        assert stack_api.workspace_client.import_workspace.call_args[0][3] == 'HTML'
-        assert stack_api.workspace_client.import_workspace.call_args[0][4] is True
-
-    def test_deploy_dbfs(self, stack_api, tmpdir):
-        filepath = os.path.join(tmpdir.strpath, 'dev', 'job.sh')
-        dirpath = os.path.join(tmpdir.strpath, 'directory')
-        os.makedirs(os.path.dirname(filepath))
-        with open(filepath, 'w+') as f:
-            f.write('123')
-        os.makedirs(dirpath)
-
-        file_dbfs_path = 'dbfs:/tmp/jobs.sh'
-        dir_dbfs_path = 'dbfs:/tmp/directory'
-
-        def _get_status_json(dbfs_path):
-            if dbfs_path.absolute_path == file_dbfs_path:
-                return {}
-            elif dbfs_path.absolute_path == dir_dbfs_path:
-                return {}
-            else:
-                # Raise an error if the workspace path isn't correct
-                raise Exception('Cant Find File')
-
-        stack_api.dbfs_client.cp = mock.MagicMock()
-        stack_api.dbfs_client.get_status_json = mock.Mock(wraps=_get_status_json)
-
-        file_properties = {'source_path': filepath, 'dbfs_path': file_dbfs_path}
-        dir_properties = {'source_path': dirpath, 'dbfs_path': dir_dbfs_path}
-
-        stack_api.deploy_dbfs('file', file_properties, overwrite=True)
-        args, kwargs = stack_api.dbfs_client.cp.call_args
-        assert kwargs['overwrite'] is True
-        assert kwargs['src'] == filepath
-        assert kwargs['dst'] == file_dbfs_path
-
-        stack_api.deploy_dbfs('directory', dir_properties, overwrite=False)
-        args, kwargs = stack_api.dbfs_client.cp.call_args
-        assert kwargs['overwrite'] is False
-        assert kwargs['src'] == dirpath
-        assert kwargs['dst'] == dir_dbfs_path
-
-        assert stack_api.dbfs_client.cp.call_count == 2
->>>>>>> 1e18423a32369188f25d1da8a151a08ca3a18cc4
+    def test_deploy_resource(self):

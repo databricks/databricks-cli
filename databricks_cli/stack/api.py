@@ -30,19 +30,8 @@ import six
 import click
 
 from requests.exceptions import HTTPError
-
-<<<<<<< HEAD
 from databricks_cli.jobs.api import JobsApi
 from databricks_cli.version import version as CLI_VERSION
-=======
-from databricks_cli.dbfs.exceptions import LocalFileExistsException
-from databricks_cli.jobs.api import JobsApi
-from databricks_cli.workspace.api import WorkspaceApi
-from databricks_cli.dbfs.api import DbfsApi
-from databricks_cli.version import version as CLI_VERSION
-from databricks_cli.dbfs.dbfs_path import DbfsPath
-from databricks_cli.workspace.types import WorkspaceFormat, WorkspaceLanguage
->>>>>>> 1e18423a32369188f25d1da8a151a08ca3a18cc4
 from databricks_cli.configure.config import get_profile_from_context, get_config_for_profile
 from databricks_cli.stack.exceptions import ConfigError
 
@@ -54,14 +43,8 @@ MS_SEC = 1000
 # STACK_DIR = os.path.join(_home, 'databricks', 'stacks', 'beta')
 
 # Resource Types
-<<<<<<< HEAD
-JOBS_TYPE = 'job'
-=======
-WORKSPACE_TYPE = 'workspace'
 JOBS_TYPE = 'job'
 DBFS_TYPE = 'dbfs'
-CLUSTERS_TYPE = 'cluster'
->>>>>>> 1e18423a32369188f25d1da8a151a08ca3a18cc4
 
 # Config Outer Fields
 STACK_NAME = 'name'
@@ -81,11 +64,6 @@ RESOURCE_DEPLOY_OUTPUT = 'deploy_output'
 class StackApi(object):
     def __init__(self, api_client):
         self.jobs_client = JobsApi(api_client)
-<<<<<<< HEAD
-=======
-        self.workspace_client = WorkspaceApi(api_client)
-        self.dbfs_client = DbfsApi(api_client)
->>>>>>> 1e18423a32369188f25d1da8a151a08ca3a18cc4
         self.host = "host/"
         if click.get_current_context(silent=True):
             profile = get_profile_from_context()
@@ -167,12 +145,6 @@ class StackApi(object):
                 click.echo('Storing deploy status metadata to %s' % os.path.abspath(custom_path))
                 json.dump(data, f, indent=2)
 
-<<<<<<< HEAD
-=======
-    def _validate_source_path(self, source_path):
-        return os.path.abspath(source_path)
-
->>>>>>> 1e18423a32369188f25d1da8a151a08ca3a18cc4
     def deploy_job(self, resource_id, job_settings, physical_id=None):
         job_id = None
         print("Deploying job %s with settings: \n%s \n" % (resource_id, json.dumps(
@@ -211,71 +183,7 @@ class StackApi(object):
 
         return job_id, deploy_output
 
-<<<<<<< HEAD
-=======
-    def deploy_workspace(self, resource_id, resource_properties, physical_path=None,
-                         overwrite=False):
-        click.echo("Deploying workspace asset %s with properties \n%s" % (resource_id, json.dumps(
-            resource_properties, indent=2, separators=(',', ': '))))
-        try:
-            local_path = self._validate_source_path(resource_properties['source_path'])
-            workspace_path = resource_properties['workspace_path']
-        except KeyError as e:
-            raise ConfigError("%s doesn't exist in workspace resource properties" % str(e))
-
-        lang_fmt = WorkspaceLanguage.to_language_and_format(local_path)  # Guess language and format
-        language, fmt = None, None
-        if lang_fmt:
-            language, fmt = lang_fmt
-
-        if 'language' in resource_properties:
-            language = resource_properties['language']
-        if 'format' in resource_properties:
-            fmt = resource_properties['format']
-
-        object_type = "DIRECTORY" if os.path.isdir(local_path) else "NOTEBOOK"
-        if 'object_type' in resource_properties:
-            object_type = resource_properties['object_type']
-
-        click.echo('sync %s %s to %s' % (object_type, local_path, workspace_path))
-        if object_type == 'NOTEBOOK':
-            self.workspace_client.mkdirs(
-                os.path.dirname(workspace_path))  # Make directory in workspace if not exist
-            self.workspace_client.import_workspace(local_path, workspace_path, language, fmt,
-                                                   overwrite)
-        elif object_type == 'DIRECTORY':
-            self.workspace_client.import_workspace_dir(local_path, workspace_path, overwrite,
-                                                       exclude_hidden_files=True)
-        if physical_path and workspace_path != physical_path:
-            click.echo('Workspace asset %s had path changed from %s to %s' % (resource_id,
-                                                                              physical_path,
-                                                                              workspace_path))
-        deploy_output = self.workspace_client.get_status_json(workspace_path)
-
-        return workspace_path, deploy_output
-
-    def deploy_dbfs(self, resource_id, resource_properties, physical_path=None, overwrite=False):
-        click.echo("Deploying dbfs asset %s with properties \n%s" % (resource_id, json.dumps(
-            resource_properties, indent=2, separators=(',', ': '))))
-        try:
-            local_path = self._validate_source_path(resource_properties['source_path'])
-            dbfs_path = resource_properties['dbfs_path']
-        except KeyError as e:
-            raise ConfigError("%s doesn't exist in dbfs resource properties" % str(e))
-
-        self.dbfs_client.cp(recursive=True, overwrite=overwrite, src=local_path, dst=dbfs_path)
-
-        if physical_path and dbfs_path != physical_path:
-            click.echo('Workspace asset %s had path changed from %s to %s' % (resource_id,
-                                                                              physical_path,
-                                                                              dbfs_path))
-
-        deploy_output = self.dbfs_client.get_status_json(DbfsPath(dbfs_path))
-
-        return dbfs_path, deploy_output
-
->>>>>>> 1e18423a32369188f25d1da8a151a08ca3a18cc4
-    def deploy_resource(self, resource, overwrite):
+    def deploy_resource(self, resource):  # overwrite to be added
         try:
             resource_id = resource[RESOURCE_ID]
             resource_type = resource[RESOURCE_TYPE]
@@ -291,25 +199,6 @@ class StackApi(object):
             job_id, deploy_output = self.deploy_job(resource_id, resource_properties,
                                                     job_id)
             physical_id = {'job_id': job_id}
-
-<<<<<<< HEAD
-=======
-        elif resource_type == WORKSPACE_TYPE:
-            physical_path = physical_id['path'] \
-                if physical_id and 'path' in physical_id else None
-            physical_path, deploy_output = self.deploy_workspace(resource_id,
-                                                                 resource_properties,
-                                                                 physical_path, overwrite)
-            physical_id = {'path': physical_path}
-        elif resource_type == DBFS_TYPE:
-            physical_path = physical_id['path'] \
-                if physical_id and 'path' in physical_id else None
-            physical_path, deploy_output = self.deploy_dbfs(resource_id,
-                                                            resource_properties,
-                                                            physical_path, overwrite)
-            physical_id = {'path': physical_path}
-
->>>>>>> 1e18423a32369188f25d1da8a151a08ca3a18cc4
         else:
             click.echo("Resource type not found")
             return None
@@ -323,7 +212,7 @@ class StackApi(object):
         resource_deploy_info['deploy_output'] = deploy_output
         return resource_deploy_info
 
-    def deploy(self, filename, overwrite, save_status_path=None):
+    def deploy(self, filename, save_status_path=None):  # overwrite to be added
         config_filepath = os.path.abspath(filename)
         config_dir = os.path.dirname(config_filepath)
         cli_cwd = os.getcwd()
@@ -345,95 +234,12 @@ class StackApi(object):
             for resource in parsed_conf['resources']:
                 click.echo()
                 click.echo("Deploying resource")
-                deploy_status = self.deploy_resource(resource, overwrite)
+                deploy_status = self.deploy_resource(resource)  # overwrite to be added
                 if deploy_status:
                     deployed_resources.append(deploy_status)
             deploy_metadata['deployed'] = deployed_resources
             self._store_deploy_metadata(config_filepath, deploy_metadata, save_status_path)
             os.chdir(cli_cwd)
         except Exception:
-<<<<<<< HEAD
-            # Still changed the working directory even when
-=======
-            os.chdir(cli_cwd)
-            raise
-
-    def download_workspace(self, resource_id, resource_properties, physical_path, overwrite):
-        click.echo("Downloading workspace asset %s with properties \n%s" % (resource_id, json.dumps(
-            resource_properties, indent=2, separators=(',', ': '))))
-        try:
-            local_path = self._validate_source_path(resource_properties['source_path'])
-            workspace_path = resource_properties['workspace_path']
-        except KeyError as e:
-            raise ConfigError("%s doesn't exist in resource config" % str(e))
-
-        if physical_path != workspace_path:
-            click.echo("Change in workspace path from deployment")
-
-        if 'format' in resource_properties:
-            fmt = resource_properties['format']
-        else:
-            fmt = WorkspaceFormat.SOURCE
-
-        object_type = "DIRECTORY" if os.path.isdir(local_path) else "NOTEBOOK"
-        if 'object_type' in resource_properties:
-            object_type = resource_properties['object_type']
-
-        click.echo('sync %s %s to %s' % (object_type, local_path, workspace_path))
-        if object_type == 'NOTEBOOK':
-            try:
-                self.workspace_client.export_workspace(workspace_path, local_path, fmt, overwrite)
-            except LocalFileExistsException:
-                click.echo('{} already exists locally as {}. Skip.'.format(workspace_path,
-                                                                           local_path))
-        elif object_type == 'DIRECTORY':
-            self.workspace_client.export_workspace_dir(workspace_path, local_path, overwrite)
-
-    def download_dbfs(self, resource_id, resource_properties, physical_path, overwrite=False):
-        click.echo("Downloading dbfs asset %s with properties \n%s" % (resource_id, json.dumps(
-            resource_properties, indent=2, separators=(',', ': '))))
-        try:
-            local_path = self._validate_source_path(resource_properties['source_path'])
-            dbfs_path = resource_properties['dbfs_path']
-        except KeyError as e:
-            raise ConfigError("%s doesn't exist in dbfs resource properties" % str(e))
-
-        if physical_path != dbfs_path:
-            click.echo("Change in dbfs path from deployment")
-
-        self.dbfs_client.cp(recursive=True, overwrite=overwrite, src=dbfs_path, dst=local_path)
-
-        click.echo('sync %s to %s' % (local_path, dbfs_path))
-
-    def download_resource(self, resource, overwrite):
-        try:
-            resource_id = resource[RESOURCE_ID]
-            resource_type = resource[RESOURCE_TYPE]
-            resource_properties = resource[RESOURCE_PROPERTIES]
-        except KeyError as e:
-            raise ConfigError("%s doesn't exist in resource config" % str(e))
-
-        # Deployment
-        physical_id = self._get_deployed_resource(resource_id, resource_type)
-        physical_path = physical_id['path'] if 'path' in physical_id else None
-        if resource_type == WORKSPACE_TYPE:
-            self.download_workspace(resource_id, resource_properties, physical_path, overwrite)
-        elif resource_type == DBFS_TYPE:
-            self.download_dbfs(resource_id, resource_properties, physical_path, overwrite)
-
-    def download(self, filename, overwrite):
-        config_dir = os.path.dirname(os.path.abspath(filename))
-        cli_cwd = os.getcwd()
-        parsed_conf = self._parse_config_file(config_dir)
-        os.chdir(config_dir)
-        try:
-            for resource in parsed_conf[STACK_RESOURCES]:
-                self.download_resource(resource, overwrite)
-            os.chdir(cli_cwd)
-        except KeyError as e:
-            os.chdir(cli_cwd)
-            raise ConfigError("%s doesn't exist in config" % str(e))
-        except Exception:
->>>>>>> 1e18423a32369188f25d1da8a151a08ca3a18cc4
             os.chdir(cli_cwd)
             raise

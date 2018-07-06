@@ -34,46 +34,20 @@ DEBUG_MODE = True
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Deploy stack given a JSON configuration of the stack')
 @click.argument('config_path', type=click.Path(exists=True), required=True)
-<<<<<<< HEAD
-=======
-@click.option('--overwrite', '-o', is_flag=True, help='Include to overwrite existing notebooks in '
-                                                      'the workspace.')
->>>>>>> 1e18423a32369188f25d1da8a151a08ca3a18cc4
 @click.option('--save-status', '-s', help='Path of deploy status JSON file at. Also a custom path '
               'to save the deploy status JSON file at.')
 @profile_option
 @eat_exceptions
 @provide_api_client
-def deploy(api_client, config_path, overwrite, save_status):
+def deploy(api_client, config_path, save_status):
     """
     Deploy a stack to the databricks workspace given a JSON stack configuration template.
     """
 
     print('Deploying stack at: ' + config_path)
-    StackApi(api_client).deploy(config_path, overwrite, save_status)
+    StackApi(api_client).deploy(config_path, save_status)
     print('#' * 80 + '\n')
 
-
-<<<<<<< HEAD
-=======
-@click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Download the associated resources associated with a databricks '
-                          'resource stack.')
-@click.argument('config_path', type=click.Path(exists=True), required=True)
-@click.option('--overwrite', '-o', is_flag=True, help='Include to overwrite the existing notebook.')
-@profile_option
-@eat_exceptions
-@provide_api_client
-def download(api_client, config_path, overwrite):
-    """
-    Downloads the notebooks defined in the stack.
-    """
-    print('Downloading stack at: ' + config_path)
-    StackApi(api_client).download(config_path, overwrite)
-    print('#' * 80 + '\n')
-
-
->>>>>>> 1e18423a32369188f25d1da8a151a08ca3a18cc4
 @click.group(context_settings=CONTEXT_SETTINGS,
              short_help='Utility to deploy and download Databricks resource stacks.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
@@ -87,7 +61,3 @@ def stack_group():
 
 
 stack_group.add_command(deploy, name='deploy')
-<<<<<<< HEAD
-=======
-stack_group.add_command(download, name='download')
->>>>>>> 1e18423a32369188f25d1da8a151a08ca3a18cc4
