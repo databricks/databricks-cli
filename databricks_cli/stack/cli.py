@@ -48,6 +48,7 @@ def deploy(api_client, config_path, save_status):
     StackApi(api_client).deploy(config_path, save_status)
     print('#' * 80 + '\n')
 
+
 @click.group(context_settings=CONTEXT_SETTINGS,
              short_help='Utility to deploy and download Databricks resource stacks.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,

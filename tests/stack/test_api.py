@@ -140,19 +140,12 @@ class TestStackApi(object):
             json.dump(TEST_STACK, f)
         initial_cwd = os.getcwd()
 
-        def _deploy_resource(resource, overwrite):
-            assert resource is not None # just to pass lint
-            assert overwrite # Just to pass lint
+        def _deploy_resource(resource):
+            assert resource is not None  # just to pass lint
             assert os.getcwd() == config_working_dir
             return {}
 
-        def _download_resource(resource, overwrite):
-            assert resource is not None  # just to pass lint
-            assert overwrite  # Just to pass lint
-            assert os.getcwd() == config_working_dir
-
         stack_api.deploy_resource = mock.Mock(wraps=_deploy_resource)
-        stack_api.download_resource = mock.Mock(wraps=_download_resource)
         stack_api.deploy(config_path)
         assert os.getcwd() == initial_cwd  # Make sure current working directory didn't change
 
@@ -229,5 +222,3 @@ class TestStackApi(object):
         assert stack_api.jobs_client.get_job.call_count == 5
         assert stack_api.jobs_client.reset_job.call_count == 1
         assert stack_api.jobs_client.create_job.call_count == 2
-
-    def test_deploy_resource(self):
