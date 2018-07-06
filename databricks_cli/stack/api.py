@@ -38,13 +38,13 @@ from databricks_cli.stack.exceptions import ConfigError
 DEBUG_MODE = False
 _home = os.path.expanduser('~')
 MS_SEC = 1000
+STACK_STATUS_INSERT = 'deployed'
 
 # Stack Deployment Status Folder- WIP
 # STACK_DIR = os.path.join(_home, 'databricks', 'stacks', 'beta')
 
 # Resource Types
 JOBS_TYPE = 'job'
-DBFS_TYPE = 'dbfs'
 
 # Config Outer Fields
 STACK_NAME = 'name'
@@ -59,6 +59,7 @@ RESOURCE_PROPERTIES = 'properties'
 # Deployed Resource Fields
 RESOURCE_PHYSICAL_ID = 'physical_id'
 RESOURCE_DEPLOY_OUTPUT = 'deploy_output'
+RESOURCE_DEPLOY_TIMESTAMP = 'timestamp'
 
 
 class StackApi(object):
@@ -82,7 +83,7 @@ class StackApi(object):
 
     def _generate_stack_status_path(self, stack_path):
         stack_path_split = stack_path.split('.')
-        stack_path_split.insert(-1, 'deployed')
+        stack_path_split.insert(-1, STACK_STATUS_INSERT)
         return '.'.join(stack_path_split)
 
     def _load_deploy_metadata(self, stack_path, save_path=None):
@@ -200,16 +201,16 @@ class StackApi(object):
                                                     job_id)
             physical_id = {'job_id': job_id}
         else:
-            click.echo("Resource type not found")
-            return None
+            raise ConfigError('Resource type %s not found')
 
         resource_deploy_info = {RESOURCE_ID: resource_id, RESOURCE_TYPE: resource_type}
         if six.PY3:
-            resource_deploy_info['timestamp'] = datetime.now().timestamp()
+            resource_deploy_info[RESOURCE_DEPLOY_TIMESTAMP] = datetime.now().timestamp()
         elif six.PY2:
-            resource_deploy_info['timestamp'] = time.mktime(datetime.now().timetuple())
-        resource_deploy_info['physical_id'] = physical_id
-        resource_deploy_info['deploy_output'] = deploy_output
+            resource_deploy_info[RESOURCE_DEPLOY_TIMESTAMP] = \
+                time.mktime(datetime.now().timetuple())
+        resource_deploy_info[RESOURCE_PHYSICAL_ID] = physical_id
+        resource_deploy_info[RESOURCE_DEPLOY_OUTPUT] = deploy_output
         return resource_deploy_info
 
     def deploy(self, filename, save_status_path=None):  # overwrite to be added
@@ -225,19 +226,19 @@ class StackApi(object):
 
             self._load_deploy_metadata(config_filepath, save_status_path)
 
-            deploy_metadata = {'name': stack_name, 'cli_version': CLI_VERSION}
+            deploy_metadata = {STACK_NAME: stack_name, 'cli_version': CLI_VERSION}
             click.echo('Deploying stack %s' % stack_name)
-            deploy_metadata['resources'] = parsed_conf['resources']
+            deploy_metadata[STACK_RESOURCES] = parsed_conf[STACK_RESOURCES]
             deployed_resources = []
-            if 'resources' not in parsed_conf:
-                raise ConfigError("'resources' not in configuration")
-            for resource in parsed_conf['resources']:
+            if STACK_RESOURCES not in parsed_conf:
+                raise ConfigError("'%s' not in configuration" % STACK_RESOURCES)
+            for resource in parsed_conf[STACK_RESOURCES]:
                 click.echo()
                 click.echo("Deploying resource")
                 deploy_status = self.deploy_resource(resource)  # overwrite to be added
                 if deploy_status:
                     deployed_resources.append(deploy_status)
-            deploy_metadata['deployed'] = deployed_resources
+            deploy_metadata[STACK_DEPLOYED] = deployed_resources
             self._store_deploy_metadata(config_filepath, deploy_metadata, save_status_path)
             os.chdir(cli_cwd)
         except Exception:

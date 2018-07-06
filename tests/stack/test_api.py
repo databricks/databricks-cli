@@ -29,6 +29,7 @@ from requests.exceptions import HTTPError
 import pytest
 
 import databricks_cli.stack.api as api
+from databricks_cli.stack.exceptions import ConfigError
 
 TEST_STACK_PATH = 'stack/stack.json'
 TEST_JOB_SETTINGS = {
@@ -39,7 +40,7 @@ TEST_JOB_ALT_SETTINGS = {
 }
 TEST_JOB_RESOURCE = {
     api.RESOURCE_ID: "job 1",
-    api.RESOURCE_TYPE: "job",
+    api.RESOURCE_TYPE: api.JOBS_TYPE,
     api.RESOURCE_PROPERTIES: TEST_JOB_SETTINGS
 }
 TEST_STACK = {
@@ -222,3 +223,36 @@ class TestStackApi(object):
         assert stack_api.jobs_client.get_job.call_count == 5
         assert stack_api.jobs_client.reset_job.call_count == 1
         assert stack_api.jobs_client.create_job.call_count == 2
+
+    def test_deploy_resource(self, stack_api):
+        stack_api.jobs_client.deploy_job = mock.MagicMock()
+        stack_api.jobs_client.deploy_job.return_value = (12345, {'job_id': 12345})
+
+        deploy_info = stack_api.deploy_resource(TEST_JOB_RESOURCE)
+        assert api.RESOURCE_ID in deploy_info
+        assert api.RESOURCE_PHYSICAL_ID in deploy_info
+        assert api.RESOURCE_DEPLOY_OUTPUT in deploy_info
+        assert api.RESOURCE_TYPE in deploy_info
+
+        # If there is a nonexistent type, just return None and continue on with deployment
+        resource_badtype = {
+            api.RESOURCE_TYPE: 'nonexist',
+            api.RESOURCE_ID: 'test',
+            api.RESOURCE_PROPERTIES: {'test': 'test'}
+        }
+        with pytest.raises(ConfigError):
+            stack_api.deploy_resource(resource_badtype)
+
+        # Missing a key, raise config error
+        d = TEST_JOB_RESOURCE.copy()
+        with pytest.raises(ConfigError):
+            d.pop(api.RESOURCE_TYPE)
+            stack_api.deploy_resource(d)
+        d = TEST_JOB_RESOURCE.copy()
+        with pytest.raises(ConfigError):
+            d.pop(api.RESOURCE_ID)
+            stack_api.deploy_resource(d)
+        d = TEST_JOB_RESOURCE.copy()
+        with pytest.raises(ConfigError):
+            d.pop(api.RESOURCE_PROPERTIES)
+            stack_api.deploy_resource(d)
