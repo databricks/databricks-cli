@@ -39,6 +39,11 @@ class JobsApi(object):
     def get_job(self, job_id):
         return self.client.get_job(job_id)
 
+    def get_jobs_by_name(self, full_job_name):
+        jobs = self.client.list_jobs()['jobs']
+        result = list(filter(lambda job: job['settings']['name'] == full_job_name, jobs))
+        return result
+
     def reset_job(self, json):
         return self.client.client.perform_query('POST', '/jobs/reset', data=json)
 
