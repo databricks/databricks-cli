@@ -83,6 +83,9 @@ class WorkspaceApi(object):
     def get_status(self, workspace_path):
         return WorkspaceFileInfo.from_json(self.client.get_status(workspace_path))
 
+    def get_status_json(self, workspace_path):
+        return self.client.get_status(workspace_path)
+
     def list_objects(self, workspace_path):
         response = self.client.list(workspace_path)
         # This case is necessary when we list an empty dir in the workspace.

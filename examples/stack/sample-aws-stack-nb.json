@@ -1,0 +1,36 @@
+{
+  "name": "cli-test-stack",
+  "resources": [
+    {
+      "id": "example-notebook",
+      "type": "workspace",
+      "properties": {
+        "source_path": "dev/notebook1.py",
+        "workspace_path": "/Shared/stack-cli-examples/dev/notebook",
+        "language": "PYTHON",
+        "format": "SOURCE",
+        "object_type": "NOTEBOOK"
+      }
+    },
+    {
+      "id": "example-job",
+      "type": "job",
+      "properties": {
+        "name": "Stack CLI Example AWS Notebook Job",
+        "new_cluster": {
+          "spark_version": "4.0.x-scala2.11",
+          "node_type_id": "r3.xlarge",
+          "aws_attributes": {
+            "availability": "SPOT"
+          },
+          "num_workers": 3
+        },
+        "timeout_seconds": 7200,
+        "max_retries": 1,
+        "notebook_task": {
+          "notebook_path": "/Shared/stack-cli-examples/dev/notebook"
+        }
+      }
+    }
+  ]
+}

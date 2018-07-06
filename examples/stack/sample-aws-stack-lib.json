@@ -1,0 +1,38 @@
+{
+  "name": "cli-test-stack-3",
+  "resources": [
+    {
+      "id": "example-library",
+      "type": "dbfs",
+      "properties": {
+        "source_path": "lib/example_lib.jar",
+        "dbfs_path": "dbfs:/tmp/stack-cli-examples/example_lib.jar"
+      }
+    },
+    {
+      "id": "example-job",
+      "type": "job",
+      "properties": {
+        "name": "Stack CLI Example AWS Library Job",
+        "type": "job",
+        "libraries": [
+          {
+            "jar": "dbfs:/tmp/stack-cli-examples/example_lib.jar"
+          }
+        ],
+        "new_cluster": {
+          "spark_version": "4.0.x-scala2.11",
+          "node_type_id": "r3.xlarge",
+          "aws_attributes": {
+            "availability": "SPOT"
+          },
+          "num_workers": 0
+        },
+        "spark_jar_task": {
+          "main_class_name": "com.databricks.example.cli.HelloWorld"
+        }
+      }
+
+    }
+  ]
+}
