@@ -40,7 +40,7 @@ class JobsApi(object):
         return self.client.get_job(job_id)
 
     def get_jobs_by_name(self, full_job_name):
-        jobs = self.client.list_jobs()['jobs']
+        jobs = self.list_jobs()['jobs']
         result = list(filter(lambda job: job['settings']['name'] == full_job_name, jobs))
         return result
 
