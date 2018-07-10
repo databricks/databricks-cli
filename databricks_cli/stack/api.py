@@ -74,7 +74,12 @@ class StackApi(object):
         self.deployed_resource_config = {}
 
     def _parse_config_file(self, filename):
-        """Parse the json config"""
+        """
+        Parse the json stack configuration template to a readable dict format.
+
+        :param filename: File path of the JSON stack configuration template.
+        :return: dict of parsed JSON stack config template.
+        """
         parsed_conf = {}
         with open(filename, 'r') as f:
             parsed_conf = json.load(f)
@@ -82,11 +87,36 @@ class StackApi(object):
         return parsed_conf
 
     def _generate_stack_status_path(self, stack_path):
+        """
+        Given a path to the stack configuration template JSON file, generates a path to where the
+        deployment status JSON will be stored after successful deployment of the stack.
+
+        :param stack_path: Path to the stack config template JSON file
+        :return: The path to the stack status file.
+
+        >>> self._generate_stack_status_path('./stack.json')
+        './stack.deployed.json'
+        """
         stack_path_split = stack_path.split('.')
         stack_path_split.insert(-1, STACK_STATUS_INSERT)
         return '.'.join(stack_path_split)
 
-    def _load_deploy_metadata(self, stack_path, save_path=None):
+    def _load_deploy_metadata(self, stack_path):
+        """
+        Loads the deployment status metadata for a stack given a path to the stack configuration
+        template JSON file. Looks for the default local stack status path generated from
+        _generate_stack_status_path.
+
+        When loaded, the stack resource configurations from the past deployment will be loaded into
+        self.deployed_resource_config, using the RESOURCE_ID field of each resource as a key in the
+        dictionary.
+        The output from the databricks server of the deployment of each resource will also be
+        loaded in self.deployed_resources in the same way.
+
+        :param stack_path: path to JSON stack configuration template.
+        :return: The dict of parsed JSON of the stack deployment status.
+        If path doesn't exist, will return an empty dict.
+        """
         parsed_conf = {}
         default_status_path = self._generate_stack_status_path(stack_path)
         try:
@@ -94,11 +124,8 @@ class StackApi(object):
                 with open(default_status_path, 'r') as f:
                     parsed_conf = json.load(f)
                 click.echo("Using deployment status file at %s" % default_status_path)
-            elif save_path and os.path.exists(save_path):
-                with open(save_path, 'r') as f:
-                    parsed_conf = json.load(f)
-                click.echo("Using deployment status file at %s" % stack_path)
         except ValueError:
+            # Handles a bad JSON read. Will just pass and parsed_conf will be empty dict.
             pass
 
         if STACK_RESOURCES in parsed_conf:
@@ -129,60 +156,97 @@ class StackApi(object):
             return deployed_physical_id
         return None
 
-    def _store_deploy_metadata(self, stack_path, data, custom_path=None):
+    def _store_deploy_metadata(self, stack_path, data):
+        """
+        Stores data to the path of the
+
+        :param stack_path:
+        :param data:
+        :return:
+        """
         stack_status_filepath = self._generate_stack_status_path(stack_path)
         stack_file_folder = os.path.dirname(stack_status_filepath)
         if not os.path.exists(stack_file_folder):
             os.makedirs(stack_file_folder)
         with open(stack_status_filepath, 'w+') as f:
+            json.dump(data, f, indent=2, sort_keys=True)
             click.echo('Storing deploy status metadata to %s' % stack_status_filepath)
-            json.dump(data, f, indent=2)
 
-        if custom_path:
-            custom_path_folder = os.path.dirname(custom_path)
-            if not os.path.exists(custom_path_folder):
-                os.makedirs(custom_path_folder)
-            with open(custom_path, 'w+') as f:
-                click.echo('Storing deploy status metadata to %s' % os.path.abspath(custom_path))
-                json.dump(data, f, indent=2)
+    def create_job(self, job_settings):
+        """
+        Given settings of the job in job_settings, create a new job. For purposes of idempotency
+        and to reduce leaked resources in alpha versions of stack deployment, if a job exists
+        with the same name, that job will be updated. If multiple jobs are found with the same name,
+        this is dangerous and the deployment will stop.
 
-    def deploy_job(self, resource_id, job_settings, physical_id=None):
-        job_id = None
-        print("Deploying job %s with settings: \n%s \n" % (resource_id, json.dumps(
-            job_settings, indent=2, separators=(',', ': '))))
-
-        if physical_id:  # job exists
-            job_id = physical_id
-        elif 'name' in job_settings:
+        :param job_settings:
+        :return: job_id, Physical ID of job on Databricks server.
+        """
+        if 'name' in job_settings:
             jobs_same_name = self.jobs_client.get_jobs_by_name(job_settings['name'])
-            if jobs_same_name:
-                creator_name = jobs_same_name[0]['creator_user_name']
-                timestamp = jobs_same_name[0]['created_time'] / MS_SEC
+            if len(jobs_same_name) == 1:
+                first_job = jobs_same_name[0]
+                creator_name = first_job['creator_user_name']
+                timestamp = first_job['created_time'] / MS_SEC
                 date_created = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
                 click.echo('Warning: Job exists with same name created by %s on %s. Job will '
                            'be overwritten' % (creator_name, date_created))
-                job_id = jobs_same_name[0]['job_id']
-
-        if job_id:
-            try:
-                # Check if persisted job still exists, otherwise create new job.
-                self.jobs_client.get_job(job_id)
-            except HTTPError:
-                job_id = None
-
-        if job_id:
-            click.echo("Updating Job: %s" % resource_id)
-            self.jobs_client.reset_job({'job_id': job_id, 'new_settings': job_settings})
-            click.echo("Link: %s#job/%s" % (self.host, str(job_id)))
+                return self.update_job(job_settings, first_job['job_id'])
+            elif len(jobs_same_name) > 1:
+                # Dangerous, raise error
+                raise ConfigError('Multiple jobs with the same name already exist, aborting job'
+                                  'deployment')
+            else:
+                click.echo("Creating new job")
         else:
-            click.echo("Creating Job: %s" % resource_id)
-            job_id = self.jobs_client.create_job(job_settings)['job_id']
-            click.echo("%s Created with ID %s. Link: %s#job/%s" % (
-                resource_id, str(job_id), self.host, str(job_id)))
+            click.echo('Warning: Creating untitled job.')
+        job_id = self.jobs_client.create_job(job_settings)['job_id']
+        return job_id
 
+    def update_job(self, job_settings, job_id):
+        """
+
+        :param job_settings:
+        :param job_id:
+        :return:
+        """
+
+        # Check if persisted job still exists, otherwise create new job.
+        try:
+            self.jobs_client.get_job(job_id)
+        except HTTPError:
+            return self.create_job(job_settings)
+
+        click.echo("Updating Job")
+        self.jobs_client.reset_job({'job_id': job_id, 'new_settings': job_settings})
+        return job_id
+
+    def deploy_job(self, resource_id, job_settings, physical_id=None):
+        """
+        Deploys a job resource by either creating a job if the job isn't kept track of through
+        the physical_id of the job or updating an existing job. The job is created or updated using
+        the the settings specified in the inputted job_settings.
+
+        :param resource_id: The stack-internal resource ID of the job.
+        :param job_settings: A dict of the Databricks JobSettings data structure
+        :param physical_id: A dict object containing 'job_id' field of job identifier in Databricks
+        server
+
+        :return: tuple of (job_id, deploy_output), where job_id
+        """
+        print("Deploying job %s with settings: \n%s \n" % (resource_id, json.dumps(
+            job_settings, indent=2, separators=(',', ': '))))
+
+        if physical_id and 'job_id' in physical_id:
+            job_id = self.update_job(job_settings, physical_id['job_id'])
+        else:
+            job_id = self.create_job(job_settings)
+
+        job_link = "%s#job/%s" % (self.host, str(job_id))
+        click.echo("Job Link: %s" % job_link)
+        physical_id = {'job_id': job_id, "link": job_link}
         deploy_output = self.jobs_client.get_job(job_id)
-
-        return job_id, deploy_output
+        return physical_id, deploy_output
 
     def deploy_resource(self, resource):  # overwrite to be added
         try:
@@ -196,10 +260,8 @@ class StackApi(object):
         physical_id = self._get_deployed_resource(resource_id, resource_type)
 
         if resource_type == JOBS_TYPE:
-            job_id = physical_id['job_id'] if physical_id and 'job_id' in physical_id else None
-            job_id, deploy_output = self.deploy_job(resource_id, resource_properties,
-                                                    job_id)
-            physical_id = {'job_id': job_id}
+            physical_id, deploy_output = self.deploy_job(resource_id, resource_properties,
+                                                         physical_id)
         else:
             raise ConfigError('Resource type %s not found')
 
@@ -213,18 +275,16 @@ class StackApi(object):
         resource_deploy_info[RESOURCE_DEPLOY_OUTPUT] = deploy_output
         return resource_deploy_info
 
-    def deploy(self, filename, save_status_path=None):  # overwrite to be added
+    def deploy(self, filename):  # overwrite to be added
         config_filepath = os.path.abspath(filename)
         config_dir = os.path.dirname(config_filepath)
         cli_cwd = os.getcwd()
-        if save_status_path:
-            save_status_path = os.path.abspath(save_status_path)
         os.chdir(config_dir)  # Switch current working directory to where json is stored
         try:
             parsed_conf = self._parse_config_file(filename)
             stack_name = parsed_conf['name'] if 'name' in parsed_conf else None
 
-            self._load_deploy_metadata(config_filepath, save_status_path)
+            self._load_deploy_metadata(config_filepath)
 
             deploy_metadata = {STACK_NAME: stack_name, 'cli_version': CLI_VERSION}
             click.echo('Deploying stack %s' % stack_name)
@@ -239,8 +299,9 @@ class StackApi(object):
                 if deploy_status:
                     deployed_resources.append(deploy_status)
             deploy_metadata[STACK_DEPLOYED] = deployed_resources
-            self._store_deploy_metadata(config_filepath, deploy_metadata, save_status_path)
+            self._store_deploy_metadata(config_filepath, deploy_metadata)
             os.chdir(cli_cwd)
         except Exception:
+            # For any exception during deployment, set cwd back to what it was.
             os.chdir(cli_cwd)
             raise

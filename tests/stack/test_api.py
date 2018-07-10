@@ -96,16 +96,6 @@ class TestStackApi(object):
         assert all(resource[api.RESOURCE_ID] in stack_api.deployed_resources
                    for resource in TEST_STATUS[api.STACK_DEPLOYED])
 
-        # save_path should be an alternate to stack_path but precedence fgoes to stack_path
-        alt_status_path = os.path.join(tmpdir.strpath, 'status.json')
-        with open(alt_status_path, 'w+') as f:
-            json.dump({}, f)
-        status = stack_api._load_deploy_metadata(stack_path=config_path, save_path=alt_status_path)
-        assert status == TEST_STATUS
-        os.remove(status_path)
-        status = stack_api._load_deploy_metadata(stack_path=config_path, save_path=alt_status_path)
-        assert status == {}
-
     def test_default_status_path(self, stack_api, tmpdir):
         config_path = os.path.join(tmpdir.strpath, 'test.json')
         expected_status_path = os.path.join(tmpdir.strpath, 'test.deployed.json')
@@ -120,16 +110,12 @@ class TestStackApi(object):
     def test_store_status(self, stack_api, tmpdir):
         config_path = os.path.join(tmpdir.strpath, 'test.json')
         default_path = os.path.join(tmpdir.strpath, 'test.deployed.json')
-        custom_path = os.path.join(tmpdir.strpath, 'status.json')
         test_data = {'test': 'test'}
-        stack_api._store_deploy_metadata(config_path, test_data, custom_path)
+        stack_api._store_deploy_metadata(config_path, test_data)
 
         status = stack_api._load_deploy_metadata(config_path)
         assert status == test_data
-
-        os.remove(default_path)
-        status = stack_api._load_deploy_metadata(config_path, custom_path)
-        assert status == test_data
+        assert os.path.exists(default_path)
 
     def test_relative_paths(self, stack_api, tmpdir):
         """
@@ -204,7 +190,8 @@ class TestStackApi(object):
         # Deploy New job
         res_physical_id, res_deploy_output = stack_api.deploy_job('test job', TEST_JOB_SETTINGS)
 
-        assert res_physical_id == job_physical_id
+        assert 'job_id' in res_physical_id
+        assert res_physical_id['job_id'] == job_physical_id
         assert res_deploy_output == job_deploy_output
 
         # Updating job
@@ -212,7 +199,8 @@ class TestStackApi(object):
         res_physical_id, res_deploy_output = stack_api.deploy_job('test job', TEST_JOB_SETTINGS,
                                                                   res_physical_id)
         assert res_deploy_output == job_deploy_output
-        assert res_physical_id == job_physical_id
+        assert 'job_id' in res_physical_id
+        assert res_physical_id['job_id'] == job_physical_id
 
         # Try to update job that doesn't exist anymore
         job_physical_id = 123456
@@ -220,7 +208,8 @@ class TestStackApi(object):
         res_physical_id, res_deploy_output = stack_api.deploy_job('test job', TEST_JOB_SETTINGS,
                                                                   res_physical_id)
         assert res_deploy_output == job_deploy_output
-        assert res_physical_id == job_physical_id
+        assert 'job_id' in res_physical_id
+        assert res_physical_id['job_id'] == job_physical_id
 
         assert stack_api.jobs_client.get_job.call_count == 5
         assert stack_api.jobs_client.reset_job.call_count == 1

@@ -34,18 +34,16 @@ DEBUG_MODE = True
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Deploy stack given a JSON configuration of the stack')
 @click.argument('config_path', type=click.Path(exists=True), required=True)
-@click.option('--save-status', '-s', help='Path of deploy status JSON file at. Also a custom path '
-              'to save the deploy status JSON file at.')
 @profile_option
 @eat_exceptions
 @provide_api_client
-def deploy(api_client, config_path, save_status):
+def deploy(api_client, config_path):
     """
     Deploy a stack to the databricks workspace given a JSON stack configuration template.
     """
 
     click.echo('Deploying stack at: ' + config_path)
-    StackApi(api_client).deploy(config_path, save_status)
+    StackApi(api_client).deploy(config_path)
     click.echo('#' * 80 + '\n')
 
 
