@@ -22,5 +22,5 @@
 # limitations under the License.
 
 
-class ConfigError(Exception):
+class StackError(Exception):
     pass

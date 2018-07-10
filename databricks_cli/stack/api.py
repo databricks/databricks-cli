@@ -33,7 +33,7 @@ from requests.exceptions import HTTPError
 from databricks_cli.jobs.api import JobsApi
 from databricks_cli.version import version as CLI_VERSION
 from databricks_cli.configure.config import get_profile_from_context, get_config_for_profile
-from databricks_cli.stack.exceptions import ConfigError
+from databricks_cli.stack.exceptions import StackError
 
 DEBUG_MODE = False
 _home = os.path.expanduser('~')
@@ -158,11 +158,13 @@ class StackApi(object):
 
     def _store_deploy_metadata(self, stack_path, data):
         """
-        Stores data to the path of the
+        Stores status data related to stack deployment given the path to the stack configuration
+        template. The status JSON file is stored to the default path generated from
+        self._generate_stack_status_path.
 
-        :param stack_path:
-        :param data:
-        :return:
+        :param stack_path: Path to the JSON configuration template of the stack.
+        :param data: Given status metadata to store.
+        :return: None
         """
         stack_status_filepath = self._generate_stack_status_path(stack_path)
         stack_file_folder = os.path.dirname(stack_status_filepath)
@@ -194,8 +196,8 @@ class StackApi(object):
                 return self.update_job(job_settings, first_job['job_id'])
             elif len(jobs_same_name) > 1:
                 # Dangerous, raise error
-                raise ConfigError('Multiple jobs with the same name already exist, aborting job'
-                                  'deployment')
+                raise StackError('Multiple jobs with the same name already exist, aborting job'
+                                 ' resource deployment')
             else:
                 click.echo("Creating new job")
         else:
@@ -205,10 +207,10 @@ class StackApi(object):
 
     def update_job(self, job_settings, job_id):
         """
-
-        :param job_settings:
-        :param job_id:
-        :return:
+        Given job settings
+        :param job_settings: job settings to update the job with.
+        :param job_id: physical id of job in databricks server.
+        :return: job_id-
         """
 
         # Check if persisted job still exists, otherwise create new job.
@@ -232,10 +234,10 @@ class StackApi(object):
         :param physical_id: A dict object containing 'job_id' field of job identifier in Databricks
         server
 
-        :return: tuple of (job_id, deploy_output), where job_id
+        :return: tuple of (physical_id, deploy_output), where physical_id contains
         """
-        print("Deploying job %s with settings: \n%s \n" % (resource_id, json.dumps(
-            job_settings, indent=2, separators=(',', ': '))))
+        click.echo("Deploying job '%s' with settings: \n%s \n" % (resource_id, json.dumps(
+            job_settings, indent=2, separators=(',', ': '))), nl=False)
 
         if physical_id and 'job_id' in physical_id:
             job_id = self.update_job(job_settings, physical_id['job_id'])
@@ -249,12 +251,22 @@ class StackApi(object):
         return physical_id, deploy_output
 
     def deploy_resource(self, resource):  # overwrite to be added
+        """
+        Deploys a resource given a resource information extracted from the stack JSON configuration
+        template.
+
+        :param resource: A dict of the resource with fields of RESOURCE_ID, RESOURCE_TYPE and
+        RESOURCE_PROPERTIES
+        :return: dict resource_deploy_info- A dictionary of deployment
+        information of the resource to be stored at deploy time. It includes the resource id of
+        the resource along with the physical id and deploy output of the resource.
+        """
         try:
             resource_id = resource[RESOURCE_ID]
             resource_type = resource[RESOURCE_TYPE]
             resource_properties = resource[RESOURCE_PROPERTIES]
         except KeyError as e:
-            raise ConfigError("%s doesn't exist in resource config" % str(e))
+            raise StackError("%s doesn't exist in resource config" % str(e))
 
         # Deployment
         physical_id = self._get_deployed_resource(resource_id, resource_type)
@@ -263,7 +275,7 @@ class StackApi(object):
             physical_id, deploy_output = self.deploy_job(resource_id, resource_properties,
                                                          physical_id)
         else:
-            raise ConfigError('Resource type %s not found')
+            raise StackError("Resource type '%s' not found" % resource_type)
 
         resource_deploy_info = {RESOURCE_ID: resource_id, RESOURCE_TYPE: resource_type}
         if six.PY3:
@@ -276,6 +288,16 @@ class StackApi(object):
         return resource_deploy_info
 
     def deploy(self, filename):  # overwrite to be added
+        """
+        Deploys a stack given stack JSON configuration template at path filename.
+
+        Loads the JSON template as well as status JSON if stack has been deployed before.
+        After going through each of the resources and deploying them, stores status JSON
+        of deployment with deploy status of each resource deployment.
+        
+        :param filename: Path to stack JSON configuration template
+        :return: None.
+        """
         config_filepath = os.path.abspath(filename)
         config_dir = os.path.dirname(config_filepath)
         cli_cwd = os.getcwd()
@@ -291,7 +313,7 @@ class StackApi(object):
             deploy_metadata[STACK_RESOURCES] = parsed_conf[STACK_RESOURCES]
             deployed_resources = []
             if STACK_RESOURCES not in parsed_conf:
-                raise ConfigError("'%s' not in configuration" % STACK_RESOURCES)
+                raise StackError("'%s' not in configuration" % STACK_RESOURCES)
             for resource in parsed_conf[STACK_RESOURCES]:
                 click.echo()
                 click.echo("Deploying resource")
