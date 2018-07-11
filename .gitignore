@@ -3,4 +3,6 @@
 *.swo
 .cache
 .*project
+.idea/*
+*.iml
 env

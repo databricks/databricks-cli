@@ -45,7 +45,7 @@ class WorkspaceFileInfo(object):
     def to_row(self, is_long_form, is_absolute):
         path = self.path if is_absolute else self.basename
         if self.is_dir:
-            stylized_path = click.style(path, 'cyan')
+            stylized_path = click.style(path, 'cyan') + '/'
         elif self.is_library:
             stylized_path = click.style(path, 'green')
         else:
