@@ -65,7 +65,7 @@ RESOURCE_DEPLOY_TIMESTAMP = 'timestamp'
 class StackApi(object):
     def __init__(self, api_client):
         self.jobs_client = JobsApi(api_client)
-        self.host = "host/"
+        self.host = "host/"  # default host name if cannot get host.
         if click.get_current_context(silent=True):
             profile = get_profile_from_context()
             config = get_config_for_profile(profile)
@@ -101,7 +101,7 @@ class StackApi(object):
         stack_path_split.insert(-1, STACK_STATUS_INSERT)
         return '.'.join(stack_path_split)
 
-    def _load_deploy_metadata(self, stack_path):
+    def _load_deploy_metadata(self, status_path):
         """
         Loads the deployment status metadata for a stack given a path to the stack configuration
         template JSON file. Looks for the default local stack status path generated from
@@ -113,17 +113,16 @@ class StackApi(object):
         The output from the databricks server of the deployment of each resource will also be
         loaded in self.deployed_resources in the same way.
 
-        :param stack_path: path to JSON stack configuration template.
+        :param status_path: path to JSON stack configuration template.
         :return: The dict of parsed JSON of the stack deployment status.
         If path doesn't exist, will return an empty dict.
         """
         parsed_conf = {}
-        default_status_path = self._generate_stack_status_path(stack_path)
         try:
-            if os.path.exists(default_status_path):
-                with open(default_status_path, 'r') as f:
+            if os.path.exists(status_path):
+                with open(status_path, 'r') as f:
                     parsed_conf = json.load(f)
-                click.echo("Using deployment status file at %s" % default_status_path)
+                click.echo("Using deployment status file at %s" % status_path)
         except ValueError:
             # Handles a bad JSON read. Will just pass and parsed_conf will be empty dict.
             pass
@@ -156,25 +155,24 @@ class StackApi(object):
             return deployed_physical_id
         return None
 
-    def _store_deploy_metadata(self, stack_path, data):
+    def _store_deploy_metadata(self, status_path, data):
         """
         Stores status data related to stack deployment given the path to the stack configuration
         template. The status JSON file is stored to the default path generated from
         self._generate_stack_status_path.
 
-        :param stack_path: Path to the JSON configuration template of the stack.
+        :param status_path: Path to the JSON configuration template of the stack.
         :param data: Given status metadata to store.
         :return: None
         """
-        stack_status_filepath = self._generate_stack_status_path(stack_path)
-        stack_file_folder = os.path.dirname(stack_status_filepath)
+        stack_file_folder = os.path.dirname(status_path)
         if not os.path.exists(stack_file_folder):
             os.makedirs(stack_file_folder)
-        with open(stack_status_filepath, 'w+') as f:
+        with open(status_path, 'w+') as f:
             json.dump(data, f, indent=2, sort_keys=True)
-            click.echo('Storing deploy status metadata to %s' % stack_status_filepath)
+            click.echo('Storing deploy status metadata to %s' % status_path)
 
-    def create_job(self, job_settings):
+    def put_job(self, job_settings):
         """
         Given settings of the job in job_settings, create a new job. For purposes of idempotency
         and to reduce leaked resources in alpha versions of stack deployment, if a job exists
@@ -184,65 +182,65 @@ class StackApi(object):
         :param job_settings:
         :return: job_id, Physical ID of job on Databricks server.
         """
-        if 'name' in job_settings:
-            jobs_same_name = self.jobs_client.get_jobs_by_name(job_settings['name'])
-            if len(jobs_same_name) == 1:
-                first_job = jobs_same_name[0]
-                creator_name = first_job['creator_user_name']
-                timestamp = first_job['created_time'] / MS_SEC
-                date_created = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
-                click.echo('Warning: Job exists with same name created by %s on %s. Job will '
-                           'be overwritten' % (creator_name, date_created))
-                return self.update_job(job_settings, first_job['job_id'])
-            elif len(jobs_same_name) > 1:
-                # Dangerous, raise error
-                raise StackError('Multiple jobs with the same name already exist, aborting job'
-                                 ' resource deployment')
-            else:
-                click.echo("Creating new job")
+        if 'name' not in job_settings:
+            raise StackError("Please supply 'name' in job resource 'resource_properties'")
+        jobs_same_name = self.jobs_client.get_jobs_by_name(job_settings['name'])
+        if len(jobs_same_name) > 1:
+            # Dangerous, raise error
+            raise StackError('Multiple jobs with the same name already exist, aborting job'
+                             ' resource deployment')
+        elif len(jobs_same_name) == 1:
+            first_job = jobs_same_name[0]
+            creator_name = first_job['creator_user_name']
+            timestamp = first_job['created_time'] / MS_SEC  # Convert to readable date.
+            date_created = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+            click.echo('Warning: Job exists with same name created by %s on %s. Job will '
+                       'be overwritten' % (creator_name, date_created))
+            self.update_job(job_settings, first_job['job_id'])
+            return first_job['job_id']
         else:
-            click.echo('Warning: Creating untitled job.')
-        job_id = self.jobs_client.create_job(job_settings)['job_id']
-        return job_id
+            click.echo("Creating new job")
+            job_id = self.jobs_client.create_job(job_settings)['job_id']
+            return job_id
 
     def update_job(self, job_settings, job_id):
         """
-        Given job settings
-        :param job_settings: job settings to update the job with.
-        :param job_id: physical id of job in databricks server.
-        :return: job_id-
-        """
+        Given job settings and an existing job_id of a job, update the job settings on databricks.
 
-        # Check if persisted job still exists, otherwise create new job.
-        try:
-            self.jobs_client.get_job(job_id)
-        except HTTPError:
-            return self.create_job(job_settings)
+        :param job_settings: job settings to update the job with.
+        :param job_id: physical job_id of job in databricks server.
+        """
 
         click.echo("Updating Job")
         self.jobs_client.reset_job({'job_id': job_id, 'new_settings': job_settings})
-        return job_id
 
-    def deploy_job(self, resource_id, job_settings, physical_id=None):
+    def deploy_job(self, resource_id, resource_properties, physical_id=None):
         """
         Deploys a job resource by either creating a job if the job isn't kept track of through
         the physical_id of the job or updating an existing job. The job is created or updated using
         the the settings specified in the inputted job_settings.
 
         :param resource_id: The stack-internal resource ID of the job.
-        :param job_settings: A dict of the Databricks JobSettings data structure
+        :param resource_properties: A dict of the Databricks JobSettings data structure
         :param physical_id: A dict object containing 'job_id' field of job identifier in Databricks
         server
 
         :return: tuple of (physical_id, deploy_output), where physical_id contains
         """
+        job_settings = resource_properties  # resource_properties of jobs are solely job settings.
         click.echo("Deploying job '%s' with settings: \n%s \n" % (resource_id, json.dumps(
             job_settings, indent=2, separators=(',', ': '))), nl=False)
 
         if physical_id and 'job_id' in physical_id:
-            job_id = self.update_job(job_settings, physical_id['job_id'])
+            job_id = physical_id['job_id']
+            # Check if persisted job still exists, otherwise create new job.
+            try:
+                self.update_job(job_settings, physical_id['job_id'])
+            except HTTPError:
+                # If updating a job fails, create the job with put_job
+                job_id = self.put_job(job_settings)
         else:
-            job_id = self.create_job(job_settings)
+            job_id = self.put_job(job_settings)
 
         job_link = "%s#job/%s" % (self.host, str(job_id))
         click.echo("Job Link: %s" % job_link)
