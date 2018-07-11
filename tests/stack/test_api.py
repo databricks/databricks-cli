@@ -115,7 +115,7 @@ class TestStackApi(object):
 
         status = stack_api._load_stack_status(status_path)
         assert status == test_data
-        assert os.path.exists(default_path)
+        assert os.path.exists(status_path)
 
     def test_relative_paths(self, stack_api, tmpdir):
         """
@@ -176,7 +176,7 @@ class TestStackApi(object):
 
         def _reset_job(data):
             if data['job_id'] != job_deploy_output['job_id']:
-                raise Exception('Job Not Found')
+                raise HTTPError('Job Not Found')
             job_deploy_output['job_settings'] = data['new_settings']
 
         def _create_job(job_settings):
@@ -187,7 +187,7 @@ class TestStackApi(object):
         stack_api.jobs_client.get_job = mock.Mock(wraps=_get_job)
         stack_api.jobs_client.reset_job = mock.Mock(wraps=_reset_job)
 
-        # Deploy New job
+        # Deploy New job.
         res_physical_id, res_deploy_output = stack_api.deploy_job('test job', TEST_JOB_SETTINGS)
 
         assert 'job_id' in res_physical_id
@@ -198,22 +198,19 @@ class TestStackApi(object):
         job_deploy_output['job_settings'] = TEST_JOB_ALT_SETTINGS
         res_physical_id, res_deploy_output = stack_api.deploy_job('test job', TEST_JOB_SETTINGS,
                                                                   res_physical_id)
-        assert res_deploy_output == job_deploy_output
         assert 'job_id' in res_physical_id
         assert res_physical_id['job_id'] == job_physical_id
+        assert res_deploy_output == job_deploy_output
 
-        # Try to update job that doesn't exist anymore
+        # Try to update job that doesn't exist anymore. Should create a new job that has new
+        # job_id equal to job_physical_id
         job_physical_id = 123456
         job_deploy_output = {'job_id': job_physical_id, 'job_settings': TEST_JOB_SETTINGS}
         res_physical_id, res_deploy_output = stack_api.deploy_job('test job', TEST_JOB_SETTINGS,
                                                                   res_physical_id)
-        assert res_deploy_output == job_deploy_output
         assert 'job_id' in res_physical_id
+        assert res_deploy_output == job_deploy_output
         assert res_physical_id['job_id'] == job_physical_id
-
-        assert stack_api.jobs_client.get_job.call_count == 5
-        assert stack_api.jobs_client.reset_job.call_count == 1
-        assert stack_api.jobs_client.create_job.call_count == 2
 
     def test_deploy_resource(self, stack_api):
         # Test deploying a job resource.

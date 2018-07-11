@@ -93,7 +93,7 @@ class StackApi(object):
         :param obj: Object that may be a datetime object.
         :return: Timestamp integer if object is a datetime object.
         """
-        if type(obj) is datetime:
+        if isinstance(obj, datetime):
             # Get timestamp of datetime object- works with python2 and 3
             return int(time.mktime(datetime.now().timetuple()))
         raise TypeError("Object of type '%s' is not JSON serializable" % type(obj))
