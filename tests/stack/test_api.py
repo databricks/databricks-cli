@@ -31,7 +31,7 @@ from requests.exceptions import HTTPError
 import pytest
 
 import databricks_cli.stack.api as api
-from databricks_cli.stack.exceptions import ConfigError
+from databricks_cli.stack.exceptions import StackError
 
 TEST_STACK_PATH = 'stack/stack.json'
 TEST_JOB_SETTINGS = {
@@ -231,19 +231,19 @@ class TestStackApi(object):
             api.RESOURCE_ID: 'test',
             api.RESOURCE_PROPERTIES: {'test': 'test'}
         }
-        with pytest.raises(ConfigError):
+        with pytest.raises(StackError):
             stack_api.deploy_resource(resource_badtype)
 
         # Missing a key, raise config error
         d = TEST_JOB_RESOURCE.copy()
-        with pytest.raises(ConfigError):
+        with pytest.raises(StackError):
             d.pop(api.RESOURCE_TYPE)
             stack_api.deploy_resource(d)
         d = TEST_JOB_RESOURCE.copy()
-        with pytest.raises(ConfigError):
+        with pytest.raises(StackError):
             d.pop(api.RESOURCE_ID)
             stack_api.deploy_resource(d)
         d = TEST_JOB_RESOURCE.copy()
-        with pytest.raises(ConfigError):
+        with pytest.raises(StackError):
             d.pop(api.RESOURCE_PROPERTIES)
             stack_api.deploy_resource(d)

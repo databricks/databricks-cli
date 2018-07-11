@@ -294,7 +294,7 @@ class StackApi(object):
         Loads the JSON template as well as status JSON if stack has been deployed before.
         After going through each of the resources and deploying them, stores status JSON
         of deployment with deploy status of each resource deployment.
-        
+
         :param filename: Path to stack JSON configuration template
         :return: None.
         """
