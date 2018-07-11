@@ -45,3 +45,8 @@ class JobsApi(object):
     def run_now(self, job_id, jar_params, notebook_params, python_params, spark_submit_params):
         return self.client.run_now(job_id, jar_params, notebook_params, python_params,
                                    spark_submit_params)
+
+    def _list_jobs_by_name(self, name):
+        jobs = self.list_jobs()['jobs']
+        result = list(filter(lambda job: job['settings']['name'] == name, jobs))
+        return result
