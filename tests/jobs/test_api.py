@@ -29,9 +29,6 @@ import pytest
 from databricks_cli.jobs.api import JobsApi
 from tests.utils import provide_conf
 
-CREATE_RETURN = {'job_id': 5}
-CREATE_JSON = '{"name": "test_job"}'
-
 
 @pytest.fixture()
 def jobs_api():
@@ -42,7 +39,7 @@ def jobs_api():
 
 
 @provide_conf
-def test_get_jobs_by_name(jobs_api):
+def test_list_jobs_by_name(jobs_api):
     test_job_name = 'test job'
     test_job_alt_name = 'test job alt'
     test_job = {'settings': {'name': test_job_name}}
@@ -50,17 +47,20 @@ def test_get_jobs_by_name(jobs_api):
     jobs_api.list_jobs = mock.MagicMock()
 
     jobs_api.list_jobs.return_value = {'jobs': []}
-    res = jobs_api.get_jobs_by_name(test_job_name)
+    res = jobs_api._list_jobs_by_name(test_job_name)
     assert len(res) == 0
 
     jobs_api.list_jobs.return_value = {'jobs': [test_job_alt]}
-    res = jobs_api.get_jobs_by_name(test_job_name)
+    res = jobs_api._list_jobs_by_name(test_job_name)
     assert len(res) == 0
 
     jobs_api.list_jobs.return_value = {'jobs': [test_job, test_job_alt]}
-    res = jobs_api.get_jobs_by_name(test_job_name)
+    res = jobs_api._list_jobs_by_name(test_job_name)
     assert len(res) == 1
+    assert res[0]['settings']['name'] == test_job_name
 
     jobs_api.list_jobs.return_value = {'jobs': [test_job, test_job_alt, test_job]}
-    res = jobs_api.get_jobs_by_name(test_job_name)
+    res = jobs_api._list_jobs_by_name(test_job_name)
     assert len(res) == 2
+    assert res[0]['settings']['name'] == test_job_name
+    assert res[1]['settings']['name'] == test_job_name
