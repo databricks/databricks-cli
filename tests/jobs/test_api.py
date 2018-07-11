@@ -43,24 +43,24 @@ def jobs_api():
 
 @provide_conf
 def test_get_jobs_by_name(jobs_api):
-    job_name = 'test job'
-    job_other_name = 'test job alt'
-    test_job = {'settings': {'name': job_name}}
-    test_job_alt = {'settings': {'name': job_other_name}}
+    test_job_name = 'test job'
+    test_job_alt_name = 'test job alt'
+    test_job = {'settings': {'name': test_job_name}}
+    test_job_alt = {'settings': {'name': test_job_alt_name}}
     jobs_api.list_jobs = mock.MagicMock()
 
     jobs_api.list_jobs.return_value = {'jobs': []}
-    res = jobs_api.get_jobs_by_name(job_name)
+    res = jobs_api.get_jobs_by_name(test_job_name)
     assert len(res) == 0
 
     jobs_api.list_jobs.return_value = {'jobs': [test_job_alt]}
-    res = jobs_api.get_jobs_by_name(job_name)
+    res = jobs_api.get_jobs_by_name(test_job_name)
     assert len(res) == 0
 
     jobs_api.list_jobs.return_value = {'jobs': [test_job, test_job_alt]}
-    res = jobs_api.get_jobs_by_name(job_name)
+    res = jobs_api.get_jobs_by_name(test_job_name)
     assert len(res) == 1
 
     jobs_api.list_jobs.return_value = {'jobs': [test_job, test_job_alt, test_job]}
-    res = jobs_api.get_jobs_by_name(job_name)
+    res = jobs_api.get_jobs_by_name(test_job_name)
     assert len(res) == 2
