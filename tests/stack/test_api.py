@@ -42,7 +42,7 @@ TEST_JOB_ALT_SETTINGS = {
 }
 TEST_JOB_RESOURCE = {
     api.RESOURCE_ID: "job 1",
-    api.RESOURCE_TYPE: api.JOBS_TYPE,
+    api.RESOURCE_SERVICE: api.JOBS_SERVICE,
     api.RESOURCE_PROPERTIES: TEST_JOB_SETTINGS
 }
 TEST_STACK = {
@@ -223,11 +223,11 @@ class TestStackApi(object):
         assert api.RESOURCE_ID in deploy_info
         assert api.RESOURCE_PHYSICAL_ID in deploy_info
         assert api.RESOURCE_DEPLOY_OUTPUT in deploy_info
-        assert api.RESOURCE_TYPE in deploy_info
+        assert api.RESOURCE_SERVICE in deploy_info
 
         # If there is a nonexistent type, just return None and continue on with deployment
         resource_badtype = {
-            api.RESOURCE_TYPE: 'nonexist',
+            api.RESOURCE_SERVICE: 'nonexist',
             api.RESOURCE_ID: 'test',
             api.RESOURCE_PROPERTIES: {'test': 'test'}
         }
@@ -237,7 +237,7 @@ class TestStackApi(object):
         # Missing a key, raise config error
         d = TEST_JOB_RESOURCE.copy()
         with pytest.raises(StackError):
-            d.pop(api.RESOURCE_TYPE)
+            d.pop(api.RESOURCE_SERVICE)
             stack_api.deploy_resource(d)
         d = TEST_JOB_RESOURCE.copy()
         with pytest.raises(StackError):
