@@ -80,17 +80,17 @@ class TestStackApi(object):
         config = stack_api._parse_config_file(stack_path)
         assert config == TEST_STACK
 
-    def test_read_status(self, stack_api, tmpdir):
+    def test_load_status(self, stack_api, tmpdir):
         """
             Test reading and parsing a deployed stack's status JSON file.
         """
         config_path = os.path.join(tmpdir.strpath, 'test.json')
-        status_path = os.path.join(tmpdir.strpath, 'test.deployed.json')
+        status_path = stack_api._generate_stack_status_path(config_path)
         with open(config_path, "w+") as f:
             json.dump(TEST_STACK, f)
         with open(status_path, "w+") as f:
             json.dump(TEST_STATUS, f)
-        status = stack_api._load_deploy_metadata(stack_path=config_path)
+        status = stack_api._load_stack_status(status_path=status_path)
         assert status == TEST_STATUS
         assert stack_api.deployed_resource_config == TEST_STATUS[api.STACK_RESOURCES]
         assert all(resource[api.RESOURCE_ID] in stack_api.deployed_resources
@@ -109,11 +109,11 @@ class TestStackApi(object):
 
     def test_store_status(self, stack_api, tmpdir):
         config_path = os.path.join(tmpdir.strpath, 'test.json')
-        default_path = os.path.join(tmpdir.strpath, 'test.deployed.json')
+        status_path = stack_api._generate_stack_status_path(config_path)
         test_data = {'test': 'test'}
-        stack_api._store_deploy_metadata(config_path, test_data)
+        stack_api._store_stack_status(status_path, test_data)
 
-        status = stack_api._load_deploy_metadata(config_path)
+        status = stack_api._load_stack_status(status_path)
         assert status == test_data
         assert os.path.exists(default_path)
 
@@ -148,16 +148,16 @@ class TestStackApi(object):
         os.makedirs(config_working_dir)
         with open(config_path, 'w+') as f:
             json.dump({'name': 'test'}, f)
-        # No 'resources' key will cause a key error
+        # No 'resources' key will cause a stack error
         try:
             stack_api.deploy(config_path)
-        except KeyError:
+        except StackError:
             pass
         assert os.getcwd() == initial_cwd
 
         try:
             stack_api.download(config_path)
-        except KeyError:
+        except StackError:
             pass
         assert os.getcwd() == initial_cwd
 
@@ -216,6 +216,7 @@ class TestStackApi(object):
         assert stack_api.jobs_client.create_job.call_count == 2
 
     def test_deploy_resource(self, stack_api):
+        # Test deploying a job resource.
         stack_api.jobs_client.deploy_job = mock.MagicMock()
         stack_api.jobs_client.deploy_job.return_value = (12345, {'job_id': 12345})
 
@@ -225,7 +226,7 @@ class TestStackApi(object):
         assert api.RESOURCE_DEPLOY_OUTPUT in deploy_info
         assert api.RESOURCE_SERVICE in deploy_info
 
-        # If there is a nonexistent type, just return None and continue on with deployment
+        # If there is a nonexistent type, raise a StackError.
         resource_badtype = {
             api.RESOURCE_SERVICE: 'nonexist',
             api.RESOURCE_ID: 'test',
@@ -234,7 +235,7 @@ class TestStackApi(object):
         with pytest.raises(StackError):
             stack_api.deploy_resource(resource_badtype)
 
-        # Missing a key, raise config error
+        # Missing a key, raise stack error
         d = TEST_JOB_RESOURCE.copy()
         with pytest.raises(StackError):
             d.pop(api.RESOURCE_SERVICE)

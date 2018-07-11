@@ -25,7 +25,6 @@ import os
 import json
 from datetime import datetime
 import time
-import six
 
 import click
 
@@ -194,7 +193,7 @@ class StackApi(object):
         Given settings of the job in job_settings, create a new job. For purposes of idempotency
         and to reduce leaked resources in alpha versions of stack deployment, if a job exists
         with the same name, that job will be updated. If multiple jobs are found with the same name,
-        this is dangerous and the deployment will stop.
+        the deployment will abort.
 
         :param job_settings:
         :return: job_id, Physical ID of job on Databricks server.
@@ -203,7 +202,6 @@ class StackApi(object):
             raise StackError("Please supply 'name' in job resource 'resource_properties'")
         jobs_same_name = self.jobs_client._list_jobs_by_name(job_settings['name'])
         if len(jobs_same_name) > 1:
-            # Dangerous, raise error
             raise StackError('Multiple jobs with the same name already exist, aborting job'
                              ' resource deployment')
         elif len(jobs_same_name) == 1:
@@ -340,6 +338,7 @@ class StackApi(object):
             # stack deploy status is original config with deployed resource statuses added
             stack_status = parsed_conf
             stack_status.update({STACK_DEPLOYED: deployed_resources})
+            stack_status.update({'cli_version': CLI_VERSION})
 
             self._store_stack_status(status_filepath, stack_status)
             os.chdir(cli_cwd)
