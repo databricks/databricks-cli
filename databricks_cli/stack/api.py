@@ -144,9 +144,10 @@ class StackApi(object):
         except ValueError:
             # Handles a bad JSON read. Will just pass and parsed_conf will be empty dict.
             pass
-        except KeyError:
-            # If something wrong with schema,
-            pass
+        except KeyError as e:
+            # This error should only be raised if there's an implementation error with stack status
+            raise StackError("Error with resource status schema from last deployment- "
+                             "Missing %s. aborting." % str(e))
 
         return stack_status
 
@@ -169,6 +170,7 @@ class StackApi(object):
                 deployed_resource_service = deployed_resource[RESOURCE_SERVICE]
                 deployed_physical_id = deployed_resource[RESOURCE_PHYSICAL_ID]
             except KeyError as e:
+                # Should only be here if there's an implementation error with stack status
                 raise StackError("Error with resource status schema from last deployment- "
                                  "Missing %s. aborting." % str(e))
             if resource_service != deployed_resource_service:
@@ -178,19 +180,19 @@ class StackApi(object):
             return deployed_physical_id
         return None
 
-    def _save_stack_status(self, status_path, data):
+    def _save_stack_status(self, status_path, status_data):
         """
         Stores status data related to stack deployment given a path to the status data file.
 
         :param status_path: Path to the JSON configuration template of the stack.
-        :param data: Given status metadata to store.
+        :param status_data: Given status metadata to store.
         :return: None
         """
         stack_file_folder = os.path.dirname(status_path)
         if not os.path.exists(stack_file_folder):
             os.makedirs(stack_file_folder)
         with open(status_path, 'w+') as f:
-            json.dump(data, f, indent=2, sort_keys=True, default=self._json_type_handler)
+            json.dump(status_data, f, indent=2, sort_keys=True, default=self._json_type_handler)
             click.echo('Storing deployed stack status metadata to %s' % status_path)
 
     def put_job(self, job_settings):
@@ -208,8 +210,8 @@ class StackApi(object):
         job_name = job_settings['name']
         jobs_same_name = self.jobs_client._list_jobs_by_name(job_name)
         if len(jobs_same_name) > 1:
-            raise StackError('Multiple jobs with the same name already exist, aborting job'
-                             ' resource deployment')
+            raise StackError("Multiple jobs with the same name '%s' already exist, aborting"
+                             " stack deployment" % job_name)
         elif len(jobs_same_name) == 1:
             existing_job = jobs_same_name[0]
             creator_name = existing_job['creator_user_name']
@@ -255,7 +257,6 @@ class StackApi(object):
 
         if physical_id and 'job_id' in physical_id:
             job_id = physical_id['job_id']
-            # Check if persisted job still exists, otherwise create new job.
             try:
                 self.update_job(job_settings, physical_id['job_id'])
             except HTTPError:
@@ -264,9 +265,9 @@ class StackApi(object):
         else:
             job_id = self.put_job(job_settings)
 
-        job_link = "%s#job/%s" % (self.host, str(job_id))
-        click.echo("Job Link: %s" % job_link)
-        physical_id = {'job_id': job_id, "link": job_link}
+        job_url = "%s#job/%s" % (self.host, str(job_id))
+        click.echo("Job URL: %s" % job_url)
+        physical_id = {'job_id': job_id, "url": job_url}
         deploy_output = self.jobs_client.get_job(job_id)
         return physical_id, deploy_output
 
