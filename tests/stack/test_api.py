@@ -22,6 +22,7 @@
 # limitations under the License.
 
 # pylint:disable=redefined-outer-name
+# pylint:disable=too-many-locals
 
 import os
 import json
@@ -35,15 +36,19 @@ from databricks_cli.stack.exceptions import StackError
 
 TEST_STACK_PATH = 'stack/stack.json'
 TEST_JOB_SETTINGS = {
-    'name': 'my test job'
+    'name': 'test job'
 }
-TEST_JOB_ALT_SETTINGS = {
-    'name': 'my test job'
-}
+TEST_RESOURCE_ID = 'test job'
 TEST_JOB_RESOURCE = {
-    api.RESOURCE_ID: "job 1",
+    api.RESOURCE_ID: TEST_RESOURCE_ID,
     api.RESOURCE_SERVICE: api.JOBS_SERVICE,
     api.RESOURCE_PROPERTIES: TEST_JOB_SETTINGS
+}
+TEST_JOB_PHYSICAL_ID = {'job_id': 1234}
+TEST_JOB_STATUS = {
+    api.RESOURCE_ID: TEST_RESOURCE_ID,
+    api.RESOURCE_SERVICE: api.JOBS_SERVICE,
+    api.RESOURCE_PHYSICAL_ID: TEST_JOB_PHYSICAL_ID
 }
 TEST_STACK = {
     api.STACK_NAME: "test-stack",
@@ -52,7 +57,7 @@ TEST_STACK = {
 TEST_STATUS = {
     api.STACK_NAME: "test-stack",
     api.STACK_RESOURCES: [TEST_JOB_RESOURCE],
-    api.STACK_DEPLOYED: []
+    api.STACK_DEPLOYED: [TEST_JOB_STATUS]
 }
 
 
@@ -69,7 +74,7 @@ def stack_api():
 
 
 class TestStackApi(object):
-    def test_read_config(self, stack_api, tmpdir):
+    def test_parse_config_file(self, stack_api, tmpdir):
         """
             Test reading a stack configuration template
         """
@@ -80,23 +85,21 @@ class TestStackApi(object):
         config = stack_api._parse_config_file(stack_path)
         assert config == TEST_STACK
 
-    def test_load_status(self, stack_api, tmpdir):
+    def test_load_stack_status(self, stack_api, tmpdir):
         """
             Test reading and parsing a deployed stack's status JSON file.
         """
         config_path = os.path.join(tmpdir.strpath, 'test.json')
         status_path = stack_api._generate_stack_status_path(config_path)
-        with open(config_path, "w+") as f:
-            json.dump(TEST_STACK, f)
         with open(status_path, "w+") as f:
             json.dump(TEST_STATUS, f)
         status = stack_api._load_stack_status(status_path=status_path)
         assert status == TEST_STATUS
-        assert stack_api.deployed_resource_config == TEST_STATUS[api.STACK_RESOURCES]
-        assert all(resource[api.RESOURCE_ID] in stack_api.deployed_resources
-                   for resource in TEST_STATUS[api.STACK_DEPLOYED])
+        job_physical_id = stack_api._get_deployed_resource_physical_id(TEST_RESOURCE_ID,
+                                                                       api.JOBS_SERVICE)
+        assert job_physical_id == TEST_JOB_PHYSICAL_ID
 
-    def test_default_status_path(self, stack_api, tmpdir):
+    def test_generate_stack_status_path(self, stack_api, tmpdir):
         config_path = os.path.join(tmpdir.strpath, 'test.json')
         expected_status_path = os.path.join(tmpdir.strpath, 'test.deployed.json')
         generated_path = stack_api._generate_stack_status_path(config_path)
@@ -107,20 +110,21 @@ class TestStackApi(object):
         generated_path = stack_api._generate_stack_status_path(config_path)
         assert expected_status_path == generated_path
 
-    def test_store_status(self, stack_api, tmpdir):
+    def test_save_stack_status(self, stack_api, tmpdir):
         config_path = os.path.join(tmpdir.strpath, 'test.json')
         status_path = stack_api._generate_stack_status_path(config_path)
         test_data = {'test': 'test'}
-        stack_api._store_stack_status(status_path, test_data)
+        stack_api._save_stack_status(status_path, test_data)
 
         status = stack_api._load_stack_status(status_path)
         assert status == test_data
-        assert os.path.exists(status_path)
 
-    def test_relative_paths(self, stack_api, tmpdir):
+    def test_deploy_relative_paths(self, stack_api, tmpdir):
         """
-            Test that the current working directory when deploying or downloading resource is same
-            as where the config path lies.
+            When doing stack_api.deploy, in every call to stack_api.deploy_resource, the current
+            working directory should be the same directory as where the stack config template is
+            contained so that relative paths for resources can be relative to the stack config
+            instead of where CLI calls the API functions.
         """
         config_working_dir = os.path.join(tmpdir.strpath, 'stack')
         config_path = os.path.join(config_working_dir, 'test.json')
@@ -138,9 +142,9 @@ class TestStackApi(object):
         stack_api.deploy(config_path)
         assert os.getcwd() == initial_cwd  # Make sure current working directory didn't change
 
-    def deploy_error_path(self, stack_api, tmpdir):
+    def test_deploy_error_path(self, stack_api, tmpdir):
         """
-            Test that an error in deployment doesn't change current working directory.
+            An error in deployment should not change current working directory.
         """
         config_working_dir = os.path.join(tmpdir.strpath, 'stack')
         initial_cwd = os.getcwd()
@@ -155,65 +159,104 @@ class TestStackApi(object):
             pass
         assert os.getcwd() == initial_cwd
 
-        try:
-            stack_api.download(config_path)
-        except StackError:
-            pass
-        assert os.getcwd() == initial_cwd
-
     def test_deploy_job(self, stack_api):
         """
-            Test Deploy Job Functionality
+            stack_api.deploy_job should create a new job when 1) A physical_id is not given and
+            a job with the same name does not exist in the settings. 2) A physical_id is given but
+            a call to reset the job fails.
+
+            stack_api.deploy_job should reset/update an existing job when 1) A physical_id is given
+            2) A physical_id is not given but one job with the same name exists.
+
+            A StackError should be raised when 1) A physical_id is not given but there are multiple
+            jobs with the same name that exist.
         """
-        job_physical_id = 12345
-        job_deploy_output = {'job_id': job_physical_id, 'job_settings': TEST_JOB_SETTINGS}
+        test_job_settings = TEST_JOB_SETTINGS
+        alt_test_job_settings = {'name': 'alt test job'}  # Different name than TEST_JOB_SETTINGS
+        jobs_in_databricks = {}
+        available_job_id = [1234, 12345]
 
         def _get_job(job_id):
-            if job_id != job_physical_id:
-                raise HTTPError()
+            if job_id not in jobs_in_databricks:
+                # Job created is not found.
+                raise HTTPError('Job not Found')
             else:
-                return job_deploy_output
+                return jobs_in_databricks[job_id]
 
         def _reset_job(data):
-            if data['job_id'] != job_deploy_output['job_id']:
+            if data['job_id'] not in jobs_in_databricks:
                 raise HTTPError('Job Not Found')
-            job_deploy_output['job_settings'] = data['new_settings']
+            jobs_in_databricks[data['job_id']]['job_settings'] = data['new_settings']
 
         def _create_job(job_settings):
-            job_deploy_output['job_settings'] = job_settings
-            return {'job_id': job_physical_id}
+            job_id = available_job_id.pop()
+            new_job_json = {'job_id': job_id,
+                            'job_settings': job_settings.copy(),
+                            'creator_user_name': 'testuser@example.com',
+                            'created_time': 987654321}
+            jobs_in_databricks[job_id] = new_job_json
+            return new_job_json
+
+        def _list_jobs_by_name(job_name):
+            return [job for job in jobs_in_databricks.values()
+                    if job['job_settings']['name'] == job_name]
 
         stack_api.jobs_client.create_job = mock.Mock(wraps=_create_job)
         stack_api.jobs_client.get_job = mock.Mock(wraps=_get_job)
         stack_api.jobs_client.reset_job = mock.Mock(wraps=_reset_job)
+        stack_api.jobs_client._list_jobs_by_name = mock.Mock(wraps=_list_jobs_by_name)
 
-        # Deploy New job.
-        res_physical_id, res_deploy_output = stack_api.deploy_job('test job', TEST_JOB_SETTINGS)
+        # TEST CASE 1:
+        # stack_api.deploy_job should create job if physical_id not given job doesn't exist
+        res_physical_id_1, res_deploy_output_1 = stack_api.deploy_job('test job', test_job_settings)
+        assert stack_api.jobs_client.get_job(res_physical_id_1['job_id']) == res_deploy_output_1
+        assert res_deploy_output_1['job_id'] == res_physical_id_1['job_id']
+        assert test_job_settings == res_deploy_output_1['job_settings']
 
-        assert 'job_id' in res_physical_id
-        assert res_physical_id['job_id'] == job_physical_id
-        assert res_deploy_output == job_deploy_output
+        # TEST CASE 2:
+        # stack_api.deploy_job should reset job if physical_id given.
+        res_physical_id_2, res_deploy_output_2 = stack_api.deploy_job('test job',
+                                                                      alt_test_job_settings,
+                                                                      res_physical_id_1)
+        # physical job id not changed from last update
+        assert res_physical_id_2['job_id'] == res_physical_id_1['job_id']
+        assert res_deploy_output_2['job_id'] == res_physical_id_2['job_id']
+        assert alt_test_job_settings == res_deploy_output_2['job_settings']
 
-        # Updating job
-        job_deploy_output['job_settings'] = TEST_JOB_ALT_SETTINGS
-        res_physical_id, res_deploy_output = stack_api.deploy_job('test job', TEST_JOB_SETTINGS,
-                                                                  res_physical_id)
-        assert 'job_id' in res_physical_id
-        assert res_physical_id['job_id'] == job_physical_id
-        assert res_deploy_output == job_deploy_output
+        # TEST CASE 3:
+        # stack_api.deploy_job should reset job if a physical_id not given, but job with same name
+        # found
+        alt_test_job_settings['new_property'] = 'new_property_value'
+        res_physical_id_3, res_deploy_output_3 = stack_api.deploy_job('test job',
+                                                                      alt_test_job_settings)
+        # physical job id not changed from last update
+        assert res_physical_id_3['job_id'] == res_physical_id_2['job_id']
+        assert res_deploy_output_3['job_id'] == res_physical_id_3['job_id']
+        assert alt_test_job_settings == res_deploy_output_3['job_settings']
 
-        # Try to update job that doesn't exist anymore. Should create a new job that has new
-        # job_id equal to job_physical_id
-        job_physical_id = 123456
-        job_deploy_output = {'job_id': job_physical_id, 'job_settings': TEST_JOB_SETTINGS}
-        res_physical_id, res_deploy_output = stack_api.deploy_job('test job', TEST_JOB_SETTINGS,
-                                                                  res_physical_id)
-        assert 'job_id' in res_physical_id
-        assert res_deploy_output == job_deploy_output
-        assert res_physical_id['job_id'] == job_physical_id
+        # TEST CASE 4
+        # If a physical_id is given, but resetting the job fails, a new job is created
+        nonexistent_physical_id = {'job_id': 123456}
+        res_physical_id_4, res_deploy_output_4 = stack_api.deploy_job('test job', TEST_JOB_SETTINGS,
+                                                                      nonexistent_physical_id)
+        # This job id should be different from last update
+        assert res_physical_id_4['job_id'] != res_physical_id_3['job_id']
+        assert res_deploy_output_4['job_id'] == res_physical_id_4['job_id']
+        assert TEST_JOB_SETTINGS == res_deploy_output_4['job_settings']
+
+        # TEST CASE 5
+        # If a physical_id is not given but there is already multiple jobs of the same name in
+        # databricks, an error should be raised
+        # Add new job with different physical id but same name settings as TEST_JOB_SETTINGS
+        jobs_in_databricks[123] = {'job_id': 123, 'job_settings': TEST_JOB_SETTINGS}
+        with pytest.raises(StackError):
+            stack_api.deploy_job('test job', TEST_JOB_SETTINGS)
 
     def test_deploy_resource(self, stack_api):
-        # Test deploying a job resource.
+        """
+           stack_api.deploy_resource should return relevant fields in output if deploy done
+           correctly. If deploy not done correctly, a StackError should be raised.
+        """
         stack_api.jobs_client.deploy_job = mock.MagicMock()
         stack_api.jobs_client.deploy_job.return_value = (12345, {'job_id': 12345})
 
