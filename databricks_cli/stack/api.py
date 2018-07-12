@@ -188,9 +188,6 @@ class StackApi(object):
         :param status_data: Given status metadata to store.
         :return: None
         """
-        stack_file_folder = os.path.dirname(status_path)
-        if not os.path.exists(stack_file_folder):
-            os.makedirs(stack_file_folder)
         with open(status_path, 'w+') as f:
             json.dump(status_data, f, indent=2, sort_keys=True, default=self._json_type_handler)
             click.echo('Storing deployed stack status metadata to %s' % status_path)
