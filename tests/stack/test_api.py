@@ -76,7 +76,8 @@ def stack_api():
 class TestStackApi(object):
     def test_parse_config_file(self, stack_api, tmpdir):
         """
-            Test reading a stack configuration template
+            _parse_config_file should read the same JSON content that was originally in the
+            stack configuration JSON.
         """
         stack_path = os.path.join(tmpdir.strpath, TEST_STACK_PATH)
         os.makedirs(os.path.dirname(stack_path))
@@ -87,7 +88,10 @@ class TestStackApi(object):
 
     def test_load_stack_status(self, stack_api, tmpdir):
         """
-            Test reading and parsing a deployed stack's status JSON file.
+            The status returned from _load_stack_status should be the same as the contents
+            originally stored in the stack status file.
+            Also when loading, there should be an internal mapping from resource_id to
+            resource_physical_id, which can be cleanly accessed through _get_resource_physical_id.
         """
         config_path = os.path.join(tmpdir.strpath, 'test.json')
         status_path = stack_api._generate_stack_status_path(config_path)
@@ -100,6 +104,10 @@ class TestStackApi(object):
         assert job_physical_id == TEST_JOB_PHYSICAL_ID
 
     def test_generate_stack_status_path(self, stack_api, tmpdir):
+        """
+            The _generate_stack_status_path should add the word 'deployed' between the json file
+            extension and the filename of the stack configuration file.
+        """
         config_path = os.path.join(tmpdir.strpath, 'test.json')
         expected_status_path = os.path.join(tmpdir.strpath, 'test.deployed.json')
         generated_path = stack_api._generate_stack_status_path(config_path)
@@ -111,13 +119,16 @@ class TestStackApi(object):
         assert expected_status_path == generated_path
 
     def test_save_stack_status(self, stack_api, tmpdir):
+        """
+            When saving the a stack status through _save_stack_status, it should be able to be
+            loaded by _load_stack_status and have the same exact contents.
+        """
         config_path = os.path.join(tmpdir.strpath, 'test.json')
         status_path = stack_api._generate_stack_status_path(config_path)
-        test_data = {'test': 'test'}
-        stack_api._save_stack_status(status_path, test_data)
+        stack_api._save_stack_status(status_path, TEST_STATUS)
 
         status = stack_api._load_stack_status(status_path)
-        assert status == test_data
+        assert status == TEST_STATUS
 
     def test_deploy_relative_paths(self, stack_api, tmpdir):
         """

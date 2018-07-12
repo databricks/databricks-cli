@@ -135,12 +135,12 @@ class StackApi(object):
                     stack_status = json.load(f)
                 click.echo("Using deployment status file at %s" % status_path)
 
-            # Store map from resource_id to past deployment configuration of resources.
-            self.previous_deploy_resource_config_map = {resource[RESOURCE_ID]: resource for resource
-                                                        in stack_status[STACK_RESOURCES]}
-            # Storing map from resource_id to past deployment resource status.
-            self.previous_deploy_resource_status_map = {resource[RESOURCE_ID]: resource for resource
-                                                        in stack_status[STACK_DEPLOYED]}
+                # Store map from resource_id to past deployment configuration of resources.
+                self.previous_deploy_resource_config_map = \
+                    {resource[RESOURCE_ID]: resource for resource in stack_status[STACK_RESOURCES]}
+                # Storing map from resource_id to past deployment resource status.
+                self.previous_deploy_resource_status_map = \
+                    {resource[RESOURCE_ID]: resource for resource in stack_status[STACK_DEPLOYED]}
         except ValueError:
             # Handles a bad JSON read. Will just pass and parsed_conf will be empty dict.
             pass
