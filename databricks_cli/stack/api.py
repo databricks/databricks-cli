@@ -56,6 +56,7 @@ RESOURCE_PROPERTIES = 'properties'
 RESOURCE_PHYSICAL_ID = 'physical_id'
 RESOURCE_DEPLOY_OUTPUT = 'deploy_output'
 RESOURCE_DEPLOY_TIMESTAMP = 'timestamp'
+CLI_VERSION_KEY = 'cli_version'
 
 
 class StackApi(object):
@@ -76,16 +77,17 @@ class StackApi(object):
         :param filename: File path of the JSON stack configuration template.
         :return: dict of parsed JSON stack config template.
         """
-        parsed_conf = {}
+        stack_conf = {}
         with open(filename, 'r') as f:
-            parsed_conf = json.load(f)
+            stack_conf = json.load(f)
 
-        return parsed_conf
+        return stack_conf
 
-    def _handle_json_datetime(self, obj):
+    def _json_type_handler(self, obj):
         """
-        Helper function to convert datetime into timestamp. Raise a regular JSON TypeError if
-        a datetime object is not given.
+        Helper function to convert certain objects into a compatible JSON format.
+
+        Right now, converts a datetime object to an integer timestamp.
 
         :param obj: Object that may be a datetime object.
         :return: Timestamp integer if object is a datetime object.
@@ -188,7 +190,7 @@ class StackApi(object):
         if not os.path.exists(stack_file_folder):
             os.makedirs(stack_file_folder)
         with open(status_path, 'w+') as f:
-            json.dump(data, f, indent=2, sort_keys=True, default=self._handle_json_datetime)
+            json.dump(data, f, indent=2, sort_keys=True, default=self._json_type_handler)
             click.echo('Storing deployed stack status metadata to %s' % status_path)
 
     def put_job(self, job_settings):
@@ -213,8 +215,8 @@ class StackApi(object):
             creator_name = existing_job['creator_user_name']
             timestamp = existing_job['created_time'] / MS_SEC  # Convert to readable date.
             date_created = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
-            click.echo('Warning: Job exists with same name %s created by %s on %s. Job will '
-                       'be overwritten' % (job_name, creator_name, date_created))
+            click.echo("Warning: Job exists with same name '%s' created by %s on %s. Job will "
+                       "be overwritten" % (job_name, creator_name, date_created))
             self.update_job(job_settings, existing_job['job_id'])
             return existing_job['job_id']
         else:
@@ -296,7 +298,7 @@ class StackApi(object):
             physical_id, deploy_output = self.deploy_job(resource_id, resource_properties,
                                                          physical_id)
         else:
-            raise StackError("Resource service '%s' not found" % resource_service)
+            raise StackError("Resource service '%s' not supported" % resource_service)
 
         resource_deploy_info = {RESOURCE_ID: resource_id, RESOURCE_SERVICE: resource_service,
                                 RESOURCE_DEPLOY_TIMESTAMP: datetime.now(),
@@ -304,29 +306,28 @@ class StackApi(object):
                                 RESOURCE_DEPLOY_OUTPUT: deploy_output}
         return resource_deploy_info
 
-    def deploy(self, file_path):  # overwrite to be added
+    def deploy(self, config_path):  # overwrite to be added
         """
-        Deploys a stack given stack JSON configuration template at path filename.
+        Deploys a stack given stack JSON configuration template at path config_path.
 
         Loads the JSON template as well as status JSON if stack has been deployed before.
         After going through each of the resources and deploying them, stores status JSON
         of deployment with deploy status of each resource deployment.
 
-        :param file_path: Path to stack JSON configuration template. Must have the fields of
+        :param config_path: Path to stack JSON configuration template. Must have the fields of
         'name', the name of the stack and 'resources', a list of stack resources.
         :return: None.
         """
-        config_filepath = os.path.abspath(file_path)
-        config_dir = os.path.dirname(config_filepath)
+        config_dir = os.path.dirname(os.path.abspath(config_path))
         cli_cwd = os.getcwd()
-        os.chdir(config_dir)  # Switch current working directory to where json is stored
+        os.chdir(config_dir)  # Switch current working directory to where json config is stored
         try:
-            parsed_conf = self._parse_config_file(file_path)
+            parsed_conf = self._parse_config_file(config_path)
             if STACK_NAME not in parsed_conf:
                 raise StackError("'%s' not in configuration" % STACK_NAME)
             stack_name = parsed_conf[STACK_NAME]
-            status_filepath = self._generate_stack_status_path(config_filepath)
-            self._load_stack_status(status_filepath)
+            status_path = self._generate_stack_status_path(config_path)
+            self._load_stack_status(status_path)
 
             click.echo('Deploying stack %s' % stack_name)
             deployed_resources = []
@@ -336,15 +337,14 @@ class StackApi(object):
                 click.echo()
                 click.echo("Deploying resource")
                 resource_status = self.deploy_resource(resource)  # overwrite to be added
-                if resource_status:
-                    deployed_resources.append(resource_status)
+                deployed_resources.append(resource_status)
 
             # stack deploy status is original config with deployed resource statuses added
-            stack_status = parsed_conf
-            stack_status.update({STACK_DEPLOYED: deployed_resources})
-            stack_status.update({'cli_version': CLI_VERSION})
+            new_stack_status = parsed_conf
+            new_stack_status.update({STACK_DEPLOYED: deployed_resources})
+            new_stack_status.update({CLI_VERSION_KEY: CLI_VERSION})
 
-            self._save_stack_status(status_filepath, stack_status)
+            self._save_stack_status(status_path, new_stack_status)
             os.chdir(cli_cwd)
         except Exception:
             # For any exception during deployment, set cwd back to what it was.
