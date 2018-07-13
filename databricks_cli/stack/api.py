@@ -32,8 +32,6 @@ from databricks_cli.jobs.api import JobsApi
 from databricks_cli.version import version as CLI_VERSION
 from databricks_cli.stack.exceptions import StackError
 
-DEBUG_MODE = False
-_home = os.path.expanduser('~')
 MS_SEC = 1000
 STACK_STATUS_INSERT = 'deployed'
 
