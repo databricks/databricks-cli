@@ -75,9 +75,9 @@ def stack_api():
 
 
 class TestStackApi(object):
-    def test_parse_config_file(self, stack_api, tmpdir):
+    def test_load_json_config(self, stack_api, tmpdir):
         """
-            _parse_config_file should read the same JSON content that was originally in the
+            _load_json should read the same JSON content that was originally in the
             stack configuration JSON.
         """
         stack_path = os.path.join(tmpdir.strpath, TEST_STACK_PATH)
@@ -201,15 +201,14 @@ class TestStackApi(object):
 
         # TEST CASE 1:
         # stack_api.deploy_job should create job if physical_id not given job doesn't exist
-        res_physical_id_1, res_deploy_output_1 = stack_api.deploy_job('test job', test_job_settings)
+        res_physical_id_1, res_deploy_output_1 = stack_api.deploy_job(test_job_settings)
         assert stack_api.jobs_client.get_job(res_physical_id_1['job_id']) == res_deploy_output_1
         assert res_deploy_output_1['job_id'] == res_physical_id_1['job_id']
         assert test_job_settings == res_deploy_output_1['job_settings']
 
         # TEST CASE 2:
         # stack_api.deploy_job should reset job if physical_id given.
-        res_physical_id_2, res_deploy_output_2 = stack_api.deploy_job('test job',
-                                                                      alt_test_job_settings,
+        res_physical_id_2, res_deploy_output_2 = stack_api.deploy_job(alt_test_job_settings,
                                                                       res_physical_id_1)
         # physical job id not changed from last update
         assert res_physical_id_2['job_id'] == res_physical_id_1['job_id']
@@ -220,8 +219,7 @@ class TestStackApi(object):
         # stack_api.deploy_job should reset job if a physical_id not given, but job with same name
         # found
         alt_test_job_settings['new_property'] = 'new_property_value'
-        res_physical_id_3, res_deploy_output_3 = stack_api.deploy_job('test job',
-                                                                      alt_test_job_settings)
+        res_physical_id_3, res_deploy_output_3 = stack_api.deploy_job(alt_test_job_settings)
         # physical job id not changed from last update
         assert res_physical_id_3['job_id'] == res_physical_id_2['job_id']
         assert res_deploy_output_3['job_id'] == res_physical_id_3['job_id']
@@ -233,7 +231,7 @@ class TestStackApi(object):
         # Add new job with different physical id but same name settings as alt_test_job_settings
         jobs_in_databricks[123] = {'job_id': 123, 'job_settings': alt_test_job_settings}
         with pytest.raises(StackError):
-            stack_api.deploy_job('test job', alt_test_job_settings)
+            stack_api.deploy_job(alt_test_job_settings)
 
     def test_deploy_resource(self, stack_api):
         """
