@@ -192,6 +192,9 @@ class StackApi(object):
             json.dump(status_data, f, indent=2, sort_keys=True, default=self._json_type_handler)
             click.echo('Storing deployed stack status metadata to %s' % status_path)
 
+        self.previous_deploy_resource_config_map = {}
+        self.previous_deploy_resource_status_map = {}
+
     def put_job(self, job_settings):
         """
         Given settings of the job in job_settings, create a new job. For purposes of idempotency
