@@ -23,6 +23,7 @@
 
 # pylint:disable=redefined-outer-name
 # pylint:disable=too-many-locals
+# pylint:disable=unused-argument
 
 import os
 import json
@@ -83,25 +84,8 @@ class TestStackApi(object):
         os.makedirs(os.path.dirname(stack_path))
         with open(stack_path, "w+") as f:
             json.dump(TEST_STACK, f)
-        config = stack_api._parse_config_file(stack_path)
+        config = stack_api._load_json(stack_path)
         assert config == TEST_STACK
-
-    def test_load_stack_status(self, stack_api, tmpdir):
-        """
-            The status returned from _load_stack_status should be the same as the contents
-            originally stored in the stack status file.
-            Also when loading, there should be an internal mapping from resource_id to
-            resource_physical_id, which can be cleanly accessed through _get_resource_physical_id.
-        """
-        config_path = os.path.join(tmpdir.strpath, 'test.json')
-        status_path = stack_api._generate_stack_status_path(config_path)
-        with open(status_path, "w+") as f:
-            json.dump(TEST_STATUS, f)
-        status = stack_api._load_stack_status(status_path=status_path)
-        assert status == TEST_STATUS
-        job_physical_id = stack_api._get_deployed_resource_physical_id(TEST_RESOURCE_ID,
-                                                                       api.JOBS_SERVICE)
-        assert job_physical_id == TEST_JOB_PHYSICAL_ID
 
     def test_generate_stack_status_path(self, stack_api, tmpdir):
         """
@@ -118,16 +102,16 @@ class TestStackApi(object):
         generated_path = stack_api._generate_stack_status_path(config_path)
         assert expected_status_path == generated_path
 
-    def test_save_stack_status(self, stack_api, tmpdir):
+    def test_save_load_stack_status(self, stack_api, tmpdir):
         """
             When saving the a stack status through _save_stack_status, it should be able to be
             loaded by _load_stack_status and have the same exact contents.
         """
         config_path = os.path.join(tmpdir.strpath, 'test.json')
         status_path = stack_api._generate_stack_status_path(config_path)
-        stack_api._save_stack_status(status_path, TEST_STATUS)
+        stack_api._save_json(status_path, TEST_STATUS)
 
-        status = stack_api._load_stack_status(status_path)
+        status = stack_api._load_json(status_path)
         assert status == TEST_STATUS
 
     def test_deploy_relative_paths(self, stack_api, tmpdir):
@@ -144,10 +128,9 @@ class TestStackApi(object):
             json.dump(TEST_STACK, f)
         initial_cwd = os.getcwd()
 
-        def _deploy_resource(resource):
-            assert resource is not None  # just to pass lint
+        def _deploy_resource(resource, stack_status):
             assert os.getcwd() == config_working_dir
-            return {}
+            return TEST_JOB_STATUS
 
         stack_api.deploy_resource = mock.Mock(wraps=_deploy_resource)
         stack_api.deploy(config_path)
@@ -173,8 +156,7 @@ class TestStackApi(object):
     def test_deploy_job(self, stack_api):
         """
             stack_api.deploy_job should create a new job when 1) A physical_id is not given and
-            a job with the same name does not exist in the settings. 2) A physical_id is given but
-            a call to reset the job fails.
+            a job with the same name does not exist in the settings.
 
             stack_api.deploy_job should reset/update an existing job when 1) A physical_id is given
             2) A physical_id is not given but one job with the same name exists.
@@ -246,27 +228,17 @@ class TestStackApi(object):
         assert alt_test_job_settings == res_deploy_output_3['job_settings']
 
         # TEST CASE 4
-        # If a physical_id is given, but resetting the job fails, a new job is created
-        nonexistent_physical_id = {'job_id': 123456}
-        res_physical_id_4, res_deploy_output_4 = stack_api.deploy_job('test job', TEST_JOB_SETTINGS,
-                                                                      nonexistent_physical_id)
-        # This job id should be different from last update
-        assert res_physical_id_4['job_id'] != res_physical_id_3['job_id']
-        assert res_deploy_output_4['job_id'] == res_physical_id_4['job_id']
-        assert TEST_JOB_SETTINGS == res_deploy_output_4['job_settings']
-
-        # TEST CASE 5
         # If a physical_id is not given but there is already multiple jobs of the same name in
         # databricks, an error should be raised
-        # Add new job with different physical id but same name settings as TEST_JOB_SETTINGS
-        jobs_in_databricks[123] = {'job_id': 123, 'job_settings': TEST_JOB_SETTINGS}
+        # Add new job with different physical id but same name settings as alt_test_job_settings
+        jobs_in_databricks[123] = {'job_id': 123, 'job_settings': alt_test_job_settings}
         with pytest.raises(StackError):
-            stack_api.deploy_job('test job', TEST_JOB_SETTINGS)
+            stack_api.deploy_job('test job', alt_test_job_settings)
 
     def test_deploy_resource(self, stack_api):
         """
            stack_api.deploy_resource should return relevant fields in output if deploy done
-           correctly. If deploy not done correctly, a StackError should be raised.
+           correctly.
         """
         stack_api.jobs_client.deploy_job = mock.MagicMock()
         stack_api.jobs_client.deploy_job.return_value = (12345, {'job_id': 12345})
@@ -285,17 +257,3 @@ class TestStackApi(object):
         }
         with pytest.raises(StackError):
             stack_api.deploy_resource(resource_badtype)
-
-        # Missing a key, raise stack error
-        d = TEST_JOB_RESOURCE.copy()
-        with pytest.raises(StackError):
-            d.pop(api.RESOURCE_SERVICE)
-            stack_api.deploy_resource(d)
-        d = TEST_JOB_RESOURCE.copy()
-        with pytest.raises(StackError):
-            d.pop(api.RESOURCE_ID)
-            stack_api.deploy_resource(d)
-        d = TEST_JOB_RESOURCE.copy()
-        with pytest.raises(StackError):
-            d.pop(api.RESOURCE_PROPERTIES)
-            stack_api.deploy_resource(d)
