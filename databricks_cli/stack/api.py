@@ -28,7 +28,6 @@ import time
 
 import click
 
-from requests.exceptions import HTTPError
 from databricks_cli.jobs.api import JobsApi
 from databricks_cli.version import version as CLI_VERSION
 from databricks_cli.stack.exceptions import StackError
@@ -97,7 +96,7 @@ class StackApi(object):
 
         :param path: Path of JSON file.
         :param data: dict- data that wants to by written to JSON file
-        :return:
+        :return: None
         """
         with open(path, 'w+') as f:
             json.dump(data, f, indent=2, sort_keys=True, default=self._json_type_handler)
