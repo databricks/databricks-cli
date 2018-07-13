@@ -25,6 +25,7 @@ import os
 import json
 from datetime import datetime
 import time
+import copy
 
 import click
 
@@ -91,13 +92,14 @@ class StackApi(object):
         """
         Deploys a stack given stack JSON configuration template at path config_path.
 
-        Loads the JSON template as well as status JSON if stack has been deployed before.
         After going through each of the resources and deploying them, stores status JSON
         of deployment with deploy status of each resource deployment.
+        For each resource deployment, stack_status is used to get the associated resource status
+        of a resource from the last deployment.
 
         :param stack_config: Must have the fields of
         'name', the name of the stack and 'resources', a list of stack resources.
-        :param stack_status:
+        :param stack_status: Must have the fields of
         :return:
         """
         self._validate_config(stack_config)
@@ -123,7 +125,7 @@ class StackApi(object):
             resource_statuses.append(new_resource_status)
 
         # stack deploy status is original config with deployed resource statuses added
-        new_stack_status = stack_config.deepcopy()
+        new_stack_status = copy.deepcopy(stack_config)
         new_stack_status.update({STACK_DEPLOYED: resource_statuses})
         new_stack_status.update({CLI_VERSION_KEY: CLI_VERSION})
 

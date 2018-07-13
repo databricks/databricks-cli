@@ -149,6 +149,7 @@ class TestStackApi(object):
         # No 'resources' key will cause a stack error
         try:
             stack_api.deploy(config_path)
+            assert False
         except StackError:
             pass
         assert os.getcwd() == initial_cwd
