@@ -123,7 +123,7 @@ class StackApi(object):
             resource_statuses.append(new_resource_status)
 
         # stack deploy status is original config with deployed resource statuses added
-        new_stack_status = stack_config
+        new_stack_status = stack_config.deepcopy()
         new_stack_status.update({STACK_DEPLOYED: resource_statuses})
         new_stack_status.update({CLI_VERSION_KEY: CLI_VERSION})
 
