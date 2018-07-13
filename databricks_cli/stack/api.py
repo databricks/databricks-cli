@@ -184,7 +184,7 @@ class StackApi(object):
         click.echo("Deploying job '%s' with settings: \n%s \n" % (resource_id, json.dumps(
             job_settings, indent=2, separators=(',', ': '))), nl=False)
 
-        if physical_id and 'job_id' in physical_id:
+        if physical_id:
             job_id = physical_id['job_id']
             self.update_job(job_settings, physical_id['job_id'])
         else:
