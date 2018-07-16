@@ -73,20 +73,13 @@ class StackApi(object):
         :return: None.
         """
         config_dir = os.path.dirname(os.path.abspath(config_path))
-        cli_cwd = os.getcwd()
         os.chdir(config_dir)  # Switch current working directory to where json config is stored
-        try:
-            stack_config = self._load_json(config_path)
-            status_path = self._generate_stack_status_path(config_path)
-            stack_status = self._load_json(status_path)
-            new_stack_status = self.deploy_config(stack_config, stack_status)
+        stack_config = self._load_json(config_path)
+        status_path = self._generate_stack_status_path(config_path)
+        stack_status = self._load_json(status_path)
+        new_stack_status = self.deploy_config(stack_config, stack_status)
 
-            self._save_json(status_path, new_stack_status)
-            os.chdir(cli_cwd)
-        except Exception:
-            # For any exception during deployment, set cwd back to what it was.
-            os.chdir(cli_cwd)
-            raise
+        self._save_json(status_path, new_stack_status)
 
     def deploy_config(self, stack_config, stack_status=None):
         """
@@ -109,16 +102,18 @@ class StackApi(object):
         else:
             resource_id_to_status = {}
 
-        stack_name = stack_config[STACK_NAME]
-        click.echo('Deploying stack %s' % stack_name)
+        stack_name = stack_config.get(STACK_NAME)
+        click.echo('Deploying stack {}'.format(stack_name))
+
+        # List of statuses, One for each resource in stack_config[STACK_RESOURCES]
         resource_statuses = []
 
-        for resource_config in stack_config[STACK_RESOURCES]:
+        for resource_config in stack_config.get(STACK_RESOURCES):
             click.echo()
-            click.echo("Deploying resource")
             # Retrieve resource deployment info from the last deployment.
-            resource_map_key = (resource_config[RESOURCE_ID], resource_config[RESOURCE_SERVICE])
-            resource_status = resource_id_to_status[resource_map_key] \
+            resource_map_key = (resource_config.get(RESOURCE_ID),
+                                resource_config.get(RESOURCE_SERVICE))
+            resource_status = resource_id_to_status.get(resource_map_key) \
                 if resource_map_key in resource_id_to_status else None
             # Deploy resource, get resource_status
             new_resource_status = self._deploy_resource(resource_config, resource_status)
@@ -151,22 +146,22 @@ class StackApi(object):
         ex. {'id': 'example-resource', 'service': 'jobs', 'physical_id': {'job_id': 123},
         'timestamp': 123456789, 'deploy_output': {..}}
         """
-        resource_id = resource_config[RESOURCE_ID]
-        resource_service = resource_config[RESOURCE_SERVICE]
-        resource_properties = resource_config[RESOURCE_PROPERTIES]
-        physical_id = resource_status[RESOURCE_PHYSICAL_ID] if resource_status else None
+        resource_id = resource_config.get(RESOURCE_ID)
+        resource_service = resource_config.get(RESOURCE_SERVICE)
+        resource_properties = resource_config.get(RESOURCE_PROPERTIES)
+        physical_id = resource_status.get(RESOURCE_PHYSICAL_ID) if resource_status else None
 
         if resource_service == JOBS_SERVICE:
-            click.echo("Deploying job '%s' with properties: \n%s \n" % (resource_id, json.dumps(
-                resource_properties, indent=2, separators=(',', ': '))), nl=False)
-            physical_id, deploy_output = self._deploy_job(resource_properties,
-                                                          physical_id)
+            click.echo("Deploying job '{}' with properties: \n{}".format(resource_id, json.dumps(
+                resource_properties, indent=2, separators=(',', ': '))))
+            new_physical_id, deploy_output = self._deploy_job(resource_properties,
+                                                              physical_id)
         else:
-            raise StackError("Resource service '%s' not supported" % resource_service)
+            raise StackError("Resource service '{}' not supported".format(resource_service))
 
         new_resource_status = {RESOURCE_ID: resource_id, RESOURCE_SERVICE: resource_service,
                                RESOURCE_DEPLOY_TIMESTAMP: datetime.now(),
-                               RESOURCE_PHYSICAL_ID: physical_id,
+                               RESOURCE_PHYSICAL_ID: new_physical_id,
                                RESOURCE_DEPLOY_OUTPUT: deploy_output}
         return new_resource_status
 
@@ -187,11 +182,11 @@ class StackApi(object):
         job_settings = resource_properties  # resource_properties of jobs are solely job settings.
 
         if physical_id:
-            job_id = physical_id['job_id']
-            self._update_job(job_settings, physical_id['job_id'])
+            job_id = physical_id.get('job_id')
+            self._update_job(job_settings, job_id)
         else:
             job_id = self._put_job(job_settings)
-        click.echo("Job deployed on Databricks with job_id %s" % job_id)
+        click.echo("Job deployed on Databricks with job_id {}".format(job_id))
         physical_id = {'job_id': job_id}
         deploy_output = self.jobs_client.get_job(job_id)
         return physical_id, deploy_output
@@ -208,26 +203,26 @@ class StackApi(object):
         """
         if 'name' not in job_settings:
             raise StackError("Please supply 'name' in job resource 'resource_properties'")
-        job_name = job_settings['name']
+        job_name = job_settings.get('name')
         jobs_same_name = self.jobs_client._list_jobs_by_name(job_name)
         if len(jobs_same_name) > 1:
-            raise StackError("Multiple jobs with the same name '%s' already exist, aborting"
-                             " stack deployment" % job_name)
+            raise StackError("Multiple jobs with the same name '{}' already exist, aborting"
+                             " stack deployment".format(job_name))
         elif len(jobs_same_name) == 1:
             existing_job = jobs_same_name[0]
-            creator_name = existing_job['creator_user_name']
-            timestamp = existing_job['created_time'] / MS_SEC  # Convert to readable date.
+            creator_name = existing_job.get('creator_user_name')
+            timestamp = existing_job.get('created_time') / MS_SEC  # Convert to readable date.
             date_created = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
-            click.echo("Warning: Job exists with same name '%s' created by %s on %s. Job will "
-                       "be overwritten" % (job_name, creator_name, date_created))
+            click.echo("Warning: Job exists with same name '{}' created by {} on {}. Job will "
+                       "be overwritten".format(job_name, creator_name, date_created))
             click.echo("Updating Job")
             # Calling jobs_client.reset_job directly so as to not call same level function.
-            self.jobs_client.reset_job({'job_id': existing_job['job_id'],
+            self.jobs_client.reset_job({'job_id': existing_job.get('job_id'),
                                         'new_settings': job_settings})
-            return existing_job['job_id']
+            return existing_job.get('job_id')
         else:
             click.echo("Creating new job")
-            job_id = self.jobs_client.create_job(job_settings)['job_id']
+            job_id = self.jobs_client.create_job(job_settings).get('job_id')
             return job_id
 
     def _update_job(self, job_settings, job_id):
@@ -249,16 +244,23 @@ class StackApi(object):
         :return: None. Raises errors to stop deployment if there is a problem.
         """
         if STACK_NAME not in stack_config:
-            raise StackError("'%s' not in configuration" % STACK_NAME)
+            raise StackError("'{}' not in configuration".format(STACK_NAME))
         if STACK_RESOURCES not in stack_config:
-            raise StackError("'%s' not in configuration" % STACK_RESOURCES)
-        for resource in stack_config[STACK_RESOURCES]:
+            raise StackError("'{}' not in configuration".format(STACK_RESOURCES))
+        seen_resource_ids = set()  # Store seen resources to restrict duplicates.
+        for resource in stack_config.get(STACK_RESOURCES):
             if RESOURCE_ID not in resource:
-                raise StackError("%s doesn't exist in resource config" % RESOURCE_ID)
+                raise StackError("{} doesn't exist in resource config".format(RESOURCE_ID))
             if RESOURCE_SERVICE not in resource:
-                raise StackError("%s doesn't exist in resource config" % RESOURCE_SERVICE)
+                raise StackError("{} doesn't exist in resource config".format(RESOURCE_SERVICE))
             if RESOURCE_PROPERTIES not in resource:
-                raise StackError("%s doesn't exist in resource config" % RESOURCE_PROPERTIES)
+                raise StackError("{} doesn't exist in resource config".format(RESOURCE_PROPERTIES))
+            # Error on duplicate resource ID's
+            resource_id = resource.get(RESOURCE_ID)
+            if resource_id in seen_resource_ids:
+                raise StackError("Duplicate resource ID '{}' found, please resolve.".format(
+                    resource_id))
+            seen_resource_ids.add(resource_id)
 
     def _validate_status(self, stack_status):
         """
@@ -272,19 +274,21 @@ class StackApi(object):
         :return: None. Raises errors to stop deployment if there is a problem.
         """
         if STACK_NAME not in stack_status:
-            raise StackError("'%s' not in status." % STACK_NAME)
+            raise StackError("'{}' not in status.".format(STACK_NAME))
         if STACK_RESOURCES not in stack_status:
-            raise StackError("'%s' not in status" % STACK_RESOURCES)
+            raise StackError("'{}' not in status".format(STACK_RESOURCES))
         if STACK_DEPLOYED not in stack_status:
-            raise StackError("'%s' not in status" % STACK_DEPLOYED)
-        for deployed_resource in stack_status[STACK_DEPLOYED]:
+            raise StackError("'{}' not in status".format(STACK_DEPLOYED))
+        for deployed_resource in stack_status.get(STACK_DEPLOYED):
             if RESOURCE_ID not in deployed_resource:
-                raise StackError("%s doesn't exist in deployed resource status" % RESOURCE_ID)
+                raise StackError("{} doesn't exist in deployed resource status".format(
+                    RESOURCE_ID))
             if RESOURCE_SERVICE not in deployed_resource:
-                raise StackError("%s doesn't exist in deployed resource status" % RESOURCE_SERVICE)
+                raise StackError("{} doesn't exist in deployed resource status".format(
+                    RESOURCE_SERVICE))
             if RESOURCE_PHYSICAL_ID not in deployed_resource:
-                raise StackError("%s doesn't exist in deployed resource status" %
-                                 RESOURCE_PHYSICAL_ID)
+                raise StackError("{} doesn't exist in deployed resource status".format(
+                    RESOURCE_PHYSICAL_ID))
 
     def _get_resource_to_status_map(self, stack_status):
         """
@@ -294,8 +298,11 @@ class StackApi(object):
         The key for this dictionary is the resource's (id, service) so that we don't load
         persisted resources with the wrong resource service.
         """
-        return {(resource_status[RESOURCE_ID], resource_status[RESOURCE_SERVICE]): resource_status
-                for resource_status in stack_status[STACK_DEPLOYED]}
+        return {
+            (resource_status.get(RESOURCE_ID), resource_status.get(RESOURCE_SERVICE)):
+                resource_status
+            for resource_status in stack_status.get(STACK_DEPLOYED)
+        }
 
     def _generate_stack_status_path(self, stack_path):
         """
@@ -340,7 +347,7 @@ class StackApi(object):
         if isinstance(obj, datetime):
             # Get timestamp of datetime object- works with python2 and 3
             return int(time.mktime(obj.timetuple()))
-        raise TypeError("Object of type '%s' is not JSON serializable" % type(obj))
+        raise TypeError("Object of type '{}' is not JSON serializable".format(type(obj)))
 
     def _save_json(self, path, data):
         """
