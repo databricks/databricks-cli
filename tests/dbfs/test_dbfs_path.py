@@ -51,6 +51,10 @@ class TestDbfsPath(object):
     def test_relpath(self):
         assert DbfsPath('dbfs:/test/a').relpath(TEST_DBFS_PATH) == 'a'
 
+    def test_api_path(self):
+        assert DbfsPath('dbfs:/test').api_path == '/test'
+        assert DbfsPath('dbfs:/dbfs:').api_path == '/dbfs:'
+
     def test_basename(self):
         assert DbfsPath('dbfs:/').basename == ''
         assert DbfsPath('dbfs:/test').basename == 'test'

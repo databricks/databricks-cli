@@ -72,14 +72,14 @@ class WorkspaceFileInfo(object):
 
     @property
     def json(self):
-        if self._json:
-            return self._json
-        else:
+        if self._json is None:
             return {
                 'path': self.path,
                 'object_type': self.object_type,
                 'language': self.language
             }
+        else:
+            return self._json
 
     @classmethod
     def from_json(cls, deserialized_json):
