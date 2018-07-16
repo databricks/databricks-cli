@@ -80,6 +80,7 @@ class TestWorkspaceApi(object):
         workspace_api.client.get_status.return_value = TEST_JSON_RESPONSE
         file_info = workspace_api.get_status(TEST_WORKSPACE_PATH)
         assert file_info.path == TEST_WORKSPACE_PATH
+        assert file_info.json == TEST_JSON_RESPONSE
 
     def test_list_objects(self, workspace_api):
         workspace_api.client.list.return_value = {'objects': [TEST_JSON_RESPONSE]}
