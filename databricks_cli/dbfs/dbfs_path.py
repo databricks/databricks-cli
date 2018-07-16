@@ -76,14 +76,6 @@ class DbfsPath(object):
         return os.path.relpath(self.absolute_path, dbfs_path_prefix.absolute_path)
 
     @property
-    def api_path(self):
-        """
-        This function returns the dbfs path that would be displayed by the API.
-        :return:
-        """
-        return self.absolute_path.lstrip('dbfs:')
-
-    @property
     def basename(self):
         """
         This function is like the basename utility and is unlike os.path.basename.

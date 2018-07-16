@@ -68,12 +68,6 @@ class TestFileInfo(object):
         assert file_info.dbfs_path == TEST_DBFS_PATH
         assert not file_info.is_dir
         assert file_info.file_size == 1
-        assert file_info.json == TEST_FILE_JSON
-
-    def test_json(self):
-        file_info = api.FileInfo(TEST_DBFS_PATH, False, 1)
-        expected_json = TEST_FILE_JSON
-        assert file_info.json == expected_json
 
 
 @pytest.fixture()

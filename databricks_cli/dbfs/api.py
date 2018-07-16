@@ -37,11 +37,10 @@ BUFFER_SIZE_BYTES = 2**20
 
 
 class FileInfo(object):
-    def __init__(self, dbfs_path, is_dir, file_size, json=None):
+    def __init__(self, dbfs_path, is_dir, file_size):
         self.dbfs_path = dbfs_path
         self.is_dir = is_dir
         self.file_size = file_size
-        self._json = json
 
     def to_row(self, is_long_form, is_absolute):
         path = self.dbfs_path.absolute_path if is_absolute else self.dbfs_path.basename
@@ -51,21 +50,10 @@ class FileInfo(object):
             return [filetype, self.file_size, stylized_path]
         return [stylized_path]
 
-    @property
-    def json(self):
-        if self._json is None:
-            return {
-                'path': self.dbfs_path.api_path,
-                'is_dir': self.is_dir,
-                'file_size': self.file_size
-            }
-        else:
-            return self._json
-
     @classmethod
     def from_json(cls, json):
         dbfs_path = DbfsPath.from_api_path(json['path'])
-        return cls(dbfs_path, json['is_dir'], json['file_size'], json=json)
+        return cls(dbfs_path, json['is_dir'], json['file_size'])
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
