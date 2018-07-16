@@ -35,11 +35,10 @@ LIBRARY = 'LIBRARY'
 
 
 class WorkspaceFileInfo(object):
-    def __init__(self, path, object_type, language=None, json=None):
+    def __init__(self, path, object_type, language=None):
         self.path = path
         self.object_type = object_type
         self.language = language
-        self._json = json
 
     def to_row(self, is_long_form, is_absolute):
         path = self.path if is_absolute else self.basename
@@ -70,20 +69,9 @@ class WorkspaceFileInfo(object):
     def basename(self):
         return os.path.basename(self.path)
 
-    @property
-    def json(self):
-        if self._json:
-            return self._json
-        else:
-            return {
-                'path': self.path,
-                'object_type': self.object_type,
-                'language': self.language
-            }
-
     @classmethod
     def from_json(cls, deserialized_json):
-        return cls(json=deserialized_json, **deserialized_json)
+        return cls(**deserialized_json)
 
 
 class WorkspaceApi(object):
