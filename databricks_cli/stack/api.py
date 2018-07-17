@@ -72,12 +72,14 @@ class StackApi(object):
         'name', the name of the stack and 'resources', a list of stack resources.
         :return: None.
         """
-        config_dir = os.path.dirname(os.path.abspath(config_path))
         stack_config = self._load_json(config_path)
         status_path = self._generate_stack_status_path(config_path)
         stack_status = self._load_json(status_path)
+        config_dir = os.path.dirname(os.path.abspath(config_path))
+        cli_dir = os.getcwd()
         os.chdir(config_dir)  # Switch current working directory to where json config is stored
         new_stack_status = self.deploy_config(stack_config, stack_status)
+        os.chdir(cli_dir)
         self._save_json(status_path, new_stack_status)
 
     def deploy_config(self, stack_config, stack_status=None):
