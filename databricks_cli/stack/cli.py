@@ -44,8 +44,6 @@ def deploy(api_client, config_path):
 
     click.echo('Deploying stack at: ' + config_path)
     StackApi(api_client).deploy(config_path)
-    click.echo('#' * 80 + '\n')
-
 
 @click.group(context_settings=CONTEXT_SETTINGS,
              short_help='Utility to deploy and download Databricks resource stacks.')

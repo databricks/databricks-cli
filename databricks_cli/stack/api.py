@@ -68,6 +68,10 @@ class StackApi(object):
         calls on deploy_config to do the stack deployment. Finally stores the new status
         file from the deployment.
 
+        The working directory is changed to that where the JSON template is contained
+        so that paths within the stack configuration are relative to the directory of the
+        JSON template instead of the directory where this function is called.
+
         :param config_path: Path to stack JSON configuration template. Must have the fields of
         'name', the name of the stack and 'resources', a list of stack resources.
         :return: None.
@@ -80,6 +84,7 @@ class StackApi(object):
         os.chdir(config_dir)  # Switch current working directory to where json config is stored
         new_stack_status = self.deploy_config(stack_config, stack_status)
         os.chdir(cli_dir)
+        click.echo("Saving stack status to {}".format(status_path))
         self._save_json(status_path, new_stack_status)
 
     def deploy_config(self, stack_config, stack_status=None):
@@ -108,9 +113,8 @@ class StackApi(object):
 
         # List of statuses, One for each resource in stack_config[STACK_RESOURCES]
         resource_statuses = []
-
+        click.echo('#' * 80)
         for resource_config in stack_config.get(STACK_RESOURCES):
-            click.echo()
             # Retrieve resource deployment info from the last deployment.
             resource_map_key = (resource_config.get(RESOURCE_ID),
                                 resource_config.get(RESOURCE_SERVICE))
@@ -119,6 +123,7 @@ class StackApi(object):
             # Deploy resource, get resource_status
             new_resource_status = self._deploy_resource(resource_config, resource_status)
             resource_statuses.append(new_resource_status)
+            click.echo('#' * 80)
 
         # stack deploy status is original config with deployed resource statuses added
         new_stack_status = copy.deepcopy(stack_config)
@@ -161,7 +166,7 @@ class StackApi(object):
             raise StackError("Resource service '{}' not supported".format(resource_service))
 
         new_resource_status = {RESOURCE_ID: resource_id, RESOURCE_SERVICE: resource_service,
-                               RESOURCE_DEPLOY_TIMESTAMP: datetime.now(),
+                               RESOURCE_DEPLOY_TIMESTAMP: int(time.mktime(datetime.now().timetuple())),
                                RESOURCE_PHYSICAL_ID: new_physical_id,
                                RESOURCE_DEPLOY_OUTPUT: deploy_output}
         return new_resource_status
@@ -187,7 +192,7 @@ class StackApi(object):
             self._update_job(job_settings, job_id)
         else:
             job_id = self._put_job(job_settings)
-        click.echo("Job deployed on Databricks with job_id {}".format(job_id))
+        click.echo("Job deployed on Databricks with Job ID {}".format(job_id))
         physical_id = {'job_id': job_id}
         deploy_output = self.jobs_client.get_job(job_id)
         return physical_id, deploy_output
@@ -216,13 +221,11 @@ class StackApi(object):
             date_created = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
             click.echo("Warning: Job exists with same name '{}' created by {} on {}. Job will "
                        "be overwritten".format(job_name, creator_name, date_created))
-            click.echo("Updating Job")
             # Calling jobs_client.reset_job directly so as to not call same level function.
             self.jobs_client.reset_job({'job_id': existing_job.get('job_id'),
                                         'new_settings': job_settings})
             return existing_job.get('job_id')
         else:
-            click.echo("Creating new job")
             job_id = self.jobs_client.create_job(job_settings).get('job_id')
             return job_id
 
@@ -233,7 +236,6 @@ class StackApi(object):
         :param job_settings: job settings to update the job with.
         :param job_id: physical job_id of job in databricks server.
         """
-        click.echo("Updating Job")
         self.jobs_client.reset_job({'job_id': job_id, 'new_settings': job_settings})
 
     def _validate_config(self, stack_config):
@@ -333,7 +335,6 @@ class StackApi(object):
         if os.path.exists(path):
             with open(path, 'r') as f:
                 stack_conf = json.load(f)
-
         return stack_conf
 
     def _json_type_handler(self, obj):
@@ -358,5 +359,5 @@ class StackApi(object):
         :param data: dict- data that wants to by written to JSON file
         :return: None
         """
-        with open(path, 'w+') as f:
+        with open(path, 'w') as f:
             json.dump(data, f, indent=2, sort_keys=True, default=self._json_type_handler)

@@ -61,6 +61,36 @@ TEST_STATUS = {
     api.STACK_DEPLOYED: [TEST_JOB_STATUS]
 }
 
+class _TestJobsClient(object):
+    def __init__(self):
+        self.jobs_in_databricks = {}
+        self.available_job_id = [1234, 12345]
+
+    def get_job(self, job_id):
+        if job_id not in self.jobs_in_databricks:
+            # Job created is not found.
+            raise HTTPError('Job not Found')
+        else:
+            return self.jobs_in_databricks[job_id]
+
+    def reset_job(self, data):
+        if data['job_id'] not in self.jobs_in_databricks:
+            raise HTTPError('Job Not Found')
+        self.jobs_in_databricks[data['job_id']]['job_settings'] = data['new_settings']
+
+    def create_job(self, job_settings):
+        job_id = self.available_job_id.pop()
+        new_job_json = {'job_id': job_id,
+                        'job_settings': job_settings.copy(),
+                        'creator_user_name': 'testuser@example.com',
+                        'created_time': 987654321}
+        self.jobs_in_databricks[job_id] = new_job_json
+        return new_job_json
+
+    def _list_jobs_by_name(self, job_name):
+        return [job for job in self.jobs_in_databricks.values()
+                if job['job_settings']['name'] == job_name]
+
 
 @pytest.fixture()
 def stack_api():
@@ -147,39 +177,7 @@ class TestStackApi(object):
         """
         test_job_settings = TEST_JOB_SETTINGS
         alt_test_job_settings = {'name': 'alt test job'}  # Different name than TEST_JOB_SETTINGS
-        jobs_in_databricks = {}
-        available_job_id = [1234, 12345]
-
-        def _get_job(job_id):
-            if job_id not in jobs_in_databricks:
-                # Job created is not found.
-                raise HTTPError('Job not Found')
-            else:
-                return jobs_in_databricks[job_id]
-
-        def _reset_job(data):
-            if data['job_id'] not in jobs_in_databricks:
-                raise HTTPError('Job Not Found')
-            jobs_in_databricks[data['job_id']]['job_settings'] = data['new_settings']
-
-        def _create_job(job_settings):
-            job_id = available_job_id.pop()
-            new_job_json = {'job_id': job_id,
-                            'job_settings': job_settings.copy(),
-                            'creator_user_name': 'testuser@example.com',
-                            'created_time': 987654321}
-            jobs_in_databricks[job_id] = new_job_json
-            return new_job_json
-
-        def _list_jobs_by_name(job_name):
-            return [job for job in jobs_in_databricks.values()
-                    if job['job_settings']['name'] == job_name]
-
-        stack_api.jobs_client.create_job = mock.Mock(wraps=_create_job)
-        stack_api.jobs_client.get_job = mock.Mock(wraps=_get_job)
-        stack_api.jobs_client.reset_job = mock.Mock(wraps=_reset_job)
-        stack_api.jobs_client._list_jobs_by_name = mock.Mock(wraps=_list_jobs_by_name)
-
+        stack_api.jobs_client = _TestJobsClient()
         # TEST CASE 1:
         # stack_api._deploy_job should create job if physical_id not given job doesn't exist
         res_physical_id_1, res_deploy_output_1 = stack_api._deploy_job(test_job_settings)
@@ -210,7 +208,10 @@ class TestStackApi(object):
         # If a physical_id is not given but there is already multiple jobs of the same name in
         # databricks, an error should be raised
         # Add new job with different physical id but same name settings as alt_test_job_settings
-        jobs_in_databricks[123] = {'job_id': 123, 'job_settings': alt_test_job_settings}
+        stack_api.jobs_client.jobs_in_databricks[123] = {
+            'job_id': 123,
+            'job_settings': alt_test_job_settings
+        }
         with pytest.raises(StackError):
             stack_api._deploy_job(alt_test_job_settings)
 
