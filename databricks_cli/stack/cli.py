@@ -41,9 +41,11 @@ def deploy(api_client, config_path):
     """
     Deploy a stack to the databricks workspace given a JSON stack configuration template.
     """
-
+    click.echo('#' * 80)
     click.echo('Deploying stack at: ' + config_path)
     StackApi(api_client).deploy(config_path)
+    click.echo('#' * 80)
+
 
 @click.group(context_settings=CONTEXT_SETTINGS,
              short_help='Utility to deploy and download Databricks resource stacks.')
