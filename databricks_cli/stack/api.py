@@ -73,10 +73,10 @@ class StackApi(object):
         :return: None.
         """
         config_dir = os.path.dirname(os.path.abspath(config_path))
-        os.chdir(config_dir)  # Switch current working directory to where json config is stored
         stack_config = self._load_json(config_path)
         status_path = self._generate_stack_status_path(config_path)
         stack_status = self._load_json(status_path)
+        os.chdir(config_dir)  # Switch current working directory to where json config is stored
         new_stack_status = self.deploy_config(stack_config, stack_status)
         self._save_json(status_path, new_stack_status)
 
