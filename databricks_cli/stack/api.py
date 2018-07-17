@@ -73,10 +73,10 @@ class StackApi(object):
         :return: None.
         """
         config_dir = os.path.dirname(os.path.abspath(config_path))
-        os.chdir(config_dir)  # Switch current working directory to where json config is stored
         stack_config = self._load_json(config_path)
         status_path = self._generate_stack_status_path(config_path)
         stack_status = self._load_json(status_path)
+        os.chdir(config_dir)  # Switch current working directory to where json config is stored
         new_stack_status = self.deploy_config(stack_config, stack_status)
         self._save_json(status_path, new_stack_status)
 
@@ -201,7 +201,7 @@ class StackApi(object):
         :return: job_id, Physical ID of job on Databricks server.
         """
         if 'name' not in job_settings:
-            raise StackError("Please supply 'name' in job resource 'resource_properties'")
+            raise StackError("Please supply 'name' in job resource 'properties'")
         job_name = job_settings.get('name')
         jobs_same_name = self.jobs_client._list_jobs_by_name(job_name)
         if len(jobs_same_name) > 1:
