@@ -61,6 +61,7 @@ TEST_STATUS = {
     api.STACK_DEPLOYED: [TEST_JOB_STATUS]
 }
 
+
 class _TestJobsClient(object):
     def __init__(self):
         self.jobs_in_databricks = {}
