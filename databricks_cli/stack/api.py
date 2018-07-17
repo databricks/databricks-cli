@@ -165,7 +165,8 @@ class StackApi(object):
         else:
             raise StackError("Resource service '{}' not supported".format(resource_service))
 
-        new_resource_status = {RESOURCE_ID: resource_id, RESOURCE_SERVICE: resource_service,
+        new_resource_status = {RESOURCE_ID: resource_id,
+                               RESOURCE_SERVICE: resource_service,
                                RESOURCE_DEPLOY_TIMESTAMP:
                                    int(time.mktime(datetime.now().timetuple())),
                                RESOURCE_PHYSICAL_ID: new_physical_id,
