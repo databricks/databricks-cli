@@ -78,7 +78,6 @@ class StackApi(object):
         status_path = self._generate_stack_status_path(config_path)
         stack_status = self._load_json(status_path)
         new_stack_status = self.deploy_config(stack_config, stack_status)
-
         self._save_json(status_path, new_stack_status)
 
     def deploy_config(self, stack_config, stack_status=None):
