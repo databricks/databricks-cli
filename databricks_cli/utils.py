@@ -50,7 +50,6 @@ def eat_exceptions(function):
         except Exception as exception: # noqa
             if not DEBUG_MODE:
                 error_and_quit('{}: {}'.format(type(exception).__name__, str(exception)))
-
     decorator.__doc__ = function.__doc__
     return decorator
 
