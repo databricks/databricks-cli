@@ -216,7 +216,7 @@ class ClusterService(object):
                        spark_conf=None, aws_attributes=None, node_type_id=None,
                        driver_node_type_id=None, ssh_public_keys=None, custom_tags=None,
                        cluster_log_conf=None, spark_env_vars=None, autotermination_minutes=None,
-                       enable_elastic_disk=None, cluster_source=None):
+                       enable_elastic_disk=None, cluster_source=None, idempotency_token=None):
         _data = {}
         if num_workers is not None:
             _data['num_workers'] = num_workers
@@ -254,6 +254,8 @@ class ClusterService(object):
             _data['enable_elastic_disk'] = enable_elastic_disk
         if cluster_source is not None:
             _data['cluster_source'] = cluster_source
+        if idempotency_token is not None:
+            _data['idempotency_token'] = idempotency_token
         return self.client.perform_query('POST', '/clusters/create', data=_data)
     
     def start_cluster(self, cluster_id):
