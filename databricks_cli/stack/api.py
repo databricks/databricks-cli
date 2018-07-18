@@ -168,7 +168,8 @@ class StackApi(object):
         new_resource_status = {RESOURCE_ID: resource_id,
                                RESOURCE_SERVICE: resource_service,
                                RESOURCE_DEPLOY_TIMESTAMP:
-                                   int(time.mktime(datetime.now().timetuple())),
+                                   # Milliseconds since epoch.
+                                   int(time.mktime(datetime.now().timetuple()) * MS_SEC),
                                RESOURCE_PHYSICAL_ID: new_physical_id,
                                RESOURCE_DEPLOY_OUTPUT: deploy_output}
         return new_resource_status
@@ -339,20 +340,6 @@ class StackApi(object):
                 stack_conf = json.load(f)
         return stack_conf
 
-    def _json_type_handler(self, obj):
-        """
-        Helper function to convert certain objects into a compatible JSON format.
-
-        Right now, converts a datetime object to an integer timestamp.
-
-        :param obj: Object that may be a datetime object.
-        :return: Timestamp integer if object is a datetime object.
-        """
-        if isinstance(obj, datetime):
-            # Get timestamp of datetime object- works with python2 and 3
-            return int(time.mktime(obj.timetuple()))
-        raise TypeError("Object of type '{}' is not JSON serializable".format(type(obj)))
-
     def _save_json(self, path, data):
         """
         Writes data to a JSON file.
@@ -362,4 +349,4 @@ class StackApi(object):
         :return: None
         """
         with open(path, 'w') as f:
-            json.dump(data, f, indent=2, sort_keys=True, default=self._json_type_handler)
+            json.dump(data, f, indent=2, sort_keys=True)
