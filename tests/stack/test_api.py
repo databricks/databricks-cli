@@ -158,7 +158,7 @@ class TestStackApi(object):
         with open(config_path, 'w+') as f:
             json.dump(TEST_STACK, f)
 
-        def _deploy_resource(resource, stack_status):
+        def _deploy_resource(resource, stack_status, **kwargs):
             assert os.getcwd() == config_working_dir
             return TEST_JOB_STATUS
 
