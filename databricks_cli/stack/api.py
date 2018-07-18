@@ -139,6 +139,42 @@ class StackApi(object):
 
         return new_stack_status
 
+    def download(self, config_path, **kwargs):
+        """
+        Downloads a stack given stack JSON configuration template at path config_path.
+
+        Loads the JSON template as well as status JSON if stack has been deployed before.
+        Changes working directory to the same directory as where the config file is, then
+        calls on deploy_config to do the stack deployment. Finally stores the new status
+        file from the deployment.
+
+        The working directory is changed to that where the JSON template is contained
+        so that paths within the stack configuration are relative to the directory of the
+        JSON template instead of the directory where this function is called.
+
+        :param config_path: Path to stack JSON configuration template. Must have the fields of
+        'name', the name of the stack and 'resources', a list of stack resources.
+        :return: None.
+        """
+        stack_config = self._load_json(config_path)
+        self.download_config(stack_config, **kwargs)
+
+    def download_config(self, stack_config, **kwargs):
+        """
+        Downloads a stack given a dict of the stack configuration
+        :param stack_config:
+        :param kwargs:
+        :return:
+        """
+        self._validate_config(stack_config)
+        click.echo('#' * 80)
+        for resource_config in stack_config.get(STACK_RESOURCES):
+            # Deploy resource, get resource_status
+            new_resource_status = self._download_resource(resource_config, **kwargs)
+            click.echo('#' * 80)
+
+    def _download_resource(self, resource_config, **kwargs):
+
     def _deploy_resource(self, resource_config, resource_status=None, **kwargs):
         """
         Deploys a resource given a resource information extracted from the stack JSON configuration
