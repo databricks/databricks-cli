@@ -63,7 +63,7 @@ class StackApi(object):
         self.jobs_client = JobsApi(api_client)
         self.workspace_client = WorkspaceApi(api_client)
 
-    def deploy(self, config_path, **kwargs):  # overwrite to be added
+    def deploy(self, config_path, **kwargs):
         """
         Deploys a stack given stack JSON configuration template at path config_path.
 
@@ -173,7 +173,7 @@ class StackApi(object):
                     resource_id, json.dumps(resource_properties, indent=2, separators=(',', ': '))
                 )
             )
-            overwrite = kwargs.get('overwrite', False)
+            overwrite = kwargs.get('overwrite_notebooks', False)
             new_physical_id, deploy_output = self._deploy_workspace(resource_properties,
                                                                     physical_id,
                                                                     overwrite)
@@ -269,7 +269,8 @@ class StackApi(object):
         :param overwrite: Whether or not to overwrite the contents of workspace notebooks.
         :return: (dict, dict) of (physical_id, deploy_output). physical_id is the physical ID for
         the stack status that contains the workspace path of the notebook or directory on datbricks.
-        deploy_output. Is the initial information about the asset on databricks at deploy time.
+        deploy_output is the initial information about the asset on databricks at deploy time
+        returned by the REST API.
         """
         # Required fields. TODO(alinxie) put in _validate_config
         local_path = resource_properties.get('source_path')
@@ -301,7 +302,7 @@ class StackApi(object):
             raise StackError("Invalid value for 'object_type' field: {}".format(object_type))
 
         if physical_id and physical_id['path'] != workspace_path:
-            # Alert if last deployment's path differs from this one.
+            # physical_id['path'] is the workspace path from the last deployment. Alert when changed
             click.echo("Workspace asset had path changed from {} to {}".format(physical_id['path'],
                                                                                workspace_path))
         new_physical_id = {'path': workspace_path}
