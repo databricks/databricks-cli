@@ -30,6 +30,8 @@ import copy
 import click
 
 from databricks_cli.jobs.api import JobsApi
+from databricks_cli.workspace.api import WorkspaceApi
+from databricks_cli.workspace.types import WorkspaceLanguage
 from databricks_cli.version import version as CLI_VERSION
 from databricks_cli.stack.exceptions import StackError
 
@@ -37,6 +39,7 @@ MS_SEC = 1000
 
 # Resource Services
 JOBS_SERVICE = 'jobs'
+WORKSPACE_SERVICE = 'workspace'
 
 # Config Outer Fields
 STACK_NAME = 'name'
@@ -58,8 +61,9 @@ CLI_VERSION_KEY = 'cli_version'
 class StackApi(object):
     def __init__(self, api_client):
         self.jobs_client = JobsApi(api_client)
+        self.workspace_client = WorkspaceApi(api_client)
 
-    def deploy(self, config_path):  # overwrite to be added
+    def deploy(self, config_path, **kwargs):  # overwrite to be added
         """
         Deploys a stack given stack JSON configuration template at path config_path.
 
@@ -82,12 +86,12 @@ class StackApi(object):
         config_dir = os.path.dirname(os.path.abspath(config_path))
         cli_dir = os.getcwd()
         os.chdir(config_dir)  # Switch current working directory to where json config is stored
-        new_stack_status = self.deploy_config(stack_config, stack_status)
+        new_stack_status = self.deploy_config(stack_config, stack_status, **kwargs)
         os.chdir(cli_dir)
         click.echo("Saving stack status to {}".format(status_path))
         self._save_json(status_path, new_stack_status)
 
-    def deploy_config(self, stack_config, stack_status=None):
+    def deploy_config(self, stack_config, stack_status=None, **kwargs):
         """
         Deploys a stack given stack JSON configuration template at path config_path.
 
@@ -121,7 +125,7 @@ class StackApi(object):
             resource_status = resource_id_to_status.get(resource_map_key) \
                 if resource_map_key in resource_id_to_status else None
             # Deploy resource, get resource_status
-            new_resource_status = self._deploy_resource(resource_config, resource_status)
+            new_resource_status = self._deploy_resource(resource_config, resource_status, **kwargs)
             resource_statuses.append(new_resource_status)
             click.echo('#' * 80)
 
@@ -135,7 +139,7 @@ class StackApi(object):
 
         return new_stack_status
 
-    def _deploy_resource(self, resource_config, resource_status=None):  # overwrite to be added
+    def _deploy_resource(self, resource_config, resource_status=None, **kwargs):
         """
         Deploys a resource given a resource information extracted from the stack JSON configuration
         template.
@@ -162,6 +166,17 @@ class StackApi(object):
                 resource_properties, indent=2, separators=(',', ': '))))
             new_physical_id, deploy_output = self._deploy_job(resource_properties,
                                                               physical_id)
+        elif resource_service == WORKSPACE_SERVICE:
+            click.echo(
+                "Deploying workspace asset '{}' with properties \n{}"
+                .format(
+                    resource_id, json.dumps(resource_properties, indent=2, separators=(',', ': '))
+                )
+            )
+            overwrite = kwargs.get('overwrite', False)
+            new_physical_id, deploy_output = self._deploy_workspace(resource_properties,
+                                                                    physical_id,
+                                                                    overwrite)
         else:
             raise StackError("Resource service '{}' not supported".format(resource_service))
 
@@ -239,7 +254,60 @@ class StackApi(object):
         :param job_settings: job settings to update the job with.
         :param job_id: physical job_id of job in databricks server.
         """
+
         self.jobs_client.reset_job({'job_id': job_id, 'new_settings': job_settings})
+
+    def _deploy_workspace(self, resource_properties, physical_id, overwrite):
+        """
+        Deploy workspace asset.
+        TODO (alinxie) Change name to overwrite to be more toward overwriting exclusive resources.
+        For a notebook workspace resource, it is recommended to provide 'language' and 'format'
+        :param resource_properties: dict of properties for the workspace asset. Must contain the
+        'source_path' and 'path' fields. The other fields will be inferred if not provided.
+        :param physical_id: dict containing physical identifier of workspace asset on databricks.
+        Should contain the field 'path'.
+        :param overwrite: Whether or not to overwrite the contents of workspace notebooks.
+        :return: (dict, dict) of (physical_id, deploy_output). physical_id is the physical ID for
+        the stack status that contains the workspace path of the notebook or directory on datbricks.
+        deploy_output. Is the initial information about the asset on databricks at deploy time.
+        """
+        # Required fields. TODO(alinxie) put in _validate_config
+        local_path = resource_properties.get('source_path')
+        workspace_path = resource_properties.get('path')
+        object_type = resource_properties.get('object_type')
+
+        actual_object_type = 'DIRECTORY' if os.path.isdir(local_path) else 'NOTEBOOK'
+        if object_type != actual_object_type:
+            raise StackError("Field 'object_type' ({}) not consistent"
+                             "with actual object type ({})".format(object_type, actual_object_type))
+
+        click.echo('sync {} {} to {}'.format(object_type, local_path, workspace_path))
+        if object_type == 'NOTEBOOK':
+            # Inference of notebook language and format
+            lang_fmt = WorkspaceLanguage.to_language_and_format(local_path)
+            if lang_fmt is None:
+                raise StackError("Workspace Notebook language and format cannot be inferred"
+                                 "Please check file extension of notebook file.")
+            language, fmt = lang_fmt
+            # Deployment
+            self.workspace_client.mkdirs(
+                os.path.dirname(workspace_path))  # Make directory in workspace if not exist
+            self.workspace_client.import_workspace(local_path, workspace_path, language, fmt,
+                                                   overwrite)
+        elif object_type == 'DIRECTORY':
+            self.workspace_client.import_workspace_dir(local_path, workspace_path, overwrite,
+                                                       exclude_hidden_files=True)
+        else:
+            raise StackError("Invalid value for 'object_type' field: {}".format(object_type))
+
+        if physical_id and physical_id['path'] != workspace_path:
+            # Alert if last deployment's path differs from this one.
+            click.echo("Workspace asset had path changed from {} to {}".format(physical_id['path'],
+                                                                               workspace_path))
+        new_physical_id = {'path': workspace_path}
+        deploy_output = self.workspace_client.client.get_status(workspace_path)
+
+        return new_physical_id, deploy_output
 
     def _validate_config(self, stack_config):
         """
