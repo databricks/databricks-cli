@@ -1,5 +1,5 @@
 # Databricks CLI
-# Copyright 2017 Databricks, Inc.
+# Copyright 2018 Databricks, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"), except
 # that the use of services to which certain application programming
@@ -23,34 +23,40 @@
 
 import click
 
-from databricks_cli.configure.config import profile_option
-from databricks_cli.libraries.cli import libraries_group
+from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS
 from databricks_cli.version import print_version_callback, version
-from databricks_cli.utils import CONTEXT_SETTINGS
-from databricks_cli.configure.cli import configure_cli
-from databricks_cli.dbfs.cli import dbfs_group
-from databricks_cli.workspace.cli import workspace_group
-from databricks_cli.jobs.cli import jobs_group
-from databricks_cli.clusters.cli import clusters_group
-from databricks_cli.runs.cli import runs_group
-from databricks_cli.secrets.cli import secrets_group
-from databricks_cli.stack.cli import stack_group
+from databricks_cli.configure.config import provide_api_client, profile_option
+from databricks_cli.stack.api import StackApi
+
+DEBUG_MODE = True
 
 
-@click.group(context_settings=CONTEXT_SETTINGS)
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Deploy stack given a JSON configuration of the stack')
+@click.argument('config_path', type=click.Path(exists=True), required=True)
+@profile_option
+@eat_exceptions
+@provide_api_client
+def deploy(api_client, config_path):
+    """
+    Deploy a stack to the databricks workspace given a JSON stack configuration template.
+    """
+    click.echo('#' * 80)
+    click.echo('Deploying stack at: ' + config_path)
+    StackApi(api_client).deploy(config_path)
+    click.echo('#' * 80)
+
+
+@click.group(context_settings=CONTEXT_SETTINGS,
+             short_help='Utility to deploy and download Databricks resource stacks.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
 @profile_option
-def cli():
+def stack_group():
+    """
+    Utility to deploy and download Databricks resource stacks.
+    """
     pass
 
 
-cli.add_command(configure_cli, name='configure')
-cli.add_command(dbfs_group, name='fs')
-cli.add_command(workspace_group, name='workspace')
-cli.add_command(jobs_group, name='jobs')
-cli.add_command(clusters_group, name='clusters')
-cli.add_command(runs_group, name='runs')
-cli.add_command(libraries_group, name='libraries')
-cli.add_command(secrets_group, name='secrets')
-cli.add_command(stack_group, name='stack')
+stack_group.add_command(deploy, name='deploy')
