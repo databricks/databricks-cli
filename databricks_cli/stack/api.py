@@ -390,11 +390,11 @@ class StackApi(object):
         click.echo('sync {} {} to {}'.format(object_type, local_path, workspace_path))
         if object_type == 'NOTEBOOK':
             # Inference of notebook language and format
-            lang_fmt = WorkspaceLanguage.to_language_and_format(local_path)
-            if lang_fmt is None:
+            language_fmt = WorkspaceLanguage.to_language_and_format(local_path)
+            if language_fmt is None:
                 raise StackError("Workspace Notebook language and format cannot be inferred"
                                  "Please check file extension of notebook file.")
-            language, fmt = lang_fmt
+            language, fmt = language_fmt
             # Deployment
             self.workspace_client.mkdirs(
                 os.path.dirname(workspace_path))  # Make directory in workspace if not exist
