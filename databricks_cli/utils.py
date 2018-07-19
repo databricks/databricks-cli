@@ -22,6 +22,7 @@
 # limitations under the License.
 
 import sys
+import traceback
 from json import dumps as json_dumps, loads as json_loads
 
 import click
@@ -29,6 +30,7 @@ import six
 from requests.exceptions import HTTPError
 
 from databricks_cli.configure.provider import DEFAULT_SECTION
+from databricks_cli.click_types import ContextObject
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 DEBUG_MODE = False
@@ -53,6 +55,10 @@ def eat_exceptions(function):
 
 
 def error_and_quit(message):
+    ctx = click.get_current_context()
+    context_object = ctx.ensure_object(ContextObject)
+    if context_object.debug_mode:
+        traceback.print_exc()
     click.echo('Error: {}'.format(message))
     sys.exit(1)
 
