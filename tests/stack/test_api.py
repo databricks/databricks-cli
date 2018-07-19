@@ -39,7 +39,29 @@ TEST_STACK_PATH = 'stack/stack.json'
 TEST_JOB_SETTINGS = {
     'name': 'test job'
 }
+TEST_WORKSPACE_NB_PROPERTIES = {
+    'source_path': '',
+    'path': '',
+    'object_type': 'NOTEBOOK'
+}
+TEST_WORKSPACE_DIR_PROPERTIES = {
+    'source_path': '',
+    'path': '',
+    'object_type': 'DIRECTORY'
+}
 TEST_RESOURCE_ID = 'test job'
+TEST_RESOURCE_WORKSPACE_NB_ID = 'test notebook'
+TEST_RESOURCE_WORKSPACE_DIR_ID = 'test directory'
+TEST_WORKSPACE_NB_RESOURCE = {
+    api.RESOURCE_ID: TEST_RESOURCE_WORKSPACE_NB_ID,
+    api.RESOURCE_SERVICE: api.JOBS_SERVICE,
+    api.RESOURCE_PROPERTIES: TEST_JOB_SETTINGS
+}
+TEST_WORKSPACE_DIR_RESOURCE = {
+    api.RESOURCE_ID: TEST_RESOURCE_WORKSPACE_DIR_ID,
+    api.RESOURCE_SERVICE: api.JOBS_SERVICE,
+    api.RESOURCE_PROPERTIES: TEST_JOB_SETTINGS
+}
 TEST_JOB_RESOURCE = {
     api.RESOURCE_ID: TEST_RESOURCE_ID,
     api.RESOURCE_SERVICE: api.JOBS_SERVICE,
@@ -216,6 +238,12 @@ class TestStackApi(object):
         with pytest.raises(StackError):
             stack_api._deploy_job(alt_test_job_settings)
 
+    def test_deploy_workspace(self, stack_api):
+
+        stack_api._deploy_workspace(TEST_WORKSPACE_NB_RESOURCE, overwrite=True)
+
+        stack_api._deploy_workspace(TEST_WORKSPACE_DIR_RESOURCE, overwrite=True)
+
     def test_deploy_resource(self, stack_api):
         """
            stack_api._deploy_resource should return relevant fields in output if deploy done
@@ -238,3 +266,4 @@ class TestStackApi(object):
         }
         with pytest.raises(StackError):
             stack_api._deploy_resource(resource_badtype)
+

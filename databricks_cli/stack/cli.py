@@ -45,7 +45,6 @@ def deploy(api_client, config_path, **kwargs):
     """
     click.echo('#' * 80)
     click.echo('Deploying stack at: ' + config_path)
-    click.echo(kwargs)
     StackApi(api_client).deploy(config_path, **kwargs)
     click.echo('#' * 80)
 

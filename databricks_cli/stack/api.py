@@ -225,18 +225,16 @@ class StackApi(object):
         actual_object_type = 'DIRECTORY' if os.path.isdir(local_path) else 'NOTEBOOK'
         if object_type != actual_object_type:
             raise StackError("Field 'object_type' ({}) not consistent"
-                             "with actual object type ({})".format(object_type,
-                                                                   actual_object_type))
+                             "with actual object type ({})".format(object_type, actual_object_type))
 
         click.echo('sync {} {} to {}'.format(object_type, workspace_path, local_path))
         if object_type == 'NOTEBOOK':
-            # Inference of notebook language and format
-            lang_fmt = WorkspaceLanguage.to_language_and_format(local_path)
-            if lang_fmt is None:
+            # Inference of notebook language and format. A tuple of (language, fmt) or Nonetype.
+            language_fmt = WorkspaceLanguage.to_language_and_format(local_path)
+            if language_fmt is None:
                 raise StackError("Workspace Notebook language and format cannot be inferred"
                                  "Please check file extension of notebook file.")
-            language, fmt = lang_fmt
-            # Deployment
+            language, fmt = language_fmt
             local_dir = os.path.dirname(os.path.abspath(local_path))
             if not os.path.exists(local_dir):
                 os.makedirs(local_dir)
