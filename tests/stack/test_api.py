@@ -47,13 +47,13 @@ TEST_JOB_RESOURCE = {
 }
 TEST_JOB_PHYSICAL_ID = {'job_id': 1234}
 TEST_WORKSPACE_NB_PROPERTIES = {
-    'source_path': '',
-    'path': '',
+    'source_path': 'notebook.py',
+    'path': '/test/notebook.py',
     'object_type': 'NOTEBOOK'
 }
 TEST_WORKSPACE_DIR_PROPERTIES = {
-    'source_path': '',
-    'path': '',
+    'source_path': 'test/dir',
+    'path': '/test/dir',
     'object_type': 'DIRECTORY'
 }
 TEST_RESOURCE_ID = 'test job'
@@ -243,15 +243,40 @@ class TestStackApi(object):
         with pytest.raises(StackError):
             stack_api._deploy_job(alt_test_job_settings)
 
-    def test_deploy_workspace(self, stack_api):
+    def test_deploy_workspace(self, stack_api, tmpdir):
         """
         stack_api._deploy_workspace should return relevant files
         :param stack_api:
         :return:
         """
-        stack_api.workspace_client = mock.MagicMock()
-        # stack_api._deploy_workspace(TEST_WORKSPACE_NB_PROPERTIES)
-        # stack_api._deploy_workspace(TEST_WORKSPACE_DIR_PROPERTIES)
+        stack_api.workspace_client.import_workspace = mock.MagicMock()
+        stack_api.workspace_client.import_workspace_dir = mock.MagicMock()
+        test_workspace_nb_properties = TEST_WORKSPACE_NB_PROPERTIES.copy()
+        test_workspace_nb_properties.update(
+            {'source_path': os.path.join(tmpdir.strpath,
+                                         test_workspace_nb_properties['source_path'])})
+        with open(test_workspace_nb_properties['source_path'], 'w') as f:
+            f.write("print('test')\n")
+        test_workspace_dir_properties = TEST_WORKSPACE_DIR_PROPERTIES.copy()
+        test_workspace_dir_properties.update(
+            {'source_path': os.path.join(tmpdir.strpath,
+                                         test_workspace_dir_properties['source_path'])})
+        os.makedirs(test_workspace_dir_properties['source_path'])
+
+        stack_api._deploy_workspace(test_workspace_dir_properties, None, True)
+        stack_api._deploy_workspace(test_workspace_nb_properties, None, True)
+        stack_api.workspace_client.import_workspace.assert_called_once()
+        stack_api.workspace_client.import_workspace_dir.assert_called_once()
+
+        # Should raise error if object type doesn't match
+        test_workspace_dir_properties.update({'object_type': 'NOTEBOOK'})
+        with pytest.raises(StackError):
+            stack_api._deploy_workspace(test_workspace_dir_properties, None, True)
+
+        # Should raise error if object_type is not NOTEBOOK or DIRECTORy
+        test_workspace_dir_properties.update({'object_type': 'INVALID_TYPE'})
+        with pytest.raises(StackError):
+            stack_api._deploy_workspace(test_workspace_dir_properties, None, True)
 
     def test_deploy_resource(self, stack_api):
         """
