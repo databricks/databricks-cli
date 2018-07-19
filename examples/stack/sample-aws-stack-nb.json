@@ -5,10 +5,8 @@
       "id": "example-notebook",
       "service": "workspace",
       "properties": {
-        "source_path": "dev/notebook1.py",
+        "source_path": "dev/notebook1.scala",
         "path": "/Shared/stack-cli-examples/dev/notebook",
-        "language": "PYTHON",
-        "format": "SOURCE",
         "object_type": "NOTEBOOK"
       }
     },
