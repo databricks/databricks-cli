@@ -36,7 +36,7 @@ from tests.utils import provide_conf
 
 @provide_conf
 def test_debug_option():
-    # Test if context object debug_mode property
+    # Test that context object debug_mode property changes with --debug flag fed.
     @click.command()
     @click.option('--debug-fed')
     @config.debug_option
@@ -50,7 +50,7 @@ def test_debug_option():
     assert result.exit_code == 0
 
     # Test that with eat_exceptions wrapper, 'Traceback' appears or doesn't appear depending on
-    # Whether --debug flag is given.
+    # whether --debug flag is given.
     @click.command()
     @config.debug_option
     @eat_exceptions
