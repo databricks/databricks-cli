@@ -245,9 +245,8 @@ class TestStackApi(object):
 
     def test_deploy_workspace(self, stack_api, tmpdir):
         """
-        stack_api._deploy_workspace should return relevant files
-        :param stack_api:
-        :return:
+            stack_api._deploy_workspace should call certain workspace client functions depending
+            on object_type and error when object_type is defined incorrectly.
         """
         stack_api.workspace_client.import_workspace = mock.MagicMock()
         stack_api.workspace_client.import_workspace_dir = mock.MagicMock()
@@ -268,12 +267,12 @@ class TestStackApi(object):
         stack_api.workspace_client.import_workspace.assert_called_once()
         stack_api.workspace_client.import_workspace_dir.assert_called_once()
 
-        # Should raise error if object type doesn't match
+        # Should raise error if resource object_type doesn't match actually is in filesystem.
         test_workspace_dir_properties.update({'object_type': 'NOTEBOOK'})
         with pytest.raises(StackError):
             stack_api._deploy_workspace(test_workspace_dir_properties, None, True)
 
-        # Should raise error if object_type is not NOTEBOOK or DIRECTORy
+        # Should raise error if object_type is not NOTEBOOK or DIRECTORY
         test_workspace_dir_properties.update({'object_type': 'INVALID_TYPE'})
         with pytest.raises(StackError):
             stack_api._deploy_workspace(test_workspace_dir_properties, None, True)
