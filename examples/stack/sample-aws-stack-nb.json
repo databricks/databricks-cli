@@ -1,0 +1,36 @@
+{
+  "name": "cli-example-jobs-stack",
+  "resources": [
+    {
+      "id": "example-notebook",
+      "service": "workspace",
+      "properties": {
+        "source_path": "dev/notebook1.py",
+        "path": "/Shared/stack-cli-examples/dev/notebook",
+        "language": "PYTHON",
+        "format": "SOURCE",
+        "object_type": "NOTEBOOK"
+      }
+    },
+    {
+      "id": "example-job",
+      "service": "jobs",
+      "properties": {
+        "name": "Stack CLI Sample Job",
+        "new_cluster": {
+          "spark_version": "4.0.x-scala2.11",
+          "node_type_id": "r3.xlarge",
+          "aws_attributes": {
+            "availability": "SPOT"
+          },
+          "num_workers": 1
+        },
+        "timeout_seconds": 1200,
+        "max_retries": 2,
+        "notebook_task": {
+          "notebook_path": "/Shared/stack-cli-examples/dev/notebook"
+        }
+      }
+    }
+  ]
+}
