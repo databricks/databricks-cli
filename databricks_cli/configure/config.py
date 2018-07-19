@@ -58,6 +58,14 @@ def get_profile_from_context():
     return context_object.get_profile()
 
 
+def debug_option(f):
+    def callback(ctx, param, value): #  NOQA
+        context_object = ctx.ensure_object(ContextObject)
+        context_object.set_debug(value)
+    return click.option('--debug', is_flag=True, callback=callback,
+                        expose_value=False, help="Debug Mode. Shows full stack trace on error.")(f)
+
+
 def profile_option(f):
     def callback(ctx, param, value): #  NOQA
         if value is not None:
