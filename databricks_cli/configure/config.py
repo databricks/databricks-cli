@@ -62,7 +62,7 @@ def debug_option(f):
     def callback(ctx, param, value): #  NOQA
         context_object = ctx.ensure_object(ContextObject)
         context_object.set_debug(value)
-    return click.option('--debug', '-d', is_flag=True, callback=callback,
+    return click.option('--debug', is_flag=True, callback=callback,
                         expose_value=False, help="Debug Mode. Shows full stack trace on error.")(f)
 
 
