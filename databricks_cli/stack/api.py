@@ -224,9 +224,9 @@ class StackApi(object):
             # Inference of notebook language and format. A tuple of (language, fmt) or Nonetype.
             language_fmt = WorkspaceLanguage.to_language_and_format(local_path)
             if language_fmt is None:
-                raise StackError("Workspace Notebook language and format cannot be inferred"
-                                 "Please check file extension of local notebook path.")
-            language, fmt = language_fmt
+                raise StackError("Workspace Notebook language and format cannot be inferred."
+                                 "Please check file extension of notebook 'source_path'.")
+            fmt = language_fmt[1]
             local_dir = os.path.dirname(os.path.abspath(local_path))
             if not os.path.exists(local_dir):
                 os.makedirs(local_dir)
