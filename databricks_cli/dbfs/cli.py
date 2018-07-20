@@ -27,7 +27,7 @@ from tabulate import tabulate
 from databricks_cli.utils import eat_exceptions, error_and_quit, CONTEXT_SETTINGS
 from databricks_cli.version import print_version_callback, version
 from databricks_cli.configure.cli import configure_cli
-from databricks_cli.configure.config import provide_api_client, profile_option
+from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.dbfs.api import DbfsApi
 from databricks_cli.dbfs.dbfs_path import DbfsPath, DbfsPathClickType
 
@@ -38,6 +38,7 @@ from databricks_cli.dbfs.dbfs_path import DbfsPath, DbfsPathClickType
 @click.option('-l', is_flag=True, default=False,
               help='Displays full information including size and file type.')
 @click.argument('dbfs_path', nargs=-1, type=DbfsPathClickType())
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -59,6 +60,7 @@ def ls_cli(api_client, l, absolute, dbfs_path): #  NOQA
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.argument('dbfs_path', type=DbfsPathClickType())
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -74,6 +76,7 @@ def mkdirs_cli(api_client, dbfs_path):
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--recursive', '-r', is_flag=True, default=False)
 @click.argument('dbfs_path', type=DbfsPathClickType())
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -91,6 +94,7 @@ def rm_cli(api_client, recursive, dbfs_path):
 @click.option('--overwrite', is_flag=True, default=False)
 @click.argument('src')
 @click.argument('dst')
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -117,6 +121,7 @@ def cp_cli(api_client, recursive, overwrite, src, dst):
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.argument('src', type=DbfsPathClickType())
 @click.argument('dst', type=DbfsPathClickType())
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -130,6 +135,7 @@ def mv_cli(api_client, src, dst):
 @click.group(context_settings=CONTEXT_SETTINGS, short_help='Utility to interact with DBFS.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
+@debug_option
 @profile_option
 def dbfs_group():
     """

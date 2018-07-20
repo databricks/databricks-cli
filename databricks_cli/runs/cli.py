@@ -27,7 +27,7 @@ from tabulate import tabulate
 from databricks_cli.click_types import OutputClickType, JsonClickType, RunIdClickType
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base, \
     truncate_string
-from databricks_cli.configure.config import provide_api_client, profile_option
+from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.runs.api import RunsApi
 from databricks_cli.version import print_version_callback, version
 
@@ -37,6 +37,7 @@ from databricks_cli.version import print_version_callback, version
               help='File containing JSON request to POST to /api/2.0/jobs/runs/submit.')
 @click.option('--json', default=None, type=JsonClickType(),
               help=JsonClickType.help('/api/2.0/jobs/runs/submit'))
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -76,6 +77,7 @@ def _runs_to_table(runs_json):
               help='The limit determines the number of runs listed. '
                    'Limit must be between 0 and 1000. Set to 20 runs by default.')
 @click.option('--output', help=OutputClickType.help, type=OutputClickType())
+@debug_option
 @profile_option
 @eat_exceptions # noqa
 @provide_api_client
@@ -105,6 +107,7 @@ def list_cli(api_client, job_id, active_only, completed_only, offset, limit, out
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--run-id', required=True, type=RunIdClickType())
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -119,6 +122,7 @@ def get_cli(api_client, run_id):
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--run-id', required=True, type=RunIdClickType())
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -133,6 +137,7 @@ def cancel_cli(api_client, run_id):
              short_help='Utility to interact with the jobs runs.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
+@debug_option
 @profile_option
 @eat_exceptions
 def runs_group():

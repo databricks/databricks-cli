@@ -30,7 +30,7 @@ from databricks_cli.click_types import OutputClickType, JsonClickType, JobIdClic
 from databricks_cli.jobs.api import JobsApi
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base, \
     truncate_string
-from databricks_cli.configure.config import provide_api_client, profile_option
+from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.version import print_version_callback, version
 
 
@@ -39,6 +39,7 @@ from databricks_cli.version import print_version_callback, version
               help='File containing JSON request to POST to /api/2.0/jobs/create.')
 @click.option('--json', default=None, type=JsonClickType(),
               help=JsonClickType.help('/api/2.0/jobs/create'))
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -60,6 +61,7 @@ def create_cli(api_client, json_file, json):
 @click.option('--json', default=None, type=JsonClickType(),
               help='Partial JSON string to POST to /api/2.0/jobs/reset. '
                    'For more, read full help message.')
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -98,6 +100,7 @@ def _jobs_to_table(jobs_json):
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Lists the jobs in the Databricks Job Service.')
 @click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -126,6 +129,7 @@ def list_cli(api_client, output):
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Deletes the specified job.')
 @click.option('--job-id', required=True, type=JobIdClickType(), help=JobIdClickType.help)
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -138,6 +142,7 @@ def delete_cli(api_client, job_id):
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--job-id', required=True, type=JobIdClickType(), help=JobIdClickType.help)
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -160,6 +165,7 @@ def get_cli(api_client, job_id):
 @click.option('--spark-submit-params', default=None, type=JsonClickType(),
               help='JSON string specifying an array of parameters. i.e. '
                    '["--class", "org.apache.spark.examples.SparkPi"]')
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -184,6 +190,7 @@ def run_now_cli(api_client, job_id, jar_params, notebook_params, python_params,
              short_help='Utility to interact with jobs.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
+@debug_option
 @profile_option
 @eat_exceptions
 def jobs_group():

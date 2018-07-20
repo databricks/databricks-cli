@@ -30,7 +30,7 @@ from databricks_cli.click_types import OutputClickType, SecretScopeClickType, Se
 from databricks_cli.secrets.api import SecretApi
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, truncate_string, \
     error_and_quit
-from databricks_cli.configure.config import provide_api_client, profile_option
+from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.version import print_version_callback, version
 
 
@@ -50,6 +50,7 @@ DASH_MARKER = '# ' + '-' * 70 + '\n'
               ' principal for this option is the group "users", which contains all users in the'
               ' workspace. If not specified, the initial ACL with MANAGE permission applied to the'
               ' scope is assigned to the request issuer\'s user identity.')
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -70,6 +71,7 @@ def _scopes_to_table(scopes_json):
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Lists all secret scopes.')
 @click.option('--output', help=OutputClickType.help, type=OutputClickType())
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -87,6 +89,7 @@ def list_scopes(api_client, output):
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Deletes a secret scope.')
 @click.option('--scope', required=True, type=SecretScopeClickType(), help=SecretScopeClickType.help)
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -145,6 +148,7 @@ def _verify_and_translate_options(string_value, binary_file):
               help='Read value from string and stored in UTF-8 (MB4) form')
 @click.option('--binary-file', default=None, type=click.Path(exists=True, readable=True),
               help='Read value from binary-file and stored as bytes.')
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -174,6 +178,7 @@ def put_secret(api_client, scope, key, string_value, binary_file):
                short_help='Deletes a secret.')
 @click.option('--scope', required=True, type=SecretScopeClickType(), help=SecretScopeClickType.help)
 @click.option('--key', required=True, type=SecretKeyClickType(), help=SecretKeyClickType.help)
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -195,6 +200,7 @@ def _secrets_to_table(secrets_json):
                short_help='Lists all the secrets in a scope.')
 @click.option('--scope', required=True, type=SecretScopeClickType(), help=SecretScopeClickType.help)
 @click.option('--output', help=OutputClickType.help, type=OutputClickType())
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -218,6 +224,7 @@ def list_secrets(api_client, scope, output):
               help=SecretPrincipalClickType.help)
 @click.option('--permission', type=click.Choice(['MANAGE', 'WRITE', 'READ']),
               required=True, help='The permission to apply.')
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -238,6 +245,7 @@ def put_acl(api_client, scope, principal, permission):
               help=SecretScopeClickType.help)
 @click.option('--principal', required=True, type=SecretPrincipalClickType(),
               help=SecretPrincipalClickType.help)
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -259,6 +267,7 @@ def _acls_to_table(acls_json):
                short_help='Lists all access control rules for a given secret scope.')
 @click.option('--scope', required=True, type=SecretScopeClickType(), help=SecretScopeClickType.help)
 @click.option('--output', help=OutputClickType.help, type=OutputClickType())
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -280,6 +289,7 @@ def list_acls(api_client, scope, output):
 @click.option('--principal', required=True, type=SecretPrincipalClickType(),
               help=SecretPrincipalClickType.help)
 @click.option('--output', help=OutputClickType.help, type=OutputClickType())
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -299,6 +309,7 @@ def get_acl(api_client, scope, principal, output):
              short_help='Utility to interact with Databricks secret API.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
+@debug_option
 @profile_option
 @eat_exceptions
 def secrets_group():
