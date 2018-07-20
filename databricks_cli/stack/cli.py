@@ -35,8 +35,7 @@ DEBUG_MODE = True
                short_help='Deploy stack given a JSON configuration of the stack')
 @click.argument('config_path', type=click.Path(exists=True), required=True)
 @click.option('--overwrite-notebooks', '-o', is_flag=True, default=False,
-              help='Include to overwrite existing notebooks in the workspace.'
-                   'If not provided, will be false.')
+              help='Include to overwrite existing notebooks in the workspace.')
 @debug_option
 @profile_option
 @eat_exceptions
