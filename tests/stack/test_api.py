@@ -39,14 +39,21 @@ TEST_STACK_PATH = 'stack/stack.json'
 TEST_JOB_SETTINGS = {
     'name': 'test job'
 }
+TEST_JOB_RESOURCE_ID = 'test job'
+TEST_JOB_RESOURCE = {
+    api.RESOURCE_ID: TEST_JOB_RESOURCE_ID,
+    api.RESOURCE_SERVICE: api.JOBS_SERVICE,
+    api.RESOURCE_PROPERTIES: TEST_JOB_SETTINGS
+}
+TEST_JOB_PHYSICAL_ID = {'job_id': 1234}
 TEST_WORKSPACE_NB_PROPERTIES = {
-    'source_path': '',
-    'path': '',
+    'source_path': 'notebook.py',
+    'path': '/test/notebook.py',
     'object_type': 'NOTEBOOK'
 }
 TEST_WORKSPACE_DIR_PROPERTIES = {
-    'source_path': '',
-    'path': '',
+    'source_path': 'test/dir',
+    'path': '/test/dir',
     'object_type': 'DIRECTORY'
 }
 TEST_RESOURCE_ID = 'test job'
@@ -54,20 +61,14 @@ TEST_RESOURCE_WORKSPACE_NB_ID = 'test notebook'
 TEST_RESOURCE_WORKSPACE_DIR_ID = 'test directory'
 TEST_WORKSPACE_NB_RESOURCE = {
     api.RESOURCE_ID: TEST_RESOURCE_WORKSPACE_NB_ID,
-    api.RESOURCE_SERVICE: api.JOBS_SERVICE,
-    api.RESOURCE_PROPERTIES: TEST_JOB_SETTINGS
+    api.RESOURCE_SERVICE: api.WORKSPACE_SERVICE,
+    api.RESOURCE_PROPERTIES: TEST_WORKSPACE_NB_PROPERTIES
 }
 TEST_WORKSPACE_DIR_RESOURCE = {
     api.RESOURCE_ID: TEST_RESOURCE_WORKSPACE_DIR_ID,
-    api.RESOURCE_SERVICE: api.JOBS_SERVICE,
-    api.RESOURCE_PROPERTIES: TEST_JOB_SETTINGS
+    api.RESOURCE_SERVICE: api.WORKSPACE_SERVICE,
+    api.RESOURCE_PROPERTIES: TEST_WORKSPACE_DIR_PROPERTIES
 }
-TEST_JOB_RESOURCE = {
-    api.RESOURCE_ID: TEST_RESOURCE_ID,
-    api.RESOURCE_SERVICE: api.JOBS_SERVICE,
-    api.RESOURCE_PROPERTIES: TEST_JOB_SETTINGS
-}
-TEST_JOB_PHYSICAL_ID = {'job_id': 1234}
 TEST_JOB_STATUS = {
     api.RESOURCE_ID: TEST_RESOURCE_ID,
     api.RESOURCE_SERVICE: api.JOBS_SERVICE,
@@ -359,24 +360,24 @@ class TestStackApi(object):
             {'source_path': os.path.join(tmpdir.strpath,
                                          test_workspace_dir_properties['source_path'])})
 
-        stack_api._download_workspace(test_workspace_dir_properties, None, True)
+        stack_api._download_workspace(test_workspace_dir_properties, True)
         stack_api.workspace_client.export_workspace_dir.assert_called_once()
         assert stack_api.workspace_client.export_workspace_dir.call_args[0][0] == \
             test_workspace_dir_properties['path']
         assert stack_api.workspace_client.export_workspace_dir.call_args[0][1] == \
             test_workspace_dir_properties['source_path']
 
-        stack_api._download_workspace(test_workspace_nb_properties, None, True)
+        stack_api._download_workspace(test_workspace_nb_properties, True)
         stack_api.workspace_client.export_workspace.assert_called_once()
         assert stack_api.workspace_client.export_workspace.call_args[0][0] == \
-            test_workspace_nb_properties['source_path']
-        assert stack_api.workspace_client.export_workspace.call_args[0][1] == \
             test_workspace_nb_properties['path']
+        assert stack_api.workspace_client.export_workspace.call_args[0][1] == \
+            test_workspace_nb_properties['source_path']
 
         # Should raise error if object_type is not NOTEBOOK or DIRECTORY
         test_workspace_dir_properties.update({'object_type': 'INVALID_TYPE'})
         with pytest.raises(StackError):
-            stack_api._download_workspace(test_workspace_dir_properties, None, True)
+            stack_api._download_workspace(test_workspace_dir_properties, True)
 
     def test_download_resource(self, stack_api):
         """
@@ -385,11 +386,11 @@ class TestStackApi(object):
         """
         # A workspace resource should have _download_resource call on _download_workspace
         stack_api._download_workspace = mock.MagicMock()
-        stack_api._download_resource(TEST_WORKSPACE_NB_RESOURCE, overwrite_notebook=True)
+        stack_api._download_resource(TEST_WORKSPACE_NB_RESOURCE, overwrite_notebooks=True)
         stack_api._download_workspace.assert_called()
         assert stack_api._download_workspace.call_args[0][0] == \
             TEST_WORKSPACE_NB_RESOURCE[api.RESOURCE_PROPERTIES]
-        assert stack_api._download_workspace.call_args[1]['overwrite_notebook'] is True
+        assert stack_api._download_workspace.call_args[0][1] is True  # overwrite argument
 
         # If there is a nonexistent service, StackError shouldn't be raised, since it is intentional
         # that some resource services cannot be downloaded, like jobs.

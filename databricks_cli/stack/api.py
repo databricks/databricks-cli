@@ -178,8 +178,8 @@ class StackApi(object):
 
     def _download_resource(self, resource_config, **kwargs):
         """
-        Downloads a resource given a resource information extracted from the stack JSON configuration
-        template.
+        Downloads a resource given a resource information extracted from the stack JSON
+        configuration template.
 
         :param resource_config: A dict of the resource with fields of RESOURCE_ID, RESOURCE_SERVICE
         and RESOURCE_PROPERTIES.
@@ -202,15 +202,13 @@ class StackApi(object):
             click.echo("Resource service '{}' not supported for download. "
                        "skipping.".format(resource_service))
 
-    def _download_workspace(self, resource_properties, overwrite=False):
+    def _download_workspace(self, resource_properties, overwrite):
         """
         Deploy workspace asset.
         TODO (alinxie) Change name to overwrite to be more toward overwriting exclusive resources.
         For a notebook workspace resource, it is recommended to provide 'language' and 'format'
         :param resource_properties: dict of properties for the workspace asset. Must contain the
         'source_path' and 'path' fields. The other fields will be inferred if not provided.
-        :param physical_id: dict containing physical identifier of workspace asset on databricks.
-        Should contain the field 'path'.
         :param overwrite: Whether or not to overwrite the contents of workspace notebooks.
         :return: (dict, dict) of (physical_id, deploy_output). physical_id is the physical ID for
         the stack status that contains the workspace path of the notebook or directory on datbricks.

@@ -63,7 +63,7 @@ def test_download_kwargs(stack_api_mock, tmpdir):
     path = tmpdir.strpath
     stack_api_mock.download = mock.MagicMock()
     runner = CliRunner()
-    runner.invoke(cli.deploy, ['--overwrite-notebooks', path])
+    runner.invoke(cli.download, ['--overwrite-notebooks', path])
     stack_api_mock.download.assert_called()
     assert stack_api_mock.download.call_args[0][0] == path
     # Check overwrite_notebooks in kwargs
@@ -95,7 +95,7 @@ def test_download_default_kwargs(stack_api_mock, tmpdir):
     path = tmpdir.strpath
     stack_api_mock.download = mock.MagicMock()
     runner = CliRunner()
-    runner.invoke(cli.deploy, [path])
+    runner.invoke(cli.download, [path])
     stack_api_mock.download.assert_called()
     assert stack_api_mock.download.call_args[0][0] == path
     # Check overwrite_notebooks in kwargs
