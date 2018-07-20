@@ -254,8 +254,10 @@ class ClusterService(object):
             _data['enable_elastic_disk'] = enable_elastic_disk
         if cluster_source is not None:
             _data['cluster_source'] = cluster_source
-        if idempotency_token is not None:
-            _data['idempotency_token'] = idempotency_token
+        if idempotency_token is None:
+            from uuid import uuid4
+            json['idempotency_token'] = str(uuid4())
+        _data['idempotency_token'] = idempotency_token
         return self.client.perform_query('POST', '/clusters/create', data=_data)
     
     def start_cluster(self, cluster_id):
