@@ -36,7 +36,7 @@ DEBUG_MODE = True
 @click.argument('config_path', type=click.Path(exists=True), required=True)
 @click.option('--overwrite-notebooks', '-o', is_flag=True, default=False,
               help='Include to overwrite existing notebooks in the workspace.'
-                   'If not provided, will be false.')
+                   'If not provided, notebooks will not be overwritten.')
 @profile_option
 @eat_exceptions
 @provide_api_client
