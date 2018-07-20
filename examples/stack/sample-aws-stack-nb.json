@@ -1,11 +1,11 @@
 {
-  "name": "cli-example-jobs-stack",
+  "name": "cli-example-nb-stack",
   "resources": [
     {
       "id": "example-notebook",
       "service": "workspace",
       "properties": {
-        "source_path": "dev/notebook1.scala",
+        "source_path": "dev/notebook.scala",
         "path": "/Shared/stack-cli-examples/dev/notebook",
         "object_type": "NOTEBOOK"
       }

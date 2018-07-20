@@ -270,8 +270,13 @@ class TestStackApi(object):
             stack_api._deploy_workspace should call certain workspace client functions depending
             on object_type and error when object_type is defined incorrectly.
         """
+        test_deploy_output = {'test': 'test'}  # default deploy_output return value
+
+        stack_api.workspace_client.client = mock.MagicMock()
+        stack_api.workspace_client.client.get_status.return_value = test_deploy_output
         stack_api.workspace_client.import_workspace = mock.MagicMock()
         stack_api.workspace_client.import_workspace_dir = mock.MagicMock()
+
         test_workspace_nb_properties = TEST_WORKSPACE_NB_PROPERTIES.copy()
         test_workspace_nb_properties.update(
             {'source_path': os.path.join(tmpdir.strpath,
@@ -284,10 +289,16 @@ class TestStackApi(object):
                                          test_workspace_dir_properties['source_path'])})
         os.makedirs(test_workspace_dir_properties['source_path'])
 
-        stack_api._deploy_workspace(test_workspace_dir_properties, None, True)
-        stack_api._deploy_workspace(test_workspace_nb_properties, None, True)
+        dir_physical_id, dir_deploy_output = \
+            stack_api._deploy_workspace(test_workspace_dir_properties, None, True)
+        nb_physical_id, nb_deploy_output = \
+            stack_api._deploy_workspace(test_workspace_nb_properties, None, True)
         stack_api.workspace_client.import_workspace.assert_called_once()
         stack_api.workspace_client.import_workspace_dir.assert_called_once()
+        assert dir_physical_id == {'path': test_workspace_dir_properties['path']}
+        assert dir_deploy_output == test_deploy_output
+        assert nb_physical_id == {'path': test_workspace_nb_properties['path']}
+        assert nb_deploy_output == test_deploy_output
 
         # Should raise error if resource object_type doesn't match actually is in filesystem.
         test_workspace_dir_properties.update({'object_type': 'NOTEBOOK'})

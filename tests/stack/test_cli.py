@@ -39,7 +39,7 @@ def stack_api_mock():
 
 
 @provide_conf
-def test_deploy(stack_api_mock, tmpdir):
+def test_deploy_kwargs(stack_api_mock, tmpdir):
     """
     Calling the cli.deploy command should call the deploy function of the stack API and
     pass in possible kwargs into deploy function
@@ -51,10 +51,11 @@ def test_deploy(stack_api_mock, tmpdir):
     stack_api_mock.deploy.assert_called()
     assert stack_api_mock.deploy.call_args[0][0] == path
     # Check overwrite_notebooks in kwargs
-    assert stack_api_mock.deploy.call_args[1]['overwrite_notebooks']
+    assert stack_api_mock.deploy.call_args[1]['overwrite_notebooks'] is True
+
 
 @provide_conf
-def test_download(stack_api_mock, tmpdir):
+def test_download_kwargs(stack_api_mock, tmpdir):
     """
     Calling the cli.deploy command should call the deploy function of the stack API and
     pass in possible kwargs into deploy function
@@ -64,6 +65,38 @@ def test_download(stack_api_mock, tmpdir):
     runner = CliRunner()
     runner.invoke(cli.deploy, ['--overwrite-notebooks', path])
     stack_api_mock.download.assert_called()
+    assert stack_api_mock.download.call_args[0][0] == path
+    # Check overwrite_notebooks in kwargs
+    assert stack_api_mock.download.call_args[1]['overwrite_notebooks'] is True
+
+
+@provide_conf
+def test_deploy_default_kwargs(stack_api_mock, tmpdir):
+    """
+    Calling the cli.deploy command without flags should call the deploy function of the stack API
+    and pass in default kwargs into deploy function
+    """
+    path = tmpdir.strpath
+    stack_api_mock.deploy = mock.MagicMock()
+    runner = CliRunner()
+    runner.invoke(cli.deploy, [path])
+    stack_api_mock.deploy.assert_called()
     assert stack_api_mock.deploy.call_args[0][0] == path
     # Check overwrite_notebooks in kwargs
-    assert stack_api_mock.deploy.call_args[1]['overwrite_notebooks']
+    assert stack_api_mock.deploy.call_args[1]['overwrite_notebooks'] is False
+
+
+@provide_conf
+def test_download_default_kwargs(stack_api_mock, tmpdir):
+    """
+    Calling the cli.deploy command should call the deploy function of the stack API and
+    pass in possible kwargs into deploy function
+    """
+    path = tmpdir.strpath
+    stack_api_mock.download = mock.MagicMock()
+    runner = CliRunner()
+    runner.invoke(cli.deploy, [path])
+    stack_api_mock.download.assert_called()
+    assert stack_api_mock.download.call_args[0][0] == path
+    # Check overwrite_notebooks in kwargs
+    assert stack_api_mock.download.call_args[1]['overwrite_notebooks'] is False

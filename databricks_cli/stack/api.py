@@ -387,24 +387,23 @@ class StackApi(object):
             raise StackError("Field 'object_type' ({}) not consistent"
                              "with actual object type ({})".format(object_type, actual_object_type))
 
-        click.echo('sync {} {} to {}'.format(object_type, local_path, workspace_path))
+        click.echo('sync {} {} to {}'.format(click.style(object_type, fg='cyan'),
+                                             click.style(local_path, fg='blue'),
+                                             click.style(workspace_path, fg='red')))
         if object_type == 'NOTEBOOK':
             # Inference of notebook language and format
             language_fmt = WorkspaceLanguage.to_language_and_format(local_path)
             if language_fmt is None:
-                raise StackError("Workspace Notebook language and format cannot be inferred"
+                raise StackError("Workspace notebook language and format cannot be inferred"
                                  "Please check file extension of notebook file.")
             language, fmt = language_fmt
-            # Deployment
-            self.workspace_client.mkdirs(
-                os.path.dirname(workspace_path))  # Make directory in workspace if not exist
+            # Create needed directories in workspace.
+            self.workspace_client.mkdirs(os.path.dirname(workspace_path))
             self.workspace_client.import_workspace(local_path, workspace_path, language, fmt,
                                                    overwrite)
         elif object_type == 'DIRECTORY':
             self.workspace_client.import_workspace_dir(local_path, workspace_path, overwrite,
                                                        exclude_hidden_files=True)
-        else:
-            raise StackError("Invalid value for 'object_type' field: {}".format(object_type))
 
         if physical_id and physical_id['path'] != workspace_path:
             # physical_id['path'] is the workspace path from the last deployment. Alert when changed

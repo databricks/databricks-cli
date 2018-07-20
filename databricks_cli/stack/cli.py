@@ -44,7 +44,7 @@ def deploy(api_client, config_path, **kwargs):
     Deploy a stack to the databricks workspace given a JSON stack configuration template.
     """
     click.echo('#' * 80)
-    click.echo('Deploying stack at: ' + config_path)
+    click.echo('Deploying stack at: {} with options: {}'.format(config_path, kwargs))
     StackApi(api_client).deploy(config_path, **kwargs)
     click.echo('#' * 80)
 
