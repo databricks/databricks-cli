@@ -28,6 +28,9 @@ class ClusterApi(object):
         self.client = ClusterService(api_client)
 
     def create_cluster(self, json):
+        if not 'idempotency_token' in json:
+            from uuid import uuid4
+            json['idempotency_token'] = str(uuid4())
         return self.client.client.perform_query('POST', '/clusters/create', data=json)
 
     def start_cluster(self, cluster_id):
