@@ -352,7 +352,7 @@ class TestStackApi(object):
         with pytest.raises(StackError):
             stack_api._deploy_resource(resource_badtype)
 
-    def test_deploy_workspace(self, stack_api, tmpdir):
+    def test_download_workspace(self, stack_api, tmpdir):
         """
             stack_api._deploy_workspace should call certain workspace client functions depending
             on object_type and error when object_type is defined incorrectly.
@@ -371,10 +371,10 @@ class TestStackApi(object):
                                          test_workspace_dir_properties['source_path'])})
         os.makedirs(test_workspace_dir_properties['source_path'])
 
-        stack_api._deploy_workspace(test_workspace_dir_properties, None, True)
-        stack_api._deploy_workspace(test_workspace_nb_properties, None, True)
-        stack_api.workspace_client.import_workspace.assert_called_once()
-        stack_api.workspace_client.import_workspace_dir.assert_called_once()
+        stack_api._download_workspace(test_workspace_dir_properties, None, True)
+        stack_api._download_workspace(test_workspace_nb_properties, None, True)
+        stack_api.workspace_client.export_workspace.assert_called_once()
+        stack_api.workspace_client.export_workspace_dir.assert_called_once()
 
         # Should raise error if resource object_type doesn't match actually is in filesystem.
         test_workspace_dir_properties.update({'object_type': 'NOTEBOOK'})
@@ -386,7 +386,7 @@ class TestStackApi(object):
         with pytest.raises(StackError):
             stack_api._deploy_workspace(test_workspace_dir_properties, None, True)
 
-    def test_deploy_resource(self, stack_api):
+    def test_download_resource(self, stack_api):
         """
            stack_api._deploy_resource should return relevant fields in output if deploy done
            correctly.
