@@ -57,8 +57,8 @@ def test_deploy_kwargs(stack_api_mock, tmpdir):
 @provide_conf
 def test_deploy_default_kwargs(stack_api_mock, tmpdir):
     """
-    Calling the cli.deploy command should call the deploy function of the stack API and
-    pass in possible kwargs into deploy function
+    Calling the cli.deploy command without flags should call the deploy function of the stack API
+    and pass in default kwargs into deploy function
     """
     path = tmpdir.strpath
     stack_api_mock.deploy = mock.MagicMock()
