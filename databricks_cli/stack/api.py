@@ -219,9 +219,9 @@ class StackApi(object):
         local_path = resource_properties.get('source_path')
         workspace_path = resource_properties.get('path')
         object_type = resource_properties.get('object_type')
-        click.echo('sync {} {} to {}'.format(click.style(object_type, fg='cyan'),
-                                             click.style(workspace_path, fg='blue'),
-                                             click.style(local_path, fg='red')))
+        click.echo('Downloading {} from Databricks path {} to {}'.format(object_type,
+                                                                         workspace_path,
+                                                                         local_path))
         if object_type == 'NOTEBOOK':
             # Inference of notebook language and format. A tuple of (language, fmt) or Nonetype.
             language_fmt = WorkspaceLanguage.to_language_and_format(local_path)
