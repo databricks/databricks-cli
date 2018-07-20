@@ -51,7 +51,7 @@ def test_deploy_kwargs(stack_api_mock, tmpdir):
     stack_api_mock.deploy.assert_called()
     assert stack_api_mock.deploy.call_args[0][0] == path
     # Check overwrite_notebooks in kwargs
-    assert stack_api_mock.deploy.call_args[1]['overwrite_notebooks']
+    assert stack_api_mock.deploy.call_args[1]['overwrite_notebooks'] is True
 
 
 @provide_conf
