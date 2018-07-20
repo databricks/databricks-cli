@@ -269,12 +269,21 @@ class TestStackApi(object):
 
         dir_physical_id, dir_deploy_output = \
             stack_api._deploy_workspace(test_workspace_dir_properties, None, True)
+        stack_api.workspace_client.import_workspace_dir.assert_called_once()
+        assert stack_api.workspace_client.import_workspace_dir.call_args[0][0] == \
+            test_workspace_dir_properties['source_path']
+        assert stack_api.workspace_client.import_workspace_dir.call_args[0][1] == \
+            test_workspace_dir_properties['path']
+        assert dir_physical_id == {'path': test_workspace_dir_properties['path']}
+        assert dir_deploy_output == test_deploy_output
+
         nb_physical_id, nb_deploy_output = \
             stack_api._deploy_workspace(test_workspace_nb_properties, None, True)
         stack_api.workspace_client.import_workspace.assert_called_once()
-        stack_api.workspace_client.import_workspace_dir.assert_called_once()
-        assert dir_physical_id == {'path': test_workspace_dir_properties['path']}
-        assert dir_deploy_output == test_deploy_output
+        assert stack_api.workspace_client.import_workspace.call_args[0][0] == \
+            test_workspace_nb_properties['source_path']
+        assert stack_api.workspace_client.import_workspace.call_args[0][1] == \
+            test_workspace_nb_properties['path']
         assert nb_physical_id == {'path': test_workspace_nb_properties['path']}
         assert nb_deploy_output == test_deploy_output
 
