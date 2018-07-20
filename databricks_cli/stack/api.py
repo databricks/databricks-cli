@@ -282,9 +282,9 @@ class StackApi(object):
             raise StackError("Field 'object_type' ({}) not consistent"
                              "with actual object type ({})".format(object_type, actual_object_type))
 
-        click.echo('sync {} {} to {}'.format(click.style(object_type, fg='cyan'),
-                                             click.style(local_path, fg='blue'),
-                                             click.style(workspace_path, fg='red')))
+        click.echo('Uploading {} from {} to Databricks workspace at {}'.format(object_type,
+                                                                               local_path,
+                                                                               workspace_path))
         if object_type == 'NOTEBOOK':
             # Inference of notebook language and format
             language_fmt = WorkspaceLanguage.to_language_and_format(local_path)
@@ -299,6 +299,9 @@ class StackApi(object):
         elif object_type == 'DIRECTORY':
             self.workspace_client.import_workspace_dir(local_path, workspace_path, overwrite,
                                                        exclude_hidden_files=True)
+        else:
+            # Shouldn't reach here because of verification of object_type above.
+            assert False
 
         if physical_id and physical_id['path'] != workspace_path:
             # physical_id['path'] is the workspace path from the last deployment. Alert when changed
