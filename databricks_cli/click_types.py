@@ -101,6 +101,14 @@ class OneOfOption(Option):
 class ContextObject(object):
     def __init__(self):
         self._profile = None
+        self._debug = False
+
+    def set_debug(self, debug=False):
+        self._debug = debug
+
+    @property
+    def debug_mode(self):
+        return self._debug
 
     def set_profile(self, profile):
         if self._profile is not None:
