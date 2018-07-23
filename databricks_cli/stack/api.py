@@ -260,7 +260,6 @@ class StackApi(object):
     def _deploy_workspace(self, resource_properties, physical_id, overwrite):
         """
         Deploy workspace asset.
-        TODO (alinxie) Change name to overwrite to be more toward overwriting exclusive resources.
         For a notebook workspace resource, it is recommended to provide 'language' and 'format'
         :param resource_properties: dict of properties for the workspace asset. Must contain the
         'source_path' and 'path' fields. The other fields will be inferred if not provided.
