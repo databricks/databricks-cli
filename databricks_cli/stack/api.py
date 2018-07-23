@@ -68,9 +68,6 @@ class StackApi(object):
         Deploys a stack given stack JSON configuration template at path config_path.
 
         Loads the JSON template as well as status JSON if stack has been deployed before.
-        Changes working directory to the same directory as where the config file is, then
-        calls on deploy_config to do the stack deployment. Finally stores the new status
-        file from the deployment.
 
         The working directory is changed to that where the JSON template is contained
         so that paths within the stack configuration are relative to the directory of the
@@ -260,7 +257,7 @@ class StackApi(object):
     def _deploy_workspace(self, resource_properties, physical_id, overwrite):
         """
         Deploy workspace asset.
-        For a notebook workspace resource, it is recommended to provide 'language' and 'format'
+
         :param resource_properties: dict of properties for the workspace asset. Must contain the
         'source_path' and 'path' fields. The other fields will be inferred if not provided.
         :param physical_id: dict containing physical identifier of workspace asset on databricks.
@@ -316,6 +313,7 @@ class StackApi(object):
         Validate fields within a stack configuration. This ensures that an inputted configuration
         has the necessary fields for stack deployment to function well.
 
+        TODO(alinxie): Add validation for separate resource services and their properties.
         :param stack_config: dict- stack config that is inputted by the user.
         :return: None. Raises errors to stop deployment if there is a problem.
         """
@@ -345,7 +343,7 @@ class StackApi(object):
 
         If there is an error here, then it is either an implementation error that must be fixed by
         a developer or the User edited the stack status file created by the program.
-
+        TODO(alinxie): Add validation for separate resource services and their physical id's.
         :param stack_status: dict- stack status that is created by the program.
         :return: None. Raises errors to stop deployment if there is a problem.
         """
