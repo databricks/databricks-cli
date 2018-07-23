@@ -92,10 +92,6 @@ class StackApi(object):
         """
         Downloads a stack given stack JSON configuration template at path config_path.
 
-        Loads the JSON template as well as status JSON if stack has been deployed before.
-        Changes working directory to the same directory as where the config file is, then
-        calls on download_config to do the stack downloading.
-
         The working directory is changed to that where the JSON template is contained
         so that paths within the stack configuration are relative to the directory of the
         JSON template instead of the directory where this function is called.
@@ -162,11 +158,14 @@ class StackApi(object):
     def download_config(self, stack_config, **kwargs):
         """
         Downloads a stack given a dict of the stack configuration
-        :param stack_config:
+        :param stack_config: dict of stack configuration. Must contain 'resources' field.
         :param kwargs:
         :return:
         """
         self._validate_config(stack_config)
+        stack_name = stack_config.get(STACK_NAME)
+        click.echo('Downloading stack {}'.format(stack_name))
+
         click.echo('#' * 80)
         for resource_config in stack_config.get(STACK_RESOURCES):
             # Deploy resource, get resource_status
@@ -201,9 +200,8 @@ class StackApi(object):
 
     def _download_workspace(self, resource_properties, overwrite):
         """
-        Deploy workspace asset.
-        TODO (alinxie) Change name to overwrite to be more toward overwriting exclusive resources.
-        For a notebook workspace resource, it is recommended to provide 'language' and 'format'
+        Download workspace asset.
+
         :param resource_properties: dict of properties for the workspace asset. Must contain the
         'source_path' and 'path' fields. The other fields will be inferred if not provided.
         :param overwrite: Whether or not to overwrite the contents of workspace notebooks.
