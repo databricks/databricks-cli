@@ -205,10 +205,6 @@ class StackApi(object):
         :param resource_properties: dict of properties for the workspace asset. Must contain the
         'source_path' and 'path' fields. The other fields will be inferred if not provided.
         :param overwrite: Whether or not to overwrite the contents of workspace notebooks.
-        :return: (dict, dict) of (physical_id, deploy_output). physical_id is the physical ID for
-        the stack status that contains the workspace path of the notebook or directory on datbricks.
-        deploy_output is the initial information about the asset on databricks at deploy time
-        returned by the REST API.
         """
         # Required fields. TODO(alinxie) put in _validate_config
         local_path = resource_properties.get('source_path')
@@ -223,7 +219,7 @@ class StackApi(object):
             if language_fmt is None:
                 raise StackError("Workspace Notebook language and format cannot be inferred."
                                  "Please check file extension of notebook 'source_path'.")
-            fmt = language_fmt[1]
+            (_, fmt) = language_fmt
             local_dir = os.path.dirname(os.path.abspath(local_path))
             if not os.path.exists(local_dir):
                 os.makedirs(local_dir)
