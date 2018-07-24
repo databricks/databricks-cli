@@ -31,6 +31,7 @@ import click
 
 from databricks_cli.jobs.api import JobsApi
 from databricks_cli.workspace.api import WorkspaceApi
+from databricks_cli.dbfs.api import DbfsApi
 from databricks_cli.workspace.types import WorkspaceLanguage
 from databricks_cli.version import version as CLI_VERSION
 from databricks_cli.stack.exceptions import StackError
@@ -40,6 +41,7 @@ MS_SEC = 1000
 # Resource Services
 JOBS_SERVICE = 'jobs'
 WORKSPACE_SERVICE = 'workspace'
+DBFS_SERVICE = 'dbfs'
 
 # Config Outer Fields
 STACK_NAME = 'name'
@@ -62,6 +64,7 @@ class StackApi(object):
     def __init__(self, api_client):
         self.jobs_client = JobsApi(api_client)
         self.workspace_client = WorkspaceApi(api_client)
+        self.dbfs_client = DbfsApi(api_client)
 
     def deploy(self, config_path, **kwargs):
         """
@@ -174,6 +177,16 @@ class StackApi(object):
             new_physical_id, deploy_output = self._deploy_workspace(resource_properties,
                                                                     physical_id,
                                                                     overwrite)
+        elif resource_service == DBFS_SERVICE:
+            click.echo(
+                "Deploying DBFS asset '{}' with properties \n{}".format(
+                    resource_id, json.dumps(resource_properties, indent=2, separators=(',', ': '))
+                )
+            )
+            overwrite = kwargs.get('overwrite_dbfs', False)
+            new_physical_id, deploy_output = self._deploy_dbfs(resource_properties,
+                                                               physical_id,
+                                                               overwrite)
         else:
             raise StackError("Resource service '{}' not supported".format(resource_service))
 
@@ -305,6 +318,45 @@ class StackApi(object):
                                                                                workspace_path))
         new_physical_id = {'path': workspace_path}
         deploy_output = self.workspace_client.client.get_status(workspace_path)
+
+        return new_physical_id, deploy_output
+
+    def _deploy_dbfs(self, resource_properties, physical_id, overwrite):
+        """
+        Deploy workspace asset.
+
+        :param resource_properties: dict of properties for the workspace asset. Must contain the
+        'source_path' and 'path' fields. The other fields will be inferred if not provided.
+        :param physical_id: dict containing physical identifier of workspace asset on databricks.
+        Should contain the field 'path'.
+        :param overwrite: Whether or not to overwrite the contents of workspace notebooks.
+        :return: (dict, dict) of (physical_id, deploy_output). physical_id is the physical ID for
+        the stack status that contains the workspace path of the notebook or directory on datbricks.
+        deploy_output is the initial information about the asset on databricks at deploy time
+        returned by the REST API.
+        """
+        # Required fields. TODO(alinxie) put in _validate_config
+        local_path = resource_properties.get('source_path')
+        dbfs_path = resource_properties.get('path')
+        is_dir = resource_properties.get('is_dir')
+
+        actual_is_dir = os.path.isdir(local_path)
+        if is_dir != actual_is_dir:
+            raise StackError("Field 'is_dir' ({}) not consistent"
+                             "with actual object type ({})".format(is_dir, actual_is_dir))
+        object_type = "DIRECTORY" if is_dir else "FILE"
+        click.echo('Uploading {} from {} to Databricks dbfs at {}'.format(object_type,
+                                                                          local_path,
+                                                                          dbfs_path))
+
+        self.dbfs_client.cp(recursive=True, overwrite=overwrite, src=local_path, dst=dbfs_path)
+
+        if physical_id and physical_id['path'] != dbfs_path:
+            # physical_id['path'] is the workspace path from the last deployment. Alert when changed
+            click.echo("DBFS asset had path changed from {} to {}".format(physical_id['path'],
+                                                                          dbfs_path))
+        new_physical_id = {'path': dbfs_path}
+        deploy_output = self.dbfs_client.client.get_status(DbfsPath(dbfs_path).)
 
         return new_physical_id, deploy_output
 
