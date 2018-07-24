@@ -55,6 +55,7 @@ def deploy(api_client, config_path, **kwargs):
 @click.argument('config_path', type=click.Path(exists=True), required=True)
 @click.option('--overwrite-notebooks', '-o', is_flag=True, help='Include to overwrite existing'
                                                                 'notebooks in the workspace.')
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
