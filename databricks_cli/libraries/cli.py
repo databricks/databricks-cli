@@ -24,7 +24,7 @@
 import click
 
 from databricks_cli.click_types import ClusterIdClickType, OneOfOption
-from databricks_cli.configure.config import provide_api_client, profile_option
+from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.libraries.api import LibrariesApi
 from databricks_cli.utils import CONTEXT_SETTINGS, eat_exceptions, pretty_format
 from databricks_cli.version import print_version_callback, version
@@ -36,6 +36,7 @@ def _all_cluster_statuses(config):
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Get the status of all libraries.')
+@debug_option
 @profile_option
 @eat_exceptions # noqa
 @provide_api_client
@@ -57,6 +58,7 @@ def _cluster_status(api_client, cluster_id):
                short_help='Get the status of all libraries for a specified cluster.')
 @click.option('--cluster-id', required=True, type=ClusterIdClickType(),
               help=ClusterIdClickType.help)
+@debug_option
 @profile_option
 @eat_exceptions # noqa
 @provide_api_client
@@ -74,6 +76,7 @@ def cluster_status_cli(api_client, cluster_id):
                short_help='Shortcut to `all-cluster-statuses` or `cluster-status`.')
 @click.option('--cluster-id', type=ClusterIdClickType(), default=None,
               help=ClusterIdClickType.help)
+@debug_option
 @profile_option
 @eat_exceptions # noqa
 @provide_api_client
@@ -161,6 +164,7 @@ def _get_library_from_options(jar, egg, maven_coordinates, maven_repo, maven_exc
 @click.option('--pypi-repo', help=PYPI_REPO_HELP)
 @click.option('--cran-package', cls=OneOfOption, one_of=INSTALL_OPTIONS, help=CRAN_PACKAGE_HELP)
 @click.option('--cran-repo', help=CRAN_REPO_HELP)
+@debug_option
 @profile_option
 @eat_exceptions # noqa
 @provide_api_client
@@ -201,6 +205,7 @@ def _uninstall_cli_exit_help(cluster_id):
 @click.option('--pypi-repo', help=PYPI_REPO_HELP)
 @click.option('--cran-package', cls=OneOfOption, one_of=UNINSTALL_OPTIONS, help=CRAN_PACKAGE_HELP)
 @click.option('--cran-repo', help=CRAN_REPO_HELP)
+@debug_option
 @profile_option
 @eat_exceptions # noqa
 @provide_api_client
@@ -227,6 +232,7 @@ def uninstall_cli(api_client, cluster_id, all, jar, egg, maven_coordinates, mave
              short_help='Utility to interact with libraries.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
+@debug_option
 @profile_option
 @eat_exceptions
 def libraries_group():
