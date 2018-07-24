@@ -27,7 +27,7 @@ from tabulate import tabulate
 
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS
 from databricks_cli.version import print_version_callback, version
-from databricks_cli.configure.config import provide_api_client, profile_option
+from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.workspace.api import WorkspaceApi
 from databricks_cli.workspace.types import LanguageClickType, FormatClickType, WorkspaceFormat, \
     WorkspaceLanguage
@@ -40,6 +40,7 @@ from databricks_cli.workspace.types import LanguageClickType, FormatClickType, W
 @click.option('-l', is_flag=True, default=False,
               help='Displays full information including ObjectType, Path, Language')
 @click.argument('workspace_path', type=str, nargs=-1)
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -60,6 +61,7 @@ def ls_cli(api_client, l, absolute, workspace_path):
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Make directories in the Databricks Workspace.')
 @click.argument('workspace_path')
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -80,6 +82,7 @@ def mkdirs_cli(api_client, workspace_path):
               help=', '.join(WorkspaceLanguage.ALL))
 @click.option('--format', '-f', default=WorkspaceFormat.SOURCE, type=FormatClickType())
 @click.option('--overwrite', '-o', is_flag=True, default=False)
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -100,6 +103,7 @@ def import_workspace_cli(api_client, source_path, target_path, language, format,
 @click.argument('target_path')
 @click.option('--format', '-f', default=WorkspaceFormat.SOURCE, type=FormatClickType())
 @click.option('--overwrite', '-o', is_flag=True, default=False)
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -125,6 +129,7 @@ def export_workspace_cli(api_client, source_path, target_path, format, overwrite
                           'rm and delete are synonyms.')
 @click.argument('workspace_path')
 @click.option('--recursive', '-r', is_flag=True, default=False)
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -142,6 +147,7 @@ def delete_cli(api_client, workspace_path, recursive):
 @click.argument('source_path')
 @click.argument('target_path')
 @click.option('--overwrite', '-o', is_flag=True, default=False)
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -165,6 +171,7 @@ def export_dir_cli(api_client, source_path, target_path, overwrite):
 @click.argument('target_path')
 @click.option('--overwrite', '-o', is_flag=True, default=False)
 @click.option('--exclude-hidden-files', '-e', is_flag=True, default=False)
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -183,6 +190,7 @@ def import_dir_cli(api_client, source_path, target_path, overwrite, exclude_hidd
              short_help='Utility to interact with the Databricks workspace.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
+@debug_option
 @profile_option
 def workspace_group():
     """

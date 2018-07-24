@@ -25,7 +25,7 @@ import click
 
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS
 from databricks_cli.version import print_version_callback, version
-from databricks_cli.configure.config import provide_api_client, profile_option
+from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.stack.api import StackApi
 
 DEBUG_MODE = True
@@ -34,9 +34,9 @@ DEBUG_MODE = True
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Deploy stack given a JSON configuration of the stack')
 @click.argument('config_path', type=click.Path(exists=True), required=True)
-@click.option('--overwrite-notebooks', '-o', is_flag=True, default=False,
-              help='Include to overwrite existing notebooks in the workspace.'
-                   'If not provided, notebooks will not be overwritten.')
+@click.option('--overwrite-notebooks', '-o', is_flag=True, default=False, show_default=True,
+              help='Include to overwrite existing notebooks in the workspace.')
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -72,6 +72,7 @@ def download(api_client, config_path, **kwargs):
              short_help='Utility to deploy and download Databricks resource stacks.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
+@debug_option
 @profile_option
 def stack_group():
     """
