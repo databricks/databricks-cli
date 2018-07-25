@@ -39,9 +39,9 @@ TEST_STACK_PATH = 'stack/stack.json'
 TEST_JOB_SETTINGS = {
     'name': 'test job'
 }
-TEST_JOB_RESOURCE_ID = 'test job'
+TEST_RESOURCE_ID = 'test job'
 TEST_JOB_RESOURCE = {
-    api.RESOURCE_ID: TEST_JOB_RESOURCE_ID,
+    api.RESOURCE_ID: TEST_JOB_RESOURCE,
     api.RESOURCE_SERVICE: api.JOBS_SERVICE,
     api.RESOURCE_PROPERTIES: TEST_JOB_SETTINGS
 }
@@ -192,25 +192,6 @@ class TestStackApi(object):
         stack_api._deploy_resource = mock.Mock(wraps=_deploy_resource)
         stack_api.deploy(config_path)
 
-    def test_download_relative_paths(self, stack_api, tmpdir):
-        """
-            When doing stack_api.download, in every call to stack_api._deploy_resource, the current
-            working directory should be the same directory as where the stack config template is
-            contained so that relative paths for resources can be relative to the stack config
-            instead of where CLI calls the API functions.
-        """
-        config_working_dir = os.path.join(tmpdir.strpath, 'stack')
-        config_path = os.path.join(config_working_dir, 'test.json')
-        os.makedirs(config_working_dir)
-        with open(config_path, 'w+') as f:
-            json.dump(TEST_STACK, f)
-
-        def _download_resource(resource, **kwargs):
-            assert os.getcwd() == config_working_dir
-            return TEST_JOB_STATUS
-
-        stack_api._download_resource = mock.Mock(wraps=_download_resource)
-        stack_api.download(config_path)
 
     def test_deploy_job(self, stack_api):
         """
@@ -287,7 +268,6 @@ class TestStackApi(object):
                                          test_workspace_dir_properties['source_path'])})
         os.makedirs(test_workspace_dir_properties['source_path'])
 
-        # Test Input of Workspace directory properties.
         dir_physical_id, dir_deploy_output = \
             stack_api._deploy_workspace(test_workspace_dir_properties, None, True)
         stack_api.workspace_client.import_workspace_dir.assert_called_once()
@@ -298,7 +278,6 @@ class TestStackApi(object):
         assert dir_physical_id == {'path': test_workspace_dir_properties['path']}
         assert dir_deploy_output == test_deploy_output
 
-        # Test Input of Workspace notebook properties.
         nb_physical_id, nb_deploy_output = \
             stack_api._deploy_workspace(test_workspace_nb_properties, None, True)
         stack_api.workspace_client.import_workspace.assert_called_once()
