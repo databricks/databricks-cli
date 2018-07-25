@@ -414,14 +414,15 @@ class StackApi(object):
 
         if physical_id and physical_id['path'] != dbfs_path:
             # physical_id['path'] is the workspace path from the last deployment. Alert when changed
-            click.echo("DBFS asset had path changed from {} to {}".format(physical_id['path'],
-                                                                          dbfs_path))
+            click.echo("DBFS {} had path changed from {} to {}".format(object_type,
+                                                                       physical_id['path'],
+                                                                       dbfs_path))
         new_physical_id = {'path': dbfs_path}
-        deploy_output = self.dbfs_client.client.get_status(DbfsPath(dbfs_path).)
+        deploy_output = self.dbfs_client.client.get_status(dbfs_path)
 
         return new_physical_id, deploy_output
 
-     def _download_workspace(self, resource_properties, overwrite):
+    def _download_workspace(self, resource_properties, overwrite):
         """
         Download workspace asset.
 
