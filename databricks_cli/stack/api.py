@@ -157,8 +157,8 @@ class StackApi(object):
 
     def download_from_config(self, stack_config, **kwargs):
         """
-        Downloads a stack given a dict of the stack configuration
-        :param stack_config: dict of stack configuration. Must contain 'resources' field.
+        Downloads a stack given a dict of the stack configuration.
+        :param stack_config: dict of stack configuration. Must contain 'name' and 'resources' field.
         :return: None.
         """
         self._validate_config(stack_config)
