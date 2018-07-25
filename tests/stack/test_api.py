@@ -46,6 +46,29 @@ TEST_JOB_RESOURCE = {
     api.RESOURCE_PROPERTIES: TEST_JOB_SETTINGS
 }
 TEST_JOB_PHYSICAL_ID = {'job_id': 1234}
+TEST_WORKSPACE_NB_PROPERTIES = {
+    'source_path': 'notebook.py',
+    'path': '/test/notebook.py',
+    'object_type': 'NOTEBOOK'
+}
+TEST_WORKSPACE_DIR_PROPERTIES = {
+    'source_path': 'test/dir',
+    'path': '/test/dir',
+    'object_type': 'DIRECTORY'
+}
+TEST_RESOURCE_ID = 'test job'
+TEST_RESOURCE_WORKSPACE_NB_ID = 'test notebook'
+TEST_RESOURCE_WORKSPACE_DIR_ID = 'test directory'
+TEST_WORKSPACE_NB_RESOURCE = {
+    api.RESOURCE_ID: TEST_RESOURCE_WORKSPACE_NB_ID,
+    api.RESOURCE_SERVICE: api.WORKSPACE_SERVICE,
+    api.RESOURCE_PROPERTIES: TEST_WORKSPACE_NB_PROPERTIES
+}
+TEST_WORKSPACE_DIR_RESOURCE = {
+    api.RESOURCE_ID: TEST_RESOURCE_WORKSPACE_DIR_ID,
+    api.RESOURCE_SERVICE: api.WORKSPACE_SERVICE,
+    api.RESOURCE_PROPERTIES: TEST_WORKSPACE_DIR_PROPERTIES
+}
 TEST_JOB_STATUS = {
     api.RESOURCE_ID: TEST_RESOURCE_ID,
     api.RESOURCE_SERVICE: api.JOBS_SERVICE,
@@ -53,11 +76,15 @@ TEST_JOB_STATUS = {
 }
 TEST_STACK = {
     api.STACK_NAME: "test-stack",
-    api.STACK_RESOURCES: [TEST_JOB_RESOURCE]
+    api.STACK_RESOURCES: [TEST_JOB_RESOURCE,
+                          TEST_WORKSPACE_NB_RESOURCE,
+                          TEST_WORKSPACE_DIR_RESOURCE]
 }
 TEST_STATUS = {
     api.STACK_NAME: "test-stack",
-    api.STACK_RESOURCES: [TEST_JOB_RESOURCE],
+    api.STACK_RESOURCES: [TEST_JOB_RESOURCE,
+                          TEST_WORKSPACE_NB_RESOURCE,
+                          TEST_WORKSPACE_DIR_RESOURCE],
     api.STACK_DEPLOYED: [TEST_JOB_STATUS]
 }
 
@@ -158,7 +185,7 @@ class TestStackApi(object):
         with open(config_path, 'w+') as f:
             json.dump(TEST_STACK, f)
 
-        def _deploy_resource(resource, stack_status):
+        def _deploy_resource(resource, stack_status, **kwargs):
             assert os.getcwd() == config_working_dir
             return TEST_JOB_STATUS
 
@@ -216,19 +243,92 @@ class TestStackApi(object):
         with pytest.raises(StackError):
             stack_api._deploy_job(alt_test_job_settings)
 
+    def test_deploy_workspace(self, stack_api, tmpdir):
+        """
+            stack_api._deploy_workspace should call certain workspace client functions depending
+            on object_type and error when object_type is defined incorrectly.
+        """
+        test_deploy_output = {'test': 'test'}  # default deploy_output return value
+
+        stack_api.workspace_client.client = mock.MagicMock()
+        stack_api.workspace_client.client.get_status.return_value = test_deploy_output
+        stack_api.workspace_client.import_workspace = mock.MagicMock()
+        stack_api.workspace_client.import_workspace_dir = mock.MagicMock()
+
+        test_workspace_nb_properties = TEST_WORKSPACE_NB_PROPERTIES.copy()
+        test_workspace_nb_properties.update(
+            {'source_path': os.path.join(tmpdir.strpath,
+                                         test_workspace_nb_properties['source_path'])})
+        with open(test_workspace_nb_properties['source_path'], 'w') as f:
+            f.write("print('test')\n")
+        test_workspace_dir_properties = TEST_WORKSPACE_DIR_PROPERTIES.copy()
+        test_workspace_dir_properties.update(
+            {'source_path': os.path.join(tmpdir.strpath,
+                                         test_workspace_dir_properties['source_path'])})
+        os.makedirs(test_workspace_dir_properties['source_path'])
+
+        dir_physical_id, dir_deploy_output = \
+            stack_api._deploy_workspace(test_workspace_dir_properties, None, True)
+        stack_api.workspace_client.import_workspace_dir.assert_called_once()
+        assert stack_api.workspace_client.import_workspace_dir.call_args[0][0] == \
+            test_workspace_dir_properties['source_path']
+        assert stack_api.workspace_client.import_workspace_dir.call_args[0][1] == \
+            test_workspace_dir_properties['path']
+        assert dir_physical_id == {'path': test_workspace_dir_properties['path']}
+        assert dir_deploy_output == test_deploy_output
+
+        nb_physical_id, nb_deploy_output = \
+            stack_api._deploy_workspace(test_workspace_nb_properties, None, True)
+        stack_api.workspace_client.import_workspace.assert_called_once()
+        assert stack_api.workspace_client.import_workspace.call_args[0][0] == \
+            test_workspace_nb_properties['source_path']
+        assert stack_api.workspace_client.import_workspace.call_args[0][1] == \
+            test_workspace_nb_properties['path']
+        assert nb_physical_id == {'path': test_workspace_nb_properties['path']}
+        assert nb_deploy_output == test_deploy_output
+
+        # Should raise error if resource object_type doesn't match actually is in filesystem.
+        test_workspace_dir_properties.update({'object_type': 'NOTEBOOK'})
+        with pytest.raises(StackError):
+            stack_api._deploy_workspace(test_workspace_dir_properties, None, True)
+
+        # Should raise error if object_type is not NOTEBOOK or DIRECTORY
+        test_workspace_dir_properties.update({'object_type': 'INVALID_TYPE'})
+        with pytest.raises(StackError):
+            stack_api._deploy_workspace(test_workspace_dir_properties, None, True)
+
     def test_deploy_resource(self, stack_api):
         """
            stack_api._deploy_resource should return relevant fields in output if deploy done
            correctly.
         """
-        stack_api.jobs_client._deploy_job = mock.MagicMock()
-        stack_api.jobs_client._deploy_job.return_value = (12345, {'job_id': 12345})
+        # A job resource should have _deploy_resource call on _deploy_job
+        stack_api._deploy_job = mock.MagicMock()
+        test_job_physical_id = {'job_id': 12345}
+        stack_api._deploy_job.return_value = (test_job_physical_id, {})
+        test_job_resource_status = {api.RESOURCE_PHYSICAL_ID: test_job_physical_id}
+        new_resource_status = stack_api._deploy_resource(TEST_JOB_RESOURCE,
+                                                         resource_status=test_job_resource_status)
+        assert api.RESOURCE_ID in new_resource_status
+        assert api.RESOURCE_PHYSICAL_ID in new_resource_status
+        assert api.RESOURCE_DEPLOY_OUTPUT in new_resource_status
+        assert api.RESOURCE_SERVICE in new_resource_status
+        stack_api._deploy_job.assert_called()
+        assert stack_api._deploy_job.call_args[0][0] == TEST_JOB_RESOURCE[api.RESOURCE_PROPERTIES]
+        assert stack_api._deploy_job.call_args[0][1] == test_job_physical_id
 
-        deploy_info = stack_api._deploy_resource(TEST_JOB_RESOURCE)
-        assert api.RESOURCE_ID in deploy_info
-        assert api.RESOURCE_PHYSICAL_ID in deploy_info
-        assert api.RESOURCE_DEPLOY_OUTPUT in deploy_info
-        assert api.RESOURCE_SERVICE in deploy_info
+        # A workspace resource should have _deploy_resource call on _deploy_workspace
+        stack_api._deploy_workspace = mock.MagicMock()
+        test_workspace_physical_id = {'path': '/test/path'}
+        stack_api._deploy_workspace.return_value = (test_workspace_physical_id, {})
+        test_workspace_resource_status = {api.RESOURCE_PHYSICAL_ID: test_workspace_physical_id}
+        stack_api._deploy_resource(TEST_WORKSPACE_NB_RESOURCE,
+                                   resource_status=test_workspace_resource_status,
+                                   overwrite_notebook=True)
+        stack_api._deploy_workspace.assert_called()
+        assert stack_api._deploy_workspace.call_args[0][0] == \
+            TEST_WORKSPACE_NB_RESOURCE[api.RESOURCE_PROPERTIES]
+        assert stack_api._deploy_workspace.call_args[0][1] == test_workspace_physical_id
 
         # If there is a nonexistent type, raise a StackError.
         resource_badtype = {
