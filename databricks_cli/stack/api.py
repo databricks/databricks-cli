@@ -104,7 +104,7 @@ class StackApi(object):
         config_dir = os.path.dirname(os.path.abspath(config_path))
         cli_dir = os.getcwd()
         os.chdir(config_dir)  # Switch current working directory to where json config is stored
-        self.download_config(stack_config, **kwargs)
+        self.download_from_config(stack_config, **kwargs)
         os.chdir(cli_dir)
 
     def deploy_config(self, stack_config, stack_status=None, **kwargs):
@@ -155,12 +155,11 @@ class StackApi(object):
 
         return new_stack_status
 
-    def download_config(self, stack_config, **kwargs):
+    def download_from_config(self, stack_config, **kwargs):
         """
         Downloads a stack given a dict of the stack configuration
         :param stack_config: dict of stack configuration. Must contain 'resources' field.
-        :param kwargs:
-        :return:
+        :return: None.
         """
         self._validate_config(stack_config)
         stack_name = stack_config.get(STACK_NAME)
@@ -171,65 +170,6 @@ class StackApi(object):
             # Deploy resource, get resource_status
             self._download_resource(resource_config, **kwargs)
             click.echo('#' * 80)
-
-    def _download_resource(self, resource_config, **kwargs):
-        """
-        Downloads a resource given a resource information extracted from the stack JSON
-        configuration template.
-
-        :param resource_config: A dict of the resource with fields of RESOURCE_ID, RESOURCE_SERVICE
-        and RESOURCE_PROPERTIES.
-        ex. {'id': 'example-resource', 'service': 'jobs', 'properties': {...}}
-        """
-        resource_id = resource_config.get(RESOURCE_ID)
-        resource_service = resource_config.get(RESOURCE_SERVICE)
-        resource_properties = resource_config.get(RESOURCE_PROPERTIES)
-
-        if resource_service == WORKSPACE_SERVICE:
-            click.echo(
-                "Downloading workspace asset '{}' with properties \n{}"
-                .format(
-                    resource_id, json.dumps(resource_properties, indent=2, separators=(',', ': '))
-                )
-            )
-            overwrite = kwargs.get('overwrite_notebooks', False)
-            self._download_workspace(resource_properties, overwrite)
-        else:
-            click.echo("Resource service '{}' not supported for download. "
-                       "skipping.".format(resource_service))
-
-    def _download_workspace(self, resource_properties, overwrite):
-        """
-        Download workspace asset.
-
-        :param resource_properties: dict of properties for the workspace asset. Must contain the
-        'source_path' and 'path' fields. The other fields will be inferred if not provided.
-        :param overwrite: Whether or not to overwrite the contents of workspace notebooks.
-        """
-        # Required fields. TODO(alinxie) put in _validate_config
-        local_path = resource_properties.get('source_path')
-        workspace_path = resource_properties.get('path')
-        object_type = resource_properties.get('object_type')
-        click.echo('Downloading {} from Databricks path {} to {}'.format(object_type,
-                                                                         workspace_path,
-                                                                         local_path))
-        if object_type == 'NOTEBOOK':
-            # Inference of notebook language and format. A tuple of (language, fmt) or Nonetype.
-            language_fmt = WorkspaceLanguage.to_language_and_format(local_path)
-            if language_fmt is None:
-                raise StackError("Workspace Notebook language and format cannot be inferred."
-                                 "Please check file extension of notebook 'source_path'.")
-            (_, fmt) = language_fmt
-            local_dir = os.path.dirname(os.path.abspath(local_path))
-            if not os.path.exists(local_dir):
-                os.makedirs(local_dir)
-            self.workspace_client.export_workspace(workspace_path, local_path, fmt, overwrite)
-        elif object_type == 'DIRECTORY':
-            if not os.path.exists(local_path):
-                os.makedirs(local_path)
-            self.workspace_client.export_workspace_dir(workspace_path, local_path, overwrite)
-        else:
-            raise StackError("Invalid value for 'object_type' field: {}".format(object_type))
 
     def _deploy_resource(self, resource_config, resource_status=None, **kwargs):
         """
@@ -280,6 +220,32 @@ class StackApi(object):
                                RESOURCE_PHYSICAL_ID: new_physical_id,
                                RESOURCE_DEPLOY_OUTPUT: deploy_output}
         return new_resource_status
+
+    def _download_resource(self, resource_config, **kwargs):
+        """
+        Downloads a resource given a resource information extracted from the stack JSON
+        configuration template.
+
+        :param resource_config: A dict of the resource with fields of RESOURCE_ID, RESOURCE_SERVICE
+        and RESOURCE_PROPERTIES.
+        ex. {'id': 'example-resource', 'service': 'jobs', 'properties': {...}}
+        """
+        resource_id = resource_config.get(RESOURCE_ID)
+        resource_service = resource_config.get(RESOURCE_SERVICE)
+        resource_properties = resource_config.get(RESOURCE_PROPERTIES)
+
+        if resource_service == WORKSPACE_SERVICE:
+            click.echo(
+                "Downloading workspace asset '{}' with properties \n{}"
+                .format(
+                    resource_id, json.dumps(resource_properties, indent=2, separators=(',', ': '))
+                )
+            )
+            overwrite = kwargs.get('overwrite_notebooks', False)
+            self._download_workspace(resource_properties, overwrite)
+        else:
+            click.echo("Resource service '{}' not supported for download. "
+                       "skipping.".format(resource_service))
 
     def _deploy_job(self, resource_properties, physical_id=None):
         """
@@ -402,6 +368,39 @@ class StackApi(object):
         deploy_output = self.workspace_client.client.get_status(workspace_path)
 
         return new_physical_id, deploy_output
+
+    def _download_workspace(self, resource_properties, overwrite):
+        """
+        Download workspace asset.
+
+        :param resource_properties: dict of properties for the workspace asset. Must contain the
+        'source_path' and 'path' fields. The other fields will be inferred if not provided.
+        :param overwrite: Whether or not to overwrite the contents of workspace notebooks.
+        """
+        # Required fields. TODO(alinxie) put in _validate_config
+        local_path = resource_properties.get('source_path')
+        workspace_path = resource_properties.get('path')
+        object_type = resource_properties.get('object_type')
+        click.echo('Downloading {} from Databricks path {} to {}'.format(object_type,
+                                                                         workspace_path,
+                                                                         local_path))
+        if object_type == 'NOTEBOOK':
+            # Inference of notebook language and format. A tuple of (language, fmt) or Nonetype.
+            language_fmt = WorkspaceLanguage.to_language_and_format(local_path)
+            if language_fmt is None:
+                raise StackError("Workspace Notebook language and format cannot be inferred."
+                                 "Please check file extension of notebook 'source_path'.")
+            (_, fmt) = language_fmt
+            local_dir = os.path.dirname(os.path.abspath(local_path))
+            if not os.path.exists(local_dir):
+                os.makedirs(local_dir)
+            self.workspace_client.export_workspace(workspace_path, local_path, fmt, overwrite)
+        elif object_type == 'DIRECTORY':
+            if not os.path.exists(local_path):
+                os.makedirs(local_path)
+            self.workspace_client.export_workspace_dir(workspace_path, local_path, overwrite)
+        else:
+            raise StackError("Invalid value for 'object_type' field: {}".format(object_type))
 
     def _validate_config(self, stack_config):
         """
