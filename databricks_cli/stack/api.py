@@ -333,7 +333,7 @@ class StackApi(object):
         Deploy workspace asset.
 
         :param resource_properties: dict of properties for the workspace asset. Must contain the
-        'source_path' and 'path' fields. The other fields will be inferred if not provided.
+        'source_path' and 'path' fields.
         :param physical_id: dict containing physical identifier of workspace asset on databricks.
         Should contain the field 'path'.
         :param overwrite: Whether or not to overwrite the contents of workspace notebooks.
@@ -384,16 +384,16 @@ class StackApi(object):
 
     def _deploy_dbfs(self, resource_properties, physical_id, overwrite):
         """
-        Deploy workspace asset.
+        Deploy dbfs asset.
 
-        :param resource_properties: dict of properties for the workspace asset. Must contain the
-        'source_path' and 'path' fields. The other fields will be inferred if not provided.
-        :param physical_id: dict containing physical identifier of workspace asset on databricks.
+        :param resource_properties: dict of properties for the dbfs asset. Must contain the
+        'source_path', 'path' and 'is_dir' fields.
+        :param physical_id: dict containing physical identifier of workspace asset on Databricks.
         Should contain the field 'path'.
         :param overwrite: Whether or not to overwrite the contents of workspace notebooks.
         :return: (dict, dict) of (physical_id, deploy_output). physical_id is the physical ID for
-        the stack status that contains the workspace path of the notebook or directory on datbricks.
-        deploy_output is the initial information about the asset on databricks at deploy time
+        the stack status that contains the dbfs path of the file on Databricks.
+        deploy_output is the initial information about the asset on Databricks at deploy time
         returned by the REST API.
         """
         # Required fields. TODO(alinxie) put in _validate_config
@@ -404,7 +404,7 @@ class StackApi(object):
         actual_is_dir = os.path.isdir(local_path)
         if is_dir != actual_is_dir:
             raise StackError("Field 'is_dir' ({}) not consistent"
-                             "with actual object type ({})".format(is_dir, actual_is_dir))
+                             " with actual value ({})".format(is_dir, actual_is_dir))
         object_type = "DIRECTORY" if is_dir else "FILE"
         click.echo('Uploading {} from {} to Databricks dbfs at {}'.format(object_type,
                                                                           local_path,
@@ -414,46 +414,13 @@ class StackApi(object):
 
         if physical_id and physical_id['path'] != dbfs_path:
             # physical_id['path'] is the workspace path from the last deployment. Alert when changed
-            click.echo("DBFS {} had path changed from {} to {}".format(object_type,
+            click.echo("Dbfs {} had path changed from {} to {}".format(object_type,
                                                                        physical_id['path'],
                                                                        dbfs_path))
         new_physical_id = {'path': dbfs_path}
         deploy_output = self.dbfs_client.client.get_status(dbfs_path)
 
         return new_physical_id, deploy_output
-
-    def _download_workspace(self, resource_properties, overwrite):
-        """
-        Download workspace asset.
-
-        :param resource_properties: dict of properties for the workspace asset. Must contain the
-        'source_path' and 'path' fields. The other fields will be inferred if not provided.
-        :param overwrite: Whether or not to overwrite the contents of workspace notebooks.
-        """
-        # Required fields. TODO(alinxie) put in _validate_config
-        local_path = resource_properties.get('source_path')
-        workspace_path = resource_properties.get('path')
-        object_type = resource_properties.get('object_type')
-        click.echo('Downloading {} from Databricks path {} to {}'.format(object_type,
-                                                                         workspace_path,
-                                                                         local_path))
-        if object_type == 'NOTEBOOK':
-            # Inference of notebook language and format. A tuple of (language, fmt) or Nonetype.
-            language_fmt = WorkspaceLanguage.to_language_and_format(local_path)
-            if language_fmt is None:
-                raise StackError("Workspace Notebook language and format cannot be inferred."
-                                 "Please check file extension of notebook 'source_path'.")
-            (_, fmt) = language_fmt
-            local_dir = os.path.dirname(os.path.abspath(local_path))
-            if not os.path.exists(local_dir):
-                os.makedirs(local_dir)
-            self.workspace_client.export_workspace(workspace_path, local_path, fmt, overwrite)
-        elif object_type == 'DIRECTORY':
-            if not os.path.exists(local_path):
-                os.makedirs(local_path)
-            self.workspace_client.export_workspace_dir(workspace_path, local_path, overwrite)
-        else:
-            raise StackError("Invalid value for 'object_type' field: {}".format(object_type))
 
     def _validate_config(self, stack_config):
         """

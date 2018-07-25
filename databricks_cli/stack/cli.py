@@ -37,7 +37,7 @@ DEBUG_MODE = True
 @click.option('--overwrite-notebooks', is_flag=True, default=False, show_default=True,
               help='Include to overwrite existing notebooks in the workspace.')
 @click.option('--overwrite-dbfs', is_flag=True, default=False, show_default=True,
-              help='Include to overwrite existing notebooks in the workspace.')
+              help='Include to overwrite existing files in dbfs.')
 @debug_option
 @profile_option
 @eat_exceptions
@@ -49,25 +49,6 @@ def deploy(api_client, config_path, **kwargs):
     click.echo('#' * 80)
     click.echo('Deploying stack at: {} with options: {}'.format(config_path, kwargs))
     StackApi(api_client).deploy(config_path, **kwargs)
-    click.echo('#' * 80)
-
-
-@click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Download stack given a JSON configuration of the stack')
-@click.argument('config_path', type=click.Path(exists=True), required=True)
-@click.option('--overwrite-notebooks', '-o', is_flag=True, help='Include to overwrite existing'
-                                                                'notebooks in the workspace.')
-@debug_option
-@profile_option
-@eat_exceptions
-@provide_api_client
-def download(api_client, config_path, **kwargs):
-    """
-    Download a stack to the databricks workspace given a JSON stack configuration template.
-    """
-    click.echo('#' * 80)
-    click.echo('Downloading stack at: {} with options: {}'.format(config_path, kwargs))
-    StackApi(api_client).download(config_path, **kwargs)
     click.echo('#' * 80)
 
 
