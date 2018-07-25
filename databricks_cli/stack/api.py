@@ -176,8 +176,8 @@ class StackApi(object):
         Deploys a resource given a resource information extracted from the stack JSON configuration
         template.
 
-        :param resource_config: A dict of the resource with fields of RESOURCE_ID, RESOURCE_SERVICE
-        and RESOURCE_PROPERTIES.
+        :param resource_config: A dict of the resource with fields of 'id', 'service'
+        and 'properties'.
         ex. {'id': 'example-resource', 'service': 'jobs', 'properties': {...}}
         :param resource_status: A dict of the resource's deployment info from the last
         deployment. Will be None if this is the first deployment.
@@ -226,8 +226,8 @@ class StackApi(object):
         Downloads a resource given a resource information extracted from the stack JSON
         configuration template.
 
-        :param resource_config: A dict of the resource with fields of RESOURCE_ID, RESOURCE_SERVICE
-        and RESOURCE_PROPERTIES.
+        :param resource_config: A dict of the resource with fields of 'id', 'service' and
+        'properties'.
         ex. {'id': 'example-resource', 'service': 'jobs', 'properties': {...}}
         """
         resource_id = resource_config.get(RESOURCE_ID)
