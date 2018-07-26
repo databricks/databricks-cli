@@ -34,8 +34,10 @@ DEBUG_MODE = True
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Deploy stack given a JSON configuration of the stack')
 @click.argument('config_path', type=click.Path(exists=True), required=True)
-@click.option('--overwrite-notebooks', '-o', is_flag=True, default=False, show_default=True,
+@click.option('--overwrite-notebooks', is_flag=True, default=False, show_default=True,
               help='Include to overwrite existing notebooks in the workspace.')
+@click.option('--overwrite-dbfs', is_flag=True, default=False, show_default=True,
+              help='Include to overwrite existing files in dbfs.')
 @debug_option
 @profile_option
 @eat_exceptions
@@ -64,3 +66,4 @@ def stack_group():
 
 
 stack_group.add_command(deploy, name='deploy')
+stack_group.add_command(download, name='download')
