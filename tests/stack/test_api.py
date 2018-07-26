@@ -41,7 +41,7 @@ TEST_JOB_SETTINGS = {
 }
 TEST_RESOURCE_ID = 'test job'
 TEST_JOB_RESOURCE = {
-    api.RESOURCE_ID: TEST_JOB_RESOURCE,
+    api.RESOURCE_ID: TEST_RESOURCE_ID,
     api.RESOURCE_SERVICE: api.JOBS_SERVICE,
     api.RESOURCE_PROPERTIES: TEST_JOB_SETTINGS
 }
@@ -191,7 +191,6 @@ class TestStackApi(object):
 
         stack_api._deploy_resource = mock.Mock(wraps=_deploy_resource)
         stack_api.deploy(config_path)
-
 
     def test_deploy_job(self, stack_api):
         """
