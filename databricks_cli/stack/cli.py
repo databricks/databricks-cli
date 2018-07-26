@@ -66,4 +66,3 @@ def stack_group():
 
 
 stack_group.add_command(deploy, name='deploy')
-stack_group.add_command(download, name='download')
