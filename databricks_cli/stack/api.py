@@ -173,7 +173,7 @@ class StackApi(object):
                     resource_id, json.dumps(resource_properties, indent=2, separators=(',', ': '))
                 )
             )
-            overwrite = kwargs.get('overwrite_notebooks', False)
+            overwrite = kwargs.get('overwrite', False)
             new_physical_id, deploy_output = self._deploy_workspace(resource_properties,
                                                                     physical_id,
                                                                     overwrite)
@@ -183,7 +183,7 @@ class StackApi(object):
                     resource_id, json.dumps(resource_properties, indent=2, separators=(',', ': '))
                 )
             )
-            overwrite = kwargs.get('overwrite_dbfs', False)
+            overwrite = kwargs.get('overwrite', False)
             new_physical_id, deploy_output = self._deploy_dbfs(resource_properties,
                                                                physical_id,
                                                                overwrite)
@@ -342,7 +342,7 @@ class StackApi(object):
         is_dir = resource_properties.get('is_dir')
 
         if is_dir != os.path.isdir(local_path):
-            raise StackError("local source path '{}' is inconsistent"
+            raise StackError("local source_path '{}' is inconsistent"
                              " with is_dir: {}".format(local_path, is_dir))
         if is_dir:
             click.echo('Uploading Directory from {} to Dbfs at {}'.format(local_path, dbfs_path))
