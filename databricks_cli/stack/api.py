@@ -327,35 +327,34 @@ class StackApi(object):
 
         :param resource_properties: dict of properties for the dbfs asset. Must contain the
         'source_path', 'path' and 'is_dir' fields.
-        :param physical_id: dict containing physical identifier of workspace asset on Databricks.
+        :param physical_id: dict containing physical identifier of dbfs asset on Databricks.
         Should contain the field 'path'.
-        :param overwrite: Whether or not to overwrite the contents of workspace notebooks.
-        :return: (dict, dict) of (physical_id, deploy_output). physical_id is the physical ID for
-        the stack status that contains the dbfs path of the file on Databricks.
-        deploy_output is the initial information about the asset on Databricks at deploy time
+        :param overwrite: Whether or not to overwrite the contents of dbfs files.
+        :return: (dict, dict) of (physical_id, deploy_output). physical_id is a dict that
+        contains the dbfs path of the file on Databricks.
+        ex.{"path":"dbfs:/path/in/dbfs"}
+        deploy_output is the initial information about the dbfs asset at deploy time
         returned by the REST API.
         """
-        # Required fields. TODO(alinxie) put in _validate_config
+        # Required fields. TODO(alinxie) validate fields in _validate_config
         local_path = resource_properties.get('source_path')
         dbfs_path = resource_properties.get('path')
         is_dir = resource_properties.get('is_dir')
 
-        actual_is_dir = os.path.isdir(local_path)
-        if is_dir != actual_is_dir:
-            raise StackError("Field 'is_dir' ({}) not consistent"
-                             " with actual value ({})".format(is_dir, actual_is_dir))
-        object_type = "DIRECTORY" if is_dir else "FILE"
-        click.echo('Uploading {} from {} to Databricks dbfs at {}'.format(object_type,
-                                                                          local_path,
-                                                                          dbfs_path))
-
-        self.dbfs_client.cp(recursive=True, overwrite=overwrite, src=local_path, dst=dbfs_path)
+        if is_dir != os.path.isdir(local_path):
+            raise StackError("local source path '{}' is inconsistent"
+                             " with is_dir: {}".format(local_path, is_dir))
+        if is_dir:
+            click.echo('Uploading Directory from {} to Dbfs at {}'.format(local_path, dbfs_path))
+            self.dbfs_client.cp(recursive=True, overwrite=overwrite, src=local_path, dst=dbfs_path)
+        else:
+            click.echo('Uploading File from {} to Dbfs at {}'.format(local_path, dbfs_path))
+            self.dbfs_client.cp(recursive=False, overwrite=overwrite, src=local_path, dst=dbfs_path)
 
         if physical_id and physical_id['path'] != dbfs_path:
-            # physical_id['path'] is the workspace path from the last deployment. Alert when changed
-            click.echo("Dbfs {} had path changed from {} to {}".format(object_type,
-                                                                       physical_id['path'],
-                                                                       dbfs_path))
+            # physical_id['path'] is the dbfs path from the last deployment. Alert when changed
+            click.echo("Dbfs asset had path changed from {} to {}".format(physical_id['path'],
+                                                                          dbfs_path))
         new_physical_id = {'path': dbfs_path}
         deploy_output = self.dbfs_client.client.get_status(dbfs_path)
 
