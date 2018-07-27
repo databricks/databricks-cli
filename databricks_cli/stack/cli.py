@@ -34,7 +34,7 @@ DEBUG_MODE = True
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Deploy stack given a JSON configuration of the stack')
 @click.argument('config_path', type=click.Path(exists=True), required=True)
-@click.option('--overwrite-notebooks', '-o', is_flag=True, default=False, show_default=True,
+@click.option('--overwrite', '-o', is_flag=True, default=False, show_default=True,
               help='Include to overwrite existing notebooks in the workspace.')
 @debug_option
 @profile_option
@@ -53,8 +53,8 @@ def deploy(api_client, config_path, **kwargs):
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Download stack given a JSON configuration of the stack')
 @click.argument('config_path', type=click.Path(exists=True), required=True)
-@click.option('--overwrite-notebooks', '-o', is_flag=True, help='Include to overwrite existing'
-                                                                'notebooks in the workspace.')
+@click.option('--overwrite', '-o', is_flag=True, help='Include to overwrite existing'
+                                                      ' notebooks in the workspace.')
 @debug_option
 @profile_option
 @eat_exceptions

@@ -346,7 +346,7 @@ class TestStackApi(object):
         test_workspace_resource_status = {api.RESOURCE_PHYSICAL_ID: test_workspace_physical_id}
         stack_api._deploy_resource(TEST_WORKSPACE_NB_RESOURCE,
                                    resource_status=test_workspace_resource_status,
-                                   overwrite_notebook=True)
+                                   overwrite=True)
         stack_api._deploy_workspace.assert_called()
         assert stack_api._deploy_workspace.call_args[0][0] == \
             TEST_WORKSPACE_NB_RESOURCE[api.RESOURCE_PROPERTIES]
@@ -408,7 +408,7 @@ class TestStackApi(object):
         """
         # A workspace resource should have _download_resource call on _download_workspace
         stack_api._download_workspace = mock.MagicMock()
-        stack_api._download_resource(TEST_WORKSPACE_NB_RESOURCE, overwrite_notebooks=True)
+        stack_api._download_resource(TEST_WORKSPACE_NB_RESOURCE, overwrite=True)
         stack_api._download_workspace.assert_called()
         assert stack_api._download_workspace.call_args[0][0] == \
             TEST_WORKSPACE_NB_RESOURCE[api.RESOURCE_PROPERTIES]

@@ -205,7 +205,7 @@ class StackApi(object):
                     resource_id, json.dumps(resource_properties, indent=2, separators=(',', ': '))
                 )
             )
-            overwrite = kwargs.get('overwrite_notebooks', False)
+            overwrite = kwargs.get('overwrite', False)
             new_physical_id, deploy_output = self._deploy_workspace(resource_properties,
                                                                     physical_id,
                                                                     overwrite)
@@ -241,7 +241,7 @@ class StackApi(object):
                     resource_id, json.dumps(resource_properties, indent=2, separators=(',', ': '))
                 )
             )
-            overwrite = kwargs.get('overwrite_notebooks', False)
+            overwrite = kwargs.get('overwrite', False)
             self._download_workspace(resource_properties, overwrite)
         else:
             click.echo("Resource service '{}' not supported for download. "
