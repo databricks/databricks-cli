@@ -62,6 +62,7 @@ def test_edit_cli_json(cluster_api_mock):
     runner.invoke(cli.edit_cli, ['--json', EDIT_JSON])
     assert cluster_api_mock.edit_cluster.call_args[0][0] == json.loads(EDIT_JSON)
 
+
 CLUSTER_ID = 'test'
 
 

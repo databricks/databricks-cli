@@ -32,7 +32,7 @@ class ClusterApi(object):
 
     def edit_cluster(self, json):
         return self.client.client.perform_query('POST', '/clusters/edit', data=json)
-    
+
     def start_cluster(self, cluster_id):
         return self.client.start_cluster(cluster_id)
 

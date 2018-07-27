@@ -52,6 +52,7 @@ def create_cli(api_client, json_file, json):
     """
     json_cli_base(json_file, json, lambda json: ClusterApi(api_client).create_cluster(json))
 
+
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--json-file', default=None, type=click.Path(),
               help='File containing JSON request to POST to /api/2.0/clusters/edit.')
@@ -75,6 +76,7 @@ def edit_cli(api_client, json_file, json):
             json = f.read()
     deser_json = json_loads(json)
     ClusterApi(api_client).edit_cluster(deser_json)
+
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Starts a terminated Databricks cluster given its ID.')
