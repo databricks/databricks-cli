@@ -56,6 +56,18 @@ TEST_WORKSPACE_DIR_PROPERTIES = {
     'path': '/test/dir',
     'object_type': 'DIRECTORY'
 }
+TEST_DBFS_FILE_PROPERTIES = {
+    'source_path': 'test.jar',
+    'path': 'dbfs:/test/test.jar',
+    'is_dir': False
+}
+TEST_DBFS_DIR_PROPERTIES = {
+    'source_path': 'test/dir',
+    'path': 'dbfs:/test/dir',
+    'is_dir': True
+}
+TEST_DBFS_FILE_PHYSICAL_ID = {'path': 'dbfs:/test/test.jar'}
+TEST_DBFS_DIR_PHYSICAL_ID = {'path': 'dbfs:/test/dir'}
 TEST_RESOURCE_ID = 'test job'
 TEST_RESOURCE_WORKSPACE_NB_ID = 'test notebook'
 TEST_RESOURCE_WORKSPACE_DIR_ID = 'test directory'
@@ -69,10 +81,32 @@ TEST_WORKSPACE_DIR_RESOURCE = {
     api.RESOURCE_SERVICE: api.WORKSPACE_SERVICE,
     api.RESOURCE_PROPERTIES: TEST_WORKSPACE_DIR_PROPERTIES
 }
+TEST_RESOURCE_DBFS_FILE_ID = 'test dbfs file'
+TEST_RESOURCE_DBFS_DIR_ID = 'test dbfs directory'
+TEST_DBFS_FILE_RESOURCE = {
+    api.RESOURCE_ID: TEST_RESOURCE_DBFS_FILE_ID,
+    api.RESOURCE_SERVICE: api.DBFS_SERVICE,
+    api.RESOURCE_PROPERTIES: TEST_DBFS_FILE_PROPERTIES
+}
+TEST_DBFS_DIR_RESOURCE = {
+    api.RESOURCE_ID: TEST_RESOURCE_DBFS_DIR_ID,
+    api.RESOURCE_SERVICE: api.DBFS_SERVICE,
+    api.RESOURCE_PROPERTIES: TEST_DBFS_DIR_PROPERTIES
+}
 TEST_JOB_STATUS = {
     api.RESOURCE_ID: TEST_RESOURCE_ID,
     api.RESOURCE_SERVICE: api.JOBS_SERVICE,
     api.RESOURCE_PHYSICAL_ID: TEST_JOB_PHYSICAL_ID
+}
+TEST_DBFS_FILE_STATUS = {
+    api.RESOURCE_ID: TEST_RESOURCE_DBFS_FILE_ID,
+    api.RESOURCE_SERVICE: api.DBFS_SERVICE,
+    api.RESOURCE_PHYSICAL_ID: TEST_DBFS_FILE_PHYSICAL_ID
+}
+TEST_DBFS_DIR_STATUS = {
+    api.RESOURCE_ID: TEST_RESOURCE_DBFS_DIR_ID,
+    api.RESOURCE_SERVICE: api.DBFS_SERVICE,
+    api.RESOURCE_PHYSICAL_ID: TEST_DBFS_DIR_PHYSICAL_ID
 }
 TEST_STACK = {
     api.STACK_NAME: "test-stack",
@@ -84,8 +118,12 @@ TEST_STATUS = {
     api.STACK_NAME: "test-stack",
     api.STACK_RESOURCES: [TEST_JOB_RESOURCE,
                           TEST_WORKSPACE_NB_RESOURCE,
-                          TEST_WORKSPACE_DIR_RESOURCE],
-    api.STACK_DEPLOYED: [TEST_JOB_STATUS]
+                          TEST_WORKSPACE_DIR_RESOURCE,
+                          TEST_DBFS_FILE_RESOURCE,
+                          TEST_DBFS_DIR_RESOURCE],
+    api.STACK_DEPLOYED: [TEST_JOB_STATUS,
+                         TEST_DBFS_FILE_STATUS,
+                         TEST_DBFS_DIR_STATUS]
 }
 
 
@@ -297,11 +335,65 @@ class TestStackApi(object):
         with pytest.raises(StackError):
             stack_api._deploy_workspace(test_workspace_dir_properties, None, True)
 
+    def test_deploy_dbfs(self, stack_api, tmpdir):
+        """
+            stack_api._deploy_dbfs should call certain dbfs client functions depending
+            on object_type and error when object_type is defined incorrectly.
+        """
+        test_deploy_output = {'test': 'test'}  # default deploy_output return value
+
+        stack_api.dbfs_client.client = mock.MagicMock()
+        stack_api.dbfs_client.client.get_status.return_value = test_deploy_output
+        stack_api.dbfs_client.cp = mock.MagicMock()
+
+        test_dbfs_file_properties = TEST_DBFS_FILE_PROPERTIES.copy()
+        test_dbfs_file_properties.update(
+            {'source_path': os.path.join(tmpdir.strpath,
+                                         test_dbfs_file_properties['source_path'])})
+        with open(test_dbfs_file_properties['source_path'], 'w') as f:
+            f.write("print('test')\n")
+        test_dbfs_dir_properties = TEST_DBFS_DIR_PROPERTIES.copy()
+        test_dbfs_dir_properties.update(
+            {'source_path': os.path.join(tmpdir.strpath,
+                                         test_dbfs_dir_properties['source_path'])})
+        os.makedirs(test_dbfs_dir_properties['source_path'])
+
+        dir_physical_id, dir_deploy_output = \
+            stack_api._deploy_dbfs(test_dbfs_dir_properties, None, True)
+        assert stack_api.dbfs_client.cp.call_count == 1
+        assert stack_api.dbfs_client.cp.call_args[1]['recursive'] is True
+        assert stack_api.dbfs_client.cp.call_args[1]['overwrite'] is True
+        assert stack_api.dbfs_client.cp.call_args[1]['src'] == \
+            test_dbfs_dir_properties['source_path']
+        assert stack_api.dbfs_client.cp.call_args[1]['dst'] == \
+            test_dbfs_dir_properties['path']
+        assert dir_physical_id == {'path': test_dbfs_dir_properties['path']}
+        assert dir_deploy_output == test_deploy_output
+
+        nb_physical_id, nb_deploy_output = \
+            stack_api._deploy_dbfs(test_dbfs_file_properties, None, True)
+        assert stack_api.dbfs_client.cp.call_count == 2
+        assert stack_api.dbfs_client.cp.call_args[1]['recursive'] is False
+        assert stack_api.dbfs_client.cp.call_args[1]['overwrite'] is True
+        assert stack_api.dbfs_client.cp.call_args[1]['src'] == \
+            test_dbfs_file_properties['source_path']
+        assert stack_api.dbfs_client.cp.call_args[1]['dst'] == \
+            test_dbfs_file_properties['path']
+        assert nb_physical_id == {'path': test_dbfs_file_properties['path']}
+        assert nb_deploy_output == test_deploy_output
+
+        # Should raise error if resource properties is_dir field isn't consistent with whether the
+        # resource is a directory or not locally.
+        test_dbfs_dir_properties.update({'is_dir': False})
+        with pytest.raises(StackError):
+            stack_api._deploy_dbfs(test_dbfs_dir_properties, None, True)
+
     def test_deploy_resource(self, stack_api):
         """
            stack_api._deploy_resource should return relevant fields in output if deploy done
            correctly.
         """
+        # TODO(alinxie) Change this test to directly call stack_api.deploy/stack_api.deploy_config
         # A job resource should have _deploy_resource call on _deploy_job
         stack_api._deploy_job = mock.MagicMock()
         test_job_physical_id = {'job_id': 12345}
@@ -329,6 +421,18 @@ class TestStackApi(object):
         assert stack_api._deploy_workspace.call_args[0][0] == \
             TEST_WORKSPACE_NB_RESOURCE[api.RESOURCE_PROPERTIES]
         assert stack_api._deploy_workspace.call_args[0][1] == test_workspace_physical_id
+
+        # A dbfs resource should have _deploy_resource call on _deploy_workspace
+        stack_api._deploy_dbfs = mock.MagicMock()
+        stack_api._deploy_dbfs.return_value = (TEST_DBFS_FILE_PHYSICAL_ID, {})
+        stack_api._deploy_resource(TEST_DBFS_FILE_RESOURCE,
+                                   resource_status=TEST_DBFS_FILE_STATUS,
+                                   overwrite_dbfs=True)
+        stack_api._deploy_dbfs.assert_called()
+        assert stack_api._deploy_dbfs.call_args[0][0] == \
+            TEST_DBFS_FILE_RESOURCE[api.RESOURCE_PROPERTIES]
+        assert stack_api._deploy_dbfs.call_args[0][1] == \
+            TEST_DBFS_FILE_STATUS[api.RESOURCE_PHYSICAL_ID]
 
         # If there is a nonexistent type, raise a StackError.
         resource_badtype = {

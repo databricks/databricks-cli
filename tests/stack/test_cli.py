@@ -48,11 +48,11 @@ def test_deploy_kwargs(stack_api_mock, tmpdir):
     path = tmpdir.strpath
     stack_api_mock.deploy = mock.MagicMock()
     runner = CliRunner()
-    runner.invoke(cli.deploy, ['--overwrite-notebooks', path])
+    runner.invoke(cli.deploy, ['--overwrite', path])
     stack_api_mock.deploy.assert_called()
     assert stack_api_mock.deploy.call_args[0][0] == path
-    # Check overwrite_notebooks in kwargs
-    assert stack_api_mock.deploy.call_args[1]['overwrite_notebooks'] is True
+    # Check overwrite in kwargs
+    assert stack_api_mock.deploy.call_args[1]['overwrite'] is True
 
 
 @provide_conf
@@ -67,5 +67,5 @@ def test_deploy_default_kwargs(stack_api_mock, tmpdir):
     runner.invoke(cli.deploy, [path])
     stack_api_mock.deploy.assert_called()
     assert stack_api_mock.deploy.call_args[0][0] == path
-    # Check overwrite_notebooks in kwargs
-    assert stack_api_mock.deploy.call_args[1]['overwrite_notebooks'] is False
+    # Check overwrite in kwargs
+    assert stack_api_mock.deploy.call_args[1]['overwrite'] is False
