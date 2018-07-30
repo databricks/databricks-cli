@@ -35,6 +35,7 @@ from tests.utils import provide_conf
 
 CREATE_RETURN = {'cluster_id': 'test'}
 CREATE_JSON = '{"name": "test_cluster"}'
+EDIT_JSON = '{"cluster_id": "test"}'
 
 
 @pytest.fixture()
@@ -53,6 +54,13 @@ def test_create_cli_json(cluster_api_mock):
         runner.invoke(cli.create_cli, ['--json', CREATE_JSON])
         assert cluster_api_mock.create_cluster.call_args[0][0] == json.loads(CREATE_JSON)
         assert echo_mock.call_args[0][0] == pretty_format(CREATE_RETURN)
+
+
+@provide_conf
+def test_edit_cli_json(cluster_api_mock):
+    runner = CliRunner()
+    runner.invoke(cli.edit_cli, ['--json', EDIT_JSON])
+    assert cluster_api_mock.edit_cluster.call_args[0][0] == json.loads(EDIT_JSON)
 
 
 CLUSTER_ID = 'test'
