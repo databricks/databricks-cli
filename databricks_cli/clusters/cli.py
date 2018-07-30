@@ -21,6 +21,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from json import loads as json_loads
+
 import click
 from tabulate import tabulate
 
@@ -49,6 +51,31 @@ def create_cli(api_client, json_file, json):
     https://docs.databricks.com/api/latest/clusters.html#create
     """
     json_cli_base(json_file, json, lambda json: ClusterApi(api_client).create_cluster(json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS)
+@click.option('--json-file', default=None, type=click.Path(),
+              help='File containing JSON request to POST to /api/2.0/clusters/edit.')
+@click.option('--json', default=None, type=JsonClickType(),
+              help=JsonClickType.help('/api/2.0/clusters/edit'))
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def edit_cli(api_client, json_file, json):
+    """
+    Edits a Databricks cluster.
+
+    The specification for the request json can be found at
+    https://docs.databricks.com/api/latest/clusters.html#edit
+    """
+    if not bool(json_file) ^ bool(json):
+        raise RuntimeError('Either --json-file or --json should be provided')
+    if json_file:
+        with open(json_file, 'r') as f:
+            json = f.read()
+    deser_json = json_loads(json)
+    ClusterApi(api_client).edit_cluster(deser_json)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -216,6 +243,7 @@ def clusters_group():
 
 
 clusters_group.add_command(create_cli, name='create')
+clusters_group.add_command(edit_cli, name='edit')
 clusters_group.add_command(start_cli, name='start')
 clusters_group.add_command(restart_cli, name='restart')
 clusters_group.add_command(delete_cli, name='delete')

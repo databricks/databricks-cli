@@ -31,6 +31,7 @@ import click
 
 from databricks_cli.jobs.api import JobsApi
 from databricks_cli.workspace.api import WorkspaceApi
+from databricks_cli.dbfs.api import DbfsApi
 from databricks_cli.workspace.types import WorkspaceLanguage
 from databricks_cli.version import version as CLI_VERSION
 from databricks_cli.stack.exceptions import StackError
@@ -40,6 +41,7 @@ MS_SEC = 1000
 # Resource Services
 JOBS_SERVICE = 'jobs'
 WORKSPACE_SERVICE = 'workspace'
+DBFS_SERVICE = 'dbfs'
 
 # Config Outer Fields
 STACK_NAME = 'name'
@@ -62,6 +64,7 @@ class StackApi(object):
     def __init__(self, api_client):
         self.jobs_client = JobsApi(api_client)
         self.workspace_client = WorkspaceApi(api_client)
+        self.dbfs_client = DbfsApi(api_client)
 
     def deploy(self, config_path, **kwargs):
         """
@@ -209,6 +212,16 @@ class StackApi(object):
             new_physical_id, deploy_output = self._deploy_workspace(resource_properties,
                                                                     physical_id,
                                                                     overwrite)
+        elif resource_service == DBFS_SERVICE:
+            click.echo(
+                "Deploying DBFS asset '{}' with properties \n{}".format(
+                    resource_id, json.dumps(resource_properties, indent=2, separators=(',', ': '))
+                )
+            )
+            overwrite = kwargs.get('overwrite', False)
+            new_physical_id, deploy_output = self._deploy_dbfs(resource_properties,
+                                                               physical_id,
+                                                               overwrite)
         else:
             raise StackError("Resource service '{}' not supported".format(resource_service))
 
@@ -320,7 +333,7 @@ class StackApi(object):
         Deploy workspace asset.
 
         :param resource_properties: dict of properties for the workspace asset. Must contain the
-        'source_path' and 'path' fields. The other fields will be inferred if not provided.
+        'source_path' and 'path' fields.
         :param physical_id: dict containing physical identifier of workspace asset on databricks.
         Should contain the field 'path'.
         :param overwrite: Whether or not to overwrite the contents of workspace notebooks.
@@ -401,6 +414,47 @@ class StackApi(object):
             self.workspace_client.export_workspace_dir(workspace_path, local_path, overwrite)
         else:
             raise StackError("Invalid value for 'object_type' field: {}".format(object_type))
+
+    def _deploy_dbfs(self, resource_properties, physical_id, overwrite):
+        """
+        Deploy dbfs asset.
+
+        :param resource_properties: dict of properties for the dbfs asset. Must contain the
+        'source_path', 'path' and 'is_dir' fields.
+        :param physical_id: dict containing physical identifier of dbfs asset on Databricks.
+        Should contain the field 'path'.
+        :param overwrite: Whether or not to overwrite the contents of dbfs files.
+        :return: (dict, dict) of (physical_id, deploy_output). physical_id is a dict that
+        contains the dbfs path of the file on Databricks.
+        ex.{"path":"dbfs:/path/in/dbfs"}
+        deploy_output is the initial information about the dbfs asset at deploy time
+        returned by the REST API.
+        """
+        # Required fields. TODO(alinxie) validate fields in _validate_config
+        local_path = resource_properties.get('source_path')
+        dbfs_path = resource_properties.get('path')
+        is_dir = resource_properties.get('is_dir')
+
+        if is_dir != os.path.isdir(local_path):
+            dir_or_file = 'directory' if os.path.isdir(local_path) else 'file'
+            raise StackError("local source_path '{}' is found to be a {}, but is not specified"
+                             " as one with is_dir: {}."
+                             .format(local_path, dir_or_file, str(is_dir).lower()))
+        if is_dir:
+            click.echo('Uploading directory from {} to DBFS at {}'.format(local_path, dbfs_path))
+            self.dbfs_client.cp(recursive=True, overwrite=overwrite, src=local_path, dst=dbfs_path)
+        else:
+            click.echo('Uploading file from {} to DBFS at {}'.format(local_path, dbfs_path))
+            self.dbfs_client.cp(recursive=False, overwrite=overwrite, src=local_path, dst=dbfs_path)
+
+        if physical_id and physical_id['path'] != dbfs_path:
+            # physical_id['path'] is the dbfs path from the last deployment. Alert when changed
+            click.echo("Dbfs asset had path changed from {} to {}".format(physical_id['path'],
+                                                                          dbfs_path))
+        new_physical_id = {'path': dbfs_path}
+        deploy_output = self.dbfs_client.client.get_status(dbfs_path)
+
+        return new_physical_id, deploy_output
 
     def _validate_config(self, stack_config):
         """
