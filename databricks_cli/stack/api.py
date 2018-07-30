@@ -342,13 +342,15 @@ class StackApi(object):
         is_dir = resource_properties.get('is_dir')
 
         if is_dir != os.path.isdir(local_path):
-            raise StackError("local source_path '{}' is inconsistent"
-                             " with is_dir: {}".format(local_path, is_dir))
+            dir_or_file = 'directory' if os.path.isdir(local_path) else 'file'
+            raise StackError("local source_path '{}' is found to be a {}, but is not specified"
+                             " as one with is_dir: {}."
+                             .format(local_path, dir_or_file, str(is_dir).lower()))
         if is_dir:
-            click.echo('Uploading Directory from {} to Dbfs at {}'.format(local_path, dbfs_path))
+            click.echo('Uploading directory from {} to DBFS at {}'.format(local_path, dbfs_path))
             self.dbfs_client.cp(recursive=True, overwrite=overwrite, src=local_path, dst=dbfs_path)
         else:
-            click.echo('Uploading File from {} to Dbfs at {}'.format(local_path, dbfs_path))
+            click.echo('Uploading file from {} to DBFS at {}'.format(local_path, dbfs_path))
             self.dbfs_client.cp(recursive=False, overwrite=overwrite, src=local_path, dst=dbfs_path)
 
         if physical_id and physical_id['path'] != dbfs_path:
