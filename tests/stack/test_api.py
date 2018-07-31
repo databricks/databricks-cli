@@ -47,7 +47,7 @@ TEST_JOB_RESOURCE = {
 }
 TEST_JOB_PHYSICAL_ID = {'job_id': 1234}
 TEST_WORKSPACE_NB_PROPERTIES = {
-    'source_path': 'notebook.py',
+    'source_path': 'test/notebook.py',
     'path': '/test/notebook.py',
     'object_type': 'NOTEBOOK'
 }
@@ -317,6 +317,7 @@ class TestStackApi(object):
         test_workspace_nb_properties.update(
             {'source_path': os.path.join(tmpdir.strpath,
                                          test_workspace_nb_properties['source_path'])})
+        os.makedirs(os.path.dirname(test_workspace_nb_properties['source_path']))
         with open(test_workspace_nb_properties['source_path'], 'w') as f:
             f.write("print('test')\n")
         test_workspace_dir_properties = TEST_WORKSPACE_DIR_PROPERTIES.copy()
@@ -495,6 +496,8 @@ class TestStackApi(object):
 
         stack_api._download_workspace(test_workspace_nb_properties, True)
         stack_api.workspace_client.export_workspace.assert_called_once()
+        created_dir = os.path.dirname(os.path.abspath(test_workspace_nb_properties['source_path']))
+        assert os.path.exists(created_dir)
         assert stack_api.workspace_client.export_workspace.call_args[0][0] == \
             test_workspace_nb_properties['path']
         assert stack_api.workspace_client.export_workspace.call_args[0][1] == \
