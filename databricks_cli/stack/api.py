@@ -30,7 +30,7 @@ import copy
 import click
 
 from databricks_cli.jobs.api import JobsApi
-from databricks_cli.workspace.api import WorkspaceApi
+from databricks_cli.workspace.api import WorkspaceApi, DIRECTORY, NOTEBOOK
 from databricks_cli.dbfs.api import DbfsApi
 from databricks_cli.workspace.types import WorkspaceLanguage
 from databricks_cli.version import version as CLI_VERSION
@@ -333,7 +333,7 @@ class StackApi(object):
         Deploy workspace asset.
 
         :param resource_properties: dict of properties for the workspace asset. Must contain the
-        'source_path' and 'path' fields.
+        'source_path', 'path' and 'object_type' fields.
         :param physical_id: dict containing physical identifier of workspace asset on databricks.
         Should contain the field 'path'.
         :param overwrite: Whether or not to overwrite the contents of workspace notebooks.
@@ -347,7 +347,7 @@ class StackApi(object):
         workspace_path = resource_properties.get('path')
         object_type = resource_properties.get('object_type')
 
-        actual_object_type = 'DIRECTORY' if os.path.isdir(local_path) else 'NOTEBOOK'
+        actual_object_type = DIRECTORY if os.path.isdir(local_path) else NOTEBOOK
         if object_type != actual_object_type:
             raise StackError("Field 'object_type' ({}) not consistent"
                              "with actual object type ({})".format(object_type, actual_object_type))
@@ -355,7 +355,7 @@ class StackApi(object):
         click.echo('Uploading {} from {} to Databricks workspace at {}'.format(object_type,
                                                                                local_path,
                                                                                workspace_path))
-        if object_type == 'NOTEBOOK':
+        if object_type == NOTEBOOK:
             # Inference of notebook language and format
             language_fmt = WorkspaceLanguage.to_language_and_format(local_path)
             if language_fmt is None:
@@ -366,7 +366,7 @@ class StackApi(object):
             self.workspace_client.mkdirs(os.path.dirname(workspace_path))
             self.workspace_client.import_workspace(local_path, workspace_path, language, fmt,
                                                    overwrite)
-        elif object_type == 'DIRECTORY':
+        elif object_type == DIRECTORY:
             self.workspace_client.import_workspace_dir(local_path, workspace_path, overwrite,
                                                        exclude_hidden_files=True)
         else:
@@ -387,7 +387,7 @@ class StackApi(object):
         Download workspace asset.
 
         :param resource_properties: dict of properties for the workspace asset. Must contain the
-        'source_path' and 'path' fields. The other fields will be inferred if not provided.
+        'source_path', 'path' and 'object_type' fields.
         :param overwrite: Whether or not to overwrite the contents of workspace notebooks.
         """
         # Required fields. TODO(alinxie) put in _validate_config
@@ -397,7 +397,7 @@ class StackApi(object):
         click.echo('Downloading {} from Databricks path {} to {}'.format(object_type,
                                                                          workspace_path,
                                                                          local_path))
-        if object_type == 'NOTEBOOK':
+        if object_type == NOTEBOOK:
             # Inference of notebook language and format. A tuple of (language, fmt) or Nonetype.
             language_fmt = WorkspaceLanguage.to_language_and_format(local_path)
             if language_fmt is None:
@@ -408,9 +408,7 @@ class StackApi(object):
             if not os.path.exists(local_dir):
                 os.makedirs(local_dir)
             self.workspace_client.export_workspace(workspace_path, local_path, fmt, overwrite)
-        elif object_type == 'DIRECTORY':
-            if not os.path.exists(local_path):
-                os.makedirs(local_path)
+        elif object_type == DIRECTORY:
             self.workspace_client.export_workspace_dir(workspace_path, local_path, overwrite)
         else:
             raise StackError("Invalid value for 'object_type' field: {}".format(object_type))

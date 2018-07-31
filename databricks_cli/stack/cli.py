@@ -54,7 +54,7 @@ def deploy(api_client, config_path, **kwargs):
                short_help='Download stack given a JSON configuration of the stack')
 @click.argument('config_path', type=click.Path(exists=True), required=True)
 @click.option('--overwrite', '-o', is_flag=True, help='Include to overwrite existing'
-                                                      ' notebooks in the workspace.')
+                                                      ' notebooks in the local filesystem.')
 @debug_option
 @profile_option
 @eat_exceptions
