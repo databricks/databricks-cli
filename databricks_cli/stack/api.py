@@ -91,6 +91,25 @@ class StackApi(object):
         click.echo("Saving stack status to {}".format(status_path))
         self._save_json(status_path, new_stack_status)
 
+    def download(self, config_path, **kwargs):
+        """
+        Downloads a stack given stack JSON configuration template at path config_path.
+
+        The working directory is changed to that where the JSON template is contained
+        so that paths within the stack configuration are relative to the directory of the
+        JSON template instead of the directory where this function is called.
+
+        :param config_path: Path to stack JSON configuration template. Must have the fields of
+        'name', the name of the stack and 'resources', a list of stack resources.
+        :return: None.
+        """
+        stack_config = self._load_json(config_path)
+        config_dir = os.path.dirname(os.path.abspath(config_path))
+        cli_dir = os.getcwd()
+        os.chdir(config_dir)  # Switch current working directory to where json config is stored
+        self.download_from_config(stack_config, **kwargs)
+        os.chdir(cli_dir)
+
     def deploy_config(self, stack_config, stack_status=None, **kwargs):
         """
         Deploys a stack given stack JSON configuration template at path config_path.
@@ -138,6 +157,22 @@ class StackApi(object):
         self._validate_status(new_stack_status)
 
         return new_stack_status
+
+    def download_from_config(self, stack_config, **kwargs):
+        """
+        Downloads a stack given a dict of the stack configuration.
+        :param stack_config: dict of stack configuration. Must contain 'name' and 'resources' field.
+        :return: None.
+        """
+        self._validate_config(stack_config)
+        stack_name = stack_config.get(STACK_NAME)
+        click.echo('Downloading stack {}'.format(stack_name))
+
+        click.echo('#' * 80)
+        for resource_config in stack_config.get(STACK_RESOURCES):
+            # Deploy resource, get resource_status
+            self._download_resource(resource_config, **kwargs)
+            click.echo('#' * 80)
 
     def _deploy_resource(self, resource_config, resource_status=None, **kwargs):
         """
@@ -198,6 +233,32 @@ class StackApi(object):
                                RESOURCE_PHYSICAL_ID: new_physical_id,
                                RESOURCE_DEPLOY_OUTPUT: deploy_output}
         return new_resource_status
+
+    def _download_resource(self, resource_config, **kwargs):
+        """
+        Downloads a resource given a resource information extracted from the stack JSON
+        configuration template.
+
+        :param resource_config: A dict of the resource with fields of 'id', 'service' and
+        'properties'.
+        ex. {'id': 'example-resource', 'service': 'jobs', 'properties': {...}}
+        """
+        resource_id = resource_config.get(RESOURCE_ID)
+        resource_service = resource_config.get(RESOURCE_SERVICE)
+        resource_properties = resource_config.get(RESOURCE_PROPERTIES)
+
+        if resource_service == WORKSPACE_SERVICE:
+            click.echo(
+                "Downloading workspace asset '{}' with properties \n{}"
+                .format(
+                    resource_id, json.dumps(resource_properties, indent=2, separators=(',', ': '))
+                )
+            )
+            overwrite = kwargs.get('overwrite', False)
+            self._download_workspace(resource_properties, overwrite)
+        else:
+            click.echo("Resource service '{}' not supported for download. "
+                       "skipping.".format(resource_service))
 
     def _deploy_job(self, resource_properties, physical_id=None):
         """
@@ -320,6 +381,39 @@ class StackApi(object):
         deploy_output = self.workspace_client.client.get_status(workspace_path)
 
         return new_physical_id, deploy_output
+
+    def _download_workspace(self, resource_properties, overwrite):
+        """
+        Download workspace asset.
+
+        :param resource_properties: dict of properties for the workspace asset. Must contain the
+        'source_path' and 'path' fields. The other fields will be inferred if not provided.
+        :param overwrite: Whether or not to overwrite the contents of workspace notebooks.
+        """
+        # Required fields. TODO(alinxie) put in _validate_config
+        local_path = resource_properties.get('source_path')
+        workspace_path = resource_properties.get('path')
+        object_type = resource_properties.get('object_type')
+        click.echo('Downloading {} from Databricks path {} to {}'.format(object_type,
+                                                                         workspace_path,
+                                                                         local_path))
+        if object_type == 'NOTEBOOK':
+            # Inference of notebook language and format. A tuple of (language, fmt) or Nonetype.
+            language_fmt = WorkspaceLanguage.to_language_and_format(local_path)
+            if language_fmt is None:
+                raise StackError("Workspace Notebook language and format cannot be inferred."
+                                 "Please check file extension of notebook 'source_path'.")
+            (_, fmt) = language_fmt
+            local_dir = os.path.dirname(os.path.abspath(local_path))
+            if not os.path.exists(local_dir):
+                os.makedirs(local_dir)
+            self.workspace_client.export_workspace(workspace_path, local_path, fmt, overwrite)
+        elif object_type == 'DIRECTORY':
+            if not os.path.exists(local_path):
+                os.makedirs(local_path)
+            self.workspace_client.export_workspace_dir(workspace_path, local_path, overwrite)
+        else:
+            raise StackError("Invalid value for 'object_type' field: {}".format(object_type))
 
     def _deploy_dbfs(self, resource_properties, physical_id, overwrite):
         """

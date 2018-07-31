@@ -50,6 +50,25 @@ def deploy(api_client, config_path, **kwargs):
     click.echo('#' * 80)
 
 
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Download stack given a JSON configuration of the stack')
+@click.argument('config_path', type=click.Path(exists=True), required=True)
+@click.option('--overwrite', '-o', is_flag=True, help='Include to overwrite existing'
+                                                      ' notebooks in the workspace.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def download(api_client, config_path, **kwargs):
+    """
+    Download a stack to the databricks workspace given a JSON stack configuration template.
+    """
+    click.echo('#' * 80)
+    click.echo('Downloading stack at: {} with options: {}'.format(config_path, kwargs))
+    StackApi(api_client).download(config_path, **kwargs)
+    click.echo('#' * 80)
+
+
 @click.group(context_settings=CONTEXT_SETTINGS,
              short_help='Utility to deploy and download Databricks resource stacks.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
@@ -64,3 +83,4 @@ def stack_group():
 
 
 stack_group.add_command(deploy, name='deploy')
+stack_group.add_command(download, name='download')
