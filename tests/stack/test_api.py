@@ -39,9 +39,9 @@ TEST_STACK_PATH = 'stack/stack.json'
 TEST_JOB_SETTINGS = {
     'name': 'test job'
 }
-TEST_RESOURCE_ID = 'test job'
+TEST_JOB_RESOURCE_ID = 'test job'
 TEST_JOB_RESOURCE = {
-    api.RESOURCE_ID: TEST_RESOURCE_ID,
+    api.RESOURCE_ID: TEST_JOB_RESOURCE_ID,
     api.RESOURCE_SERVICE: api.JOBS_SERVICE,
     api.RESOURCE_PROPERTIES: TEST_JOB_SETTINGS
 }
@@ -230,6 +230,26 @@ class TestStackApi(object):
         stack_api._deploy_resource = mock.Mock(wraps=_deploy_resource)
         stack_api.deploy(config_path)
 
+    def test_download_relative_paths(self, stack_api, tmpdir):
+        """
+            When doing stack_api.download, in every call to stack_api._deploy_resource, the current
+            working directory should be the same directory as where the stack config template is
+            contained so that relative paths for resources can be relative to the stack config
+            instead of where CLI calls the API functions.
+        """
+        config_working_dir = os.path.join(tmpdir.strpath, 'stack')
+        config_path = os.path.join(config_working_dir, 'test.json')
+        os.makedirs(config_working_dir)
+        with open(config_path, 'w+') as f:
+            json.dump(TEST_STACK, f)
+
+        def _download_resource(resource, **kwargs):
+            assert os.getcwd() == config_working_dir
+            return TEST_JOB_STATUS
+
+        stack_api._download_resource = mock.Mock(wraps=_download_resource)
+        stack_api.download(config_path)
+
     def test_deploy_job(self, stack_api):
         """
             stack_api._deploy_job should create a new job when 1) A physical_id is not given and
@@ -305,6 +325,7 @@ class TestStackApi(object):
                                          test_workspace_dir_properties['source_path'])})
         os.makedirs(test_workspace_dir_properties['source_path'])
 
+        # Test Input of Workspace directory properties.
         dir_physical_id, dir_deploy_output = \
             stack_api._deploy_workspace(test_workspace_dir_properties, None, True)
         stack_api.workspace_client.import_workspace_dir.assert_called_once()
@@ -315,6 +336,7 @@ class TestStackApi(object):
         assert dir_physical_id == {'path': test_workspace_dir_properties['path']}
         assert dir_deploy_output == test_deploy_output
 
+        # Test Input of Workspace notebook properties.
         nb_physical_id, nb_deploy_output = \
             stack_api._deploy_workspace(test_workspace_nb_properties, None, True)
         stack_api.workspace_client.import_workspace.assert_called_once()
@@ -416,7 +438,7 @@ class TestStackApi(object):
         test_workspace_resource_status = {api.RESOURCE_PHYSICAL_ID: test_workspace_physical_id}
         stack_api._deploy_resource(TEST_WORKSPACE_NB_RESOURCE,
                                    resource_status=test_workspace_resource_status,
-                                   overwrite_notebook=True)
+                                   overwrite=True)
         stack_api._deploy_workspace.assert_called()
         assert stack_api._deploy_workspace.call_args[0][0] == \
             TEST_WORKSPACE_NB_RESOURCE[api.RESOURCE_PROPERTIES]
@@ -442,3 +464,65 @@ class TestStackApi(object):
         }
         with pytest.raises(StackError):
             stack_api._deploy_resource(resource_badtype)
+
+    def test_download_workspace(self, stack_api, tmpdir):
+        """
+            stack_api._download_workspace should call certain workspace client functions depending
+            on object_type and error when object_type is defined incorrectly.
+        """
+        test_deploy_output = {'test': 'test'}  # default deploy_output return value
+
+        stack_api.workspace_client.client = mock.MagicMock()
+        stack_api.workspace_client.client.get_status.return_value = test_deploy_output
+        stack_api.workspace_client.export_workspace = mock.MagicMock()
+        stack_api.workspace_client.export_workspace_dir = mock.MagicMock()
+
+        test_workspace_nb_properties = TEST_WORKSPACE_NB_PROPERTIES.copy()
+        test_workspace_nb_properties.update(
+            {'source_path': os.path.join(tmpdir.strpath,
+                                         test_workspace_nb_properties['source_path'])})
+        test_workspace_dir_properties = TEST_WORKSPACE_DIR_PROPERTIES.copy()
+        test_workspace_dir_properties.update(
+            {'source_path': os.path.join(tmpdir.strpath,
+                                         test_workspace_dir_properties['source_path'])})
+
+        stack_api._download_workspace(test_workspace_dir_properties, True)
+        stack_api.workspace_client.export_workspace_dir.assert_called_once()
+        assert stack_api.workspace_client.export_workspace_dir.call_args[0][0] == \
+            test_workspace_dir_properties['path']
+        assert stack_api.workspace_client.export_workspace_dir.call_args[0][1] == \
+            test_workspace_dir_properties['source_path']
+
+        stack_api._download_workspace(test_workspace_nb_properties, True)
+        stack_api.workspace_client.export_workspace.assert_called_once()
+        assert stack_api.workspace_client.export_workspace.call_args[0][0] == \
+            test_workspace_nb_properties['path']
+        assert stack_api.workspace_client.export_workspace.call_args[0][1] == \
+            test_workspace_nb_properties['source_path']
+
+        # Should raise error if object_type is not NOTEBOOK or DIRECTORY
+        test_workspace_dir_properties.update({'object_type': 'INVALID_TYPE'})
+        with pytest.raises(StackError):
+            stack_api._download_workspace(test_workspace_dir_properties, True)
+
+    def test_download_resource(self, stack_api):
+        """
+           stack_api._download_resource should correctly call on a specific resource's download
+           function.
+        """
+        # A workspace resource should have _download_resource call on _download_workspace
+        stack_api._download_workspace = mock.MagicMock()
+        stack_api._download_resource(TEST_WORKSPACE_NB_RESOURCE, overwrite=True)
+        stack_api._download_workspace.assert_called()
+        assert stack_api._download_workspace.call_args[0][0] == \
+            TEST_WORKSPACE_NB_RESOURCE[api.RESOURCE_PROPERTIES]
+        assert stack_api._download_workspace.call_args[0][1] is True  # overwrite argument
+
+        # If there is a nonexistent service, StackError shouldn't be raised, since it is intentional
+        # that some resource services cannot be downloaded, like jobs.
+        resource_badservice = {
+            api.RESOURCE_SERVICE: 'nonexist',
+            api.RESOURCE_ID: 'test',
+            api.RESOURCE_PROPERTIES: {'test': 'test'}
+        }
+        stack_api._download_resource(resource_badservice)
