@@ -21,6 +21,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint:disable=too-many-branches
+
 import os
 import json
 from datetime import datetime
@@ -296,8 +298,6 @@ class StackApi(object):
         :param job_settings:
         :return: job_id, Physical ID of job on Databricks server.
         """
-        if 'name' not in job_settings:
-            raise StackError("Please supply 'name' in job resource 'properties'")
         job_name = job_settings.get('name')
         jobs_same_name = self.jobs_client._list_jobs_by_name(job_name)
         if len(jobs_same_name) > 1:
@@ -342,7 +342,6 @@ class StackApi(object):
         deploy_output is the initial information about the asset on databricks at deploy time
         returned by the REST API.
         """
-        # Required fields. TODO(alinxie) put in _validate_config
         local_path = resource_properties.get('source_path')
         workspace_path = resource_properties.get('path')
         object_type = resource_properties.get('object_type')
@@ -390,7 +389,6 @@ class StackApi(object):
         'source_path', 'path' and 'object_type' fields.
         :param overwrite: Whether or not to overwrite the contents of workspace notebooks.
         """
-        # Required fields. TODO(alinxie) put in _validate_config
         local_path = resource_properties.get('source_path')
         workspace_path = resource_properties.get('path')
         object_type = resource_properties.get('object_type')
@@ -428,7 +426,7 @@ class StackApi(object):
         deploy_output is the initial information about the dbfs asset at deploy time
         returned by the REST API.
         """
-        # Required fields. TODO(alinxie) validate fields in _validate_config
+
         local_path = resource_properties.get('source_path')
         dbfs_path = resource_properties.get('path')
         is_dir = resource_properties.get('is_dir')
@@ -459,7 +457,6 @@ class StackApi(object):
         Validate fields within a stack configuration. This ensures that an inputted configuration
         has the necessary fields for stack deployment to function well.
 
-        TODO(alinxie): Add validation for separate resource services and their properties.
         :param stack_config: dict- stack config that is inputted by the user.
         :return: None. Raises errors to stop deployment if there is a problem.
         """
@@ -475,12 +472,51 @@ class StackApi(object):
                 raise StackError("{} doesn't exist in resource config".format(RESOURCE_SERVICE))
             if RESOURCE_PROPERTIES not in resource:
                 raise StackError("{} doesn't exist in resource config".format(RESOURCE_PROPERTIES))
-            # Error on duplicate resource ID's
+
             resource_id = resource.get(RESOURCE_ID)
+            resource_service = resource.get(RESOURCE_SERVICE)
+            resource_properties = resource.get(RESOURCE_PROPERTIES)
+
+            # Error on duplicate resource ID's
             if resource_id in seen_resource_ids:
                 raise StackError("Duplicate resource ID '{}' found, please resolve.".format(
                     resource_id))
             seen_resource_ids.add(resource_id)
+
+            # Resource service-specific validations
+            if resource_service == JOBS_SERVICE:
+                if 'name' not in resource_properties:
+                    raise StackError('"{}" doesn\'t exist in "{}" of {} resource with ID "{}"'
+                                     .format('name', RESOURCE_PROPERTIES, JOBS_SERVICE,
+                                             resource_id))
+            elif resource_service == WORKSPACE_SERVICE:
+                if 'path' not in resource_properties:
+                    raise StackError('"{}" doesn\'t exist in "{}" of {} resource with ID "{}"'
+                                     .format('path', RESOURCE_PROPERTIES, WORKSPACE_SERVICE,
+                                             resource_id))
+                if 'source_path' not in resource_properties:
+                    raise StackError('"{}" doesn\'t exist in "{}" of {} resource with ID "{}"'
+                                     .format('source_path', RESOURCE_PROPERTIES, WORKSPACE_SERVICE,
+                                             resource_id))
+                if 'object_type' not in resource_properties:
+                    raise StackError('"{}" doesn\'t exist in "{}" of {} resource with ID "{}"'
+                                     .format('object_type', RESOURCE_PROPERTIES, WORKSPACE_SERVICE,
+                                             resource_id))
+            elif resource_service == DBFS_SERVICE:
+                if 'path' not in resource_properties:
+                    raise StackError('"{}" doesn\'t exist in "{}" of {} resource with ID "{}"'
+                                     .format('path', RESOURCE_PROPERTIES, DBFS_SERVICE,
+                                             resource_id))
+                if 'source_path' not in resource_properties:
+                    raise StackError('"{}" doesn\'t exist in "{}" of {} resource with ID "{}"'
+                                     .format('source_path', RESOURCE_PROPERTIES, DBFS_SERVICE,
+                                             resource_id))
+                if 'is_dir' not in resource_properties:
+                    raise StackError('"{}" doesn\'t exist in "{}" of {} resource with ID "{}"'
+                                     .format('is_dir', RESOURCE_PROPERTIES, DBFS_SERVICE,
+                                             resource_id))
+            else:
+                raise StackError("Resource service '{}' not supported".format(resource_service))
 
     def _validate_status(self, stack_status):
         """
@@ -489,7 +525,7 @@ class StackApi(object):
 
         If there is an error here, then it is either an implementation error that must be fixed by
         a developer or the User edited the stack status file created by the program.
-        TODO(alinxie): Add validation for separate resource services and their physical id's.
+
         :param stack_status: dict- stack status that is created by the program.
         :return: None. Raises errors to stop deployment if there is a problem.
         """
@@ -509,6 +545,23 @@ class StackApi(object):
             if RESOURCE_PHYSICAL_ID not in deployed_resource:
                 raise StackError("{} doesn't exist in deployed resource status".format(
                     RESOURCE_PHYSICAL_ID))
+            resource_id = deployed_resource[RESOURCE_ID]
+            resource_service = deployed_resource.get(RESOURCE_SERVICE)
+            resource_physical_id = deployed_resource.get(RESOURCE_PHYSICAL_ID)
+            if resource_service == JOBS_SERVICE:
+                if 'job_id' not in resource_physical_id:
+                    raise StackError('"{}" doesn\'t exist in {} resource status with ID "{}"'
+                                     .format('job_id', JOBS_SERVICE, resource_id))
+            elif resource_service == WORKSPACE_SERVICE:
+                if 'path' not in resource_physical_id:
+                    raise StackError('"{}" doesn\'t exist in {} resource status with ID "{}"'
+                                     .format('path', WORKSPACE_SERVICE, resource_id))
+            elif resource_service == DBFS_SERVICE:
+                if 'path' not in resource_physical_id:
+                    raise StackError('"{}" doesn\'t exist in {} resource status with ID "{}"'
+                                     .format('path', DBFS_SERVICE, resource_id))
+            else:
+                raise StackError("{} not a valid resource status service".format(resource_service))
 
     def _get_resource_to_status_map(self, stack_status):
         """

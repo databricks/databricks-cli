@@ -56,6 +56,8 @@ TEST_WORKSPACE_DIR_PROPERTIES = {
     'path': '/test/dir',
     'object_type': 'DIRECTORY'
 }
+TEST_WORKSPACE_NB_PHYSICAL_ID = {'path': '/test/notebook.py'}
+TEST_WORKSPACE_DIR_PHYSICAL_ID = {'path': '/test/dir'}
 TEST_DBFS_FILE_PROPERTIES = {
     'source_path': 'test.jar',
     'path': 'dbfs:/test/test.jar',
@@ -98,6 +100,16 @@ TEST_JOB_STATUS = {
     api.RESOURCE_SERVICE: api.JOBS_SERVICE,
     api.RESOURCE_PHYSICAL_ID: TEST_JOB_PHYSICAL_ID
 }
+TEST_WORKSPACE_NB_STATUS = {
+    api.RESOURCE_ID: TEST_RESOURCE_WORKSPACE_NB_ID,
+    api.RESOURCE_SERVICE: api.WORKSPACE_SERVICE,
+    api.RESOURCE_PHYSICAL_ID: TEST_WORKSPACE_NB_PHYSICAL_ID
+}
+TEST_WORKSPACE_DIR_STATUS = {
+    api.RESOURCE_ID: TEST_RESOURCE_WORKSPACE_DIR_ID,
+    api.RESOURCE_SERVICE: api.WORKSPACE_SERVICE,
+    api.RESOURCE_PHYSICAL_ID: TEST_WORKSPACE_DIR_PHYSICAL_ID
+}
 TEST_DBFS_FILE_STATUS = {
     api.RESOURCE_ID: TEST_RESOURCE_DBFS_FILE_ID,
     api.RESOURCE_SERVICE: api.DBFS_SERVICE,
@@ -112,7 +124,9 @@ TEST_STACK = {
     api.STACK_NAME: "test-stack",
     api.STACK_RESOURCES: [TEST_JOB_RESOURCE,
                           TEST_WORKSPACE_NB_RESOURCE,
-                          TEST_WORKSPACE_DIR_RESOURCE]
+                          TEST_WORKSPACE_DIR_RESOURCE,
+                          TEST_DBFS_FILE_RESOURCE,
+                          TEST_DBFS_DIR_RESOURCE]
 }
 TEST_STATUS = {
     api.STACK_NAME: "test-stack",
@@ -122,8 +136,11 @@ TEST_STATUS = {
                           TEST_DBFS_FILE_RESOURCE,
                           TEST_DBFS_DIR_RESOURCE],
     api.STACK_DEPLOYED: [TEST_JOB_STATUS,
+                         TEST_WORKSPACE_NB_STATUS,
+                         TEST_WORKSPACE_DIR_STATUS,
                          TEST_DBFS_FILE_STATUS,
-                         TEST_DBFS_DIR_STATUS]
+                         TEST_DBFS_DIR_STATUS,
+                         ]
 }
 
 
@@ -529,3 +546,48 @@ class TestStackApi(object):
             api.RESOURCE_PROPERTIES: {'test': 'test'}
         }
         stack_api._download_resource(resource_badservice)
+
+    def test_end_to_end_deploy(self, stack_api):
+        """
+            The stack API should not go through any validation exceptions for any resource types
+            when valid stack configurations and stack status are fed in.
+        """
+        stack_api._update_job = mock.MagicMock()
+        stack_api._update_job.return_value = 12345
+        stack_api._put_job = mock.MagicMock()
+        stack_api._put_job.return_value = 12345
+        stack_api.jobs_client.get_job = mock.MagicMock()
+        stack_api.jobs_client.get_job.return_value = {}
+
+        stack_api.workspace_client.import_workspace = mock.MagicMock()
+        stack_api.workspace_client.import_workspace_dir = mock.MagicMock()
+        stack_api.workspace_client.client.get_status = mock.MagicMock()
+        stack_api.workspace_client.client.get_status.return_value = {}
+
+        stack_api.dbfs_client.cp = mock.MagicMock()
+        stack_api.dbfs_client.client = mock.MagicMock()
+        stack_api.dbfs_client.client.get_status.return_value = {}
+
+        # Make sure inputted stack config and stack status is valid.
+        stack_api._validate_config(TEST_STACK)
+        stack_api._validate_status(TEST_STATUS)
+
+        # Run deploy command on stack and validate stack status.
+        new_stack_status = stack_api.deploy_config(TEST_STACK)
+        stack_api._validate_status(new_stack_status)
+        new_stack_status = stack_api.deploy_config(TEST_STACK, stack_status=TEST_STATUS)
+        stack_api._validate_status(new_stack_status)
+        new_stack_status = stack_api.deploy_config(TEST_STACK, stack_status=TEST_STATUS,
+                                                   overwrite=True)
+        stack_api._validate_status(new_stack_status)
+
+    def test_end_to_end_download(self, stack_api):
+        """
+            The stack API should not go through any validation exceptions for any resource types
+            when valid stack configurations and stack status are fed in.
+        """
+        stack_api.workspace_client.export_workspace = mock.MagicMock()
+        stack_api.workspace_client.export_workspace_dir = mock.MagicMock()
+
+        stack_api.download_from_config(TEST_STACK)
+        stack_api.download_from_config(TEST_STACK, overwrite=True)
