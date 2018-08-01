@@ -61,7 +61,7 @@ def deploy(api_client, config_path, **kwargs):
 @provide_api_client
 def download(api_client, config_path, **kwargs):
     """
-    Download a stack to the databricks workspace given a JSON stack configuration template.
+    Download a stack to the local filesystem given a JSON stack configuration template.
     """
     click.echo('#' * 80)
     click.echo('Downloading stack at: {} with options: {}'.format(config_path, kwargs))
