@@ -27,9 +27,9 @@
 
 import os
 import json
+import copy
 import mock
 from requests.exceptions import HTTPError
-import copy
 
 import pytest
 
