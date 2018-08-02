@@ -61,6 +61,20 @@ RESOURCE_DEPLOY_OUTPUT = 'deploy_output'
 RESOURCE_DEPLOY_TIMESTAMP = 'timestamp'
 CLI_VERSION_KEY = 'cli_version'
 
+# Job Service Properties
+JOBS_RESOURCE_NAME = 'name'
+JOBS_RESOURCE_ID = 'job_id'
+
+# Workspace Service Properties
+WORKSPACE_RESOURCE_SOURCE_PATH = 'source_path'
+WORKSPACE_RESOURCE_PATH = 'path'
+WORKSPACE_RESOURCE_OBJECT_TYPE = 'object_type'
+
+# Workspace Service Properties
+DBFS_RESOURCE_SOURCE_PATH = 'source_path'
+DBFS_RESOURCE_PATH = 'path'
+DBFS_RESOURCE_IS_DIR = 'is_dir'
+
 
 class StackApi(object):
     def __init__(self, api_client):
@@ -298,7 +312,7 @@ class StackApi(object):
         :param job_settings:
         :return: job_id, Physical ID of job on Databricks server.
         """
-        job_name = job_settings.get('name')
+        job_name = job_settings.get(JOBS_RESOURCE_NAME)
         jobs_same_name = self.jobs_client._list_jobs_by_name(job_name)
         if len(jobs_same_name) > 1:
             raise StackError("Multiple jobs with the same name '{}' already exist, aborting"
@@ -326,7 +340,7 @@ class StackApi(object):
         :param job_id: physical job_id of job in databricks server.
         """
 
-        self.jobs_client.reset_job({'job_id': job_id, 'new_settings': job_settings})
+        self.jobs_client.reset_job({JOBS_RESOURCE_ID: job_id, 'new_settings': job_settings})
 
     def _deploy_workspace(self, resource_properties, physical_id, overwrite):
         """
@@ -342,14 +356,16 @@ class StackApi(object):
         deploy_output is the initial information about the asset on databricks at deploy time
         returned by the REST API.
         """
-        local_path = resource_properties.get('source_path')
-        workspace_path = resource_properties.get('path')
-        object_type = resource_properties.get('object_type')
+        local_path = resource_properties.get(WORKSPACE_RESOURCE_SOURCE_PATH)
+        workspace_path = resource_properties.get(WORKSPACE_RESOURCE_PATH)
+        object_type = resource_properties.get(WORKSPACE_RESOURCE_OBJECT_TYPE)
 
         actual_object_type = DIRECTORY if os.path.isdir(local_path) else NOTEBOOK
         if object_type != actual_object_type:
-            raise StackError("Field 'object_type' ({}) not consistent"
-                             "with actual object type ({})".format(object_type, actual_object_type))
+            raise StackError("Field '{}' ({}) not consistent"
+                             "with actual object type ({})".format(WORKSPACE_RESOURCE_OBJECT_TYPE,
+                                                                   object_type,
+                                                                   actual_object_type))
 
         click.echo('Uploading {} from {} to Databricks workspace at {}'.format(object_type,
                                                                                local_path,
@@ -372,11 +388,11 @@ class StackApi(object):
             # Shouldn't reach here because of verification of object_type above.
             assert False
 
-        if physical_id and physical_id['path'] != workspace_path:
+        if physical_id and physical_id[WORKSPACE_RESOURCE_PATH] != workspace_path:
             # physical_id['path'] is the workspace path from the last deployment. Alert when changed
-            click.echo("Workspace asset had path changed from {} to {}".format(physical_id['path'],
-                                                                               workspace_path))
-        new_physical_id = {'path': workspace_path}
+            click.echo("Workspace asset had path changed from {} to {}"
+                       .format(physical_id[WORKSPACE_RESOURCE_PATH], workspace_path))
+        new_physical_id = {WORKSPACE_RESOURCE_PATH: workspace_path}
         deploy_output = self.workspace_client.client.get_status(workspace_path)
 
         return new_physical_id, deploy_output
@@ -389,9 +405,9 @@ class StackApi(object):
         'source_path', 'path' and 'object_type' fields.
         :param overwrite: Whether or not to overwrite the contents of workspace notebooks.
         """
-        local_path = resource_properties.get('source_path')
-        workspace_path = resource_properties.get('path')
-        object_type = resource_properties.get('object_type')
+        local_path = resource_properties.get(WORKSPACE_RESOURCE_SOURCE_PATH)
+        workspace_path = resource_properties.get(WORKSPACE_RESOURCE_PATH)
+        object_type = resource_properties.get(WORKSPACE_RESOURCE_OBJECT_TYPE)
         click.echo('Downloading {} from Databricks path {} to {}'.format(object_type,
                                                                          workspace_path,
                                                                          local_path))
@@ -409,7 +425,8 @@ class StackApi(object):
         elif object_type == DIRECTORY:
             self.workspace_client.export_workspace_dir(workspace_path, local_path, overwrite)
         else:
-            raise StackError("Invalid value for 'object_type' field: {}".format(object_type))
+            raise StackError("Invalid value for '{}' field: {}"
+                             .format(WORKSPACE_RESOURCE_OBJECT_TYPE, object_type))
 
     def _deploy_dbfs(self, resource_properties, physical_id, overwrite):
         """
@@ -427,9 +444,9 @@ class StackApi(object):
         returned by the REST API.
         """
 
-        local_path = resource_properties.get('source_path')
-        dbfs_path = resource_properties.get('path')
-        is_dir = resource_properties.get('is_dir')
+        local_path = resource_properties.get(DBFS_RESOURCE_SOURCE_PATH)
+        dbfs_path = resource_properties.get(DBFS_RESOURCE_PATH)
+        is_dir = resource_properties.get(DBFS_RESOURCE_IS_DIR)
 
         if is_dir != os.path.isdir(local_path):
             dir_or_file = 'directory' if os.path.isdir(local_path) else 'file'
@@ -443,11 +460,11 @@ class StackApi(object):
             click.echo('Uploading file from {} to DBFS at {}'.format(local_path, dbfs_path))
             self.dbfs_client.cp(recursive=False, overwrite=overwrite, src=local_path, dst=dbfs_path)
 
-        if physical_id and physical_id['path'] != dbfs_path:
+        if physical_id and physical_id[DBFS_RESOURCE_PATH] != dbfs_path:
             # physical_id['path'] is the dbfs path from the last deployment. Alert when changed
-            click.echo("Dbfs asset had path changed from {} to {}".format(physical_id['path'],
-                                                                          dbfs_path))
-        new_physical_id = {'path': dbfs_path}
+            click.echo("Dbfs asset had path changed from {} to {}"
+                       .format(physical_id[DBFS_RESOURCE_PATH], dbfs_path))
+        new_physical_id = {DBFS_RESOURCE_PATH: dbfs_path}
         deploy_output = self.dbfs_client.client.get_status(dbfs_path)
 
         return new_physical_id, deploy_output
@@ -485,36 +502,37 @@ class StackApi(object):
 
             # Resource service-specific validations
             if resource_service == JOBS_SERVICE:
-                if 'name' not in resource_properties:
+                if JOBS_RESOURCE_NAME not in resource_properties:
                     raise StackError('"{}" doesn\'t exist in "{}" of {} resource with ID "{}"'
-                                     .format('name', RESOURCE_PROPERTIES, JOBS_SERVICE,
+                                     .format(JOBS_RESOURCE_NAME, RESOURCE_PROPERTIES, JOBS_SERVICE,
                                              resource_id))
             elif resource_service == WORKSPACE_SERVICE:
-                if 'path' not in resource_properties:
+                if WORKSPACE_RESOURCE_PATH not in resource_properties:
                     raise StackError('"{}" doesn\'t exist in "{}" of {} resource with ID "{}"'
-                                     .format('path', RESOURCE_PROPERTIES, WORKSPACE_SERVICE,
-                                             resource_id))
-                if 'source_path' not in resource_properties:
+                                     .format(WORKSPACE_RESOURCE_PATH, RESOURCE_PROPERTIES,
+                                             WORKSPACE_SERVICE, resource_id))
+                if WORKSPACE_RESOURCE_SOURCE_PATH not in resource_properties:
                     raise StackError('"{}" doesn\'t exist in "{}" of {} resource with ID "{}"'
-                                     .format('source_path', RESOURCE_PROPERTIES, WORKSPACE_SERVICE,
+                                     .format(WORKSPACE_RESOURCE_SOURCE_PATH, RESOURCE_PROPERTIES,
+                                             WORKSPACE_SERVICE,
                                              resource_id))
-                if 'object_type' not in resource_properties:
+                if WORKSPACE_RESOURCE_OBJECT_TYPE not in resource_properties:
                     raise StackError('"{}" doesn\'t exist in "{}" of {} resource with ID "{}"'
-                                     .format('object_type', RESOURCE_PROPERTIES, WORKSPACE_SERVICE,
-                                             resource_id))
+                                     .format(WORKSPACE_RESOURCE_OBJECT_TYPE, RESOURCE_PROPERTIES,
+                                             WORKSPACE_SERVICE, resource_id))
             elif resource_service == DBFS_SERVICE:
-                if 'path' not in resource_properties:
+                if DBFS_RESOURCE_PATH not in resource_properties:
                     raise StackError('"{}" doesn\'t exist in "{}" of {} resource with ID "{}"'
-                                     .format('path', RESOURCE_PROPERTIES, DBFS_SERVICE,
+                                     .format(DBFS_RESOURCE_PATH, RESOURCE_PROPERTIES, DBFS_SERVICE,
                                              resource_id))
-                if 'source_path' not in resource_properties:
+                if DBFS_RESOURCE_SOURCE_PATH not in resource_properties:
                     raise StackError('"{}" doesn\'t exist in "{}" of {} resource with ID "{}"'
-                                     .format('source_path', RESOURCE_PROPERTIES, DBFS_SERVICE,
-                                             resource_id))
-                if 'is_dir' not in resource_properties:
+                                     .format(DBFS_RESOURCE_SOURCE_PATH, RESOURCE_PROPERTIES,
+                                             DBFS_SERVICE, resource_id))
+                if DBFS_RESOURCE_IS_DIR not in resource_properties:
                     raise StackError('"{}" doesn\'t exist in "{}" of {} resource with ID "{}"'
-                                     .format('is_dir', RESOURCE_PROPERTIES, DBFS_SERVICE,
-                                             resource_id))
+                                     .format(DBFS_RESOURCE_IS_DIR, RESOURCE_PROPERTIES,
+                                             DBFS_SERVICE, resource_id))
             else:
                 raise StackError("Resource service '{}' not supported".format(resource_service))
 
@@ -549,17 +567,18 @@ class StackApi(object):
             resource_service = deployed_resource.get(RESOURCE_SERVICE)
             resource_physical_id = deployed_resource.get(RESOURCE_PHYSICAL_ID)
             if resource_service == JOBS_SERVICE:
-                if 'job_id' not in resource_physical_id:
+                if JOBS_RESOURCE_ID not in resource_physical_id:
                     raise StackError('"{}" doesn\'t exist in {} resource status with ID "{}"'
-                                     .format('job_id', JOBS_SERVICE, resource_id))
+                                     .format(JOBS_RESOURCE_ID, JOBS_SERVICE, resource_id))
             elif resource_service == WORKSPACE_SERVICE:
-                if 'path' not in resource_physical_id:
+                if WORKSPACE_RESOURCE_PATH not in resource_physical_id:
                     raise StackError('"{}" doesn\'t exist in {} resource status with ID "{}"'
-                                     .format('path', WORKSPACE_SERVICE, resource_id))
+                                     .format(WORKSPACE_RESOURCE_PATH, WORKSPACE_SERVICE,
+                                             resource_id))
             elif resource_service == DBFS_SERVICE:
-                if 'path' not in resource_physical_id:
+                if DBFS_RESOURCE_PATH not in resource_physical_id:
                     raise StackError('"{}" doesn\'t exist in {} resource status with ID "{}"'
-                                     .format('path', DBFS_SERVICE, resource_id))
+                                     .format(DBFS_RESOURCE_PATH, DBFS_SERVICE, resource_id))
             else:
                 raise StackError("{} not a valid resource status service".format(resource_service))
 

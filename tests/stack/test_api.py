@@ -39,7 +39,7 @@ from databricks_cli.stack.exceptions import StackError
 
 TEST_STACK_PATH = 'stack/stack.json'
 TEST_JOB_SETTINGS = {
-    'name': 'test job'
+    api.JOBS_RESOURCE_NAME: 'test job'
 }
 TEST_JOB_RESOURCE_ID = 'test job'
 TEST_JOB_RESOURCE = {
@@ -47,31 +47,31 @@ TEST_JOB_RESOURCE = {
     api.RESOURCE_SERVICE: api.JOBS_SERVICE,
     api.RESOURCE_PROPERTIES: TEST_JOB_SETTINGS
 }
-TEST_JOB_PHYSICAL_ID = {'job_id': 1234}
+TEST_JOB_PHYSICAL_ID = {api.JOBS_RESOURCE_ID: 1234}
 TEST_WORKSPACE_NB_PROPERTIES = {
-    'source_path': 'test/notebook.py',
-    'path': '/test/notebook.py',
-    'object_type': workspace_api.NOTEBOOK
+    api.WORKSPACE_RESOURCE_SOURCE_PATH: 'test/notebook.py',
+    api.WORKSPACE_RESOURCE_PATH: '/test/notebook.py',
+    api.WORKSPACE_RESOURCE_OBJECT_TYPE: workspace_api.NOTEBOOK
 }
 TEST_WORKSPACE_DIR_PROPERTIES = {
-    'source_path': 'test/workspace/dir',
-    'path': '/test/dir',
-    'object_type': workspace_api.DIRECTORY
+    api.WORKSPACE_RESOURCE_SOURCE_PATH: 'test/workspace/dir',
+    api.WORKSPACE_RESOURCE_PATH: '/test/dir',
+    api.WORKSPACE_RESOURCE_OBJECT_TYPE: workspace_api.DIRECTORY
 }
-TEST_WORKSPACE_NB_PHYSICAL_ID = {'path': '/test/notebook.py'}
-TEST_WORKSPACE_DIR_PHYSICAL_ID = {'path': '/test/dir'}
+TEST_WORKSPACE_NB_PHYSICAL_ID = {api.WORKSPACE_RESOURCE_PATH: '/test/notebook.py'}
+TEST_WORKSPACE_DIR_PHYSICAL_ID = {api.WORKSPACE_RESOURCE_PATH: '/test/dir'}
 TEST_DBFS_FILE_PROPERTIES = {
-    'source_path': 'test.jar',
-    'path': 'dbfs:/test/test.jar',
-    'is_dir': False
+    api.DBFS_RESOURCE_SOURCE_PATH: 'test.jar',
+    api.DBFS_RESOURCE_PATH: 'dbfs:/test/test.jar',
+    api.DBFS_RESOURCE_IS_DIR: False
 }
 TEST_DBFS_DIR_PROPERTIES = {
-    'source_path': 'test/dbfs/dir',
-    'path': 'dbfs:/test/dir',
-    'is_dir': True
+    api.DBFS_RESOURCE_SOURCE_PATH: 'test/dbfs/dir',
+    api.DBFS_RESOURCE_PATH: 'dbfs:/test/dir',
+    api.DBFS_RESOURCE_IS_DIR: True
 }
-TEST_DBFS_FILE_PHYSICAL_ID = {'path': 'dbfs:/test/test.jar'}
-TEST_DBFS_DIR_PHYSICAL_ID = {'path': 'dbfs:/test/dir'}
+TEST_DBFS_FILE_PHYSICAL_ID = {api.DBFS_RESOURCE_PATH: 'dbfs:/test/test.jar'}
+TEST_DBFS_DIR_PHYSICAL_ID = {api.DBFS_RESOURCE_PATH: 'dbfs:/test/dir'}
 TEST_RESOURCE_ID = 'test job'
 TEST_RESOURCE_WORKSPACE_NB_ID = 'test notebook'
 TEST_RESOURCE_WORKSPACE_DIR_ID = 'test directory'
@@ -159,13 +159,13 @@ class _TestJobsClient(object):
             return self.jobs_in_databricks[job_id]
 
     def reset_job(self, data):
-        if data['job_id'] not in self.jobs_in_databricks:
+        if data[api.JOBS_RESOURCE_ID] not in self.jobs_in_databricks:
             raise HTTPError('Job Not Found')
-        self.jobs_in_databricks[data['job_id']]['job_settings'] = data['new_settings']
+        self.jobs_in_databricks[data[api.JOBS_RESOURCE_ID]]['job_settings'] = data['new_settings']
 
     def create_job(self, job_settings):
         job_id = self.available_job_id.pop()
-        new_job_json = {'job_id': job_id,
+        new_job_json = {api.JOBS_RESOURCE_ID: job_id,
                         'job_settings': job_settings.copy(),
                         'creator_user_name': 'testuser@example.com',
                         'created_time': 987654321}
@@ -281,13 +281,15 @@ class TestStackApi(object):
             jobs with the same name that exist.
         """
         test_job_settings = TEST_JOB_SETTINGS
-        alt_test_job_settings = {'name': 'alt test job'}  # Different name than TEST_JOB_SETTINGS
+        # Different name than TEST_JOB_SETTINGS
+        alt_test_job_settings = {api.JOBS_RESOURCE_NAME: 'alt test job'}
         stack_api.jobs_client = _TestJobsClient()
         # TEST CASE 1:
         # stack_api._deploy_job should create job if physical_id not given job doesn't exist
         res_physical_id_1, res_deploy_output_1 = stack_api._deploy_job(test_job_settings)
-        assert stack_api.jobs_client.get_job(res_physical_id_1['job_id']) == res_deploy_output_1
-        assert res_deploy_output_1['job_id'] == res_physical_id_1['job_id']
+        assert stack_api.jobs_client.get_job(res_physical_id_1[api.JOBS_RESOURCE_ID]) == \
+            res_deploy_output_1
+        assert res_deploy_output_1[api.JOBS_RESOURCE_ID] == res_physical_id_1[api.JOBS_RESOURCE_ID]
         assert test_job_settings == res_deploy_output_1['job_settings']
 
         # TEST CASE 2:
@@ -295,8 +297,8 @@ class TestStackApi(object):
         res_physical_id_2, res_deploy_output_2 = stack_api._deploy_job(alt_test_job_settings,
                                                                        res_physical_id_1)
         # physical job id not changed from last update
-        assert res_physical_id_2['job_id'] == res_physical_id_1['job_id']
-        assert res_deploy_output_2['job_id'] == res_physical_id_2['job_id']
+        assert res_physical_id_2[api.JOBS_RESOURCE_ID] == res_physical_id_1[api.JOBS_RESOURCE_ID]
+        assert res_deploy_output_2[api.JOBS_RESOURCE_ID] == res_physical_id_2[api.JOBS_RESOURCE_ID]
         assert alt_test_job_settings == res_deploy_output_2['job_settings']
 
         # TEST CASE 3:
@@ -305,8 +307,8 @@ class TestStackApi(object):
         alt_test_job_settings['new_property'] = 'new_property_value'
         res_physical_id_3, res_deploy_output_3 = stack_api._deploy_job(alt_test_job_settings)
         # physical job id not changed from last update
-        assert res_physical_id_3['job_id'] == res_physical_id_2['job_id']
-        assert res_deploy_output_3['job_id'] == res_physical_id_3['job_id']
+        assert res_physical_id_3[api.JOBS_RESOURCE_ID] == res_physical_id_2[api.JOBS_RESOURCE_ID]
+        assert res_deploy_output_3[api.JOBS_RESOURCE_ID] == res_physical_id_3[api.JOBS_RESOURCE_ID]
         assert alt_test_job_settings == res_deploy_output_3['job_settings']
 
         # TEST CASE 4
@@ -314,7 +316,7 @@ class TestStackApi(object):
         # databricks, an error should be raised
         # Add new job with different physical id but same name settings as alt_test_job_settings
         stack_api.jobs_client.jobs_in_databricks[123] = {
-            'job_id': 123,
+            api.JOBS_RESOURCE_ID: 123,
             'job_settings': alt_test_job_settings
         }
         with pytest.raises(StackError):
@@ -334,26 +336,32 @@ class TestStackApi(object):
 
         test_workspace_nb_properties = TEST_WORKSPACE_NB_PROPERTIES.copy()
         test_workspace_nb_properties.update(
-            {'source_path': os.path.join(tmpdir.strpath,
-                                         test_workspace_nb_properties['source_path'])})
-        os.makedirs(os.path.dirname(test_workspace_nb_properties['source_path']))
-        with open(test_workspace_nb_properties['source_path'], 'w') as f:
+            {api.WORKSPACE_RESOURCE_SOURCE_PATH: os.path.join(tmpdir.strpath,
+                                                              test_workspace_nb_properties[
+                                                                  api.WORKSPACE_RESOURCE_SOURCE_PATH
+                                                              ])})
+        os.makedirs(
+            os.path.dirname(test_workspace_nb_properties[api.WORKSPACE_RESOURCE_SOURCE_PATH]))
+        with open(test_workspace_nb_properties[api.WORKSPACE_RESOURCE_SOURCE_PATH], 'w') as f:
             f.write("print('test')\n")
         test_workspace_dir_properties = TEST_WORKSPACE_DIR_PROPERTIES.copy()
         test_workspace_dir_properties.update(
-            {'source_path': os.path.join(tmpdir.strpath,
-                                         test_workspace_dir_properties['source_path'])})
-        os.makedirs(test_workspace_dir_properties['source_path'])
+            {api.WORKSPACE_RESOURCE_SOURCE_PATH: os.path.join(tmpdir.strpath,
+                                                              test_workspace_dir_properties[
+                                                                  api.WORKSPACE_RESOURCE_SOURCE_PATH
+                                                              ])})
+        os.makedirs(test_workspace_dir_properties[api.WORKSPACE_RESOURCE_SOURCE_PATH])
 
         # Test Input of Workspace directory properties.
         dir_physical_id, dir_deploy_output = \
             stack_api._deploy_workspace(test_workspace_dir_properties, None, True)
         stack_api.workspace_client.import_workspace_dir.assert_called_once()
         assert stack_api.workspace_client.import_workspace_dir.call_args[0][0] == \
-            test_workspace_dir_properties['source_path']
+            test_workspace_dir_properties[api.WORKSPACE_RESOURCE_SOURCE_PATH]
         assert stack_api.workspace_client.import_workspace_dir.call_args[0][1] == \
-            test_workspace_dir_properties['path']
-        assert dir_physical_id == {'path': test_workspace_dir_properties['path']}
+            test_workspace_dir_properties[api.WORKSPACE_RESOURCE_PATH]
+        assert dir_physical_id == {
+            api.WORKSPACE_RESOURCE_PATH: test_workspace_dir_properties[api.WORKSPACE_RESOURCE_PATH]}
         assert dir_deploy_output == test_deploy_output
 
         # Test Input of Workspace notebook properties.
@@ -361,19 +369,21 @@ class TestStackApi(object):
             stack_api._deploy_workspace(test_workspace_nb_properties, None, True)
         stack_api.workspace_client.import_workspace.assert_called_once()
         assert stack_api.workspace_client.import_workspace.call_args[0][0] == \
-            test_workspace_nb_properties['source_path']
+            test_workspace_nb_properties[api.WORKSPACE_RESOURCE_SOURCE_PATH]
         assert stack_api.workspace_client.import_workspace.call_args[0][1] == \
-            test_workspace_nb_properties['path']
-        assert nb_physical_id == {'path': test_workspace_nb_properties['path']}
+            test_workspace_nb_properties[api.WORKSPACE_RESOURCE_PATH]
+        assert nb_physical_id == {api.WORKSPACE_RESOURCE_PATH:
+                                  test_workspace_nb_properties[api.WORKSPACE_RESOURCE_PATH]}
         assert nb_deploy_output == test_deploy_output
 
         # Should raise error if resource object_type doesn't match actually is in filesystem.
-        test_workspace_dir_properties.update({'object_type': 'NOTEBOOK'})
+        test_workspace_dir_properties.update(
+            {api.WORKSPACE_RESOURCE_OBJECT_TYPE: workspace_api.NOTEBOOK})
         with pytest.raises(StackError):
             stack_api._deploy_workspace(test_workspace_dir_properties, None, True)
 
         # Should raise error if object_type is not NOTEBOOK or DIRECTORY
-        test_workspace_dir_properties.update({'object_type': 'INVALID_TYPE'})
+        test_workspace_dir_properties.update({api.WORKSPACE_RESOURCE_OBJECT_TYPE: 'INVALID_TYPE'})
         with pytest.raises(StackError):
             stack_api._deploy_workspace(test_workspace_dir_properties, None, True)
 
@@ -390,15 +400,17 @@ class TestStackApi(object):
 
         test_dbfs_file_properties = TEST_DBFS_FILE_PROPERTIES.copy()
         test_dbfs_file_properties.update(
-            {'source_path': os.path.join(tmpdir.strpath,
-                                         test_dbfs_file_properties['source_path'])})
-        with open(test_dbfs_file_properties['source_path'], 'w') as f:
+            {api.DBFS_RESOURCE_SOURCE_PATH: os.path.join(tmpdir.strpath,
+                                                         test_dbfs_file_properties[
+                                                             api.DBFS_RESOURCE_SOURCE_PATH])})
+        with open(test_dbfs_file_properties[api.DBFS_RESOURCE_SOURCE_PATH], 'w') as f:
             f.write("print('test')\n")
         test_dbfs_dir_properties = TEST_DBFS_DIR_PROPERTIES.copy()
         test_dbfs_dir_properties.update(
-            {'source_path': os.path.join(tmpdir.strpath,
-                                         test_dbfs_dir_properties['source_path'])})
-        os.makedirs(test_dbfs_dir_properties['source_path'])
+            {api.DBFS_RESOURCE_SOURCE_PATH: os.path.join(tmpdir.strpath,
+                                                         test_dbfs_dir_properties[
+                                                             api.DBFS_RESOURCE_SOURCE_PATH])})
+        os.makedirs(test_dbfs_dir_properties[api.DBFS_RESOURCE_SOURCE_PATH])
 
         dir_physical_id, dir_deploy_output = \
             stack_api._deploy_dbfs(test_dbfs_dir_properties, None, True)
@@ -406,10 +418,11 @@ class TestStackApi(object):
         assert stack_api.dbfs_client.cp.call_args[1]['recursive'] is True
         assert stack_api.dbfs_client.cp.call_args[1]['overwrite'] is True
         assert stack_api.dbfs_client.cp.call_args[1]['src'] == \
-            test_dbfs_dir_properties['source_path']
+            test_dbfs_dir_properties[api.DBFS_RESOURCE_SOURCE_PATH]
         assert stack_api.dbfs_client.cp.call_args[1]['dst'] == \
-            test_dbfs_dir_properties['path']
-        assert dir_physical_id == {'path': test_dbfs_dir_properties['path']}
+            test_dbfs_dir_properties[api.DBFS_RESOURCE_PATH]
+        assert dir_physical_id == {api.DBFS_RESOURCE_PATH:
+                                   test_dbfs_dir_properties[api.DBFS_RESOURCE_PATH]}
         assert dir_deploy_output == test_deploy_output
 
         nb_physical_id, nb_deploy_output = \
@@ -418,15 +431,16 @@ class TestStackApi(object):
         assert stack_api.dbfs_client.cp.call_args[1]['recursive'] is False
         assert stack_api.dbfs_client.cp.call_args[1]['overwrite'] is True
         assert stack_api.dbfs_client.cp.call_args[1]['src'] == \
-            test_dbfs_file_properties['source_path']
+            test_dbfs_file_properties[api.DBFS_RESOURCE_SOURCE_PATH]
         assert stack_api.dbfs_client.cp.call_args[1]['dst'] == \
-            test_dbfs_file_properties['path']
-        assert nb_physical_id == {'path': test_dbfs_file_properties['path']}
+            test_dbfs_file_properties[api.DBFS_RESOURCE_PATH]
+        assert nb_physical_id == {api.DBFS_RESOURCE_PATH:
+                                  test_dbfs_file_properties[api.DBFS_RESOURCE_PATH]}
         assert nb_deploy_output == test_deploy_output
 
         # Should raise error if resource properties is_dir field isn't consistent with whether the
         # resource is a directory or not locally.
-        test_dbfs_dir_properties.update({'is_dir': False})
+        test_dbfs_dir_properties.update({api.DBFS_RESOURCE_IS_DIR: False})
         with pytest.raises(StackError):
             stack_api._deploy_dbfs(test_dbfs_dir_properties, None, True)
 
@@ -438,7 +452,7 @@ class TestStackApi(object):
         # TODO(alinxie) Change this test to directly call stack_api.deploy/stack_api.deploy_config
         # A job resource should have _deploy_resource call on _deploy_job
         stack_api._deploy_job = mock.MagicMock()
-        test_job_physical_id = {'job_id': 12345}
+        test_job_physical_id = {api.JOBS_RESOURCE_ID: 12345}
         stack_api._deploy_job.return_value = (test_job_physical_id, {})
         test_job_resource_status = {api.RESOURCE_PHYSICAL_ID: test_job_physical_id}
         new_resource_status = stack_api._deploy_resource(TEST_JOB_RESOURCE,
@@ -453,7 +467,7 @@ class TestStackApi(object):
 
         # A workspace resource should have _deploy_resource call on _deploy_workspace
         stack_api._deploy_workspace = mock.MagicMock()
-        test_workspace_physical_id = {'path': '/test/path'}
+        test_workspace_physical_id = {api.WORKSPACE_RESOURCE_PATH: '/test/path'}
         stack_api._deploy_workspace.return_value = (test_workspace_physical_id, {})
         test_workspace_resource_status = {api.RESOURCE_PHYSICAL_ID: test_workspace_physical_id}
         stack_api._deploy_resource(TEST_WORKSPACE_NB_RESOURCE,
@@ -499,31 +513,36 @@ class TestStackApi(object):
 
         test_workspace_nb_properties = TEST_WORKSPACE_NB_PROPERTIES.copy()
         test_workspace_nb_properties.update(
-            {'source_path': os.path.join(tmpdir.strpath,
-                                         test_workspace_nb_properties['source_path'])})
+            {api.WORKSPACE_RESOURCE_SOURCE_PATH: os.path.join(tmpdir.strpath,
+                                                              test_workspace_nb_properties[
+                                                                  api.WORKSPACE_RESOURCE_SOURCE_PATH
+                                                              ])})
         test_workspace_dir_properties = TEST_WORKSPACE_DIR_PROPERTIES.copy()
         test_workspace_dir_properties.update(
-            {'source_path': os.path.join(tmpdir.strpath,
-                                         test_workspace_dir_properties['source_path'])})
+            {api.WORKSPACE_RESOURCE_SOURCE_PATH: os.path.join(tmpdir.strpath,
+                                                              test_workspace_dir_properties[
+                                                                  api.WORKSPACE_RESOURCE_SOURCE_PATH
+                                                              ])})
 
         stack_api._download_workspace(test_workspace_dir_properties, True)
         stack_api.workspace_client.export_workspace_dir.assert_called_once()
         assert stack_api.workspace_client.export_workspace_dir.call_args[0][0] == \
-            test_workspace_dir_properties['path']
+            test_workspace_dir_properties[api.WORKSPACE_RESOURCE_PATH]
         assert stack_api.workspace_client.export_workspace_dir.call_args[0][1] == \
-            test_workspace_dir_properties['source_path']
+            test_workspace_dir_properties[api.WORKSPACE_RESOURCE_SOURCE_PATH]
 
         stack_api._download_workspace(test_workspace_nb_properties, True)
         stack_api.workspace_client.export_workspace.assert_called_once()
-        created_dir = os.path.dirname(os.path.abspath(test_workspace_nb_properties['source_path']))
+        created_dir = os.path.dirname(
+            os.path.abspath(test_workspace_nb_properties[api.WORKSPACE_RESOURCE_SOURCE_PATH]))
         assert os.path.exists(created_dir)
         assert stack_api.workspace_client.export_workspace.call_args[0][0] == \
-            test_workspace_nb_properties['path']
+            test_workspace_nb_properties[api.WORKSPACE_RESOURCE_PATH]
         assert stack_api.workspace_client.export_workspace.call_args[0][1] == \
-            test_workspace_nb_properties['source_path']
+            test_workspace_nb_properties[api.WORKSPACE_RESOURCE_SOURCE_PATH]
 
         # Should raise error if object_type is not NOTEBOOK or DIRECTORY
-        test_workspace_dir_properties.update({'object_type': 'INVALID_TYPE'})
+        test_workspace_dir_properties.update({api.WORKSPACE_RESOURCE_OBJECT_TYPE: 'INVALID_TYPE'})
         with pytest.raises(StackError):
             stack_api._download_workspace(test_workspace_dir_properties, True)
 
@@ -575,21 +594,24 @@ class TestStackApi(object):
         for resource in test_stack[api.STACK_RESOURCES]:
             resource_service = resource[api.RESOURCE_SERVICE]
             resource_properties = resource[api.RESOURCE_PROPERTIES]
-            curr_source_path = resource_properties.get('source_path', '')
+            curr_source_path = resource_properties.get(api.DBFS_RESOURCE_SOURCE_PATH, '')
             resource_properties.update(
-                {'source_path': os.path.join(tmpdir.strpath, curr_source_path)})
+                {api.DBFS_RESOURCE_SOURCE_PATH: os.path.join(tmpdir.strpath, curr_source_path)})
             if resource_service == api.WORKSPACE_SERVICE:
-                if resource_properties['object_type'] == workspace_api.NOTEBOOK:
-                    os.makedirs(os.path.dirname(resource_properties['source_path']))
-                    with open(resource_properties['source_path'], 'w') as f:
+                if workspace_api.NOTEBOOK == \
+                        resource_properties[api.WORKSPACE_RESOURCE_OBJECT_TYPE]:
+                    os.makedirs(os.path.dirname(resource_properties[
+                                                api.WORKSPACE_RESOURCE_SOURCE_PATH]))
+                    with open(resource_properties[api.WORKSPACE_RESOURCE_SOURCE_PATH], 'w') as f:
                         f.write("print('test')\n")
-                if resource_properties['object_type'] == workspace_api.DIRECTORY:
-                    os.makedirs(resource_properties['source_path'])
+                if resource_properties[api.WORKSPACE_RESOURCE_OBJECT_TYPE] == \
+                        workspace_api.DIRECTORY:
+                    os.makedirs(resource_properties[api.WORKSPACE_RESOURCE_SOURCE_PATH])
             elif resource_service == api.DBFS_SERVICE:
-                if resource_properties['is_dir']:
-                    os.makedirs(resource_properties['source_path'])
+                if resource_properties[api.DBFS_RESOURCE_IS_DIR]:
+                    os.makedirs(resource_properties[api.DBFS_RESOURCE_SOURCE_PATH])
                 else:
-                    with open(resource_properties['source_path'], 'w') as f:
+                    with open(resource_properties[api.DBFS_RESOURCE_SOURCE_PATH], 'w') as f:
                         f.write("print('test')\n")
 
         # Make sure inputted stack config and stack status is valid.
