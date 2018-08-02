@@ -51,12 +51,12 @@ TEST_JOB_PHYSICAL_ID = {'job_id': 1234}
 TEST_WORKSPACE_NB_PROPERTIES = {
     'source_path': 'test/notebook.py',
     'path': '/test/notebook.py',
-    'object_type': 'NOTEBOOK'
+    'object_type': workspace_api.NOTEBOOK
 }
 TEST_WORKSPACE_DIR_PROPERTIES = {
     'source_path': 'test/workspace/dir',
     'path': '/test/dir',
-    'object_type': 'DIRECTORY'
+    'object_type': workspace_api.DIRECTORY
 }
 TEST_WORKSPACE_NB_PHYSICAL_ID = {'path': '/test/notebook.py'}
 TEST_WORKSPACE_DIR_PHYSICAL_ID = {'path': '/test/dir'}
