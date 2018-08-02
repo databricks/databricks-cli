@@ -352,7 +352,7 @@ class StackApi(object):
 
         actual_object_type = DIRECTORY if os.path.isdir(local_path) else NOTEBOOK
         if object_type != actual_object_type:
-            raise StackError("Field 'object_type' ({}) not consistent"
+            raise StackError("Field 'object_type' ({}) not consistent "
                              "with actual object type ({})".format(object_type, actual_object_type))
 
         click.echo('Uploading {} from {} to Databricks workspace at {}'.format(object_type,
@@ -362,7 +362,7 @@ class StackApi(object):
             # Inference of notebook language and format
             language_fmt = WorkspaceLanguage.to_language_and_format(local_path)
             if language_fmt is None:
-                raise StackError("Workspace notebook language and format cannot be inferred"
+                raise StackError("Workspace notebook language and format cannot be inferred. "
                                  "Please check file extension of notebook file.")
             language, fmt = language_fmt
             # Create needed directories in workspace.
@@ -404,7 +404,7 @@ class StackApi(object):
             # Inference of notebook language and format. A tuple of (language, fmt) or Nonetype.
             language_fmt = WorkspaceLanguage.to_language_and_format(local_path)
             if language_fmt is None:
-                raise StackError("Workspace Notebook language and format cannot be inferred."
+                raise StackError("Workspace Notebook language and format cannot be inferred. "
                                  "Please check file extension of notebook 'source_path'.")
             (_, fmt) = language_fmt
             local_dir = os.path.dirname(os.path.abspath(local_path))
