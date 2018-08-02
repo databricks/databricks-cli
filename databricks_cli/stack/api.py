@@ -21,8 +21,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint:disable=too-many-branches
-
 import os
 import json
 from datetime import datetime
@@ -477,18 +475,13 @@ class StackApi(object):
         :param stack_config: dict- stack config that is inputted by the user.
         :return: None. Raises errors to stop deployment if there is a problem.
         """
-        if STACK_NAME not in stack_config:
-            raise StackError("'{}' not in configuration".format(STACK_NAME))
-        if STACK_RESOURCES not in stack_config:
-            raise StackError("'{}' not in configuration".format(STACK_RESOURCES))
+        self._assert_field_in_stack_config(STACK_NAME, stack_config)
+        self._assert_field_in_stack_config(STACK_RESOURCES, stack_config)
         seen_resource_ids = set()  # Store seen resources to restrict duplicates.
         for resource in stack_config.get(STACK_RESOURCES):
-            if RESOURCE_ID not in resource:
-                raise StackError("{} doesn't exist in resource config".format(RESOURCE_ID))
-            if RESOURCE_SERVICE not in resource:
-                raise StackError("{} doesn't exist in resource config".format(RESOURCE_SERVICE))
-            if RESOURCE_PROPERTIES not in resource:
-                raise StackError("{} doesn't exist in resource config".format(RESOURCE_PROPERTIES))
+            self._assert_field_in_resource(RESOURCE_ID, resource)
+            self._assert_field_in_resource(RESOURCE_SERVICE, resource)
+            self._assert_field_in_resource(RESOURCE_PROPERTIES, resource)
 
             resource_id = resource.get(RESOURCE_ID)
             resource_service = resource.get(RESOURCE_SERVICE)
@@ -502,39 +495,41 @@ class StackApi(object):
 
             # Resource service-specific validations
             if resource_service == JOBS_SERVICE:
-                if JOBS_RESOURCE_NAME not in resource_properties:
-                    raise StackError('"{}" doesn\'t exist in "{}" of {} resource with ID "{}"'
-                                     .format(JOBS_RESOURCE_NAME, RESOURCE_PROPERTIES, JOBS_SERVICE,
-                                             resource_id))
+                self._assert_field_in_resource_properties(JOBS_RESOURCE_NAME, resource_properties,
+                                                          JOBS_SERVICE, resource_id)
             elif resource_service == WORKSPACE_SERVICE:
-                if WORKSPACE_RESOURCE_PATH not in resource_properties:
-                    raise StackError('"{}" doesn\'t exist in "{}" of {} resource with ID "{}"'
-                                     .format(WORKSPACE_RESOURCE_PATH, RESOURCE_PROPERTIES,
-                                             WORKSPACE_SERVICE, resource_id))
-                if WORKSPACE_RESOURCE_SOURCE_PATH not in resource_properties:
-                    raise StackError('"{}" doesn\'t exist in "{}" of {} resource with ID "{}"'
-                                     .format(WORKSPACE_RESOURCE_SOURCE_PATH, RESOURCE_PROPERTIES,
-                                             WORKSPACE_SERVICE,
-                                             resource_id))
-                if WORKSPACE_RESOURCE_OBJECT_TYPE not in resource_properties:
-                    raise StackError('"{}" doesn\'t exist in "{}" of {} resource with ID "{}"'
-                                     .format(WORKSPACE_RESOURCE_OBJECT_TYPE, RESOURCE_PROPERTIES,
-                                             WORKSPACE_SERVICE, resource_id))
+                self._assert_field_in_resource_properties(WORKSPACE_RESOURCE_PATH,
+                                                          resource_properties,
+                                                          WORKSPACE_SERVICE, resource_id)
+                self._assert_field_in_resource_properties(WORKSPACE_RESOURCE_SOURCE_PATH,
+                                                          resource_properties, WORKSPACE_SERVICE,
+                                                          resource_id)
+                self._assert_field_in_resource_properties(WORKSPACE_RESOURCE_OBJECT_TYPE,
+                                                          resource_properties, WORKSPACE_SERVICE,
+                                                          resource_id)
             elif resource_service == DBFS_SERVICE:
-                if DBFS_RESOURCE_PATH not in resource_properties:
-                    raise StackError('"{}" doesn\'t exist in "{}" of {} resource with ID "{}"'
-                                     .format(DBFS_RESOURCE_PATH, RESOURCE_PROPERTIES, DBFS_SERVICE,
-                                             resource_id))
-                if DBFS_RESOURCE_SOURCE_PATH not in resource_properties:
-                    raise StackError('"{}" doesn\'t exist in "{}" of {} resource with ID "{}"'
-                                     .format(DBFS_RESOURCE_SOURCE_PATH, RESOURCE_PROPERTIES,
-                                             DBFS_SERVICE, resource_id))
-                if DBFS_RESOURCE_IS_DIR not in resource_properties:
-                    raise StackError('"{}" doesn\'t exist in "{}" of {} resource with ID "{}"'
-                                     .format(DBFS_RESOURCE_IS_DIR, RESOURCE_PROPERTIES,
-                                             DBFS_SERVICE, resource_id))
+                self._assert_field_in_resource_properties(DBFS_RESOURCE_PATH, resource_properties,
+                                                          DBFS_SERVICE, resource_id)
+                self._assert_field_in_resource_properties(DBFS_RESOURCE_SOURCE_PATH,
+                                                          resource_properties, DBFS_SERVICE,
+                                                          resource_id)
+                self._assert_field_in_resource_properties(DBFS_RESOURCE_IS_DIR, resource_properties,
+                                                          DBFS_SERVICE, resource_id)
             else:
                 raise StackError("Resource service '{}' not supported".format(resource_service))
+
+    def _assert_field_in_resource_properties(self, field, properties, service, resource_id):
+        if field not in properties:
+            raise StackError('"{}" doesn\'t exist in "{}" of {} resource with ID "{}"'
+                             .format(field, RESOURCE_PROPERTIES, service, resource_id))
+
+    def _assert_field_in_resource(self, field, resource):
+        if field not in resource:
+            raise StackError("{} doesn't exist in resource config".format(field))
+
+    def _assert_field_in_stack_config(self, field, stack_config):
+        if field not in stack_config:
+            raise StackError("'{}' not in stack config".format(field))
 
     def _validate_status(self, stack_status):
         """
@@ -547,40 +542,45 @@ class StackApi(object):
         :param stack_status: dict- stack status that is created by the program.
         :return: None. Raises errors to stop deployment if there is a problem.
         """
-        if STACK_NAME not in stack_status:
-            raise StackError("'{}' not in status.".format(STACK_NAME))
-        if STACK_RESOURCES not in stack_status:
-            raise StackError("'{}' not in status".format(STACK_RESOURCES))
-        if STACK_DEPLOYED not in stack_status:
-            raise StackError("'{}' not in status".format(STACK_DEPLOYED))
-        for deployed_resource in stack_status.get(STACK_DEPLOYED):
-            if RESOURCE_ID not in deployed_resource:
-                raise StackError("{} doesn't exist in deployed resource status".format(
-                    RESOURCE_ID))
-            if RESOURCE_SERVICE not in deployed_resource:
-                raise StackError("{} doesn't exist in deployed resource status".format(
-                    RESOURCE_SERVICE))
-            if RESOURCE_PHYSICAL_ID not in deployed_resource:
-                raise StackError("{} doesn't exist in deployed resource status".format(
-                    RESOURCE_PHYSICAL_ID))
-            resource_id = deployed_resource[RESOURCE_ID]
-            resource_service = deployed_resource.get(RESOURCE_SERVICE)
-            resource_physical_id = deployed_resource.get(RESOURCE_PHYSICAL_ID)
+        self._assert_field_in_stack_status(STACK_NAME, stack_status)
+        self._assert_field_in_stack_status(STACK_RESOURCES, stack_status)
+        self._assert_field_in_stack_status(STACK_DEPLOYED, stack_status)
+
+        for resource_status in stack_status.get(STACK_DEPLOYED):
+            self._assert_field_in_resource_status(RESOURCE_ID, resource_status)
+            self._assert_field_in_resource_status(RESOURCE_SERVICE, resource_status)
+            self._assert_field_in_resource_status(RESOURCE_PHYSICAL_ID, resource_status)
+            self._assert_field_in_resource_status(RESOURCE_DEPLOY_OUTPUT, resource_status)
+
+            resource_id = resource_status[RESOURCE_ID]
+            resource_service = resource_status.get(RESOURCE_SERVICE)
+            resource_physical_id = resource_status.get(RESOURCE_PHYSICAL_ID)
+
             if resource_service == JOBS_SERVICE:
-                if JOBS_RESOURCE_ID not in resource_physical_id:
-                    raise StackError('"{}" doesn\'t exist in {} resource status with ID "{}"'
-                                     .format(JOBS_RESOURCE_ID, JOBS_SERVICE, resource_id))
+                self._assert_field_in_resource_physical_id(JOBS_RESOURCE_ID, resource_physical_id,
+                                                           resource_service, resource_id)
             elif resource_service == WORKSPACE_SERVICE:
-                if WORKSPACE_RESOURCE_PATH not in resource_physical_id:
-                    raise StackError('"{}" doesn\'t exist in {} resource status with ID "{}"'
-                                     .format(WORKSPACE_RESOURCE_PATH, WORKSPACE_SERVICE,
-                                             resource_id))
+                self._assert_field_in_resource_physical_id(WORKSPACE_RESOURCE_PATH,
+                                                           resource_physical_id,
+                                                           resource_service, resource_id)
             elif resource_service == DBFS_SERVICE:
-                if DBFS_RESOURCE_PATH not in resource_physical_id:
-                    raise StackError('"{}" doesn\'t exist in {} resource status with ID "{}"'
-                                     .format(DBFS_RESOURCE_PATH, DBFS_SERVICE, resource_id))
+                self._assert_field_in_resource_physical_id(DBFS_RESOURCE_PATH, resource_physical_id,
+                                                           resource_service, resource_id)
             else:
                 raise StackError("{} not a valid resource status service".format(resource_service))
+
+    def _assert_field_in_resource_physical_id(self, field, physical_id, service, resource_id):
+        if field not in physical_id:
+            raise StackError('"{}" doesn\'t exist in "{}" of {} resource status with ID "{}"'
+                             .format(field, RESOURCE_PHYSICAL_ID, service, resource_id))
+
+    def _assert_field_in_resource_status(self, field, resource_status):
+        if field not in resource_status:
+            raise StackError('"{}" doesn\'t exist in resource status'.format(field))
+
+    def _assert_field_in_stack_status(self, field, properties):
+        if field not in properties:
+            raise StackError("'{}' not in stack status".format(field))
 
     def _get_resource_to_status_map(self, stack_status):
         """
