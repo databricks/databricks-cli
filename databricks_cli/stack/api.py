@@ -59,6 +59,20 @@ RESOURCE_DEPLOY_OUTPUT = 'deploy_output'
 RESOURCE_DEPLOY_TIMESTAMP = 'timestamp'
 CLI_VERSION_KEY = 'cli_version'
 
+# Job Service Properties
+JOBS_RESOURCE_NAME = 'name'
+JOBS_RESOURCE_ID = 'job_id'
+
+# Workspace Service Properties
+WORKSPACE_RESOURCE_SOURCE_PATH = 'source_path'
+WORKSPACE_RESOURCE_PATH = 'path'
+WORKSPACE_RESOURCE_OBJECT_TYPE = 'object_type'
+
+# Workspace Service Properties
+DBFS_RESOURCE_SOURCE_PATH = 'source_path'
+DBFS_RESOURCE_PATH = 'path'
+DBFS_RESOURCE_IS_DIR = 'is_dir'
+
 
 class StackApi(object):
     def __init__(self, api_client):
@@ -299,9 +313,7 @@ class StackApi(object):
         :param job_settings:
         :return: job_id, Physical ID of job on Databricks server.
         """
-        if 'name' not in job_settings:
-            raise StackError("Please supply 'name' in job resource 'properties'")
-        job_name = job_settings.get('name')
+        job_name = job_settings.get(JOBS_RESOURCE_NAME)
         jobs_same_name = self.jobs_client._list_jobs_by_name(job_name)
         if len(jobs_same_name) > 1:
             raise StackError("Multiple jobs with the same name '{}' already exist, aborting"
@@ -329,7 +341,7 @@ class StackApi(object):
         :param job_id: physical job_id of job in databricks server.
         """
 
-        self.jobs_client.reset_job({'job_id': job_id, 'new_settings': job_settings})
+        self.jobs_client.reset_job({JOBS_RESOURCE_ID: job_id, 'new_settings': job_settings})
 
     def _deploy_workspace(self, resource_properties, physical_id, overwrite):
         """
@@ -345,15 +357,16 @@ class StackApi(object):
         deploy_output is the initial information about the asset on databricks at deploy time
         returned by the REST API.
         """
-        # Required fields. TODO(alinxie) put in _validate_config
-        local_path = resource_properties.get('source_path')
-        workspace_path = resource_properties.get('path')
-        object_type = resource_properties.get('object_type')
+        local_path = resource_properties.get(WORKSPACE_RESOURCE_SOURCE_PATH)
+        workspace_path = resource_properties.get(WORKSPACE_RESOURCE_PATH)
+        object_type = resource_properties.get(WORKSPACE_RESOURCE_OBJECT_TYPE)
 
         actual_object_type = DIRECTORY if os.path.isdir(local_path) else NOTEBOOK
         if object_type != actual_object_type:
-            raise StackError("Field 'object_type' ({}) not consistent "
-                             "with actual object type ({})".format(object_type, actual_object_type))
+            raise StackError("Field '{}' ({}) not consistent"
+                             "with actual object type ({})".format(WORKSPACE_RESOURCE_OBJECT_TYPE,
+                                                                   object_type,
+                                                                   actual_object_type))
 
         click.echo('Uploading {} from {} to Databricks workspace at {}'.format(object_type,
                                                                                local_path,
@@ -376,11 +389,11 @@ class StackApi(object):
             # Shouldn't reach here because of verification of object_type above.
             assert False
 
-        if physical_id and physical_id['path'] != workspace_path:
+        if physical_id and physical_id[WORKSPACE_RESOURCE_PATH] != workspace_path:
             # physical_id['path'] is the workspace path from the last deployment. Alert when changed
-            click.echo("Workspace asset had path changed from {} to {}".format(physical_id['path'],
-                                                                               workspace_path))
-        new_physical_id = {'path': workspace_path}
+            click.echo("Workspace asset had path changed from {} to {}"
+                       .format(physical_id[WORKSPACE_RESOURCE_PATH], workspace_path))
+        new_physical_id = {WORKSPACE_RESOURCE_PATH: workspace_path}
         deploy_output = self.workspace_client.client.get_status(workspace_path)
 
         return new_physical_id, deploy_output
@@ -393,10 +406,9 @@ class StackApi(object):
         'source_path', 'path' and 'object_type' fields.
         :param overwrite: Whether or not to overwrite the contents of workspace notebooks.
         """
-        # Required fields. TODO(alinxie) put in _validate_config
-        local_path = resource_properties.get('source_path')
-        workspace_path = resource_properties.get('path')
-        object_type = resource_properties.get('object_type')
+        local_path = resource_properties.get(WORKSPACE_RESOURCE_SOURCE_PATH)
+        workspace_path = resource_properties.get(WORKSPACE_RESOURCE_PATH)
+        object_type = resource_properties.get(WORKSPACE_RESOURCE_OBJECT_TYPE)
         click.echo('Downloading {} from Databricks path {} to {}'.format(object_type,
                                                                          workspace_path,
                                                                          local_path))
@@ -414,7 +426,8 @@ class StackApi(object):
         elif object_type == DIRECTORY:
             self.workspace_client.export_workspace_dir(workspace_path, local_path, overwrite)
         else:
-            raise StackError("Invalid value for 'object_type' field: {}".format(object_type))
+            raise StackError("Invalid value for '{}' field: {}"
+                             .format(WORKSPACE_RESOURCE_OBJECT_TYPE, object_type))
 
     def _deploy_dbfs(self, resource_properties, physical_id, overwrite):
         """
@@ -431,10 +444,10 @@ class StackApi(object):
         deploy_output is the initial information about the dbfs asset at deploy time
         returned by the REST API.
         """
-        # Required fields. TODO(alinxie) validate fields in _validate_config
-        local_path = resource_properties.get('source_path')
-        dbfs_path = resource_properties.get('path')
-        is_dir = resource_properties.get('is_dir')
+
+        local_path = resource_properties.get(DBFS_RESOURCE_SOURCE_PATH)
+        dbfs_path = resource_properties.get(DBFS_RESOURCE_PATH)
+        is_dir = resource_properties.get(DBFS_RESOURCE_IS_DIR)
 
         if is_dir != os.path.isdir(local_path):
             dir_or_file = 'directory' if os.path.isdir(local_path) else 'file'
@@ -448,11 +461,11 @@ class StackApi(object):
             click.echo('Uploading file from {} to DBFS at {}'.format(local_path, dbfs_path))
             self.dbfs_client.cp(recursive=False, overwrite=overwrite, src=local_path, dst=dbfs_path)
 
-        if physical_id and physical_id['path'] != dbfs_path:
+        if physical_id and physical_id[DBFS_RESOURCE_PATH] != dbfs_path:
             # physical_id['path'] is the dbfs path from the last deployment. Alert when changed
-            click.echo("Dbfs asset had path changed from {} to {}".format(physical_id['path'],
-                                                                          dbfs_path))
-        new_physical_id = {'path': dbfs_path}
+            click.echo("Dbfs asset had path changed from {} to {}"
+                       .format(physical_id[DBFS_RESOURCE_PATH], dbfs_path))
+        new_physical_id = {DBFS_RESOURCE_PATH: dbfs_path}
         deploy_output = self.dbfs_client.client.get_status(dbfs_path)
 
         return new_physical_id, deploy_output
@@ -462,28 +475,64 @@ class StackApi(object):
         Validate fields within a stack configuration. This ensures that an inputted configuration
         has the necessary fields for stack deployment to function well.
 
-        TODO(alinxie): Add validation for separate resource services and their properties.
         :param stack_config: dict- stack config that is inputted by the user.
         :return: None. Raises errors to stop deployment if there is a problem.
         """
-        if STACK_NAME not in stack_config:
-            raise StackError("'{}' not in configuration".format(STACK_NAME))
-        if STACK_RESOURCES not in stack_config:
-            raise StackError("'{}' not in configuration".format(STACK_RESOURCES))
+        self._assert_field_in_stack_config(STACK_NAME, stack_config)
+        self._assert_field_in_stack_config(STACK_RESOURCES, stack_config)
         seen_resource_ids = set()  # Store seen resources to restrict duplicates.
         for resource in stack_config.get(STACK_RESOURCES):
-            if RESOURCE_ID not in resource:
-                raise StackError("{} doesn't exist in resource config".format(RESOURCE_ID))
-            if RESOURCE_SERVICE not in resource:
-                raise StackError("{} doesn't exist in resource config".format(RESOURCE_SERVICE))
-            if RESOURCE_PROPERTIES not in resource:
-                raise StackError("{} doesn't exist in resource config".format(RESOURCE_PROPERTIES))
-            # Error on duplicate resource ID's
+            self._assert_field_in_resource(RESOURCE_ID, resource)
+            self._assert_field_in_resource(RESOURCE_SERVICE, resource)
+            self._assert_field_in_resource(RESOURCE_PROPERTIES, resource)
+
             resource_id = resource.get(RESOURCE_ID)
+            resource_service = resource.get(RESOURCE_SERVICE)
+            resource_properties = resource.get(RESOURCE_PROPERTIES)
+
+            # Error on duplicate resource ID's
             if resource_id in seen_resource_ids:
                 raise StackError("Duplicate resource ID '{}' found, please resolve.".format(
                     resource_id))
             seen_resource_ids.add(resource_id)
+
+            # Resource service-specific validations
+            if resource_service == JOBS_SERVICE:
+                self._assert_field_in_resource_properties(JOBS_RESOURCE_NAME, resource_properties,
+                                                          JOBS_SERVICE, resource_id)
+            elif resource_service == WORKSPACE_SERVICE:
+                self._assert_field_in_resource_properties(WORKSPACE_RESOURCE_PATH,
+                                                          resource_properties,
+                                                          WORKSPACE_SERVICE, resource_id)
+                self._assert_field_in_resource_properties(WORKSPACE_RESOURCE_SOURCE_PATH,
+                                                          resource_properties, WORKSPACE_SERVICE,
+                                                          resource_id)
+                self._assert_field_in_resource_properties(WORKSPACE_RESOURCE_OBJECT_TYPE,
+                                                          resource_properties, WORKSPACE_SERVICE,
+                                                          resource_id)
+            elif resource_service == DBFS_SERVICE:
+                self._assert_field_in_resource_properties(DBFS_RESOURCE_PATH, resource_properties,
+                                                          DBFS_SERVICE, resource_id)
+                self._assert_field_in_resource_properties(DBFS_RESOURCE_SOURCE_PATH,
+                                                          resource_properties, DBFS_SERVICE,
+                                                          resource_id)
+                self._assert_field_in_resource_properties(DBFS_RESOURCE_IS_DIR, resource_properties,
+                                                          DBFS_SERVICE, resource_id)
+            else:
+                raise StackError("Resource service '{}' not supported".format(resource_service))
+
+    def _assert_field_in_resource_properties(self, field, properties, service, resource_id):
+        if field not in properties:
+            raise StackError('"{}" doesn\'t exist in "{}" of {} resource with ID "{}"'
+                             .format(field, RESOURCE_PROPERTIES, service, resource_id))
+
+    def _assert_field_in_resource(self, field, resource):
+        if field not in resource:
+            raise StackError("{} doesn't exist in resource config".format(field))
+
+    def _assert_field_in_stack_config(self, field, stack_config):
+        if field not in stack_config:
+            raise StackError("'{}' not in stack config".format(field))
 
     def _validate_status(self, stack_status):
         """
@@ -492,26 +541,49 @@ class StackApi(object):
 
         If there is an error here, then it is either an implementation error that must be fixed by
         a developer or the User edited the stack status file created by the program.
-        TODO(alinxie): Add validation for separate resource services and their physical id's.
+
         :param stack_status: dict- stack status that is created by the program.
         :return: None. Raises errors to stop deployment if there is a problem.
         """
-        if STACK_NAME not in stack_status:
-            raise StackError("'{}' not in status.".format(STACK_NAME))
-        if STACK_RESOURCES not in stack_status:
-            raise StackError("'{}' not in status".format(STACK_RESOURCES))
-        if STACK_DEPLOYED not in stack_status:
-            raise StackError("'{}' not in status".format(STACK_DEPLOYED))
-        for deployed_resource in stack_status.get(STACK_DEPLOYED):
-            if RESOURCE_ID not in deployed_resource:
-                raise StackError("{} doesn't exist in deployed resource status".format(
-                    RESOURCE_ID))
-            if RESOURCE_SERVICE not in deployed_resource:
-                raise StackError("{} doesn't exist in deployed resource status".format(
-                    RESOURCE_SERVICE))
-            if RESOURCE_PHYSICAL_ID not in deployed_resource:
-                raise StackError("{} doesn't exist in deployed resource status".format(
-                    RESOURCE_PHYSICAL_ID))
+        self._assert_field_in_stack_status(STACK_NAME, stack_status)
+        self._assert_field_in_stack_status(STACK_RESOURCES, stack_status)
+        self._assert_field_in_stack_status(STACK_DEPLOYED, stack_status)
+
+        for resource_status in stack_status.get(STACK_DEPLOYED):
+            self._assert_field_in_resource_status(RESOURCE_ID, resource_status)
+            self._assert_field_in_resource_status(RESOURCE_SERVICE, resource_status)
+            self._assert_field_in_resource_status(RESOURCE_PHYSICAL_ID, resource_status)
+            self._assert_field_in_resource_status(RESOURCE_DEPLOY_OUTPUT, resource_status)
+
+            resource_id = resource_status[RESOURCE_ID]
+            resource_service = resource_status.get(RESOURCE_SERVICE)
+            resource_physical_id = resource_status.get(RESOURCE_PHYSICAL_ID)
+
+            if resource_service == JOBS_SERVICE:
+                self._assert_field_in_resource_physical_id(JOBS_RESOURCE_ID, resource_physical_id,
+                                                           resource_service, resource_id)
+            elif resource_service == WORKSPACE_SERVICE:
+                self._assert_field_in_resource_physical_id(WORKSPACE_RESOURCE_PATH,
+                                                           resource_physical_id,
+                                                           resource_service, resource_id)
+            elif resource_service == DBFS_SERVICE:
+                self._assert_field_in_resource_physical_id(DBFS_RESOURCE_PATH, resource_physical_id,
+                                                           resource_service, resource_id)
+            else:
+                raise StackError("{} not a valid resource status service".format(resource_service))
+
+    def _assert_field_in_resource_physical_id(self, field, physical_id, service, resource_id):
+        if field not in physical_id:
+            raise StackError('"{}" doesn\'t exist in "{}" of {} resource status with ID "{}"'
+                             .format(field, RESOURCE_PHYSICAL_ID, service, resource_id))
+
+    def _assert_field_in_resource_status(self, field, resource_status):
+        if field not in resource_status:
+            raise StackError('"{}" doesn\'t exist in resource status'.format(field))
+
+    def _assert_field_in_stack_status(self, field, properties):
+        if field not in properties:
+            raise StackError("'{}' not in stack status".format(field))
 
     def _get_resource_to_status_map(self, stack_status):
         """
