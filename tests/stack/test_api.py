@@ -568,28 +568,33 @@ class TestStackApi(object):
         }
         stack_api._download_resource(resource_badservice)
 
-    def test_end_to_end_deploy(self, stack_api, tmpdir):
+    def test_deploy_valid_stack_status(self, stack_api, tmpdir):
         """
             The stack API should not go through any validation exceptions for any resource types
-            when valid stack configurations and stack status are fed in.
+            when valid stack configurations and stack status are fed in to stack_api.deploy_config.
         """
+        test_deploy_output = {'test': 'test'}
+        # Setup mocks for job resource deployment
         stack_api._update_job = mock.MagicMock()
         stack_api._update_job.return_value = 12345
         stack_api._put_job = mock.MagicMock()
         stack_api._put_job.return_value = 12345
         stack_api.jobs_client.get_job = mock.MagicMock()
-        stack_api.jobs_client.get_job.return_value = {}
+        stack_api.jobs_client.get_job.return_value = test_deploy_output
 
+        # Setup mocks for workspace resource deployment
         stack_api.workspace_client.import_workspace = mock.MagicMock()
         stack_api.workspace_client.import_workspace_dir = mock.MagicMock()
         stack_api.workspace_client.client.get_status = mock.MagicMock()
-        stack_api.workspace_client.client.get_status.return_value = {}
+        stack_api.workspace_client.client.get_status.return_value = test_deploy_output
 
+        # Setup mocks for dbfs resource deployment
         stack_api.dbfs_client.cp = mock.MagicMock()
         stack_api.dbfs_client.client = mock.MagicMock()
-        stack_api.dbfs_client.client.get_status.return_value = {}
+        stack_api.dbfs_client.client.get_status.return_value = test_deploy_output
 
-        # Setup filesystem for workspace and dbfs resources
+        # Create files and directories associated with workspace and dbfs resources to ensure
+        # that validations within resource-specific services pass.
         test_stack = copy.deepcopy(TEST_STACK)
         for resource in test_stack[api.STACK_RESOURCES]:
             resource_service = resource[api.RESOURCE_SERVICE]
@@ -614,25 +619,31 @@ class TestStackApi(object):
                     with open(resource_properties[api.DBFS_RESOURCE_SOURCE_PATH], 'w') as f:
                         f.write("print('test')\n")
 
-        # Make sure inputted stack config and stack status is valid.
-        stack_api._validate_config(test_stack)
-        stack_api._validate_status(TEST_STATUS)
+        # Run deploy command on stack and validate stack status. If there are no exceptions
+        # related to validation errors for the newly generated stack status, then test
+        # will pass.
+        new_stack_status_1 = stack_api.deploy_config(test_stack)
+        # Test some extra correctness criteria for the generated stack status.
+        assert new_stack_status_1.get(api.STACK_RESOURCES) == test_stack.get(api.STACK_RESOURCES)
+        for deployed_resource in new_stack_status_1.get(api.STACK_DEPLOYED):
+            assert deployed_resource.get(api.RESOURCE_DEPLOY_OUTPUT) == test_deploy_output
 
-        # Run deploy command on stack and validate stack status.
-        new_stack_status = stack_api.deploy_config(test_stack)
-        stack_api._validate_status(new_stack_status)
-        new_stack_status = stack_api.deploy_config(test_stack, stack_status=TEST_STATUS)
-        stack_api._validate_status(new_stack_status)
-        new_stack_status = stack_api.deploy_config(test_stack, stack_status=TEST_STATUS,
-                                                   overwrite=True)
-        stack_api._validate_status(new_stack_status)
+        # Test that when passing in a  status that the new status generated will still be valid.
+        new_stack_status_2 = stack_api.deploy_config(test_stack, stack_status=TEST_STATUS)
+        # Test some extra correctness criteria for the generated stack status.
+        assert new_stack_status_2.get(api.STACK_RESOURCES) == test_stack.get(api.STACK_RESOURCES)
+        for deployed_resource in new_stack_status_2.get(api.STACK_DEPLOYED):
+            assert deployed_resource.get(api.RESOURCE_DEPLOY_OUTPUT) == test_deploy_output
 
-    def test_end_to_end_download(self, stack_api):
+    def test_download(self, stack_api):
         """
-            The stack API should not go through any validation exceptions for any resource types.
+            stack_api.download_from_config should call the correct workspace_client endpoints
+            when the a valid input is given.
         """
         stack_api.workspace_client.export_workspace = mock.MagicMock()
         stack_api.workspace_client.export_workspace_dir = mock.MagicMock()
 
         stack_api.download_from_config(TEST_STACK)
         stack_api.download_from_config(TEST_STACK, overwrite=True)
+        assert stack_api.workspace_client.export_workspace.call_count == 2
+        assert stack_api.workspace_client.export_workspace_dir.call_count == 2
