@@ -29,10 +29,12 @@ import os
 import json
 import mock
 from requests.exceptions import HTTPError
+import copy
 
 import pytest
 
 import databricks_cli.stack.api as api
+import databricks_cli.workspace.api as workspace_api
 from databricks_cli.stack.exceptions import StackError
 
 TEST_STACK_PATH = 'stack/stack.json'
@@ -52,7 +54,7 @@ TEST_WORKSPACE_NB_PROPERTIES = {
     'object_type': 'NOTEBOOK'
 }
 TEST_WORKSPACE_DIR_PROPERTIES = {
-    'source_path': 'test/dir',
+    'source_path': 'test/workspace/dir',
     'path': '/test/dir',
     'object_type': 'DIRECTORY'
 }
@@ -64,7 +66,7 @@ TEST_DBFS_FILE_PROPERTIES = {
     'is_dir': False
 }
 TEST_DBFS_DIR_PROPERTIES = {
-    'source_path': 'test/dir',
+    'source_path': 'test/dbfs/dir',
     'path': 'dbfs:/test/dir',
     'is_dir': True
 }
@@ -547,7 +549,7 @@ class TestStackApi(object):
         }
         stack_api._download_resource(resource_badservice)
 
-    def test_end_to_end_deploy(self, stack_api):
+    def test_end_to_end_deploy(self, stack_api, tmpdir):
         """
             The stack API should not go through any validation exceptions for any resource types
             when valid stack configurations and stack status are fed in.
@@ -568,16 +570,38 @@ class TestStackApi(object):
         stack_api.dbfs_client.client = mock.MagicMock()
         stack_api.dbfs_client.client.get_status.return_value = {}
 
+        # Setup filesystem for workspace and dbfs resources
+        test_stack = copy.deepcopy(TEST_STACK)
+        for resource in test_stack[api.STACK_RESOURCES]:
+            resource_service = resource[api.RESOURCE_SERVICE]
+            resource_properties = resource[api.RESOURCE_PROPERTIES]
+            curr_source_path = resource_properties.get('source_path', '')
+            resource_properties.update(
+                {'source_path': os.path.join(tmpdir.strpath, curr_source_path)})
+            if resource_service == api.WORKSPACE_SERVICE:
+                if resource_properties['object_type'] == workspace_api.NOTEBOOK:
+                    os.makedirs(os.path.dirname(resource_properties['source_path']))
+                    with open(resource_properties['source_path'], 'w') as f:
+                        f.write("print('test')\n")
+                if resource_properties['object_type'] == workspace_api.DIRECTORY:
+                    os.makedirs(resource_properties['source_path'])
+            elif resource_service == api.DBFS_SERVICE:
+                if resource_properties['is_dir']:
+                    os.makedirs(resource_properties['source_path'])
+                else:
+                    with open(resource_properties['source_path'], 'w') as f:
+                        f.write("print('test')\n")
+
         # Make sure inputted stack config and stack status is valid.
-        stack_api._validate_config(TEST_STACK)
+        stack_api._validate_config(test_stack)
         stack_api._validate_status(TEST_STATUS)
 
         # Run deploy command on stack and validate stack status.
-        new_stack_status = stack_api.deploy_config(TEST_STACK)
+        new_stack_status = stack_api.deploy_config(test_stack)
         stack_api._validate_status(new_stack_status)
-        new_stack_status = stack_api.deploy_config(TEST_STACK, stack_status=TEST_STATUS)
+        new_stack_status = stack_api.deploy_config(test_stack, stack_status=TEST_STATUS)
         stack_api._validate_status(new_stack_status)
-        new_stack_status = stack_api.deploy_config(TEST_STACK, stack_status=TEST_STATUS,
+        new_stack_status = stack_api.deploy_config(test_stack, stack_status=TEST_STATUS,
                                                    overwrite=True)
         stack_api._validate_status(new_stack_status)
 
