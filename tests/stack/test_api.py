@@ -583,8 +583,7 @@ class TestStackApi(object):
 
     def test_end_to_end_download(self, stack_api):
         """
-            The stack API should not go through any validation exceptions for any resource types
-            when valid stack configurations and stack status are fed in.
+            The stack API should not go through any validation exceptions for any resource types.
         """
         stack_api.workspace_client.export_workspace = mock.MagicMock()
         stack_api.workspace_client.export_workspace_dir = mock.MagicMock()
