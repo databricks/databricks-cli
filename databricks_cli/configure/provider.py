@@ -249,6 +249,10 @@ class DatabricksConfig(object):
     def from_password(cls, host, username, password, insecure=None):
         return DatabricksConfig(host, username, password, None, insecure)
 
+    @classmethod
+    def empty(cls):
+        return DatabricksConfig(None, None, None, None, None)
+
     @property
     def is_valid_with_token(self):
         return self.host is not None and self.token is not None
