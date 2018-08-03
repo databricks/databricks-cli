@@ -80,53 +80,6 @@ class StackApi(object):
         self.workspace_client = WorkspaceApi(api_client)
         self.dbfs_client = DbfsApi(api_client)
 
-    # def deploy(self, config_path, **kwargs):
-    #     """
-    #     Deploys a stack given stack JSON configuration template at path config_path.
-    #
-    #     Loads the JSON template as well as status JSON if stack has been deployed before.
-    #
-    #     The working directory is changed to that where the JSON template is contained
-    #     so that paths within the stack configuration are relative to the directory of the
-    #     JSON template instead of the directory where this function is called.
-    #
-    #     :param config_path: Path to stack JSON configuration template. Must have the fields of
-    #     'name', the name of the stack and 'resources', a list of stack resources.
-    #     :return: None.
-    #     """
-    #     stack_config = self._load_json(config_path)
-    #     status_path = self._generate_stack_status_path(config_path)
-    #     stack_status = self._load_json(status_path)
-    #     config_dir = os.path.dirname(os.path.abspath(config_path))
-    #     cli_dir = os.getcwd()
-    #     os.chdir(config_dir)  # Switch current working directory to where json config is stored
-    #     new_stack_status = self.deploy_config(stack_config, stack_status, **kwargs)
-    #     os.chdir(cli_dir)
-    #     click.echo("Saving stack status to {}".format(status_path))
-    #     self._save_json(status_path, new_stack_status)
-    #     click.echo('Warning- The stack status file is an automatically generated file that is'
-    #                ' depended on for the databricks stack CLI to function correctly.'
-    #                ' Please do not edit the file.')
-    #
-    # def download(self, config_path, **kwargs):
-    #     """
-    #     Downloads a stack given stack JSON configuration template at path config_path.
-    #
-    #     The working directory is changed to that where the JSON template is contained
-    #     so that paths within the stack configuration are relative to the directory of the
-    #     JSON template instead of the directory where this function is called.
-    #
-    #     :param config_path: Path to stack JSON configuration template. Must have the fields of
-    #     'name', the name of the stack and 'resources', a list of stack resources.
-    #     :return: None.
-    #     """
-    #     stack_config = self._load_json(config_path)
-    #     config_dir = os.path.dirname(os.path.abspath(config_path))
-    #     cli_dir = os.getcwd()
-    #     os.chdir(config_dir)  # Switch current working directory to where json config is stored
-    #     self.download_from_config(stack_config, **kwargs)
-    #     os.chdir(cli_dir)
-
     def deploy(self, stack_config, stack_status=None, **kwargs):
         """
         Deploys a stack given stack JSON configuration template at path config_path.
@@ -598,44 +551,3 @@ class StackApi(object):
                 resource_status
             for resource_status in stack_status.get(STACK_DEPLOYED)
         }
-
-    # def _generate_stack_status_path(self, stack_path):
-    #     """
-    #     Given a path to the stack configuration template JSON file, generates a path to where the
-    #     deployment status JSON will be stored after successful deployment of the stack.
-    #
-    #     :param stack_path: Path to the stack config template JSON file
-    #     :return: The path to the stack status file.
-    #
-    #     >>> self._generate_stack_status_path('./stack.json')
-    #     './stack.deployed.json'
-    #     """
-    #     stack_status_insert = 'deployed'
-    #     stack_path_split = stack_path.split('.')
-    #     stack_path_split.insert(-1, stack_status_insert)
-    #     return '.'.join(stack_path_split)
-    #
-    # def _load_json(self, path):
-    #     """
-    #     Parse a json file to a readable dict format.
-    #     Returns an empty dictionary if the path doesn't exist.
-    #
-    #     :param path: File path of the JSON stack configuration template.
-    #     :return: dict of parsed JSON stack config template.
-    #     """
-    #     stack_conf = {}
-    #     if os.path.exists(path):
-    #         with open(path, 'r') as f:
-    #             stack_conf = json.load(f)
-    #     return stack_conf
-    #
-    # def _save_json(self, path, data):
-    #     """
-    #     Writes data to a JSON file.
-    #
-    #     :param path: Path of JSON file.
-    #     :param data: dict- data that wants to by written to JSON file
-    #     :return: None
-    #     """
-    #     with open(path, 'w') as f:
-    #         json.dump(data, f, indent=2, sort_keys=True)
