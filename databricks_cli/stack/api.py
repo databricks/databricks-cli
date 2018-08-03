@@ -316,7 +316,7 @@ class StackApi(object):
 
         actual_object_type = DIRECTORY if os.path.isdir(local_path) else NOTEBOOK
         if object_type != actual_object_type:
-            raise StackError("Field '{}' ({}) not consistent"
+            raise StackError("Field '{}' ({}) not consistent "
                              "with actual object type ({})".format(WORKSPACE_RESOURCE_OBJECT_TYPE,
                                                                    object_type,
                                                                    actual_object_type))
