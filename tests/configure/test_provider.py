@@ -21,9 +21,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from mock import patch
 import os
 import pytest
+
+from mock import patch
 from databricks_cli.configure.provider import DatabricksConfig, DEFAULT_SECTION, \
     update_and_persist_config, get_config_for_profile, get_config, \
     set_config_provider, ProfileConfigProvider, _get_path, DatabrickConfigProvider
@@ -185,4 +186,3 @@ def test_get_config_override_custom():
 def test_get_config_bad_override():
     with pytest.raises(Exception):
         set_config_provider("NotAConfigProvider")
-
