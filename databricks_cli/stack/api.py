@@ -61,14 +61,14 @@ CLI_VERSION_KEY = 'cli_version'
 
 # Job Service Properties
 JOBS_RESOURCE_NAME = 'name'
-JOBS_RESOURCE_ID = 'job_id'
+JOBS_RESOURCE_JOB_ID = 'job_id'
 
 # Workspace Service Properties
 WORKSPACE_RESOURCE_SOURCE_PATH = 'source_path'
 WORKSPACE_RESOURCE_PATH = 'path'
 WORKSPACE_RESOURCE_OBJECT_TYPE = 'object_type'
 
-# Workspace Service Properties
+# DBFS Service Properties
 DBFS_RESOURCE_SOURCE_PATH = 'source_path'
 DBFS_RESOURCE_PATH = 'path'
 DBFS_RESOURCE_IS_DIR = 'is_dir'
@@ -94,14 +94,17 @@ class StackApi(object):
         :param stack_status: Must have the fields of
         :return:
         """
+        click.echo('#' * 80)
         self._validate_config(stack_config)
         if stack_status:
+            click.echo('#' * 80)
             self._validate_status(stack_status)
             resource_id_to_status = self._get_resource_to_status_map(stack_status)
         else:
             resource_id_to_status = {}
 
         stack_name = stack_config.get(STACK_NAME)
+        click.echo('#' * 80)
         click.echo('Deploying stack {}'.format(stack_name))
 
         # List of statuses, One for each resource in stack_config[STACK_RESOURCES]
@@ -117,7 +120,6 @@ class StackApi(object):
             new_resource_status = self._deploy_resource(resource_config, resource_status, **kwargs)
             resource_statuses.append(new_resource_status)
             click.echo('#' * 80)
-
         # stack deploy status is original config with deployed resource statuses added
         new_stack_status = copy.deepcopy(stack_config)
         new_stack_status.update({STACK_DEPLOYED: resource_statuses})
@@ -125,6 +127,7 @@ class StackApi(object):
 
         # Validate that the status has been created correctly
         self._validate_status(new_stack_status)
+        click.echo('#' * 80)
 
         return new_stack_status
 
@@ -431,15 +434,18 @@ class StackApi(object):
         :param stack_config: dict- stack config that is inputted by the user.
         :return: None. Raises errors to stop deployment if there is a problem.
         """
-        self._assert_field_in_stack_config(STACK_NAME, stack_config)
-        self._assert_field_in_stack_config(STACK_RESOURCES, stack_config)
+        click.echo('Validating fields in stack configuration...')
+        self._assert_fields_in_dict([STACK_NAME, STACK_RESOURCES], stack_config)
+
         seen_resource_ids = set()  # Store seen resources to restrict duplicates.
         for resource in stack_config.get(STACK_RESOURCES):
-            self._assert_field_in_resource(RESOURCE_ID, resource)
-            self._assert_field_in_resource(RESOURCE_SERVICE, resource)
-            self._assert_field_in_resource(RESOURCE_PROPERTIES, resource)
-
+            # Get validate resource ID exists, then get it.
+            self._assert_fields_in_dict([RESOURCE_ID], resource)
             resource_id = resource.get(RESOURCE_ID)
+
+            click.echo('Validating fields in resource with ID "{}"'.format(resource_id))
+            self._assert_fields_in_dict([RESOURCE_SERVICE, RESOURCE_PROPERTIES], resource)
+
             resource_service = resource.get(RESOURCE_SERVICE)
             resource_properties = resource.get(RESOURCE_PROPERTIES)
 
@@ -450,42 +456,20 @@ class StackApi(object):
             seen_resource_ids.add(resource_id)
 
             # Resource service-specific validations
+            click.echo('Validating fields in "{}" of {} resource.'
+                       .format(RESOURCE_PROPERTIES, resource_service))
             if resource_service == JOBS_SERVICE:
-                self._assert_field_in_resource_properties(JOBS_RESOURCE_NAME, resource_properties,
-                                                          JOBS_SERVICE, resource_id)
+                self._assert_fields_in_dict([JOBS_RESOURCE_NAME], resource_properties)
             elif resource_service == WORKSPACE_SERVICE:
-                self._assert_field_in_resource_properties(WORKSPACE_RESOURCE_PATH,
-                                                          resource_properties,
-                                                          WORKSPACE_SERVICE, resource_id)
-                self._assert_field_in_resource_properties(WORKSPACE_RESOURCE_SOURCE_PATH,
-                                                          resource_properties, WORKSPACE_SERVICE,
-                                                          resource_id)
-                self._assert_field_in_resource_properties(WORKSPACE_RESOURCE_OBJECT_TYPE,
-                                                          resource_properties, WORKSPACE_SERVICE,
-                                                          resource_id)
+                self._assert_fields_in_dict(
+                    [WORKSPACE_RESOURCE_PATH, WORKSPACE_RESOURCE_SOURCE_PATH,
+                     WORKSPACE_RESOURCE_OBJECT_TYPE], resource_properties)
             elif resource_service == DBFS_SERVICE:
-                self._assert_field_in_resource_properties(DBFS_RESOURCE_PATH, resource_properties,
-                                                          DBFS_SERVICE, resource_id)
-                self._assert_field_in_resource_properties(DBFS_RESOURCE_SOURCE_PATH,
-                                                          resource_properties, DBFS_SERVICE,
-                                                          resource_id)
-                self._assert_field_in_resource_properties(DBFS_RESOURCE_IS_DIR, resource_properties,
-                                                          DBFS_SERVICE, resource_id)
+                self._assert_fields_in_dict(
+                    [DBFS_RESOURCE_PATH, DBFS_RESOURCE_SOURCE_PATH,
+                     DBFS_RESOURCE_IS_DIR], resource_properties)
             else:
                 raise StackError('Resource service "{}" not supported'.format(resource_service))
-
-    def _assert_field_in_resource_properties(self, field, properties, service, resource_id):
-        if field not in properties:
-            raise StackError('"{}" not in "{}" of {} resource with ID "{}"'
-                             .format(field, RESOURCE_PROPERTIES, service, resource_id))
-
-    def _assert_field_in_resource(self, field, resource):
-        if field not in resource:
-            raise StackError('"{}" not in resource config'.format(field))
-
-    def _assert_field_in_stack_config(self, field, stack_config):
-        if field not in stack_config:
-            raise StackError('"{}" not in stack config'.format(field))
 
     def _validate_status(self, stack_status):
         """
@@ -498,45 +482,35 @@ class StackApi(object):
         :param stack_status: dict- stack status that is created by the program.
         :return: None. Raises errors to stop deployment if there is a problem.
         """
-        self._assert_field_in_stack_status(STACK_NAME, stack_status)
-        self._assert_field_in_stack_status(STACK_RESOURCES, stack_status)
-        self._assert_field_in_stack_status(STACK_DEPLOYED, stack_status)
+        click.echo('Validating fields in stack status...')
+        self._assert_fields_in_dict([STACK_NAME, STACK_RESOURCES, STACK_DEPLOYED], stack_status)
 
         for resource_status in stack_status.get(STACK_DEPLOYED):
-            self._assert_field_in_resource_status(RESOURCE_ID, resource_status)
-            self._assert_field_in_resource_status(RESOURCE_SERVICE, resource_status)
-            self._assert_field_in_resource_status(RESOURCE_PHYSICAL_ID, resource_status)
-            self._assert_field_in_resource_status(RESOURCE_DEPLOY_OUTPUT, resource_status)
+            self._assert_fields_in_dict([RESOURCE_ID], resource_status)
+            resource_id = resource_status.get(RESOURCE_ID)
+            click.echo('Validating fields in resource status of resource with ID "{}"'
+                       .format(resource_id))
+            self._assert_fields_in_dict([RESOURCE_SERVICE, RESOURCE_PHYSICAL_ID,
+                                         RESOURCE_DEPLOY_OUTPUT], resource_status)
 
-            resource_id = resource_status[RESOURCE_ID]
             resource_service = resource_status.get(RESOURCE_SERVICE)
             resource_physical_id = resource_status.get(RESOURCE_PHYSICAL_ID)
 
+            click.echo('Validating fields in "{}" of {} resource status'
+                       .format(RESOURCE_PHYSICAL_ID, resource_service))
             if resource_service == JOBS_SERVICE:
-                self._assert_field_in_resource_physical_id(JOBS_RESOURCE_ID, resource_physical_id,
-                                                           resource_service, resource_id)
+                self._assert_fields_in_dict([JOBS_RESOURCE_JOB_ID], resource_physical_id)
             elif resource_service == WORKSPACE_SERVICE:
-                self._assert_field_in_resource_physical_id(WORKSPACE_RESOURCE_PATH,
-                                                           resource_physical_id,
-                                                           resource_service, resource_id)
+                self._assert_fields_in_dict([WORKSPACE_RESOURCE_PATH], resource_physical_id)
             elif resource_service == DBFS_SERVICE:
-                self._assert_field_in_resource_physical_id(DBFS_RESOURCE_PATH, resource_physical_id,
-                                                           resource_service, resource_id)
+                self._assert_fields_in_dict([DBFS_RESOURCE_PATH], resource_physical_id)
             else:
                 raise StackError("{} not a valid resource status service".format(resource_service))
 
-    def _assert_field_in_resource_physical_id(self, field, physical_id, service, resource_id):
-        if field not in physical_id:
-            raise StackError('"{}" not in "{}" of {} resource status with ID "{}"'
-                             .format(field, RESOURCE_PHYSICAL_ID, service, resource_id))
-
-    def _assert_field_in_resource_status(self, field, resource_status):
-        if field not in resource_status:
-            raise StackError('"{}" not in resource status'.format(field))
-
-    def _assert_field_in_stack_status(self, field, properties):
-        if field not in properties:
-            raise StackError('"{}" not in stack status'.format(field))
+    def _assert_fields_in_dict(self, fields, dictionary):
+        for field in fields:
+            if field not in dictionary:
+                raise StackError('Required field "{}" not found'.format(field))
 
     def _get_resource_to_status_map(self, stack_status):
         """

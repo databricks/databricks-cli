@@ -45,7 +45,7 @@ TEST_JOB_RESOURCE = {
     api.RESOURCE_SERVICE: api.JOBS_SERVICE,
     api.RESOURCE_PROPERTIES: TEST_JOB_SETTINGS
 }
-TEST_JOB_PHYSICAL_ID = {api.JOBS_RESOURCE_ID: 1234}
+TEST_JOB_PHYSICAL_ID = {api.JOBS_RESOURCE_JOB_ID: 1234}
 TEST_WORKSPACE_NB_PROPERTIES = {
     api.WORKSPACE_RESOURCE_SOURCE_PATH: 'test/notebook.py',
     api.WORKSPACE_RESOURCE_PATH: '/test/notebook.py',
@@ -162,13 +162,14 @@ class _TestJobsClient(object):
             return self.jobs_in_databricks[job_id]
 
     def reset_job(self, data):
-        if data[api.JOBS_RESOURCE_ID] not in self.jobs_in_databricks:
+        if data[api.JOBS_RESOURCE_JOB_ID] not in self.jobs_in_databricks:
             raise HTTPError('Job Not Found')
-        self.jobs_in_databricks[data[api.JOBS_RESOURCE_ID]]['job_settings'] = data['new_settings']
+        self.jobs_in_databricks[data[api.JOBS_RESOURCE_JOB_ID]]['job_settings'] = \
+            data['new_settings']
 
     def create_job(self, job_settings):
         job_id = self.available_job_id.pop()
-        new_job_json = {api.JOBS_RESOURCE_ID: job_id,
+        new_job_json = {api.JOBS_RESOURCE_JOB_ID: job_id,
                         'job_settings': job_settings.copy(),
                         'creator_user_name': 'testuser@example.com',
                         'created_time': 987654321}
@@ -211,9 +212,10 @@ class TestStackApi(object):
         # TEST CASE 1:
         # stack_api._deploy_job should create job if physical_id not given job doesn't exist
         res_physical_id_1, res_deploy_output_1 = stack_api._deploy_job(test_job_settings)
-        assert stack_api.jobs_client.get_job(res_physical_id_1[api.JOBS_RESOURCE_ID]) == \
+        assert stack_api.jobs_client.get_job(res_physical_id_1[api.JOBS_RESOURCE_JOB_ID]) == \
             res_deploy_output_1
-        assert res_deploy_output_1[api.JOBS_RESOURCE_ID] == res_physical_id_1[api.JOBS_RESOURCE_ID]
+        assert res_deploy_output_1[api.JOBS_RESOURCE_JOB_ID] == \
+            res_physical_id_1[api.JOBS_RESOURCE_JOB_ID]
         assert test_job_settings == res_deploy_output_1['job_settings']
 
         # TEST CASE 2:
@@ -221,8 +223,10 @@ class TestStackApi(object):
         res_physical_id_2, res_deploy_output_2 = stack_api._deploy_job(alt_test_job_settings,
                                                                        res_physical_id_1)
         # physical job id not changed from last update
-        assert res_physical_id_2[api.JOBS_RESOURCE_ID] == res_physical_id_1[api.JOBS_RESOURCE_ID]
-        assert res_deploy_output_2[api.JOBS_RESOURCE_ID] == res_physical_id_2[api.JOBS_RESOURCE_ID]
+        assert res_physical_id_2[api.JOBS_RESOURCE_JOB_ID] == \
+            res_physical_id_1[api.JOBS_RESOURCE_JOB_ID]
+        assert res_deploy_output_2[api.JOBS_RESOURCE_JOB_ID] == \
+            res_physical_id_2[api.JOBS_RESOURCE_JOB_ID]
         assert alt_test_job_settings == res_deploy_output_2['job_settings']
 
         # TEST CASE 3:
@@ -231,8 +235,10 @@ class TestStackApi(object):
         alt_test_job_settings['new_property'] = 'new_property_value'
         res_physical_id_3, res_deploy_output_3 = stack_api._deploy_job(alt_test_job_settings)
         # physical job id not changed from last update
-        assert res_physical_id_3[api.JOBS_RESOURCE_ID] == res_physical_id_2[api.JOBS_RESOURCE_ID]
-        assert res_deploy_output_3[api.JOBS_RESOURCE_ID] == res_physical_id_3[api.JOBS_RESOURCE_ID]
+        assert res_physical_id_3[api.JOBS_RESOURCE_JOB_ID] == \
+            res_physical_id_2[api.JOBS_RESOURCE_JOB_ID]
+        assert res_deploy_output_3[api.JOBS_RESOURCE_JOB_ID] == \
+            res_physical_id_3[api.JOBS_RESOURCE_JOB_ID]
         assert alt_test_job_settings == res_deploy_output_3['job_settings']
 
         # TEST CASE 4
@@ -240,7 +246,7 @@ class TestStackApi(object):
         # databricks, an error should be raised
         # Add new job with different physical id but same name settings as alt_test_job_settings
         stack_api.jobs_client.jobs_in_databricks[123] = {
-            api.JOBS_RESOURCE_ID: 123,
+            api.JOBS_RESOURCE_JOB_ID: 123,
             'job_settings': alt_test_job_settings
         }
         with pytest.raises(StackError):
@@ -376,7 +382,7 @@ class TestStackApi(object):
         # TODO(alinxie) Change this test to directly call stack_api.deploy
         # A job resource should have _deploy_resource call on _deploy_job
         stack_api._deploy_job = mock.MagicMock()
-        test_job_physical_id = {api.JOBS_RESOURCE_ID: 12345}
+        test_job_physical_id = {api.JOBS_RESOURCE_JOB_ID: 12345}
         stack_api._deploy_job.return_value = (test_job_physical_id, {})
         test_job_resource_status = {api.RESOURCE_PHYSICAL_ID: test_job_physical_id}
         new_resource_status = stack_api._deploy_resource(TEST_JOB_RESOURCE,
@@ -494,8 +500,8 @@ class TestStackApi(object):
 
     def test_deploy_valid_stack_status(self, stack_api, tmpdir):
         """
-            The stack API should not go through any validation exceptions for any resource types
-            when valid stack configurations and stack status are fed in to stack_api.deploy_config.
+            Test valid creation of the stack status on a correctly setup stack
+            deployed through StackApi.deploy
         """
         test_deploy_output = {'test': 'test'}
         # Setup mocks for job resource deployment
@@ -543,13 +549,14 @@ class TestStackApi(object):
                     with open(resource_properties[api.DBFS_RESOURCE_SOURCE_PATH], 'w') as f:
                         f.write("print('test')\n")
 
-        # Run deploy command on stack and validate stack status. If there are no exceptions
-        # related to validation errors for the newly generated stack status, then test
-        # will pass.
-        new_stack_status_1 = stack_api.deploy(test_stack)
-        # Test some extra correctness criteria for the generated stack status.
+        # Run deploy command on stack and then verify stack status. Validation for the stack
+        # status is done within the deploy command, so if the function doesn't error, then
+        # the generated stack is valid.
+        new_stack_status_1 = stack_api.deploy_config(test_stack)
+        # Asserting some correctness criteria for the generated stack status.
         assert new_stack_status_1.get(api.STACK_RESOURCES) == test_stack.get(api.STACK_RESOURCES)
         for deployed_resource in new_stack_status_1.get(api.STACK_DEPLOYED):
+            # All functions to pull the deployed output were mocked to return deploy_output
             assert deployed_resource.get(api.RESOURCE_DEPLOY_OUTPUT) == test_deploy_output
 
         # Test that when passing in a  status that the new status generated will still be valid.
@@ -561,13 +568,13 @@ class TestStackApi(object):
 
     def test_download(self, stack_api):
         """
-            stack_api.download_from_config should call the correct workspace_client endpoints
-            when the a valid input is given.
+            stack_api.download_from_config should should call _download_resource on all of its
+            resources but only call _download_workspace on the workspace resources.
         """
-        stack_api.workspace_client.export_workspace = mock.MagicMock()
-        stack_api.workspace_client.export_workspace_dir = mock.MagicMock()
+        stack_api._download_workspace = mock.MagicMock()
+        stack_api._download_resource = mock.Mock(wraps=stack_api._download_resource)
 
-        stack_api.download(TEST_STACK)
-        stack_api.download(TEST_STACK, overwrite=True)
-        assert stack_api.workspace_client.export_workspace.call_count == 2
-        assert stack_api.workspace_client.export_workspace_dir.call_count == 2
+        stack_api.download_from_config(TEST_STACK)
+        # because there is only two workspace resources, _download
+        assert stack_api._download_resource.call_count == 5
+        assert stack_api._download_workspace.call_count == 2
