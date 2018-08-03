@@ -99,13 +99,13 @@ def deploy(api_client, config_path, **kwargs):
     cli_dir = os.getcwd()
     os.chdir(config_dir)  # Switch current working directory to where json config is stored
     new_stack_status = StackApi(api_client).deploy(stack_config, stack_status, **kwargs)
+    click.echo('#' * 80)
     os.chdir(cli_dir)
     click.echo("Saving stack status to {}".format(status_path))
     _save_json(status_path, new_stack_status)
     click.echo('Warning- The stack status file is an automatically generated file that is'
                ' depended on for the databricks stack CLI to function correctly.'
                ' Please do not edit the file.')
-    StackApi(api_client).deploy(config_path, **kwargs)
     click.echo('#' * 80)
 
 
