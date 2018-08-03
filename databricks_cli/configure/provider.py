@@ -88,6 +88,7 @@ def update_and_persist_config(profile, databricks_config):
     same profile.
     :param databricks_config: DatabricksConfig
     """
+    profile = profile if profile else DEFAULT_SECTION
     raw_config = _fetch_from_fs()
     _create_section_if_absent(raw_config, profile)
     _set_option(raw_config, profile, HOST, databricks_config.host)
@@ -136,6 +137,7 @@ def get_config_for_profile(profile):
 
     :return: DatabricksConfig
     """
+    profile = profile if profile else DEFAULT_SECTION
     config = EnvironmentVariableConfigProvider().get_config()
     if config and config.is_valid:
         return config
@@ -219,9 +221,6 @@ class ProfileConfigProvider(DatabrickConfigProvider):
         self.profile = profile
 
     def get_config(self):
-        if not os.path.exists(_get_path()):
-            return None
-
         raw_config = _fetch_from_fs()
         host = _get_option_if_exists(raw_config, self.profile, HOST)
         username = _get_option_if_exists(raw_config, self.profile, USERNAME)
