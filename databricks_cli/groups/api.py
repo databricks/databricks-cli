@@ -31,22 +31,11 @@ class GroupsApi(object):
     def __init__(self, api_client):
         self.client = GroupsService(api_client)
 
-    def add_member(self, parent_name, member_type, member_name):
-        """Add a user or group to a group.
-
-        member_type is either 'group' or 'user'.
-        member_name is the name of the member.
-        """
-        if member_type == "group":
-            return self.client.add_to_group(parent_name=parent_name,
-                                            group_name=member_name)
-        elif member_type == "user":
-            return self.client.add_to_group(parent_name=parent_name,
-                                            user_name=member_name)
-        else:
-            raise GroupsException("Invalid 'member_type' {}".format(
-                member_type
-            ))
+    def add_member(self, parent_name, user_name, group_name):
+        assert user_name is not None or group_name is not None
+        return self.client.add_to_group(parent_name=parent_name,
+                                        group_name=group_name,
+                                        user_name=user_name)
 
     def create(self, group_name):
         """Create a new group with the given name."""
@@ -60,7 +49,7 @@ class GroupsApi(object):
         """Return all of the groups in an organization."""
         return self.client.get_groups()
 
-    def list_parents(self, member_type, member_name):
+    def list_parents(self, user_name, group_name):
         """Retrieve all groups in which a given user or group is a member.
 
         member_type is either 'group' or 'user'.
@@ -70,31 +59,14 @@ class GroupsApi(object):
         which the given user or group is a member but not the groups in which
         those groups are members).
         """
-        if member_type == "group":
-            return self.client.get_groups_for_principal(group_name=member_name)
-        elif member_type == "user":
-            return self.client.get_groups_for_principal(user_name=member_name)
-        else:
-            raise GroupsException("Invalid 'member_type' {}".format(
-                member_type
-            ))
+        assert user_name is not None or group_name is not None
+        return self.client.get_groups_for_principal(user_name=user_name, group_name=group_name)
 
-    def remove_member(self, parent_name, member_type, member_name):
-        """Remove a user or group from a group.
-
-        member_type is either 'group' or 'user'.
-        member_name is the name of the member.
-        """
-        if member_type == "group":
-            return self.client.remove_from_group(parent_name=parent_name,
-                                                 group_name=member_name)
-        elif member_type == "user":
-            return self.client.remove_from_group(parent_name=parent_name,
-                                                 user_name=member_name)
-        else:
-            raise GroupsException("Invalid 'member_type' {}".format(
-                member_type
-            ))
+    def remove_member(self, parent_name, user_name, group_name):
+        assert user_name is not None or group_name is not None
+        return self.client.remove_from_group(parent_name=parent_name,
+                                             user_name=user_name,
+                                             group_name=group_name)
 
     def delete(self, group_name):
         """Remove a group from this organization."""
