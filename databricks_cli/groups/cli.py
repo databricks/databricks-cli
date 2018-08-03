@@ -49,7 +49,9 @@ MEMBER_OPTIONS = ['user-name', 'group-name']
 @provide_api_client
 def add_member_cli(api_client, parent_name, user_name, group_name):
     """Add a user or group to a group."""
-    GroupsApi(api_client).add_member(parent_name, user_name, group_name)
+    GroupsApi(api_client).add_member(parent_name=parent_name,
+                                     user_name=user_name,
+                                     group_name=group_name)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -100,7 +102,8 @@ def list_all_cli(api_client):
 @provide_api_client
 def list_parents_cli(api_client, user_name, group_name):
     """Retrieve all groups in which a given user or group is a member."""
-    content = GroupsApi(api_client).list_parents(user_name, group_name)
+    content = GroupsApi(api_client).list_parents(user_name=user_name,
+                                                 group_name=group_name)
     click.echo(pretty_format(content))
 
 

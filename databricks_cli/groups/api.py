@@ -22,7 +22,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from databricks_cli.sdk import GroupsService
-from databricks_cli.groups.exceptions import GroupsException
 
 
 class GroupsApi(object):
@@ -34,8 +33,8 @@ class GroupsApi(object):
     def add_member(self, parent_name, user_name, group_name):
         assert user_name is not None or group_name is not None
         return self.client.add_to_group(parent_name=parent_name,
-                                        group_name=group_name,
-                                        user_name=user_name)
+                                        user_name=user_name,
+                                        group_name=group_name)
 
     def create(self, group_name):
         """Create a new group with the given name."""
