@@ -20,10 +20,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+from abc import abstractmethod, ABCMeta
 from configparser import ConfigParser
+import os
 from os.path import expanduser, join
 
-import os
+from databricks_cli.utils import InvalidConfigurationError
+
 
 _home = expanduser('~')
 HOST = 'host'
@@ -32,6 +36,7 @@ PASSWORD = 'password' # NOQA
 TOKEN = 'token'
 INSECURE = 'insecure'
 DEFAULT_SECTION = 'DEFAULT'
+_config_provider = None
 
 
 def _get_path():
@@ -91,35 +96,120 @@ def update_and_persist_config(profile, databricks_config):
     _overwrite_config(raw_config)
 
 
+def set_config_provider(provider):
+    """
+    Sets a ConfigProvider that will be used for all future calls to get_config(),
+    used by the Databricks CLI code to discover the user's credentials.
+    """
+    global _config_provider
+    if provider and not isinstance(provider, DatabrickConfigProvider):
+        raise Exception('Must be instance of DatabrickConfigProvider: %s' % _config_provider)
+    _config_provider = provider
+
+
+def get_config_provider(provider):
+    global _config_provider
+    return _config_provider
+
+
+def get_config():
+    """
+    Returns a DatabricksConfig containing the hostname and authentication used to talk to
+    the Databricks API. By default, we leverage the DefaultConfigProvider to get
+    this config, but this behavior may be overridden by calling 'set_config_provider'
+
+    If no DatabricksConfig can be found, we will raise a NoDatabricksConfigException.
+    """
+    global _config_provider
+    if _config_provider:
+        config = _config_provider.get_config()
+        if config:
+            return config
+        raise InvalidConfigurationError(
+            'Custom provider returned no DatabricksConfig: %s' % _config_provider)
+
+    config = DefaultConfigProvider().get_config()
+    if config:
+        return config
+    raise InvalidConfigurationError.for_profile(None)
+
+
 def get_config_for_profile(profile):
     """
-    Reads from the filesystem and gets a DatabricksConfig for the specified profile. If it does not
-    exist, then return a DatabricksConfig with fields set.
+    [Deprecated] Reads from the filesystem and gets a DatabricksConfig for the
+    specified profile. If it does not exist, then return a DatabricksConfig with fields set
+    to None.
+
+    Internal callers should prefer get_config() to use user-specified overrides, and
+    to return appropriate error messages as opposited to invalid configurations.
+
+    If you want to read from a specific profile, please instead use
+    'ProfileConfigProvider(profile).get_config()'.
+
     :return: DatabricksConfig
     """
-    if is_environment_set():
+    default_provider = DefaultConfigProvider(profile)
+    config = default_provider.get_config()
+    if config:
+        return config
+    return DatabricksConfig(None, None, None, None, None)
+
+
+class DatabrickConfigProvider(object):
+    __metaclass__ = ABCMeta
+    @abstractmethod
+    def get_config(self):
+        pass
+
+
+class DefaultConfigProvider(DatabrickConfigProvider):
+    def __init__(self, profile=DEFAULT_SECTION):
+        super(DatabrickConfigProvider, self).__init__()
+        self.env_provider = EnvironmentVariableConfigProvider()
+        self.default_profile_provider = ProfileConfigProvider(profile)
+
+    def get_config(self):
+        env_config = self.env_provider.get_config()
+        if env_config:
+            return env_config
+
+        profile_config = self.default_profile_provider.get_config()
+        if profile_config:
+            return profile_config
+
+
+class EnvironmentVariableConfigProvider(DatabrickConfigProvider):
+    def get_config(self):
         host = os.environ.get('DATABRICKS_HOST')
         username = os.environ.get('DATABRICKS_USERNAME')
         password = os.environ.get('DATABRICKS_PASSWORD')
         token = os.environ.get('DATABRICKS_TOKEN')
         insecure = os.environ.get('DATABRICKS_INSECURE')
-        return DatabricksConfig(host, username, password, token, insecure)
-    raw_config = _fetch_from_fs()
-    host = _get_option_if_exists(raw_config, profile, HOST)
-    username = _get_option_if_exists(raw_config, profile, USERNAME)
-    password = _get_option_if_exists(raw_config, profile, PASSWORD)
-    token = _get_option_if_exists(raw_config, profile, TOKEN)
-    insecure = _get_option_if_exists(raw_config, profile, INSECURE)
-    return DatabricksConfig(host, username, password, token, insecure)
+        config = DatabricksConfig(host, username, password, token, insecure)
+        if config.is_valid:
+            return config
+        return None
 
 
-def is_environment_set():
-    token_exists = (os.environ.get('DATABRICKS_HOST')
-                    and os.environ.get('DATABRICKS_TOKEN'))
-    password_exists = (os.environ.get('DATABRICKS_HOST')
-                       and os.environ.get('DATABRICKS_USERNAME')
-                       and os.environ.get('DATABRICKS_PASSWORD'))
-    return token_exists or password_exists
+class ProfileConfigProvider(DatabrickConfigProvider):
+    def __init__(self, profile=DEFAULT_SECTION):
+        super(DatabrickConfigProvider, self).__init__()
+        self.profile = profile
+
+    def get_config(self):
+        if not os.path.exists(_get_path()):
+            return None
+
+        raw_config = _fetch_from_fs()
+        host = _get_option_if_exists(raw_config, self.profile, HOST)
+        username = _get_option_if_exists(raw_config, self.profile, USERNAME)
+        password = _get_option_if_exists(raw_config, self.profile, PASSWORD)
+        token = _get_option_if_exists(raw_config, self.profile, TOKEN)
+        insecure = _get_option_if_exists(raw_config, self.profile, INSECURE)
+        config = DatabricksConfig(host, username, password, token, insecure)
+        if config.is_valid:
+            return config
+        return None
 
 
 class DatabricksConfig(object):
