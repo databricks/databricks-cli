@@ -581,8 +581,8 @@ class TestStackApi(object):
 
     def test_deploy_valid_stack_status(self, stack_api, tmpdir):
         """
-            The stack API should not go through any validation exceptions for any resource types
-            when valid stack configurations and stack status are fed in to stack_api.deploy_config.
+            Test valid creation of the stack status on a correctly setup stack
+            deployed through StackApi.deploy
         """
         test_deploy_output = {'test': 'test'}
         # Setup mocks for job resource deployment
