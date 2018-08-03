@@ -167,13 +167,13 @@ class StackApi(object):
         physical_id = resource_status.get(RESOURCE_PHYSICAL_ID) if resource_status else None
 
         if resource_service == JOBS_SERVICE:
-            click.echo("Deploying job '{}' with properties: \n{}".format(resource_id, json.dumps(
+            click.echo('Deploying job "{}" with properties: \n{}'.format(resource_id, json.dumps(
                 resource_properties, indent=2, separators=(',', ': '))))
             new_physical_id, deploy_output = self._deploy_job(resource_properties,
                                                               physical_id)
         elif resource_service == WORKSPACE_SERVICE:
             click.echo(
-                "Deploying workspace asset '{}' with properties \n{}"
+                'Deploying workspace asset "{}" with properties \n{}'
                 .format(
                     resource_id, json.dumps(resource_properties, indent=2, separators=(',', ': '))
                 )
@@ -184,7 +184,7 @@ class StackApi(object):
                                                                     overwrite)
         elif resource_service == DBFS_SERVICE:
             click.echo(
-                "Deploying DBFS asset '{}' with properties \n{}".format(
+                'Deploying DBFS asset "{}" with properties \n{}'.format(
                     resource_id, json.dumps(resource_properties, indent=2, separators=(',', ': '))
                 )
             )
@@ -193,7 +193,7 @@ class StackApi(object):
                                                                physical_id,
                                                                overwrite)
         else:
-            raise StackError("Resource service '{}' not supported".format(resource_service))
+            raise StackError('Resource service "{}" not supported'.format(resource_service))
 
         new_resource_status = {RESOURCE_ID: resource_id,
                                RESOURCE_SERVICE: resource_service,
@@ -219,7 +219,7 @@ class StackApi(object):
 
         if resource_service == WORKSPACE_SERVICE:
             click.echo(
-                "Downloading workspace asset '{}' with properties \n{}"
+                'Downloading workspace asset "{}" with properties \n{}'
                 .format(
                     resource_id, json.dumps(resource_properties, indent=2, separators=(',', ': '))
                 )
@@ -227,8 +227,8 @@ class StackApi(object):
             overwrite = kwargs.get('overwrite', False)
             self._download_workspace(resource_properties, overwrite)
         else:
-            click.echo("Resource service '{}' not supported for download. "
-                       "skipping.".format(resource_service))
+            click.echo('Resource service "{}" not supported for download. '
+                       'skipping.'.format(resource_service))
 
     def _deploy_job(self, resource_properties, physical_id=None):
         """
@@ -269,15 +269,15 @@ class StackApi(object):
         job_name = job_settings.get(JOBS_RESOURCE_NAME)
         jobs_same_name = self.jobs_client._list_jobs_by_name(job_name)
         if len(jobs_same_name) > 1:
-            raise StackError("Multiple jobs with the same name '{}' already exist, aborting"
-                             " stack deployment".format(job_name))
+            raise StackError('Multiple jobs with the same name "{}" already exist, aborting'
+                             ' stack deployment'.format(job_name))
         elif len(jobs_same_name) == 1:
             existing_job = jobs_same_name[0]
             creator_name = existing_job.get('creator_user_name')
             timestamp = existing_job.get('created_time') / MS_SEC  # Convert to readable date.
             date_created = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
-            click.echo("Warning: Job exists with same name '{}' created by {} on {}. Job will "
-                       "be overwritten".format(job_name, creator_name, date_created))
+            click.echo('Warning: Job exists with same name "{}" created by {} on {}. Job will '
+                       'be overwritten'.format(job_name, creator_name, date_created))
             # Calling jobs_client.reset_job directly so as to not call same level function.
             self.jobs_client.reset_job({'job_id': existing_job.get('job_id'),
                                         'new_settings': job_settings})
@@ -316,8 +316,8 @@ class StackApi(object):
 
         actual_object_type = DIRECTORY if os.path.isdir(local_path) else NOTEBOOK
         if object_type != actual_object_type:
-            raise StackError("Field '{}' ({}) not consistent "
-                             "with actual object type ({})".format(WORKSPACE_RESOURCE_OBJECT_TYPE,
+            raise StackError('Field "{}" ({}) not consistent '
+                             'with actual object type ({})'.format(WORKSPACE_RESOURCE_OBJECT_TYPE,
                                                                    object_type,
                                                                    actual_object_type))
 
@@ -379,7 +379,7 @@ class StackApi(object):
         elif object_type == DIRECTORY:
             self.workspace_client.export_workspace_dir(workspace_path, local_path, overwrite)
         else:
-            raise StackError("Invalid value for '{}' field: {}"
+            raise StackError('Invalid value for "{}" field: {}'
                              .format(WORKSPACE_RESOURCE_OBJECT_TYPE, object_type))
 
     def _deploy_dbfs(self, resource_properties, physical_id, overwrite):
@@ -404,8 +404,8 @@ class StackApi(object):
 
         if is_dir != os.path.isdir(local_path):
             dir_or_file = 'directory' if os.path.isdir(local_path) else 'file'
-            raise StackError("local source_path '{}' is found to be a {}, but is not specified"
-                             " as one with is_dir: {}."
+            raise StackError('local source_path "{}" is found to be a {}, but is not specified'
+                             ' as one with is_dir: {}.'
                              .format(local_path, dir_or_file, str(is_dir).lower()))
         if is_dir:
             click.echo('Uploading directory from {} to DBFS at {}'.format(local_path, dbfs_path))
@@ -445,7 +445,7 @@ class StackApi(object):
 
             # Error on duplicate resource ID's
             if resource_id in seen_resource_ids:
-                raise StackError("Duplicate resource ID '{}' found, please resolve.".format(
+                raise StackError('Duplicate resource ID "{}" found, please resolve.'.format(
                     resource_id))
             seen_resource_ids.add(resource_id)
 
@@ -472,20 +472,20 @@ class StackApi(object):
                 self._assert_field_in_resource_properties(DBFS_RESOURCE_IS_DIR, resource_properties,
                                                           DBFS_SERVICE, resource_id)
             else:
-                raise StackError("Resource service '{}' not supported".format(resource_service))
+                raise StackError('Resource service "{}" not supported'.format(resource_service))
 
     def _assert_field_in_resource_properties(self, field, properties, service, resource_id):
         if field not in properties:
-            raise StackError('"{}" doesn\'t exist in "{}" of {} resource with ID "{}"'
+            raise StackError('"{}" not in "{}" of {} resource with ID "{}"'
                              .format(field, RESOURCE_PROPERTIES, service, resource_id))
 
     def _assert_field_in_resource(self, field, resource):
         if field not in resource:
-            raise StackError("{} doesn't exist in resource config".format(field))
+            raise StackError('"{}" not in resource config'.format(field))
 
     def _assert_field_in_stack_config(self, field, stack_config):
         if field not in stack_config:
-            raise StackError("'{}' not in stack config".format(field))
+            raise StackError('"{}" not in stack config'.format(field))
 
     def _validate_status(self, stack_status):
         """
@@ -527,16 +527,16 @@ class StackApi(object):
 
     def _assert_field_in_resource_physical_id(self, field, physical_id, service, resource_id):
         if field not in physical_id:
-            raise StackError('"{}" doesn\'t exist in "{}" of {} resource status with ID "{}"'
+            raise StackError('"{}" not in "{}" of {} resource status with ID "{}"'
                              .format(field, RESOURCE_PHYSICAL_ID, service, resource_id))
 
     def _assert_field_in_resource_status(self, field, resource_status):
         if field not in resource_status:
-            raise StackError('"{}" doesn\'t exist in resource status'.format(field))
+            raise StackError('"{}" not in resource status'.format(field))
 
     def _assert_field_in_stack_status(self, field, properties):
         if field not in properties:
-            raise StackError("'{}' not in stack status".format(field))
+            raise StackError('"{}" not in stack status'.format(field))
 
     def _get_resource_to_status_map(self, stack_status):
         """
