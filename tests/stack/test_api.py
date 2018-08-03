@@ -26,7 +26,6 @@
 # pylint:disable=unused-argument
 
 import os
-import json
 import copy
 import mock
 from requests.exceptions import HTTPError
@@ -37,7 +36,6 @@ import databricks_cli.stack.api as api
 import databricks_cli.workspace.api as workspace_api
 from databricks_cli.stack.exceptions import StackError
 
-TEST_STACK_PATH = 'stack/stack.json'
 TEST_JOB_SETTINGS = {
     api.JOBS_RESOURCE_NAME: 'test job'
 }
@@ -195,85 +193,6 @@ def stack_api():
 
 
 class TestStackApi(object):
-    def test_load_json_config(self, stack_api, tmpdir):
-        """
-            _load_json should read the same JSON content that was originally in the
-            stack configuration JSON.
-        """
-        stack_path = os.path.join(tmpdir.strpath, TEST_STACK_PATH)
-        os.makedirs(os.path.dirname(stack_path))
-        with open(stack_path, "w+") as f:
-            json.dump(TEST_STACK, f)
-        config = stack_api._load_json(stack_path)
-        assert config == TEST_STACK
-
-    def test_generate_stack_status_path(self, stack_api, tmpdir):
-        """
-            The _generate_stack_status_path should add the word 'deployed' between the json file
-            extension and the filename of the stack configuration file.
-        """
-        config_path = os.path.join(tmpdir.strpath, 'test.json')
-        expected_status_path = os.path.join(tmpdir.strpath, 'test.deployed.json')
-        generated_path = stack_api._generate_stack_status_path(config_path)
-        assert expected_status_path == generated_path
-
-        config_path = os.path.join(tmpdir.strpath, 'test.st-ack.json')
-        expected_status_path = os.path.join(tmpdir.strpath, 'test.st-ack.deployed.json')
-        generated_path = stack_api._generate_stack_status_path(config_path)
-        assert expected_status_path == generated_path
-
-    def test_save_load_stack_status(self, stack_api, tmpdir):
-        """
-            When saving the a stack status through _save_stack_status, it should be able to be
-            loaded by _load_stack_status and have the same exact contents.
-        """
-        config_path = os.path.join(tmpdir.strpath, 'test.json')
-        status_path = stack_api._generate_stack_status_path(config_path)
-        stack_api._save_json(status_path, TEST_STATUS)
-
-        status = stack_api._load_json(status_path)
-        assert status == TEST_STATUS
-
-    def test_deploy_relative_paths(self, stack_api, tmpdir):
-        """
-            When doing stack_api.deploy, in every call to stack_api._deploy_resource, the current
-            working directory should be the same directory as where the stack config template is
-            contained so that relative paths for resources can be relative to the stack config
-            instead of where CLI calls the API functions.
-        """
-        config_working_dir = os.path.join(tmpdir.strpath, 'stack')
-        config_path = os.path.join(config_working_dir, 'test.json')
-        os.makedirs(config_working_dir)
-        with open(config_path, 'w+') as f:
-            json.dump(TEST_STACK, f)
-
-        def _deploy_resource(resource, stack_status, **kwargs):
-            assert os.getcwd() == config_working_dir
-            return TEST_JOB_STATUS
-
-        stack_api._deploy_resource = mock.Mock(wraps=_deploy_resource)
-        stack_api.deploy(config_path)
-
-    def test_download_relative_paths(self, stack_api, tmpdir):
-        """
-            When doing stack_api.download, in every call to stack_api._deploy_resource, the current
-            working directory should be the same directory as where the stack config template is
-            contained so that relative paths for resources can be relative to the stack config
-            instead of where CLI calls the API functions.
-        """
-        config_working_dir = os.path.join(tmpdir.strpath, 'stack')
-        config_path = os.path.join(config_working_dir, 'test.json')
-        os.makedirs(config_working_dir)
-        with open(config_path, 'w+') as f:
-            json.dump(TEST_STACK, f)
-
-        def _download_resource(resource, **kwargs):
-            assert os.getcwd() == config_working_dir
-            return TEST_JOB_STATUS
-
-        stack_api._download_resource = mock.Mock(wraps=_download_resource)
-        stack_api.download(config_path)
-
     def test_deploy_job(self, stack_api):
         """
             stack_api._deploy_job should create a new job when 1) A physical_id is not given and
@@ -454,7 +373,7 @@ class TestStackApi(object):
            stack_api._deploy_resource should return relevant fields in output if deploy done
            correctly.
         """
-        # TODO(alinxie) Change this test to directly call stack_api.deploy/stack_api.deploy_config
+        # TODO(alinxie) Change this test to directly call stack_api.deploy
         # A job resource should have _deploy_resource call on _deploy_job
         stack_api._deploy_job = mock.MagicMock()
         test_job_physical_id = {api.JOBS_RESOURCE_ID: 12345}
@@ -627,14 +546,14 @@ class TestStackApi(object):
         # Run deploy command on stack and validate stack status. If there are no exceptions
         # related to validation errors for the newly generated stack status, then test
         # will pass.
-        new_stack_status_1 = stack_api.deploy_config(test_stack)
+        new_stack_status_1 = stack_api.deploy(test_stack)
         # Test some extra correctness criteria for the generated stack status.
         assert new_stack_status_1.get(api.STACK_RESOURCES) == test_stack.get(api.STACK_RESOURCES)
         for deployed_resource in new_stack_status_1.get(api.STACK_DEPLOYED):
             assert deployed_resource.get(api.RESOURCE_DEPLOY_OUTPUT) == test_deploy_output
 
         # Test that when passing in a  status that the new status generated will still be valid.
-        new_stack_status_2 = stack_api.deploy_config(test_stack, stack_status=TEST_STATUS)
+        new_stack_status_2 = stack_api.deploy(test_stack, stack_status=TEST_STATUS)
         # Test some extra correctness criteria for the generated stack status.
         assert new_stack_status_2.get(api.STACK_RESOURCES) == test_stack.get(api.STACK_RESOURCES)
         for deployed_resource in new_stack_status_2.get(api.STACK_DEPLOYED):
@@ -648,7 +567,7 @@ class TestStackApi(object):
         stack_api.workspace_client.export_workspace = mock.MagicMock()
         stack_api.workspace_client.export_workspace_dir = mock.MagicMock()
 
-        stack_api.download_from_config(TEST_STACK)
-        stack_api.download_from_config(TEST_STACK, overwrite=True)
+        stack_api.download(TEST_STACK)
+        stack_api.download(TEST_STACK, overwrite=True)
         assert stack_api.workspace_client.export_workspace.call_count == 2
         assert stack_api.workspace_client.export_workspace_dir.call_count == 2
