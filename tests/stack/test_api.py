@@ -581,8 +581,9 @@ class TestStackApi(object):
 
     def test_deploy_valid_stack_status(self, stack_api, tmpdir):
         """
-            Test valid creation of the stack status on a correctly setup stack
-            deployed through StackApi.deploy
+            The stack status generated from a correctly set up stack passed through deployment
+            in stack_api should pass the validation assertions within the deployment procedure
+            along with passing some correctness criteria that will be tested here.
         """
         test_deploy_output = {'test': 'test'}
         # Setup mocks for job resource deployment
@@ -630,32 +631,16 @@ class TestStackApi(object):
                     with open(resource_properties[api.DBFS_RESOURCE_SOURCE_PATH], 'w') as f:
                         f.write("print('test')\n")
 
-        # Run deploy command on stack and then verify stack status. Validation for the stack
-        # status is done within the deploy command, so if the function doesn't error, then
-        # the generated stack is valid.
         new_stack_status_1 = stack_api.deploy_config(test_stack)
-        # Asserting some correctness criteria for the generated stack status.
+        # new stack status should have an identical list of "resources"
         assert new_stack_status_1.get(api.STACK_RESOURCES) == test_stack.get(api.STACK_RESOURCES)
         for deployed_resource in new_stack_status_1.get(api.STACK_DEPLOYED):
             # All functions to pull the deployed output were mocked to return deploy_output
             assert deployed_resource.get(api.RESOURCE_DEPLOY_OUTPUT) == test_deploy_output
 
-        # Test that when passing in a  status that the new status generated will still be valid.
+        # stack_api.deploY_config should create a valid stack status when given an existing
+        # stack_status
         new_stack_status_2 = stack_api.deploy_config(test_stack, stack_status=TEST_STATUS)
-        # Test some extra correctness criteria for the generated stack status.
         assert new_stack_status_2.get(api.STACK_RESOURCES) == test_stack.get(api.STACK_RESOURCES)
         for deployed_resource in new_stack_status_2.get(api.STACK_DEPLOYED):
             assert deployed_resource.get(api.RESOURCE_DEPLOY_OUTPUT) == test_deploy_output
-
-    def test_download(self, stack_api):
-        """
-            stack_api.download_from_config should should call _download_resource on all of its
-            resources but only call _download_workspace on the workspace resources.
-        """
-        stack_api._download_workspace = mock.MagicMock()
-        stack_api._download_resource = mock.Mock(wraps=stack_api._download_resource)
-
-        stack_api.download_from_config(TEST_STACK)
-        # because there is only two workspace resources, _download
-        assert stack_api._download_resource.call_count == 5
-        assert stack_api._download_workspace.call_count == 2

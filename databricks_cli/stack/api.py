@@ -294,12 +294,12 @@ class StackApi(object):
         job_settings = resource_properties  # resource_properties of jobs are solely job settings.
 
         if physical_id:
-            job_id = physical_id.get('job_id')
+            job_id = physical_id.get(JOBS_RESOURCE_JOB_ID)
             self._update_job(job_settings, job_id)
         else:
             job_id = self._put_job(job_settings)
         click.echo("Job deployed on Databricks with Job ID {}".format(job_id))
-        physical_id = {'job_id': job_id}
+        physical_id = {JOBS_RESOURCE_JOB_ID: job_id}
         deploy_output = self.jobs_client.get_job(job_id)
         return physical_id, deploy_output
 
@@ -341,7 +341,7 @@ class StackApi(object):
         :param job_id: physical job_id of job in databricks server.
         """
 
-        self.jobs_client.reset_job({JOBS_RESOURCE_JOB_ID: job_id, 'new_settings': job_settings})
+        self.jobs_client.reset_job({'job_id': job_id, 'new_settings': job_settings})
 
     def _deploy_workspace(self, resource_properties, physical_id, overwrite):
         """
