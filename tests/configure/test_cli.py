@@ -39,11 +39,11 @@ TEST_HOST_2 = 'https://test2.cloud.databricks.com'
 
 def test_configure_cli():
     runner = CliRunner()
-    result = runner.invoke(cli.configure_cli,
-                           input=(TEST_HOST + '\n' +
-                                  TEST_USER + '\n' +
-                                  TEST_PASSWORD + '\n' +
-                                  TEST_PASSWORD + '\n'))
+    runner.invoke(cli.configure_cli,
+                  input=(TEST_HOST + '\n' +
+                         TEST_USER + '\n' +
+                         TEST_PASSWORD + '\n' +
+                         TEST_PASSWORD + '\n'))
     assert get_config().host == TEST_HOST
     assert get_config().username == TEST_USER
     assert get_config().password == TEST_PASSWORD
