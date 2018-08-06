@@ -23,8 +23,6 @@
 
 from click import ParamType, Option, MissingParameter, UsageError
 
-from databricks_cli.configure.provider import DEFAULT_SECTION
-
 
 class OutputClickType(ParamType):
     name = 'FORMAT'
@@ -117,6 +115,4 @@ class ContextObject(object):
         self._profile = profile
 
     def get_profile(self):
-        if self._profile is None:
-            return DEFAULT_SECTION
         return self._profile
