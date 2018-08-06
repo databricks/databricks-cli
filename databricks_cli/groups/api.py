@@ -31,6 +31,9 @@ class GroupsApi(object):
         self.client = GroupsService(api_client)
 
     def add_member(self, parent_name, user_name, group_name):
+        """
+        Only one of ``user_name`` or ``group_name`` should be provided.
+        """
         assert user_name is not None or group_name is not None
         return self.client.add_to_group(parent_name=parent_name,
                                         user_name=user_name,
@@ -49,10 +52,10 @@ class GroupsApi(object):
         return self.client.get_groups()
 
     def list_parents(self, user_name, group_name):
-        """Retrieve all groups in which a given user or group is a member.
+        """
+        Only one of ``user_name`` or ``group_name`` should be provided.
 
-        member_type is either 'group' or 'user'.
-        member_name is the name of the member.
+        Retrieve all groups in which a given user or group is a member.
 
         Note: this method is non-recursive - it will return all groups in
         which the given user or group is a member but not the groups in which
@@ -62,6 +65,9 @@ class GroupsApi(object):
         return self.client.get_groups_for_principal(user_name=user_name, group_name=group_name)
 
     def remove_member(self, parent_name, user_name, group_name):
+        """
+        Only one of ``user_name`` or ``group_name`` should be provided.
+        """
         assert user_name is not None or group_name is not None
         return self.client.remove_from_group(parent_name=parent_name,
                                              user_name=user_name,
