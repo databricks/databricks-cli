@@ -91,8 +91,11 @@ class StackApi(object):
 
         :param stack_config: Must have the fields of
         'name', the name of the stack and 'resources', a list of stack resources.
-        :param stack_status: Must have the fields of
-        :return:
+        :param stack_status: Must have the fields of 'name', the name of the stack, 'resources',
+        a list of stack resources, and 'deployed', a list of resource statuses from a previous
+        deployment.
+        :return: new_stack_status: The new stack status generated from the deployment of
+        the given stack_config.
         """
         click.echo('#' * 80)
         self._validate_config(stack_config)
