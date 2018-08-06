@@ -20,9 +20,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import os
+import pytest
+
 from mock import patch
 from databricks_cli.configure.provider import DatabricksConfig, DEFAULT_SECTION, \
-    update_and_persist_config, get_config_for_profile
+    update_and_persist_config, get_config_for_profile, get_config, \
+    set_config_provider, ProfileConfigProvider, _get_path, DatabrickConfigProvider
+from databricks_cli.utils import InvalidConfigurationError
 
 
 TEST_HOST = 'https://test.cloud.databricks.com'
@@ -117,30 +123,66 @@ def test_get_config_if_password_environment_set():
         assert config.password == TEST_PASSWORD
 
 
-class TestDatabricksConfig(object):
-    def test_from_token(self):
-        config = DatabricksConfig.from_token(TEST_HOST, TEST_TOKEN)
-        assert config.host == TEST_HOST
-        assert config.token == TEST_TOKEN
+def test_get_config_uses_default_profile():
+    config = DatabricksConfig.from_token("hosty", "hello")
+    update_and_persist_config(DEFAULT_SECTION, config)
+    config = get_config()
+    assert config.is_valid_with_token
+    assert config.host == "hosty"
+    assert config.token == "hello"
 
-    def test_from_password(self):
-        config = DatabricksConfig.from_password(TEST_HOST, TEST_USER, TEST_PASSWORD)
+
+def test_get_config_uses_env_variable():
+    with patch.dict('os.environ', {'DATABRICKS_HOST': TEST_HOST,
+                                   'DATABRICKS_USERNAME': TEST_USER,
+                                   'DATABRICKS_PASSWORD': TEST_PASSWORD}):
+        config = get_config()
         assert config.host == TEST_HOST
         assert config.username == TEST_USER
         assert config.password == TEST_PASSWORD
 
-    def test_is_valid_with_token(self):
-        config = DatabricksConfig.from_token(TEST_HOST, TEST_TOKEN)
-        assert not config.is_valid_with_password
-        assert config.is_valid_with_token
 
-    def test_is_valid_with_password(self):
-        config = DatabricksConfig.from_password(TEST_HOST, TEST_USER, TEST_PASSWORD)
-        assert config.is_valid_with_password
-        assert not config.is_valid_with_token
+def test_get_config_throw_exception_if_profile_invalid():
+    invalid_config = DatabricksConfig.from_token(None, None)
+    update_and_persist_config(DEFAULT_SECTION, invalid_config)
+    with pytest.raises(InvalidConfigurationError):
+        get_config()
 
-    def test_is_valid(self):
-        config = DatabricksConfig.from_password(TEST_HOST, TEST_USER, TEST_PASSWORD)
-        assert config.is_valid
-        config = DatabricksConfig.from_token(TEST_HOST, TEST_TOKEN)
-        assert config.is_valid
+
+def test_get_config_throw_exception_if_profile_absent():
+    assert not os.path.exists(_get_path())
+    with pytest.raises(InvalidConfigurationError):
+        get_config()
+
+
+def test_get_config_override_profile():
+    config = DatabricksConfig.from_token("yo", "lo")
+    update_and_persist_config(TEST_PROFILE, config)
+    try:
+        provider = ProfileConfigProvider(TEST_PROFILE)
+        set_config_provider(provider)
+        config = get_config()
+        assert config.host == "yo"
+        assert config.token == "lo"
+    finally:
+        set_config_provider(None)
+
+
+def test_get_config_override_custom():
+    class TestConfigProvider(DatabrickConfigProvider):
+        def get_config(self):
+            return DatabricksConfig.from_token("Override", "Token!")
+
+    try:
+        provider = TestConfigProvider()
+        set_config_provider(provider)
+        config = get_config()
+        assert config.host == "Override"
+        assert config.token == "Token!"
+    finally:
+        set_config_provider(None)
+
+
+def test_get_config_bad_override():
+    with pytest.raises(Exception):
+        set_config_provider("NotAConfigProvider")

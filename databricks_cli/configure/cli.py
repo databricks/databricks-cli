@@ -26,7 +26,7 @@ import click
 from click import ParamType
 
 from databricks_cli.configure.provider import DatabricksConfig, update_and_persist_config, \
-    get_config_for_profile
+    ProfileConfigProvider
 from databricks_cli.utils import CONTEXT_SETTINGS
 from databricks_cli.configure.config import profile_option, get_profile_from_context, debug_option
 
@@ -37,7 +37,7 @@ PROMPT_TOKEN = 'Token' #  NOQA
 
 
 def _configure_cli_token(profile, insecure):
-    config = get_config_for_profile(profile)
+    config = ProfileConfigProvider(profile).get_config() or DatabricksConfig.empty()
     host = click.prompt(PROMPT_HOST, default=config.host, type=_DbfsHost())
     token = click.prompt(PROMPT_TOKEN, default=config.token)
     new_config = DatabricksConfig.from_token(host, token, insecure)
@@ -45,7 +45,7 @@ def _configure_cli_token(profile, insecure):
 
 
 def _configure_cli_password(profile, insecure):
-    config = get_config_for_profile(profile)
+    config = ProfileConfigProvider(profile).get_config() or DatabricksConfig.empty()
     if config.password:
         default_password = '*' * len(config.password)
     else:
