@@ -557,7 +557,11 @@ class TestStackApi(object):
             # All functions to pull the deployed output were mocked to return deploy_output
             assert deployed_resource.get(api.RESOURCE_DEPLOY_OUTPUT) == test_deploy_output
 
+<<<<<<< HEAD
         # stack_api.deploy should create a valid stack status when given an existing
+=======
+        # stack_api.deploy_config should create a valid stack status when given an existing
+>>>>>>> stack-validation
         # stack_status
         new_stack_status_2 = stack_api.deploy(test_stack, stack_status=TEST_STATUS)
         assert new_stack_status_2.get(api.STACK_RESOURCES) == test_stack.get(api.STACK_RESOURCES)
