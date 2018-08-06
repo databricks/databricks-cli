@@ -498,7 +498,7 @@ class TestStackApi(object):
         }
         stack_api._download_resource(resource_badservice)
 
-    def test_deploy_valid_stack_status(self, stack_api, tmpdir):
+    def test_deploy_config(self, stack_api, tmpdir):
         """
             The stack status generated from a correctly set up stack passed through deployment
             in stack_api should pass the validation assertions within the deployment procedure
@@ -557,7 +557,11 @@ class TestStackApi(object):
             # All functions to pull the deployed output were mocked to return deploy_output
             assert deployed_resource.get(api.RESOURCE_DEPLOY_OUTPUT) == test_deploy_output
 
+<<<<<<< HEAD
         # stack_api.deploy should create a valid stack status when given an existing
+=======
+        # stack_api.deploy_config should create a valid stack status when given an existing
+>>>>>>> stack-validation
         # stack_status
         new_stack_status_2 = stack_api.deploy(test_stack, stack_status=TEST_STATUS)
         assert new_stack_status_2.get(api.STACK_RESOURCES) == test_stack.get(api.STACK_RESOURCES)
