@@ -89,7 +89,7 @@ def truncate_string(s, length=100):
 class InvalidConfigurationError(RuntimeError):
     @staticmethod
     def for_profile(profile):
-        if profile == None:
+        if profile is None:
             return InvalidConfigurationError(
                 'You haven\'t configured the CLI yet! '
                 'Please configure by entering `{} configure`'.format(sys.argv[0]))

@@ -186,7 +186,6 @@ class DatabrickConfigProvider(object):
 class DefaultConfigProvider(DatabrickConfigProvider):
     """Prefers environment variables, and then the default profile."""
     def __init__(self):
-        super(DatabrickConfigProvider, self).__init__()
         self.env_provider = EnvironmentVariableConfigProvider()
         self.default_profile_provider = ProfileConfigProvider()
 
@@ -217,7 +216,6 @@ class EnvironmentVariableConfigProvider(DatabrickConfigProvider):
 class ProfileConfigProvider(DatabrickConfigProvider):
     """Loads from the databrickscfg file."""
     def __init__(self, profile=DEFAULT_SECTION):
-        super(DatabrickConfigProvider, self).__init__()
         self.profile = profile
 
     def get_config(self):
