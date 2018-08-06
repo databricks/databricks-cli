@@ -26,7 +26,7 @@
 from click.testing import CliRunner
 
 import databricks_cli.configure.cli as cli
-from databricks_cli.configure.provider import get_config_for_profile, DEFAULT_SECTION
+from databricks_cli.configure.provider import get_config, ProfileConfigProvider
 
 TEST_HOST = 'https://test.cloud.databricks.com'
 TEST_USER = 'monkey@databricks.com'
@@ -44,18 +44,18 @@ def test_configure_cli():
                          TEST_USER + '\n' +
                          TEST_PASSWORD + '\n' +
                          TEST_PASSWORD + '\n'))
-    assert get_config_for_profile(DEFAULT_SECTION).host == TEST_HOST
-    assert get_config_for_profile(DEFAULT_SECTION).username == TEST_USER
-    assert get_config_for_profile(DEFAULT_SECTION).password == TEST_PASSWORD
+    assert get_config().host == TEST_HOST
+    assert get_config().username == TEST_USER
+    assert get_config().password == TEST_PASSWORD
 
 
 def test_configure_cli_token():
     runner = CliRunner()
     runner.invoke(cli.configure_cli, ['--token'],
                   input=(TEST_HOST + '\n' + TEST_TOKEN + '\n'))
-    assert get_config_for_profile(DEFAULT_SECTION).host == TEST_HOST
-    assert get_config_for_profile(DEFAULT_SECTION).token == TEST_TOKEN
-    assert get_config_for_profile(DEFAULT_SECTION).insecure is None
+    assert get_config().host == TEST_HOST
+    assert get_config().token == TEST_TOKEN
+    assert get_config().insecure is None
 
 
 def test_configure_two_sections():
@@ -64,16 +64,16 @@ def test_configure_two_sections():
                   input=(TEST_HOST + '\n' + TEST_TOKEN + '\n'))
     runner.invoke(cli.configure_cli, ['--token', '--profile', TEST_PROFILE],
                   input=(TEST_HOST_2 + '\n' + TEST_TOKEN + '\n'))
-    assert get_config_for_profile(DEFAULT_SECTION).host == TEST_HOST
-    assert get_config_for_profile(DEFAULT_SECTION).token == TEST_TOKEN
-    assert get_config_for_profile(TEST_PROFILE).host == TEST_HOST_2
-    assert get_config_for_profile(TEST_PROFILE).token == TEST_TOKEN
+    assert get_config().host == TEST_HOST
+    assert get_config().token == TEST_TOKEN
+    assert ProfileConfigProvider(TEST_PROFILE).get_config().host == TEST_HOST_2
+    assert ProfileConfigProvider(TEST_PROFILE).get_config().token == TEST_TOKEN
 
 
 def test_configure_cli_insecure():
     runner = CliRunner()
     runner.invoke(cli.configure_cli, ['--token', '--insecure'],
                   input=(TEST_HOST + '\n' + TEST_TOKEN + '\n'))
-    assert get_config_for_profile(DEFAULT_SECTION).host == TEST_HOST
-    assert get_config_for_profile(DEFAULT_SECTION).token == TEST_TOKEN
-    assert get_config_for_profile(DEFAULT_SECTION).insecure == 'True'
+    assert get_config().host == TEST_HOST
+    assert get_config().token == TEST_TOKEN
+    assert get_config().insecure == 'True'
