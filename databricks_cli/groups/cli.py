@@ -24,40 +24,40 @@
 
 import click
 
+from databricks_cli.click_types import OneOfOption
 from databricks_cli.groups.api import GroupsApi
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format
-from databricks_cli.configure.config import provide_api_client, profile_option
+from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.version import print_version_callback, version
 
 
+MEMBER_OPTIONS = ['user-name', 'group-name']
+
+
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help="Add an existing group to another existing group.")
+               short_help="Add an existing principal to another existing group.")
 @click.option("--parent-name", required=True,
               help=("Name of the parent group to which the new member will be "
                     " added. This field is required."))
-@click.option("--user-name", required=False,
-              help="If user_name, the user name.")
-@click.option("--group-name", required=False,
-              help="If group_name, the group name.")
+@click.option("--user-name", cls=OneOfOption, default=None, one_of=MEMBER_OPTIONS,
+              help="The user name which will be added to the parent group.")
+@click.option("--group-name", cls=OneOfOption, default=None, one_of=MEMBER_OPTIONS,
+              help="If group name which will be added to the parent group.")
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
 def add_member_cli(api_client, parent_name, user_name, group_name):
     """Add a user or group to a group."""
-    member_type = None
-    member_name = None
-    if user_name:
-        member_type = "user"
-        member_name = user_name
-    elif group_name:
-        member_type = "group"
-        member_name = group_name
-    GroupsApi(api_client).add_member(parent_name, member_type, member_name)
+    GroupsApi(api_client).add_member(parent_name=parent_name,
+                                     user_name=user_name,
+                                     group_name=group_name)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help="Create a new group with the given name.")
 @click.option("--group-name", required=True)
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -70,6 +70,7 @@ def create_cli(api_client, group_name):
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help="Return all of the members of a particular group.")
 @click.option("--group-name", required=True)
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -80,7 +81,8 @@ def list_members_cli(api_client, group_name):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help="Return all of the groups in an organization.")
+               short_help="Return all of the groups in a workspace.")
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -92,52 +94,42 @@ def list_all_cli(api_client):
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help="Retrieve all groups in which a given user or group is a member.")
-@click.option("--user-name", required=False)
-@click.option("--group-name", required=False)
+@click.option("--user-name", cls=OneOfOption, default=None, one_of=MEMBER_OPTIONS)
+@click.option("--group-name", cls=OneOfOption, default=None, one_of=MEMBER_OPTIONS)
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def list_parents_cli(api_client, user_name=None, group_name=None):
+def list_parents_cli(api_client, user_name, group_name):
     """Retrieve all groups in which a given user or group is a member."""
-    member_type = None
-    member_name = None
-    if user_name:
-        member_type = "user"
-        member_name = user_name
-    elif group_name:
-        member_type = "group"
-        member_name = group_name
-    content = GroupsApi(api_client).list_parents(member_type, member_name)
+    content = GroupsApi(api_client).list_parents(user_name=user_name,
+                                                 group_name=group_name)
     click.echo(pretty_format(content))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help="Removes a user or group from a group.")
-@click.option("--parent-name", required=True)
-@click.option("--user-name", required=False)
-@click.option("--group-name", required=False)
+@click.option("--parent-name", required=True,
+              help=("Name of the parent group to which the new member will be "
+                    " removed. This field is required."))
+@click.option("--user-name", cls=OneOfOption, default=None, one_of=MEMBER_OPTIONS,
+              help="The user name which will be removed from the parent group.")
+@click.option("--group-name", cls=OneOfOption, default=None, one_of=MEMBER_OPTIONS,
+              help="If group name which will be removed from the parent group.")
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def remove_member_cli(api_client, parent_name, user_name=None,
-                      group_name=None):
-    """Remove a user or group from a group."""
-    member_type = None
-    member_name = None
-    if user_name:
-        member_type = "user"
-        member_name = user_name
-    elif group_name:
-        member_type = "group"
-        member_name = group_name
+def remove_member_cli(api_client, parent_name, user_name, group_name):
     GroupsApi(api_client).remove_member(parent_name=parent_name,
-                                        member_type=member_type,
-                                        member_name=member_name)
+                                        user_name=user_name,
+                                        group_name=group_name)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help="Remove a group from this organization.")
 @click.option("--group-name", required=False)
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -151,6 +143,7 @@ def delete_cli(api_client, group_name):
              short_help="Utility to interact with Databricks groups.")
 @click.option("--version", "-v", is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
+@debug_option
 @profile_option
 @eat_exceptions
 def groups_group():
