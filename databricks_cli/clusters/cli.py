@@ -21,6 +21,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from json import loads as json_loads
+
 import click
 from tabulate import tabulate
 
@@ -28,7 +30,7 @@ from databricks_cli.click_types import OutputClickType, JsonClickType, ClusterId
 from databricks_cli.clusters.api import ClusterApi
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base, \
     truncate_string
-from databricks_cli.configure.config import provide_api_client, profile_option
+from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.version import print_version_callback, version
 
 
@@ -37,6 +39,7 @@ from databricks_cli.version import print_version_callback, version
               help='File containing JSON request to POST to /api/2.0/clusters/create.')
 @click.option('--json', default=None, type=JsonClickType(),
               help=JsonClickType.help('/api/2.0/clusters/create'))
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -50,10 +53,36 @@ def create_cli(api_client, json_file, json):
     json_cli_base(json_file, json, lambda json: ClusterApi(api_client).create_cluster(json))
 
 
+@click.command(context_settings=CONTEXT_SETTINGS)
+@click.option('--json-file', default=None, type=click.Path(),
+              help='File containing JSON request to POST to /api/2.0/clusters/edit.')
+@click.option('--json', default=None, type=JsonClickType(),
+              help=JsonClickType.help('/api/2.0/clusters/edit'))
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def edit_cli(api_client, json_file, json):
+    """
+    Edits a Databricks cluster.
+
+    The specification for the request json can be found at
+    https://docs.databricks.com/api/latest/clusters.html#edit
+    """
+    if not bool(json_file) ^ bool(json):
+        raise RuntimeError('Either --json-file or --json should be provided')
+    if json_file:
+        with open(json_file, 'r') as f:
+            json = f.read()
+    deser_json = json_loads(json)
+    ClusterApi(api_client).edit_cluster(deser_json)
+
+
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Starts a terminated Databricks cluster given its ID.')
 @click.option('--cluster-id', required=True, type=ClusterIdClickType(),
               help=ClusterIdClickType.help)
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -70,6 +99,7 @@ def start_cli(api_client, cluster_id):
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--cluster-id', required=True, type=ClusterIdClickType(),
               help=ClusterIdClickType.help)
+@debug_option
 @profile_option
 @provide_api_client
 @eat_exceptions
@@ -85,6 +115,7 @@ def restart_cli(api_client, cluster_id):
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--cluster-id', required=True, type=ClusterIdClickType(),
               help=ClusterIdClickType.help)
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -104,6 +135,7 @@ def delete_cli(api_client, cluster_id):
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--cluster-id', required=True, type=ClusterIdClickType(),
               help=ClusterIdClickType.help)
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -124,6 +156,7 @@ def _clusters_to_table(clusters_json):
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Lists active and recently terminated clusters.')
 @click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -150,6 +183,7 @@ def list_cli(api_client, output):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -165,6 +199,7 @@ def list_zones_cli(api_client):
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Lists possible node types for a cluster.')
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -179,6 +214,7 @@ def list_node_types_cli(api_client):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
+@debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
@@ -196,6 +232,7 @@ def spark_versions_cli(api_client):
              short_help='Utility to interact with Databricks clusters.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
+@debug_option
 @profile_option
 @eat_exceptions
 def clusters_group():
@@ -206,6 +243,7 @@ def clusters_group():
 
 
 clusters_group.add_command(create_cli, name='create')
+clusters_group.add_command(edit_cli, name='edit')
 clusters_group.add_command(start_cli, name='start')
 clusters_group.add_command(restart_cli, name='restart')
 clusters_group.add_command(delete_cli, name='delete')

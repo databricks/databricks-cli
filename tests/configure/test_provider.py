@@ -20,8 +20,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from mock import patch
 from databricks_cli.configure.provider import DatabricksConfig, DEFAULT_SECTION, \
     update_and_persist_config, get_config_for_profile
+
 
 TEST_HOST = 'https://test.cloud.databricks.com'
 TEST_USER = 'monkey@databricks.com'
@@ -94,6 +96,25 @@ def test_get_config_for_profile_empty():
     assert config.username is None
     assert config.password is None
     assert config.token is None
+
+
+def test_get_config_if_token_environment_set():
+
+    with patch.dict('os.environ', {'DATABRICKS_HOST': TEST_HOST,
+                                   'DATABRICKS_TOKEN': TEST_TOKEN}):
+        config = get_config_for_profile(TEST_PROFILE)
+        assert config.host == TEST_HOST
+        assert config.token == TEST_TOKEN
+
+
+def test_get_config_if_password_environment_set():
+    with patch.dict('os.environ', {'DATABRICKS_HOST': TEST_HOST,
+                                   'DATABRICKS_USERNAME': TEST_USER,
+                                   'DATABRICKS_PASSWORD': TEST_PASSWORD}):
+        config = get_config_for_profile(TEST_PROFILE)
+        assert config.host == TEST_HOST
+        assert config.username == TEST_USER
+        assert config.password == TEST_PASSWORD
 
 
 class TestDatabricksConfig(object):

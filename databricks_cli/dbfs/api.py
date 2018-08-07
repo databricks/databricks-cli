@@ -127,3 +127,100 @@ class DbfsApi(object):
 
     def move(self, dbfs_src, dbfs_dst):
         self.client.move(dbfs_src.absolute_path, dbfs_dst.absolute_path)
+
+    def _copy_to_dbfs_non_recursive(self, src, dbfs_path_dst, overwrite):
+        # Munge dst path in case dbfs_path_dst is a dir
+        try:
+            if self.get_status(dbfs_path_dst).is_dir:
+                dbfs_path_dst = dbfs_path_dst.join(os.path.basename(src))
+        except HTTPError as e:
+            if e.response.json()['error_code'] == DbfsErrorCodes.RESOURCE_DOES_NOT_EXIST:
+                pass
+            else:
+                raise e
+        self.put_file(src, dbfs_path_dst, overwrite)
+
+    def _copy_from_dbfs_non_recursive(self, dbfs_path_src, dst, overwrite):
+        # Munge dst path in case dst is a dir
+        if os.path.isdir(dst):
+            dst = os.path.join(dst, dbfs_path_src.basename)
+        self.get_file(dbfs_path_src, dst, overwrite)
+
+    def _copy_to_dbfs_recursive(self, src, dbfs_path_dst, overwrite):
+        try:
+            self.mkdirs(dbfs_path_dst)
+        except HTTPError as e:
+            if e.response.json()['error_code'] == DbfsErrorCodes.RESOURCE_ALREADY_EXISTS:
+                click.echo(e.response.json())
+                return
+        for filename in os.listdir(src):
+            cur_src = os.path.join(src, filename)
+            cur_dbfs_dst = dbfs_path_dst.join(filename)
+            if os.path.isdir(cur_src):
+                self._copy_to_dbfs_recursive(cur_src, cur_dbfs_dst, overwrite)
+            elif os.path.isfile(cur_src):
+                try:
+                    self.put_file(cur_src, cur_dbfs_dst, overwrite)
+                    click.echo('{} -> {}'.format(cur_src, cur_dbfs_dst))
+                except HTTPError as e:
+                    if e.response.json()['error_code'] == DbfsErrorCodes.RESOURCE_ALREADY_EXISTS:
+                        click.echo('{} already exists. Skip.'.format(cur_dbfs_dst))
+                    else:
+                        raise e
+
+    def _copy_from_dbfs_recursive(self, dbfs_path_src, dst, overwrite):
+        if os.path.isfile(dst):
+            click.echo(
+                '{} exists as a file. Skipping this subtree {}'.format(dst, repr(dbfs_path_src)))
+            return
+        elif not os.path.isdir(dst):
+            os.makedirs(dst)
+
+        for dbfs_src_file_info in self.list_files(dbfs_path_src):
+            cur_dbfs_src = dbfs_src_file_info.dbfs_path
+            cur_dst = os.path.join(dst, cur_dbfs_src.basename)
+            if dbfs_src_file_info.is_dir:
+                self._copy_from_dbfs_recursive(cur_dbfs_src, cur_dst, overwrite)
+            else:
+                try:
+                    self.get_file(cur_dbfs_src, cur_dst, overwrite)
+                    click.echo('{} -> {}'.format(cur_dbfs_src, cur_dst))
+                except LocalFileExistsException:
+                    click.echo(('{} already exists locally as {}. Skip. To overwrite, you' +
+                                'should provide the --overwrite flag.').format(cur_dbfs_src,
+                                                                               cur_dst))
+
+    def cp(self, recursive, overwrite, src, dst):
+        if not DbfsPath.is_valid(src) and DbfsPath.is_valid(dst):
+            if not os.path.exists(src):
+                error_and_quit('The local file {} does not exist.'.format(src))
+            if not recursive:
+                if os.path.isdir(src):
+                    error_and_quit(
+                        ('The local file {} is a directory. You must provide --recursive')
+                        .format(src))
+                self._copy_to_dbfs_non_recursive(src, DbfsPath(dst), overwrite)
+            else:
+                if not os.path.isdir(src):
+                    self._copy_to_dbfs_non_recursive(src, DbfsPath(dst), overwrite)
+                    return
+                self._copy_to_dbfs_recursive(src, DbfsPath(dst), overwrite)
+        # Copy from DBFS in this case
+        elif DbfsPath.is_valid(src) and not DbfsPath.is_valid(dst):
+            if not recursive:
+                self._copy_from_dbfs_non_recursive(DbfsPath(src), dst, overwrite)
+            else:
+                dbfs_path_src = DbfsPath(src)
+                if not self.get_status(dbfs_path_src).is_dir:
+                    self._copy_from_dbfs_non_recursive(dbfs_path_src, dst, overwrite)
+                self._copy_from_dbfs_recursive(dbfs_path_src, dst, overwrite)
+        elif not DbfsPath.is_valid(src) and not DbfsPath.is_valid(dst):
+            error_and_quit('Both paths provided are from your local filesystem. '
+                           'To use this utility, one of the src or dst must be prefixed '
+                           'with dbfs:/')
+        elif DbfsPath.is_valid(src) and DbfsPath.is_valid(dst):
+            error_and_quit('Both paths provided are from the DBFS filesystem. '
+                           'To copy between the DBFS filesystem, you currently must copy the '
+                           'file from DBFS to your local filesystem and then back.')
+        else:
+            assert False, 'not reached'

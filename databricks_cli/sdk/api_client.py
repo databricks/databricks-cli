@@ -62,8 +62,8 @@ class ApiClient(object):
     A partial Python implementation of dbc rest api
     to be used by different versions of the client.
     """
-    def __init__(self, user = None, password = None, host = None, token = None,
-                 apiVersion = version.API_VERSION, default_headers = {}, verify = True):
+    def __init__(self, user=None, password=None, host=None, token=None,
+                 apiVersion=version.API_VERSION, default_headers={}, verify=True, command_name=""):
         if host[-1] == "/":
             host = host[:-1]
 
@@ -79,7 +79,8 @@ class ApiClient(object):
             auth = {'Authorization': 'Bearer {}'.format(token), 'Content-Type': 'text/json'}
         else:
             auth = {}
-        user_agent = {'user-agent': 'databricks-cli-{v}'.format(v=databricks_cli_version)}
+        user_agent = {'user-agent': 'databricks-cli-{v}-{c}'.format(v=databricks_cli_version,
+                                                                    c=command_name)}
         self.default_headers = {}
         self.default_headers.update(auth)
         self.default_headers.update(default_headers)

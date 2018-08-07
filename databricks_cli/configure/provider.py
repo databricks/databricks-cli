@@ -97,6 +97,13 @@ def get_config_for_profile(profile):
     exist, then return a DatabricksConfig with fields set.
     :return: DatabricksConfig
     """
+    if is_environment_set():
+        host = os.environ.get('DATABRICKS_HOST')
+        username = os.environ.get('DATABRICKS_USERNAME')
+        password = os.environ.get('DATABRICKS_PASSWORD')
+        token = os.environ.get('DATABRICKS_TOKEN')
+        insecure = os.environ.get('DATABRICKS_INSECURE')
+        return DatabricksConfig(host, username, password, token, insecure)
     raw_config = _fetch_from_fs()
     host = _get_option_if_exists(raw_config, profile, HOST)
     username = _get_option_if_exists(raw_config, profile, USERNAME)
@@ -104,6 +111,15 @@ def get_config_for_profile(profile):
     token = _get_option_if_exists(raw_config, profile, TOKEN)
     insecure = _get_option_if_exists(raw_config, profile, INSECURE)
     return DatabricksConfig(host, username, password, token, insecure)
+
+
+def is_environment_set():
+    token_exists = (os.environ.get('DATABRICKS_HOST')
+                    and os.environ.get('DATABRICKS_TOKEN'))
+    password_exists = (os.environ.get('DATABRICKS_HOST')
+                       and os.environ.get('DATABRICKS_USERNAME')
+                       and os.environ.get('DATABRICKS_PASSWORD'))
+    return token_exists or password_exists
 
 
 class DatabricksConfig(object):
