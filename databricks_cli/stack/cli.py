@@ -103,7 +103,7 @@ def deploy(api_client, config_path, **kwargs):
     os.chdir(cli_dir)
     click.echo("Saving stack status to {}".format(status_path))
     _save_json(status_path, new_stack_status)
-    click.echo('Warning- The stack status file is an automatically generated file that is'
+    click.echo('Note: The stack status file is an automatically generated file that is'
                ' depended on for the databricks stack CLI to function correctly.'
                ' Please do not edit the file.')
     click.echo('#' * 80)

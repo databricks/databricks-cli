@@ -37,7 +37,7 @@ from tests.stack.test_api import TEST_STATUS, TEST_STACK
 TEST_STACK_PATH = 'stack/stack.json'
 
 
-def _write_stack(tmpdir):
+def _write_test_stack_config(tmpdir):
     """
     Utility function to store the stack config in the filesystem and returns the config path.
     """
@@ -63,7 +63,7 @@ def test_deploy_kwargs(stack_api_mock, tmpdir):
     Calling the cli.deploy command should call the deploy function of the stack API and
     pass in possible kwargs into deploy function
     """
-    config_path = _write_stack(tmpdir)
+    config_path = _write_test_stack_config(tmpdir)
     stack_api_mock.deploy = mock.MagicMock()
     runner = CliRunner()
     runner.invoke(cli.deploy, ['--overwrite', config_path])
@@ -79,7 +79,7 @@ def test_download_kwargs(stack_api_mock, tmpdir):
     Calling the cli.deploy command should call the deploy function of the stack API and
     pass in possible kwargs into deploy function
     """
-    config_path = _write_stack(tmpdir)
+    config_path = _write_test_stack_config(tmpdir)
     stack_api_mock.download = mock.MagicMock()
     runner = CliRunner()
     runner.invoke(cli.download, ['--overwrite', config_path])
@@ -95,7 +95,7 @@ def test_deploy_default_kwargs(stack_api_mock, tmpdir):
     Calling the cli.deploy command without flags should call the deploy function of the stack API
     and pass in default kwargs into deploy function
     """
-    config_path = _write_stack(tmpdir)
+    config_path = _write_test_stack_config(tmpdir)
     stack_api_mock.deploy = mock.MagicMock()
     runner = CliRunner()
     runner.invoke(cli.deploy, [config_path])
@@ -111,7 +111,7 @@ def test_download_default_kwargs(stack_api_mock, tmpdir):
     Calling the cli.deploy command should call the deploy function of the stack API and
     pass in possible kwargs into deploy function
     """
-    config_path = _write_stack(tmpdir)
+    config_path = _write_test_stack_config(tmpdir)
     stack_api_mock.download = mock.MagicMock()
     runner = CliRunner()
     runner.invoke(cli.download, [config_path])
@@ -129,7 +129,7 @@ def test_deploy_relative_paths(stack_api_mock, tmpdir):
         contained so that relative paths for resources can be relative to the stack config
         instead of where CLI calls the API functions.
     """
-    config_path = _write_stack(tmpdir)
+    config_path = _write_test_stack_config(tmpdir)
     config_working_dir = os.path.dirname(config_path)
 
     def _deploy(*args, **kwargs):
@@ -148,7 +148,7 @@ def test_download_relative_paths(stack_api_mock, tmpdir):
         contained so that relative paths for resources can be relative to the stack config
         instead of where CLI calls the API functions.
     """
-    config_path = _write_stack(tmpdir)
+    config_path = _write_test_stack_config(tmpdir)
     config_working_dir = os.path.dirname(config_path)
 
     def _download(*args, **kwargs):
