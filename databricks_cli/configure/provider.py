@@ -154,8 +154,8 @@ def set_config_provider(provider):
     used by the Databricks CLI code to discover the user's credentials.
     """
     global _config_provider
-    if provider and not isinstance(provider, DatabrickConfigProvider):
-        raise Exception('Must be instance of DatabrickConfigProvider: %s' % _config_provider)
+    if provider and not isinstance(provider, DatabricksConfigProvider):
+        raise Exception('Must be instance of DatabricksConfigProvider: %s' % _config_provider)
     _config_provider = provider
 
 
@@ -168,7 +168,7 @@ def get_config_provider():
     return _config_provider
 
 
-class DatabrickConfigProvider(object):
+class DatabricksConfigProvider(object):
     """
     Responsible for providing hostname and authentication information to make
     API requests against the Databricks REST API.
@@ -183,7 +183,7 @@ class DatabrickConfigProvider(object):
         pass
 
 
-class DefaultConfigProvider(DatabrickConfigProvider):
+class DefaultConfigProvider(DatabricksConfigProvider):
     """Prefers environment variables, and then the default profile."""
     def __init__(self):
         self.env_provider = EnvironmentVariableConfigProvider()
@@ -199,7 +199,7 @@ class DefaultConfigProvider(DatabrickConfigProvider):
             return profile_config
 
 
-class EnvironmentVariableConfigProvider(DatabrickConfigProvider):
+class EnvironmentVariableConfigProvider(DatabricksConfigProvider):
     """Loads from system environment variables."""
     def get_config(self):
         host = os.environ.get('DATABRICKS_HOST')
@@ -213,7 +213,7 @@ class EnvironmentVariableConfigProvider(DatabrickConfigProvider):
         return None
 
 
-class ProfileConfigProvider(DatabrickConfigProvider):
+class ProfileConfigProvider(DatabricksConfigProvider):
     """Loads from the databrickscfg file."""
     def __init__(self, profile=DEFAULT_SECTION):
         self.profile = profile

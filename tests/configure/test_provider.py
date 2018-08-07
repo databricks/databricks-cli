@@ -27,7 +27,7 @@ import pytest
 from mock import patch
 from databricks_cli.configure.provider import DatabricksConfig, DEFAULT_SECTION, \
     update_and_persist_config, get_config_for_profile, get_config, \
-    set_config_provider, ProfileConfigProvider, _get_path, DatabrickConfigProvider
+    set_config_provider, ProfileConfigProvider, _get_path, DatabricksConfigProvider
 from databricks_cli.utils import InvalidConfigurationError
 
 
@@ -169,7 +169,7 @@ def test_get_config_override_profile():
 
 
 def test_get_config_override_custom():
-    class TestConfigProvider(DatabrickConfigProvider):
+    class TestConfigProvider(DatabricksConfigProvider):
         def get_config(self):
             return DatabricksConfig.from_token("Override", "Token!")
 
