@@ -3,6 +3,9 @@ This example goes through deploying a stack containing a notebook and a job to a
 The "Hello, world" Notebook will go into the `Shared` directory of the workspace and a job will be created
 (or updated) on deploy.
 
+The example commands shown is for the `sample-aws-stack-nb.json` file which is only compatible with an
+AWS workspace. For an azure workspace, use the `sample-azure-stack-nb.json` file in the commands instead.
+
 Note: The Databricks Stack CLI is still in beta, so command names or JSON fields are subject to change.
 
 ## Setup
