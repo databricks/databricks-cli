@@ -64,15 +64,25 @@ def group_api_mock():
 
 
 @provide_conf
+def test_add_member_validation(group_api_mock):
+    runner = CliRunner()
+    runner.invoke(cli.add_member_cli,
+                  ["--parent-name", TEST_PARENT_GROUP,
+                   "--user-name", TEST_USER,
+                   "--group-name", TEST_GROUP])
+    assert group_api_mock.add_member.call_count == 0
+
+
+@provide_conf
 def test_add_user_to_group(group_api_mock):
     runner = CliRunner()
     runner.invoke(cli.add_member_cli,
                   ["--parent-name", TEST_PARENT_GROUP,
                    "--user-name", TEST_USER])
     group_api_mock.add_member.assert_called_once_with(
-        TEST_PARENT_GROUP,
-        'user',
-        TEST_USER
+        parent_name=TEST_PARENT_GROUP,
+        user_name=TEST_USER,
+        group_name=None
     )
 
 
@@ -83,9 +93,9 @@ def test_add_group_to_parent_group(group_api_mock):
                   ["--parent-name", TEST_PARENT_GROUP,
                    "--group-name", TEST_GROUP])
     group_api_mock.add_member.assert_called_once_with(
-        TEST_PARENT_GROUP,
-        'group',
-        TEST_GROUP
+        parent_name=TEST_PARENT_GROUP,
+        user_name=None,
+        group_name=TEST_GROUP,
     )
 
 
@@ -122,8 +132,7 @@ def test_list_group_parents_cli(group_api_mock):
         group_api_mock.list_parents.return_value = GROUP_PARENTS
         runner = CliRunner()
         runner.invoke(cli.list_parents_cli, ['--group-name', TEST_GROUP])
-        group_api_mock.list_parents.assert_called_once_with('group',
-                                                            TEST_GROUP)
+        group_api_mock.list_parents.assert_called_once_with(user_name=None, group_name=TEST_GROUP)
         echo_mock.assert_called_once_with(pretty_format(GROUP_PARENTS))
 
 
@@ -133,7 +142,7 @@ def test_list_user_groups_cli(group_api_mock):
         group_api_mock.list_parents.return_value = GROUPS
         runner = CliRunner()
         runner.invoke(cli.list_parents_cli, ['--user-name', TEST_USER])
-        group_api_mock.list_parents.assert_called_once_with('user', TEST_USER)
+        group_api_mock.list_parents.assert_called_once_with(user_name=TEST_USER, group_name=None)
         echo_mock.assert_called_once_with(pretty_format(GROUPS))
 
 
@@ -144,8 +153,8 @@ def test_remove_user_from_group_cli(group_api_mock):
                                           "--user-name", TEST_USER])
     group_api_mock.remove_member.assert_called_once_with(
         parent_name=TEST_PARENT_GROUP,
-        member_type='user',
-        member_name=TEST_USER
+        user_name=TEST_USER,
+        group_name=None,
     )
 
 
@@ -156,8 +165,8 @@ def test_remove_group_from_parent_cli(group_api_mock):
                                           "--group-name", TEST_GROUP])
     group_api_mock.remove_member.assert_called_once_with(
         parent_name=TEST_PARENT_GROUP,
-        member_type='group',
-        member_name=TEST_GROUP
+        user_name=None,
+        group_name=TEST_GROUP,
     )
 
 
