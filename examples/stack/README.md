@@ -26,12 +26,12 @@ $ stack_cli deploy --profile <profile_name> sample-aws-stack-nb.json
 If you have made changes to the notebook on workspace and want to download these changes locally,
 run this command:
 ```
-$ stack_cli download --profile <profile_name> -o sample-aws-stack-nb.json
+$ stack_cli download --profile <profile_name> --overwrite sample-aws-stack-nb.json
 ```
 
 ## Update Deployment
 If you have made changes to the notebook source code or job configurations locally, you can
 run this command to update the stack on your workspace.
 ```
-$ stack_cli deploy --profile <profile_name> -o sample-aws-stack-nb.json
+$ stack_cli deploy --profile <profile_name> --overwrite sample-aws-stack-nb.json
 ```
