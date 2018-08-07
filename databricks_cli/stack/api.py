@@ -46,14 +46,14 @@ DBFS_SERVICE = 'dbfs'
 # Config Outer Fields
 STACK_NAME = 'name'
 STACK_RESOURCES = 'resources'
-STACK_DEPLOYED = 'deployed'
+STACK_DEPLOYED = 'deployed'  # For Stack Status
 
 # Resource Fields
 RESOURCE_ID = 'id'
 RESOURCE_SERVICE = 'service'
 RESOURCE_PROPERTIES = 'properties'
 
-# Deployed Resource Fields
+# Resource Status Fields
 RESOURCE_PHYSICAL_ID = 'physical_id'
 RESOURCE_DEPLOY_OUTPUT = 'deploy_output'
 RESOURCE_DEPLOY_TIMESTAMP = 'timestamp'
