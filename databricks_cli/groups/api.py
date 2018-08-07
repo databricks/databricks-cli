@@ -34,7 +34,7 @@ class GroupsApi(object):
         """
         Only one of ``user_name`` or ``group_name`` should be provided.
         """
-        assert user_name is not None or group_name is not None
+        assert bool(user_name is not None) ^ bool(group_name is not None)
         return self.client.add_to_group(parent_name=parent_name,
                                         user_name=user_name,
                                         group_name=group_name)
@@ -61,14 +61,14 @@ class GroupsApi(object):
         which the given user or group is a member but not the groups in which
         those groups are members).
         """
-        assert user_name is not None or group_name is not None
+        assert bool(user_name is not None) ^ bool(group_name is not None)
         return self.client.get_groups_for_principal(user_name=user_name, group_name=group_name)
 
     def remove_member(self, parent_name, user_name, group_name):
         """
         Only one of ``user_name`` or ``group_name`` should be provided.
         """
-        assert user_name is not None or group_name is not None
+        assert bool(user_name is not None) ^ bool(group_name is not None)
         return self.client.remove_from_group(parent_name=parent_name,
                                              user_name=user_name,
                                              group_name=group_name)
