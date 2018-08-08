@@ -78,7 +78,7 @@ def _save_json(path, data):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Deploy stack given a JSON configuration of the stack')
+               short_help='Deploy a stack given a JSON configuration of the stack')
 @click.argument('config_path', type=click.Path(exists=True), required=True)
 @click.option('--overwrite', '-o', is_flag=True, default=False, show_default=True,
               help='Include to overwrite existing workspace notebooks and dbfs files')
@@ -89,6 +89,13 @@ def _save_json(path, data):
 def deploy(api_client, config_path, **kwargs):
     """
     Deploy a stack to the databricks workspace given a JSON stack configuration template.
+
+    After deployment, a stack status will be saves at <config_file_name>.deployed.json. Please
+    do not edit or move the file as it is generated through the CLI and is used for future
+    deployments of the stack. If you run into errors with the stack status at deployment,
+    please delete the stack status file and try the deployment again. If the problem persists,
+    please raise a Github issue on the Databricks CLI repository at
+    https://www.github.com/databricks/databricks-cli/issues
     """
     click.echo('#' * 80)
     click.echo('Deploying stack at: {} with options: {}'.format(config_path, kwargs))
@@ -110,7 +117,7 @@ def deploy(api_client, config_path, **kwargs):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Download stack given a JSON configuration of the stack')
+               short_help='Download stack notebooks given a JSON configuration of the stack')
 @click.argument('config_path', type=click.Path(exists=True), required=True)
 @click.option('--overwrite', '-o', is_flag=True, help='Include to overwrite existing'
                                                       ' notebooks in the local filesystem.')
@@ -120,7 +127,8 @@ def deploy(api_client, config_path, **kwargs):
 @provide_api_client
 def download(api_client, config_path, **kwargs):
     """
-    Download a stack to the local filesystem given a JSON stack configuration template.
+    Download workspace notebooks of a stack to the local filesystem given a JSON stack
+    configuration template.
     """
     click.echo('#' * 80)
     click.echo('Downloading stack at: {} with options: {}'.format(config_path, kwargs))
