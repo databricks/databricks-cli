@@ -1,4 +1,4 @@
-# Stack CLI Quickstart
+# Stack CLI Quick Start
 This example goes through deploying a stack containing a notebook and a job to a Databricks workspace through the Stack CLI (`databricks stack`).
 The "Hello, world" Notebook will go into the `Shared` directory of the workspace and a job will be created
 (or updated) on deploy.
@@ -19,7 +19,7 @@ $ databricks configure --token --profile <profile_name>
 ### Download Repo, Navigate to Example Folder
 ```
 $ git clone https://github.com/databricks/databricks-cli.git
-$ cd databricks-cli/examples/stack
+$ cd databricks-cli/examples/stack/quickstart
 ```
 
 ## Initial Deployment of Stack

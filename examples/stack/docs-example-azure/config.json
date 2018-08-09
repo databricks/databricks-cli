@@ -1,0 +1,49 @@
+    {
+      "name": "example-stack",
+      "resources": [
+        {
+          "id": "example-workspace-notebook",
+          "service": "workspace",
+          "properties": {
+            "source_path": "notebooks/common/notebook.scala",
+            "path": "/Users/andrew.linxie@databricks.com/dev/notebook",
+            "object_type": "NOTEBOOK"
+          }
+        },
+        {
+          "id": "example-workspace-config-dir",
+          "service": "workspace",
+          "properties": {
+            "source_path": "notebooks/config",
+            "path": "/Users/andrew.linxie@databricks.com/dev/config",
+            "object_type": "DIRECTORY"
+          }
+        },
+        {
+          "id": "example-dbfs-library",
+          "service": "dbfs",
+          "properties": {
+            "source_path": "lib/library.jar",
+            "path": "dbfs:/tmp/lib/library.jar",
+            "is_dir": false
+          }
+        },
+        {
+          "id": "example-job",
+          "service": "jobs",
+          "properties": {
+            "name": "Example Stack CLI Job",
+            "new_cluster": {
+              "spark_version": "4.0.x-scala2.11",
+              "node_type_id": "Standard_DS3_v2",
+              "num_workers": 3
+            },
+            "timeout_seconds": 7200,
+            "max_retries": 1,
+            "notebook_task": {
+              "notebook_path": "/Users/andrew.linxie@databricks.com/dev/notebook"
+            }
+          }
+        }
+      ]
+    }
