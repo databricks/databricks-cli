@@ -152,7 +152,7 @@ def test_get_config_uses_path_env_variable(tmpdir):
         host = {host}
         token = {token}
         """.format(host="hosty", token="hello")))
-    with patch.dict('os.environ', {'DATABRICKS_CFG_PATH': cfg_file}):
+    with patch.dict('os.environ', {'DATABRICKS_CONFIG_FILE': cfg_file}):
         config = get_config()
     assert config.is_valid_with_token
     assert config.host == "hosty"

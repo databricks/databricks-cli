@@ -36,14 +36,14 @@ PASSWORD = 'password' # NOQA
 TOKEN = 'token'
 INSECURE = 'insecure'
 DEFAULT_SECTION = 'DEFAULT'
-CONFIG_PATH_ENV_VAR = "DATABRICKS_CFG_PATH"
+CONFIG_FILE_ENV_VAR = "DATABRICKS_CONFIG_FILE"
 
 # User-provided override for the DatabricksConfigProvider
 _config_provider = None
 
 
 def _get_path():
-    return os.environ.get(CONFIG_PATH_ENV_VAR, join(_home, '.databrickscfg'))
+    return os.environ.get(CONFIG_FILE_ENV_VAR, join(_home, '.databrickscfg'))
 
 
 def _fetch_from_fs():
