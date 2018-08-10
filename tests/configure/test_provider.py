@@ -22,7 +22,6 @@
 # limitations under the License.
 
 import os
-import textwrap
 
 from mock import patch
 import pytest
