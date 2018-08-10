@@ -22,9 +22,11 @@
 # limitations under the License.
 
 import os
-import pytest
+import textwrap
 
 from mock import patch
+import pytest
+
 from databricks_cli.configure.provider import DatabricksConfig, DEFAULT_SECTION, \
     update_and_persist_config, get_config_for_profile, get_config, \
     set_config_provider, ProfileConfigProvider, _get_path, DatabricksConfigProvider
@@ -140,6 +142,21 @@ def test_get_config_uses_env_variable():
         assert config.host == TEST_HOST
         assert config.username == TEST_USER
         assert config.password == TEST_PASSWORD
+
+
+def test_get_config_uses_path_env_variable(tmpdir):
+    cfg_file = tmpdir.join("some-cfg-path").strpath
+    with open(cfg_file, "w") as handle:
+        handle.write(textwrap.dedent("""
+        [DEFAULT]
+        host = {host}
+        token = {token}
+        """.format(host="hosty", token="hello")))
+    with patch.dict('os.environ', {'DATABRICKS_CFG_PATH': cfg_file}):
+        config = get_config()
+    assert config.is_valid_with_token
+    assert config.host == "hosty"
+    assert config.token == "hello"
 
 
 def test_get_config_throw_exception_if_profile_invalid():
