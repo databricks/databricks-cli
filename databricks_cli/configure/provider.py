@@ -30,6 +30,7 @@ from databricks_cli.utils import InvalidConfigurationError
 
 
 _home = expanduser('~')
+CONFIG_FILE_ENV_VAR = "DATABRICKS_CONFIG_FILE"
 HOST = 'host'
 USERNAME = 'username'
 PASSWORD = 'password' # NOQA
@@ -42,7 +43,7 @@ _config_provider = None
 
 
 def _get_path():
-    return join(_home, '.databrickscfg')
+    return os.environ.get(CONFIG_FILE_ENV_VAR, join(_home, '.databrickscfg'))
 
 
 def _fetch_from_fs():
