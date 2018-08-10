@@ -30,13 +30,13 @@ from databricks_cli.utils import InvalidConfigurationError
 
 
 _home = expanduser('~')
+CONFIG_FILE_ENV_VAR = "DATABRICKS_CONFIG_FILE"
 HOST = 'host'
 USERNAME = 'username'
 PASSWORD = 'password' # NOQA
 TOKEN = 'token'
 INSECURE = 'insecure'
 DEFAULT_SECTION = 'DEFAULT'
-CONFIG_FILE_ENV_VAR = "DATABRICKS_CONFIG_FILE"
 
 # User-provided override for the DatabricksConfigProvider
 _config_provider = None
