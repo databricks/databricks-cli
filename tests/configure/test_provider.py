@@ -146,14 +146,12 @@ def test_get_config_uses_env_variable():
 
 def test_get_config_uses_path_env_variable(tmpdir):
     cfg_file = tmpdir.join("some-cfg-path").strpath
-    with open(cfg_file, "w") as handle:
-        handle.write(textwrap.dedent("""
-        [DEFAULT]
-        host = {host}
-        token = {token}
-        """.format(host="hosty", token="hello")))
     with patch.dict('os.environ', {'DATABRICKS_CONFIG_FILE': cfg_file}):
+        config = DatabricksConfig.from_token("hosty", "hello")
+        update_and_persist_config(DEFAULT_SECTION, config)
         config = get_config()
+    assert os.path.exists(cfg_file)
+    assert not os.path.exists(_get_path())
     assert config.is_valid_with_token
     assert config.host == "hosty"
     assert config.token == "hello"
