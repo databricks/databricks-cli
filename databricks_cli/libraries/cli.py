@@ -93,10 +93,14 @@ def list_cli(api_client, cluster_id):
         _all_cluster_statuses(api_client)
 
 
-INSTALL_OPTIONS = ['jar', 'egg', 'maven-coordinates', 'pypi-package', 'cran-package']
+INSTALL_OPTIONS = ['jar', 'egg', 'whl', 'maven-coordinates', 'pypi-package', 'cran-package']
 UNINSTALL_OPTIONS = ['all'] + INSTALL_OPTIONS
 JAR_HELP = 'JAR on DBFS or S3 or WASB.'
 EGG_HELP = 'Egg on DBFS or S3 or WASB.'
+WHEEL_HELP = """
+Wheel or zipped wheelhouse on DBFS or S3 or WASB. Only recommended for clusters running
+Databricks Runtime 4.2 or higher.
+"""
 MAVEN_COORDINATES_HELP = """
 Maven coordinates in the form of GroupId:ArtifactId:Version (i.e. org.jsoup:jsoup:1.7.2).
 """
@@ -123,13 +127,15 @@ The repository where the package can be found. If not specified, the default CRA
 """
 
 
-def _get_library_from_options(jar, egg, maven_coordinates, maven_repo, maven_exclusion, # noqa
+def _get_library_from_options(jar, egg, whl, maven_coordinates, maven_repo, maven_exclusion, # noqa
                               pypi_package, pypi_repo, cran_package, cran_repo):
     maven_exclusion = list(maven_exclusion)
     if jar is not None:
         return {'jar': jar}
     elif egg is not None:
         return {'egg': egg}
+    elif whl is not None:
+        return {'whl': whl}
     elif maven_coordinates is not None:
         maven_library = {'maven': {'coordinates': maven_coordinates}}
         if maven_repo is not None:
@@ -156,6 +162,7 @@ def _get_library_from_options(jar, egg, maven_coordinates, maven_repo, maven_exc
               help=ClusterIdClickType.help)
 @click.option('--jar', cls=OneOfOption, one_of=INSTALL_OPTIONS, help=JAR_HELP)
 @click.option('--egg', cls=OneOfOption, one_of=INSTALL_OPTIONS, help=EGG_HELP)
+@click.option('--whl', cls=OneOfOption, one_of=INSTALL_OPTIONS, help=WHEEL_HELP)
 @click.option('--maven-coordinates', cls=OneOfOption, one_of=INSTALL_OPTIONS,
               help=MAVEN_COORDINATES_HELP)
 @click.option('--maven-repo', help=MAVEN_REPO_HELP)
@@ -168,18 +175,30 @@ def _get_library_from_options(jar, egg, maven_coordinates, maven_repo, maven_exc
 @profile_option
 @eat_exceptions # noqa
 @provide_api_client
-def install_cli(api_client, cluster_id, jar, egg, maven_coordinates, maven_repo, maven_exclusion, # noqa
-                pypi_package, pypi_repo, cran_package, cran_repo):
+def install_cli(api_client, cluster_id, jar, egg, whl, maven_coordinates, maven_repo, # noqa
+                maven_exclusion, pypi_package, pypi_repo, cran_package, cran_repo):
     """
-    Install a library ona a cluster. Libraries must be first uploaded to dbfs or s3
+    Install a library on a cluster. Libraries must be first uploaded to dbfs or s3
     (see `dbfs cp -h`). Unlike the API, only one library can be installed for each execution of
     `databricks libraries install`.
 
     Users should only provide one of
-    [--jar, --egg, --maven-coordinates, --pypi-package, --cran-package].
+    [--jar, --egg, --whl, --maven-coordinates, --pypi-package, --cran-package].
+
+    Installing a whl library on clusters running Databricks Runtime 4.2 or higher effectively runs
+    the pip command against the wheel file directly on driver and executors.The library must satisfy
+    the wheel file name convention.
+    To install multiple wheel files, use the .wheelhouse.zip file that includes all the wheel files
+    with the --whl option.
+
+    Installing a wheel library on clusters running Databricks Runtime lower than 4.2 just adds the
+    file to the PYTHONPATH variable, without installing the dependencies.
+    More information is available here:
+    https://docs.databricks.com/api/latest/libraries.html#managedlibrariesmanagedlibraryserviceinstalllibraries
     """
-    library = _get_library_from_options(jar, egg, maven_coordinates, maven_repo, maven_exclusion,
-                                        pypi_package, pypi_repo, cran_package, cran_repo)
+    library = _get_library_from_options(jar, egg, whl, maven_coordinates, maven_repo,
+                                        maven_exclusion, pypi_package, pypi_repo, cran_package,
+                                        cran_repo)
     LibrariesApi(api_client).install_libraries(cluster_id, [library])
 
 
@@ -196,6 +215,7 @@ def _uninstall_cli_exit_help(cluster_id):
               help='If set, uninstall all libraries.')
 @click.option('--jar', cls=OneOfOption, one_of=UNINSTALL_OPTIONS, help=JAR_HELP)
 @click.option('--egg', cls=OneOfOption, one_of=UNINSTALL_OPTIONS, help=EGG_HELP)
+@click.option('--whl', cls=OneOfOption, one_of=UNINSTALL_OPTIONS, help=WHEEL_HELP)
 @click.option('--maven-coordinates', cls=OneOfOption, one_of=UNINSTALL_OPTIONS,
               help=MAVEN_COORDINATES_HELP)
 @click.option('--maven-repo', help=MAVEN_REPO_HELP)
@@ -209,7 +229,7 @@ def _uninstall_cli_exit_help(cluster_id):
 @profile_option
 @eat_exceptions # noqa
 @provide_api_client
-def uninstall_cli(api_client, cluster_id, all, jar, egg, maven_coordinates, maven_repo, # noqa
+def uninstall_cli(api_client, cluster_id, all, jar, egg, whl, maven_coordinates, maven_repo, # noqa
                   maven_exclusion, pypi_package, pypi_repo, cran_package, cran_repo):
     """
     Mark libraries on a cluster to be uninstalled. Libraries which are marked to be uninstalled
@@ -222,8 +242,9 @@ def uninstall_cli(api_client, cluster_id, all, jar, egg, maven_coordinates, mave
         libraries_api.uninstall_libraries(cluster_id, libraries)
         _uninstall_cli_exit_help(cluster_id)
         return
-    library = _get_library_from_options(jar, egg, maven_coordinates, maven_repo, maven_exclusion,
-                                        pypi_package, pypi_repo, cran_package, cran_repo)
+    library = _get_library_from_options(jar, egg, whl, maven_coordinates, maven_repo,
+                                        maven_exclusion, pypi_package, pypi_repo, cran_package,
+                                        cran_repo)
     LibrariesApi(api_client).uninstall_libraries(cluster_id, [library])
     _uninstall_cli_exit_help(cluster_id)
 
