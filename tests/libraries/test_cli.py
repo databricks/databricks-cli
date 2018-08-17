@@ -135,13 +135,14 @@ def test_install_cli_egg(libraries_api_mock):
         '--egg', test_egg])
     libraries_api_mock.install_libraries.assert_called_with(TEST_CLUSTER_ID, [{'egg': test_egg}])
 
+
 @provide_conf
 def test_install_cli_wheel(libraries_api_mock):
     test_wheel = 'dbfs:/test.whl'
     runner = CliRunner()
     runner.invoke(cli.install_cli, [
         '--cluster-id', TEST_CLUSTER_ID,
-        '--wheel', test_wheel])
+        '--whl', test_wheel])
     libraries_api_mock.install_libraries.assert_called_with(TEST_CLUSTER_ID, [{'whl': test_wheel}])
 
 
@@ -269,6 +270,7 @@ def test_uninstall_cli_jar(libraries_api_mock):
         '--jar', test_jar])
     libraries_api_mock.uninstall_libraries.assert_called_with(TEST_CLUSTER_ID, [{'jar': test_jar}])
 
+
 @provide_conf
 def test_uninstall_cli_egg(libraries_api_mock):
     test_egg = 'dbfs:/test.egg'
@@ -278,6 +280,7 @@ def test_uninstall_cli_egg(libraries_api_mock):
         '--egg', test_egg])
     libraries_api_mock.uninstall_libraries.assert_called_with(TEST_CLUSTER_ID, [{'egg': test_egg}])
 
+
 @provide_conf
 def test_uninstall_cli_whl(libraries_api_mock):
     test_whl = 'dbfs:/test.whl'
@@ -286,6 +289,7 @@ def test_uninstall_cli_whl(libraries_api_mock):
         '--cluster-id', TEST_CLUSTER_ID,
         '--whl', test_whl])
     libraries_api_mock.uninstall_libraries.assert_called_with(TEST_CLUSTER_ID, [{'whl': test_whl}])
+
 
 @provide_conf
 def test_uninstall_cli_maven(libraries_api_mock):
