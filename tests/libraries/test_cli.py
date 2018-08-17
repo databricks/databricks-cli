@@ -137,6 +137,16 @@ def test_install_cli_egg(libraries_api_mock):
 
 
 @provide_conf
+def test_install_cli_wheel(libraries_api_mock):
+    test_wheel = 'dbfs:/test.whl'
+    runner = CliRunner()
+    runner.invoke(cli.install_cli, [
+        '--cluster-id', TEST_CLUSTER_ID,
+        '--whl', test_wheel])
+    libraries_api_mock.install_libraries.assert_called_with(TEST_CLUSTER_ID, [{'whl': test_wheel}])
+
+
+@provide_conf
 def test_install_cli_maven(libraries_api_mock):
     test_maven_coordinates = 'org.jsoup:jsoup:1.7.2'
     test_maven_repo = 'https://maven.databricks.com'
@@ -269,6 +279,16 @@ def test_uninstall_cli_egg(libraries_api_mock):
         '--cluster-id', TEST_CLUSTER_ID,
         '--egg', test_egg])
     libraries_api_mock.uninstall_libraries.assert_called_with(TEST_CLUSTER_ID, [{'egg': test_egg}])
+
+
+@provide_conf
+def test_uninstall_cli_whl(libraries_api_mock):
+    test_whl = 'dbfs:/test.whl'
+    runner = CliRunner()
+    runner.invoke(cli.uninstall_cli, [
+        '--cluster-id', TEST_CLUSTER_ID,
+        '--whl', test_whl])
+    libraries_api_mock.uninstall_libraries.assert_called_with(TEST_CLUSTER_ID, [{'whl': test_whl}])
 
 
 @provide_conf
