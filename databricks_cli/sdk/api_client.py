@@ -106,5 +106,5 @@ class ApiClient(object):
         try:
             resp.raise_for_status()
         except requests.exceptions.HTTPError as e:
-            raise e
+            raise requests.exceptions.HTTPError(resp.content, e)
         return resp.json()
