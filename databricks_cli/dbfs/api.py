@@ -96,7 +96,7 @@ class DbfsApi(object):
         return FileInfo.from_json(json)
 
     def put_file(self, src_path, dbfs_path,
-                 overwrite, tries = DEFAULT_TRIES, delay = DEFAULT_DELAY):
+                 overwrite, tries=DEFAULT_TRIES, delay=DEFAULT_DELAY):
         handle = self.client.create(dbfs_path.absolute_path, overwrite)['handle']
         try:
             with open(src_path, 'rb') as local_file:
