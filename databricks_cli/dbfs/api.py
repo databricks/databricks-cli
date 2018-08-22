@@ -95,29 +95,31 @@ class DbfsApi(object):
         json = self.client.get_status(dbfs_path.absolute_path)
         return FileInfo.from_json(json)
 
-    def put_file(self, src_path, dbfs_path, overwrite):
+    def put_file(self, src_path, dbfs_path, overwrite, tries = DEFAULT_TRIES, delay = DEFAULT_DELAY):
         handle = self.client.create(dbfs_path.absolute_path, overwrite)['handle']
-        with open(src_path, 'rb') as local_file:
-            while True:
-                contents = local_file.read(BUFFER_SIZE_BYTES)
-                if len(contents) == 0:
-                    break
-                # retry on failure
-                tries = DEFAULT_TRIES
-                delay = DEFAULT_DELAY
+        try:
+            with open(src_path, 'rb') as local_file:
                 while True:
-                    try:
-                        # add_block should not take a bytes object.
-                        self.client.add_block(handle, b64encode(contents).decode())
+                    contents = local_file.read(BUFFER_SIZE_BYTES)
+                    if len(contents) == 0:
                         break
-                    except HTTPError as e:
-                        if tries > 1:
-                            click.echo("%s, Number of tries left: %d, Retrying in %d seconds..." % (e.response.json(), tries - 1, delay))
-                            time.sleep(delay)
-                            tries -= 1
-                            delay *= 2
-                        else:
-                            raise e
+                    # retry on failure
+                    localTries = tries
+                    localDelay = delay
+                    while True:
+                        try:
+                            # add_block should not take a bytes object.
+                            self.client.add_block(handle, b64encode(contents).decode())
+                            break
+                        except HTTPError as e:
+                            if localTries > 1:
+                                click.echo("%s, Number of tries left: %d, Retrying in %d seconds..." % (e.response.json(), localTries - 1, localDelay))
+                                time.sleep(delay)
+                                localTries -= 1
+                                localDelay *= 2
+                            else:
+                                raise e
+        finally:
             self.client.close(handle)
 
     def get_file(self, dbfs_path, dst_path, overwrite):
