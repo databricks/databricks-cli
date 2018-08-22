@@ -25,6 +25,7 @@ from base64 import b64encode, b64decode
 
 import os
 import click
+import time
 
 from requests.exceptions import HTTPError
 
@@ -34,6 +35,8 @@ from databricks_cli.dbfs.dbfs_path import DbfsPath
 from databricks_cli.dbfs.exceptions import LocalFileExistsException
 
 BUFFER_SIZE_BYTES = 2**20
+DEFAULT_TRIES = 3
+DEFAULT_DELAY = 2
 
 
 class FileInfo(object):
@@ -99,8 +102,22 @@ class DbfsApi(object):
                 contents = local_file.read(BUFFER_SIZE_BYTES)
                 if len(contents) == 0:
                     break
-                # add_block should not take a bytes object.
-                self.client.add_block(handle, b64encode(contents).decode())
+                # retry on failure
+                tries = DEFAULT_TRIES
+                delay = DEFAULT_DELAY
+                while True:
+                    try:
+                        # add_block should not take a bytes object.
+                        self.client.add_block(handle, b64encode(contents).decode())
+                        break
+                    except HTTPError as e:
+                        if tries > 1:
+                            click.echo("%s, Number of tries left: %d, Retrying in %d seconds..." % (e.response.json(), tries - 1, delay))
+                            time.sleep(delay)
+                            tries -= 1
+                            delay *= 2
+                        else:
+                            raise e
             self.client.close(handle)
 
     def get_file(self, dbfs_path, dst_path, overwrite):
