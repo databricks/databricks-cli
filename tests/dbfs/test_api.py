@@ -131,6 +131,8 @@ class TestDbfsApi(object):
 
     def test_put_file_retries_on_failure(self, dbfs_api, tmpdir):
         test_file_path = os.path.join(tmpdir.strpath, 'test')
+        tries = 2
+        delay = 0
         with open(test_file_path, 'wt') as f:
             f.write('test')
         api_mock = dbfs_api.client
@@ -141,9 +143,6 @@ class TestDbfsApi(object):
         add_block_response._content = ('{"error_code": "500"}').encode()
         exception = requests.exceptions.HTTPError(response=add_block_response)
         api_mock.add_block = mock.Mock(side_effect=exception)
-
-        tries = 2
-        delay = 0
 
         with pytest.raises(exception.__class__):
             dbfs_api.put_file(test_file_path, TEST_DBFS_PATH, True, tries, delay)
