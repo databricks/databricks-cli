@@ -35,8 +35,8 @@ from databricks_cli.dbfs.dbfs_path import DbfsPath
 from databricks_cli.dbfs.exceptions import LocalFileExistsException
 
 BUFFER_SIZE_BYTES = 2**20
-DEFAULT_TRIES_INTEGER = 3
-DEFAULT_DELAY_INTEGER = 2
+DEFAULT_TRIES = 3
+DEFAULT_DELAY_SEC = 2
 
 
 class FileInfo(object):
@@ -96,7 +96,7 @@ class DbfsApi(object):
         return FileInfo.from_json(json)
 
     def put_file(self, src_path, dbfs_path,
-                 overwrite, tries=DEFAULT_TRIES_INTEGER, delay=DEFAULT_DELAY_INTEGER):
+                 overwrite, tries=DEFAULT_TRIES, delay=DEFAULT_DELAY_SEC):
         handle = self.client.create(dbfs_path.absolute_path, overwrite)['handle']
         try:
             with open(src_path, 'rb') as local_file:
