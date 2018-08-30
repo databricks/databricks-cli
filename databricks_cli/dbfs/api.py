@@ -35,6 +35,7 @@ from databricks_cli.dbfs.exceptions import LocalFileExistsException
 
 BUFFER_SIZE_BYTES = 2**20
 
+
 class FileInfo(object):
     def __init__(self, dbfs_path, is_dir, file_size):
         self.dbfs_path = dbfs_path
