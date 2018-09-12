@@ -24,7 +24,6 @@
 from base64 import b64encode, b64decode
 
 import os
-import time
 import click
 
 from requests.exceptions import HTTPError
@@ -35,8 +34,6 @@ from databricks_cli.dbfs.dbfs_path import DbfsPath
 from databricks_cli.dbfs.exceptions import LocalFileExistsException
 
 BUFFER_SIZE_BYTES = 2**20
-DEFAULT_TRIES = 3
-DEFAULT_DELAY_SEC = 2
 
 
 class FileInfo(object):
@@ -95,37 +92,15 @@ class DbfsApi(object):
         json = self.client.get_status(dbfs_path.absolute_path)
         return FileInfo.from_json(json)
 
-    def put_file(self, src_path, dbfs_path,
-                 overwrite, tries=DEFAULT_TRIES, delay=DEFAULT_DELAY_SEC):
+    def put_file(self, src_path, dbfs_path, overwrite):
         handle = self.client.create(dbfs_path.absolute_path, overwrite)['handle']
-        try:
-            with open(src_path, 'rb') as local_file:
-                while True:
-                    contents = local_file.read(BUFFER_SIZE_BYTES)
-                    if len(contents) == 0:
-                        break
-                    # retry on failure
-                    local_tries = tries
-                    local_delay = delay
-                    while True:
-                        try:
-                            # add_block should not take a bytes object.
-                            self.client.add_block(handle, b64encode(contents).decode())
-                            break
-                        except HTTPError as e:
-                            if local_tries > 1:
-                                click.echo(
-                                    '{}. Number of tries left: {}, Retrying in {} seconds...'
-                                    .format(
-                                        e.response.json(), local_tries - 1, local_delay
-                                    )
-                                )
-                                time.sleep(delay)
-                                local_tries -= 1
-                                local_delay *= 2
-                            else:
-                                raise e
-        finally:
+        with open(src_path, 'rb') as local_file:
+            while True:
+                contents = local_file.read(BUFFER_SIZE_BYTES)
+                if len(contents) == 0:
+                    break
+                # add_block should not take a bytes object.
+                self.client.add_block(handle, b64encode(contents).decode())
             self.client.close(handle)
 
     def get_file(self, dbfs_path, dst_path, overwrite):

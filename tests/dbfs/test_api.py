@@ -131,27 +131,6 @@ class TestDbfsApi(object):
         assert api_mock.close.call_count == 1
         assert test_handle == api_mock.close.call_args[0][0]
 
-    def test_put_file_retries_on_failure(self, dbfs_api, tmpdir):
-        test_file_path = os.path.join(tmpdir.strpath, 'test')
-        tries = 2
-        delay = 0
-        with open(test_file_path, 'wt') as f:
-            f.write('test')
-        api_mock = dbfs_api.client
-        test_handle = 0
-        api_mock.create.return_value = {'handle': test_handle}
-
-        add_block_response = requests.Response()
-        add_block_response._content = ('{"error_code": "500"}').encode()
-        exception = requests.exceptions.HTTPError(response=add_block_response)
-        api_mock.add_block = mock.Mock(side_effect=exception)
-
-        with pytest.raises(exception.__class__):
-            dbfs_api.put_file(test_file_path, TEST_DBFS_PATH, True, tries, delay)
-        assert api_mock.add_block.call_count == tries
-        assert api_mock.close.call_count == 1
-        assert test_handle == api_mock.close.call_args[0][0]
-
     def test_get_file_check_overwrite(self, dbfs_api, tmpdir):
         test_file_path = os.path.join(tmpdir.strpath, 'test')
         with open(test_file_path, 'w') as f:
