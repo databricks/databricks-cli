@@ -142,14 +142,16 @@ def download(api_client, config_path, **kwargs):
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
-             short_help='Utility to deploy and download Databricks resource stacks, currently in beta version.')
+             short_help='Utility to deploy and download Databricks resource stacks, '
+                        'currently in beta version.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
 @debug_option
 @profile_option
 def stack_group():
     """
-    (Experimental) Utility to deploy and download Databricks resource stacks, currently in beta version.
+    (Experimental) Utility to deploy and download Databricks resource stacks, 
+    currently in beta version.
     """
     pass
 
