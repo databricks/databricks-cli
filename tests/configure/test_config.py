@@ -87,7 +87,7 @@ def test_provide_api_client_invalid():
         click.echo(x)
 
     result = CliRunner().invoke(test_command, ['--x', '1'])
-    assert result.exit_code == -1
+    assert result.exit_code == 1
     assert isinstance(result.exception, InvalidConfigurationError)
 
 
