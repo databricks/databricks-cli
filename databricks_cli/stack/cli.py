@@ -149,7 +149,7 @@ def download(api_client, config_path, **kwargs):
 @profile_option
 def stack_group():
     """
-    Utility to deploy and download Databricks resource stacks, currently in beta version.
+    (Experimental) Utility to deploy and download Databricks resource stacks, currently in beta version.
     """
     pass
 
