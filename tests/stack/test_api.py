@@ -210,7 +210,7 @@ class TestStackApi(object):
         # TEST CASE 2:
         # stack_api._deploy_job should reset job if databricks_id given.
         res_databricks_id_2 = stack_api._deploy_job(alt_test_job_settings,
-                                                                         res_databricks_id_1)
+                                                    res_databricks_id_1)
         # physical job id not changed from last update
         assert res_databricks_id_2[api.JOBS_RESOURCE_JOB_ID] == \
             res_databricks_id_1[api.JOBS_RESOURCE_JOB_ID]

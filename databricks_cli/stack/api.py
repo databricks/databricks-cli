@@ -180,7 +180,7 @@ class StackApi(object):
                 )
             )
             overwrite = kwargs.get('overwrite', False)
-            new_databricks_id= self._deploy_workspace(resource_properties,
+            new_databricks_id = self._deploy_workspace(resource_properties,
                                                       databricks_id,
                                                       overwrite)
         elif resource_service == DBFS_SERVICE:
@@ -237,7 +237,8 @@ class StackApi(object):
         :param databricks_id: A dict object containing 'job_id' field of job identifier in
         Databricks server
 
-        :return: databricks_id: dict containing  a 'job_id' field of the physical job_id of the job on databricks.
+        :return: databricks_id: dict containing  a 'job_id' field of the physical job_id of the
+        job on databricks.
         """
         job_settings = resource_properties  # resource_properties of jobs are solely job settings.
 
