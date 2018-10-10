@@ -186,8 +186,8 @@ class StackApi(object):
             )
             overwrite = kwargs.get('overwrite', False)
             new_databricks_id, deploy_output = self._deploy_workspace(resource_properties,
-                                                                        databricks_id,
-                                                                        overwrite)
+                                                                      databricks_id,
+                                                                      overwrite)
         elif resource_service == DBFS_SERVICE:
             click.echo(
                 'Deploying DBFS asset "{}" with properties \n{}'.format(
@@ -196,8 +196,8 @@ class StackApi(object):
             )
             overwrite = kwargs.get('overwrite', False)
             new_databricks_id, deploy_output = self._deploy_dbfs(resource_properties,
-                                                                    databricks_id,
-                                                                    overwrite)
+                                                                 databricks_id,
+                                                                 overwrite)
         else:
             raise StackError('Resource service "{}" not supported'.format(resource_service))
 

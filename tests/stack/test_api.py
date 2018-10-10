@@ -222,7 +222,7 @@ class TestStackApi(object):
         # TEST CASE 2:
         # stack_api._deploy_job should reset job if databricks_id given.
         res_databricks_id_2, res_deploy_output_2 = stack_api._deploy_job(alt_test_job_settings,
-                                                                            res_databricks_id_1)
+                                                                         res_databricks_id_1)
         # physical job id not changed from last update
         assert res_databricks_id_2[api.JOBS_RESOURCE_JOB_ID] == \
             res_databricks_id_1[api.JOBS_RESOURCE_JOB_ID]
@@ -353,7 +353,7 @@ class TestStackApi(object):
         assert stack_api.dbfs_client.cp.call_args[1]['dst'] == \
             test_dbfs_dir_properties[api.DBFS_RESOURCE_PATH]
         assert dir_databricks_id == {api.DBFS_RESOURCE_PATH:
-                                        test_dbfs_dir_properties[api.DBFS_RESOURCE_PATH]}
+                                     test_dbfs_dir_properties[api.DBFS_RESOURCE_PATH]}
         assert dir_deploy_output == test_deploy_output
 
         nb_databricks_id, nb_deploy_output = \
@@ -366,7 +366,7 @@ class TestStackApi(object):
         assert stack_api.dbfs_client.cp.call_args[1]['dst'] == \
             test_dbfs_file_properties[api.DBFS_RESOURCE_PATH]
         assert nb_databricks_id == {api.DBFS_RESOURCE_PATH:
-                                        test_dbfs_file_properties[api.DBFS_RESOURCE_PATH]}
+                                    test_dbfs_file_properties[api.DBFS_RESOURCE_PATH]}
         assert nb_deploy_output == test_deploy_output
 
         # Should raise error if resource properties is_dir field isn't consistent with whether the
