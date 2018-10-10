@@ -204,35 +204,25 @@ class TestStackApi(object):
         stack_api.jobs_client = _TestJobsClient()
         # TEST CASE 1:
         # stack_api._deploy_job should create job if databricks_id not given job doesn't exist
-        res_databricks_id_1, res_deploy_output_1 = stack_api._deploy_job(test_job_settings)
-        assert stack_api.jobs_client.get_job(res_databricks_id_1[api.JOBS_RESOURCE_JOB_ID]) == \
-            res_deploy_output_1
-        assert res_deploy_output_1[api.JOBS_RESOURCE_JOB_ID] == \
-            res_databricks_id_1[api.JOBS_RESOURCE_JOB_ID]
-        assert test_job_settings == res_deploy_output_1['job_settings']
+        res_databricks_id_1 = stack_api._deploy_job(test_job_settings)
+        assert res_databricks_id_1 == {api.JOBS_RESOURCE_JOB_ID: 12345}
 
         # TEST CASE 2:
         # stack_api._deploy_job should reset job if databricks_id given.
-        res_databricks_id_2, res_deploy_output_2 = stack_api._deploy_job(alt_test_job_settings,
+        res_databricks_id_2 = stack_api._deploy_job(alt_test_job_settings,
                                                                          res_databricks_id_1)
         # physical job id not changed from last update
         assert res_databricks_id_2[api.JOBS_RESOURCE_JOB_ID] == \
             res_databricks_id_1[api.JOBS_RESOURCE_JOB_ID]
-        assert res_deploy_output_2[api.JOBS_RESOURCE_JOB_ID] == \
-            res_databricks_id_2[api.JOBS_RESOURCE_JOB_ID]
-        assert alt_test_job_settings == res_deploy_output_2['job_settings']
 
         # TEST CASE 3:
         # stack_api._deploy_job should reset job if a databricks_id not given, but job with same
         # name found
         alt_test_job_settings['new_property'] = 'new_property_value'
-        res_databricks_id_3, res_deploy_output_3 = stack_api._deploy_job(alt_test_job_settings)
+        res_databricks_id_3 = stack_api._deploy_job(alt_test_job_settings)
         # physical job id not changed from last update
         assert res_databricks_id_3[api.JOBS_RESOURCE_JOB_ID] == \
             res_databricks_id_2[api.JOBS_RESOURCE_JOB_ID]
-        assert res_deploy_output_3[api.JOBS_RESOURCE_JOB_ID] == \
-            res_databricks_id_3[api.JOBS_RESOURCE_JOB_ID]
-        assert alt_test_job_settings == res_deploy_output_3['job_settings']
 
         # TEST CASE 4
         # If a databricks_id is not given but there is already multiple jobs of the same name in
@@ -276,7 +266,7 @@ class TestStackApi(object):
         os.makedirs(test_workspace_dir_properties[api.WORKSPACE_RESOURCE_SOURCE_PATH])
 
         # Test Input of Workspace directory properties.
-        dir_databricks_id, dir_deploy_output = \
+        dir_databricks_id = \
             stack_api._deploy_workspace(test_workspace_dir_properties, None, True)
         stack_api.workspace_client.import_workspace_dir.assert_called_once()
         assert stack_api.workspace_client.import_workspace_dir.call_args[0][0] == \
@@ -285,10 +275,9 @@ class TestStackApi(object):
             test_workspace_dir_properties[api.WORKSPACE_RESOURCE_PATH]
         assert dir_databricks_id == {
             api.WORKSPACE_RESOURCE_PATH: test_workspace_dir_properties[api.WORKSPACE_RESOURCE_PATH]}
-        assert dir_deploy_output == test_deploy_output
 
         # Test Input of Workspace notebook properties.
-        nb_databricks_id, nb_deploy_output = \
+        nb_databricks_id = \
             stack_api._deploy_workspace(test_workspace_nb_properties, None, True)
         stack_api.workspace_client.import_workspace.assert_called_once()
         assert stack_api.workspace_client.import_workspace.call_args[0][0] == \
@@ -297,7 +286,6 @@ class TestStackApi(object):
             test_workspace_nb_properties[api.WORKSPACE_RESOURCE_PATH]
         assert nb_databricks_id == {api.WORKSPACE_RESOURCE_PATH:
                                     test_workspace_nb_properties[api.WORKSPACE_RESOURCE_PATH]}
-        assert nb_deploy_output == test_deploy_output
 
         # Should raise error if resource object_type doesn't match actually is in filesystem.
         test_workspace_dir_properties.update(
@@ -335,7 +323,7 @@ class TestStackApi(object):
                                                              api.DBFS_RESOURCE_SOURCE_PATH])})
         os.makedirs(test_dbfs_dir_properties[api.DBFS_RESOURCE_SOURCE_PATH])
 
-        dir_databricks_id, dir_deploy_output = \
+        dir_databricks_id = \
             stack_api._deploy_dbfs(test_dbfs_dir_properties, None, True)
         assert stack_api.dbfs_client.cp.call_count == 1
         assert stack_api.dbfs_client.cp.call_args[1]['recursive'] is True
@@ -346,9 +334,8 @@ class TestStackApi(object):
             test_dbfs_dir_properties[api.DBFS_RESOURCE_PATH]
         assert dir_databricks_id == {api.DBFS_RESOURCE_PATH:
                                      test_dbfs_dir_properties[api.DBFS_RESOURCE_PATH]}
-        assert dir_deploy_output == test_deploy_output
 
-        nb_databricks_id, nb_deploy_output = \
+        nb_databricks_id = \
             stack_api._deploy_dbfs(test_dbfs_file_properties, None, True)
         assert stack_api.dbfs_client.cp.call_count == 2
         assert stack_api.dbfs_client.cp.call_args[1]['recursive'] is False
@@ -359,7 +346,6 @@ class TestStackApi(object):
             test_dbfs_file_properties[api.DBFS_RESOURCE_PATH]
         assert nb_databricks_id == {api.DBFS_RESOURCE_PATH:
                                     test_dbfs_file_properties[api.DBFS_RESOURCE_PATH]}
-        assert nb_deploy_output == test_deploy_output
 
         # Should raise error if resource properties is_dir field isn't consistent with whether the
         # resource is a directory or not locally.
