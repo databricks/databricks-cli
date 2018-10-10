@@ -45,7 +45,7 @@ TEST_JOB_RESOURCE = {
     api.RESOURCE_SERVICE: api.JOBS_SERVICE,
     api.RESOURCE_PROPERTIES: TEST_JOB_SETTINGS
 }
-TEST_JOB_PHYSICAL_ID = {api.JOBS_RESOURCE_JOB_ID: 1234}
+TEST_JOB_DATABRICKS_ID = {api.JOBS_RESOURCE_JOB_ID: 1234}
 TEST_WORKSPACE_NB_PROPERTIES = {
     api.WORKSPACE_RESOURCE_SOURCE_PATH: 'test/notebook.py',
     api.WORKSPACE_RESOURCE_PATH: '/test/notebook.py',
@@ -56,8 +56,8 @@ TEST_WORKSPACE_DIR_PROPERTIES = {
     api.WORKSPACE_RESOURCE_PATH: '/test/dir',
     api.WORKSPACE_RESOURCE_OBJECT_TYPE: workspace_api.DIRECTORY
 }
-TEST_WORKSPACE_NB_PHYSICAL_ID = {api.WORKSPACE_RESOURCE_PATH: '/test/notebook.py'}
-TEST_WORKSPACE_DIR_PHYSICAL_ID = {api.WORKSPACE_RESOURCE_PATH: '/test/dir'}
+TEST_WORKSPACE_NB_DATABRICKS_ID = {api.WORKSPACE_RESOURCE_PATH: '/test/notebook.py'}
+TEST_WORKSPACE_DIR_DATABRICKS_ID = {api.WORKSPACE_RESOURCE_PATH: '/test/dir'}
 TEST_DBFS_FILE_PROPERTIES = {
     api.DBFS_RESOURCE_SOURCE_PATH: 'test.jar',
     api.DBFS_RESOURCE_PATH: 'dbfs:/test/test.jar',
@@ -68,8 +68,8 @@ TEST_DBFS_DIR_PROPERTIES = {
     api.DBFS_RESOURCE_PATH: 'dbfs:/test/dir',
     api.DBFS_RESOURCE_IS_DIR: True
 }
-TEST_DBFS_FILE_PHYSICAL_ID = {api.DBFS_RESOURCE_PATH: 'dbfs:/test/test.jar'}
-TEST_DBFS_DIR_PHYSICAL_ID = {api.DBFS_RESOURCE_PATH: 'dbfs:/test/dir'}
+TEST_DBFS_FILE_DATABRICKS_ID = {api.DBFS_RESOURCE_PATH: 'dbfs:/test/test.jar'}
+TEST_DBFS_DIR_DATABRICKS_ID = {api.DBFS_RESOURCE_PATH: 'dbfs:/test/dir'}
 TEST_RESOURCE_ID = 'test job'
 TEST_RESOURCE_WORKSPACE_NB_ID = 'test notebook'
 TEST_RESOURCE_WORKSPACE_DIR_ID = 'test directory'
@@ -98,31 +98,31 @@ TEST_DBFS_DIR_RESOURCE = {
 TEST_JOB_STATUS = {
     api.RESOURCE_ID: TEST_RESOURCE_ID,
     api.RESOURCE_SERVICE: api.JOBS_SERVICE,
-    api.RESOURCE_PHYSICAL_ID: TEST_JOB_PHYSICAL_ID,
+    api.RESOURCE_DATABRICKS_ID: TEST_JOB_DATABRICKS_ID,
     api.RESOURCE_DEPLOY_OUTPUT: {}
 }
 TEST_WORKSPACE_NB_STATUS = {
     api.RESOURCE_ID: TEST_RESOURCE_WORKSPACE_NB_ID,
     api.RESOURCE_SERVICE: api.WORKSPACE_SERVICE,
-    api.RESOURCE_PHYSICAL_ID: TEST_WORKSPACE_NB_PHYSICAL_ID,
+    api.RESOURCE_DATABRICKS_ID: TEST_WORKSPACE_NB_DATABRICKS_ID,
     api.RESOURCE_DEPLOY_OUTPUT: {}
 }
 TEST_WORKSPACE_DIR_STATUS = {
     api.RESOURCE_ID: TEST_RESOURCE_WORKSPACE_DIR_ID,
     api.RESOURCE_SERVICE: api.WORKSPACE_SERVICE,
-    api.RESOURCE_PHYSICAL_ID: TEST_WORKSPACE_DIR_PHYSICAL_ID,
+    api.RESOURCE_DATABRICKS_ID: TEST_WORKSPACE_DIR_DATABRICKS_ID,
     api.RESOURCE_DEPLOY_OUTPUT: {}
 }
 TEST_DBFS_FILE_STATUS = {
     api.RESOURCE_ID: TEST_RESOURCE_DBFS_FILE_ID,
     api.RESOURCE_SERVICE: api.DBFS_SERVICE,
-    api.RESOURCE_PHYSICAL_ID: TEST_DBFS_FILE_PHYSICAL_ID,
+    api.RESOURCE_DATABRICKS_ID: TEST_DBFS_FILE_DATABRICKS_ID,
     api.RESOURCE_DEPLOY_OUTPUT: {}
 }
 TEST_DBFS_DIR_STATUS = {
     api.RESOURCE_ID: TEST_RESOURCE_DBFS_DIR_ID,
     api.RESOURCE_SERVICE: api.DBFS_SERVICE,
-    api.RESOURCE_PHYSICAL_ID: TEST_DBFS_DIR_PHYSICAL_ID,
+    api.RESOURCE_DATABRICKS_ID: TEST_DBFS_DIR_DATABRICKS_ID,
     api.RESOURCE_DEPLOY_OUTPUT: {}
 }
 TEST_STACK = {
@@ -196,53 +196,54 @@ def stack_api():
 class TestStackApi(object):
     def test_deploy_job(self, stack_api):
         """
-            stack_api._deploy_job should create a new job when 1) A physical_id is not given and
+            stack_api._deploy_job should create a new job when 1) A databricks_id is not given and
             a job with the same name does not exist in the settings.
 
-            stack_api._deploy_job should reset/update an existing job when 1) A physical_id is given
-            2) A physical_id is not given but one job with the same name exists.
+            stack_api._deploy_job should reset/update an existing job when 1) A databricks_id is
+            given
+            2) A databricks_id is not given but one job with the same name exists.
 
-            A StackError should be raised when 1) A physical_id is not given but there are multiple
-            jobs with the same name that exist.
+            A StackError should be raised when 1) A databricks_id is not given but there are
+            multiple jobs with the same name that exist.
         """
         test_job_settings = TEST_JOB_SETTINGS
         # Different name than TEST_JOB_SETTINGS
         alt_test_job_settings = {api.JOBS_RESOURCE_NAME: 'alt test job'}
         stack_api.jobs_client = _TestJobsClient()
         # TEST CASE 1:
-        # stack_api._deploy_job should create job if physical_id not given job doesn't exist
-        res_physical_id_1, res_deploy_output_1 = stack_api._deploy_job(test_job_settings)
-        assert stack_api.jobs_client.get_job(res_physical_id_1[api.JOBS_RESOURCE_JOB_ID]) == \
+        # stack_api._deploy_job should create job if databricks_id not given job doesn't exist
+        res_databricks_id_1, res_deploy_output_1 = stack_api._deploy_job(test_job_settings)
+        assert stack_api.jobs_client.get_job(res_databricks_id_1[api.JOBS_RESOURCE_JOB_ID]) == \
             res_deploy_output_1
         assert res_deploy_output_1[api.JOBS_RESOURCE_JOB_ID] == \
-            res_physical_id_1[api.JOBS_RESOURCE_JOB_ID]
+            res_databricks_id_1[api.JOBS_RESOURCE_JOB_ID]
         assert test_job_settings == res_deploy_output_1['job_settings']
 
         # TEST CASE 2:
-        # stack_api._deploy_job should reset job if physical_id given.
-        res_physical_id_2, res_deploy_output_2 = stack_api._deploy_job(alt_test_job_settings,
-                                                                       res_physical_id_1)
+        # stack_api._deploy_job should reset job if databricks_id given.
+        res_databricks_id_2, res_deploy_output_2 = stack_api._deploy_job(alt_test_job_settings,
+                                                                         res_databricks_id_1)
         # physical job id not changed from last update
-        assert res_physical_id_2[api.JOBS_RESOURCE_JOB_ID] == \
-            res_physical_id_1[api.JOBS_RESOURCE_JOB_ID]
+        assert res_databricks_id_2[api.JOBS_RESOURCE_JOB_ID] == \
+            res_databricks_id_1[api.JOBS_RESOURCE_JOB_ID]
         assert res_deploy_output_2[api.JOBS_RESOURCE_JOB_ID] == \
-            res_physical_id_2[api.JOBS_RESOURCE_JOB_ID]
+            res_databricks_id_2[api.JOBS_RESOURCE_JOB_ID]
         assert alt_test_job_settings == res_deploy_output_2['job_settings']
 
         # TEST CASE 3:
-        # stack_api._deploy_job should reset job if a physical_id not given, but job with same name
-        # found
+        # stack_api._deploy_job should reset job if a databricks_id not given, but job with same
+        # name found
         alt_test_job_settings['new_property'] = 'new_property_value'
-        res_physical_id_3, res_deploy_output_3 = stack_api._deploy_job(alt_test_job_settings)
+        res_databricks_id_3, res_deploy_output_3 = stack_api._deploy_job(alt_test_job_settings)
         # physical job id not changed from last update
-        assert res_physical_id_3[api.JOBS_RESOURCE_JOB_ID] == \
-            res_physical_id_2[api.JOBS_RESOURCE_JOB_ID]
+        assert res_databricks_id_3[api.JOBS_RESOURCE_JOB_ID] == \
+            res_databricks_id_2[api.JOBS_RESOURCE_JOB_ID]
         assert res_deploy_output_3[api.JOBS_RESOURCE_JOB_ID] == \
-            res_physical_id_3[api.JOBS_RESOURCE_JOB_ID]
+            res_databricks_id_3[api.JOBS_RESOURCE_JOB_ID]
         assert alt_test_job_settings == res_deploy_output_3['job_settings']
 
         # TEST CASE 4
-        # If a physical_id is not given but there is already multiple jobs of the same name in
+        # If a databricks_id is not given but there is already multiple jobs of the same name in
         # databricks, an error should be raised
         # Add new job with different physical id but same name settings as alt_test_job_settings
         stack_api.jobs_client.jobs_in_databricks[123] = {
@@ -283,27 +284,27 @@ class TestStackApi(object):
         os.makedirs(test_workspace_dir_properties[api.WORKSPACE_RESOURCE_SOURCE_PATH])
 
         # Test Input of Workspace directory properties.
-        dir_physical_id, dir_deploy_output = \
+        dir_databricks_id, dir_deploy_output = \
             stack_api._deploy_workspace(test_workspace_dir_properties, None, True)
         stack_api.workspace_client.import_workspace_dir.assert_called_once()
         assert stack_api.workspace_client.import_workspace_dir.call_args[0][0] == \
             test_workspace_dir_properties[api.WORKSPACE_RESOURCE_SOURCE_PATH]
         assert stack_api.workspace_client.import_workspace_dir.call_args[0][1] == \
             test_workspace_dir_properties[api.WORKSPACE_RESOURCE_PATH]
-        assert dir_physical_id == {
+        assert dir_databricks_id == {
             api.WORKSPACE_RESOURCE_PATH: test_workspace_dir_properties[api.WORKSPACE_RESOURCE_PATH]}
         assert dir_deploy_output == test_deploy_output
 
         # Test Input of Workspace notebook properties.
-        nb_physical_id, nb_deploy_output = \
+        nb_databricks_id, nb_deploy_output = \
             stack_api._deploy_workspace(test_workspace_nb_properties, None, True)
         stack_api.workspace_client.import_workspace.assert_called_once()
         assert stack_api.workspace_client.import_workspace.call_args[0][0] == \
             test_workspace_nb_properties[api.WORKSPACE_RESOURCE_SOURCE_PATH]
         assert stack_api.workspace_client.import_workspace.call_args[0][1] == \
             test_workspace_nb_properties[api.WORKSPACE_RESOURCE_PATH]
-        assert nb_physical_id == {api.WORKSPACE_RESOURCE_PATH:
-                                  test_workspace_nb_properties[api.WORKSPACE_RESOURCE_PATH]}
+        assert nb_databricks_id == {api.WORKSPACE_RESOURCE_PATH:
+                                    test_workspace_nb_properties[api.WORKSPACE_RESOURCE_PATH]}
         assert nb_deploy_output == test_deploy_output
 
         # Should raise error if resource object_type doesn't match actually is in filesystem.
@@ -342,7 +343,7 @@ class TestStackApi(object):
                                                              api.DBFS_RESOURCE_SOURCE_PATH])})
         os.makedirs(test_dbfs_dir_properties[api.DBFS_RESOURCE_SOURCE_PATH])
 
-        dir_physical_id, dir_deploy_output = \
+        dir_databricks_id, dir_deploy_output = \
             stack_api._deploy_dbfs(test_dbfs_dir_properties, None, True)
         assert stack_api.dbfs_client.cp.call_count == 1
         assert stack_api.dbfs_client.cp.call_args[1]['recursive'] is True
@@ -351,11 +352,11 @@ class TestStackApi(object):
             test_dbfs_dir_properties[api.DBFS_RESOURCE_SOURCE_PATH]
         assert stack_api.dbfs_client.cp.call_args[1]['dst'] == \
             test_dbfs_dir_properties[api.DBFS_RESOURCE_PATH]
-        assert dir_physical_id == {api.DBFS_RESOURCE_PATH:
-                                   test_dbfs_dir_properties[api.DBFS_RESOURCE_PATH]}
+        assert dir_databricks_id == {api.DBFS_RESOURCE_PATH:
+                                     test_dbfs_dir_properties[api.DBFS_RESOURCE_PATH]}
         assert dir_deploy_output == test_deploy_output
 
-        nb_physical_id, nb_deploy_output = \
+        nb_databricks_id, nb_deploy_output = \
             stack_api._deploy_dbfs(test_dbfs_file_properties, None, True)
         assert stack_api.dbfs_client.cp.call_count == 2
         assert stack_api.dbfs_client.cp.call_args[1]['recursive'] is False
@@ -364,8 +365,8 @@ class TestStackApi(object):
             test_dbfs_file_properties[api.DBFS_RESOURCE_SOURCE_PATH]
         assert stack_api.dbfs_client.cp.call_args[1]['dst'] == \
             test_dbfs_file_properties[api.DBFS_RESOURCE_PATH]
-        assert nb_physical_id == {api.DBFS_RESOURCE_PATH:
-                                  test_dbfs_file_properties[api.DBFS_RESOURCE_PATH]}
+        assert nb_databricks_id == {api.DBFS_RESOURCE_PATH:
+                                    test_dbfs_file_properties[api.DBFS_RESOURCE_PATH]}
         assert nb_deploy_output == test_deploy_output
 
         # Should raise error if resource properties is_dir field isn't consistent with whether the
@@ -382,35 +383,35 @@ class TestStackApi(object):
         # TODO(alinxie) Change this test to directly call stack_api.deploy
         # A job resource should have _deploy_resource call on _deploy_job
         stack_api._deploy_job = mock.MagicMock()
-        test_job_physical_id = {api.JOBS_RESOURCE_JOB_ID: 12345}
-        stack_api._deploy_job.return_value = (test_job_physical_id, {})
-        test_job_resource_status = {api.RESOURCE_PHYSICAL_ID: test_job_physical_id}
+        test_job_databricks_id = {api.JOBS_RESOURCE_JOB_ID: 12345}
+        stack_api._deploy_job.return_value = (test_job_databricks_id, {})
+        test_job_resource_status = {api.RESOURCE_DATABRICKS_ID: test_job_databricks_id}
         new_resource_status = stack_api._deploy_resource(TEST_JOB_RESOURCE,
                                                          resource_status=test_job_resource_status)
         assert api.RESOURCE_ID in new_resource_status
-        assert api.RESOURCE_PHYSICAL_ID in new_resource_status
+        assert api.RESOURCE_DATABRICKS_ID in new_resource_status
         assert api.RESOURCE_DEPLOY_OUTPUT in new_resource_status
         assert api.RESOURCE_SERVICE in new_resource_status
         stack_api._deploy_job.assert_called()
         assert stack_api._deploy_job.call_args[0][0] == TEST_JOB_RESOURCE[api.RESOURCE_PROPERTIES]
-        assert stack_api._deploy_job.call_args[0][1] == test_job_physical_id
+        assert stack_api._deploy_job.call_args[0][1] == test_job_databricks_id
 
         # A workspace resource should have _deploy_resource call on _deploy_workspace
         stack_api._deploy_workspace = mock.MagicMock()
-        test_workspace_physical_id = {api.WORKSPACE_RESOURCE_PATH: '/test/path'}
-        stack_api._deploy_workspace.return_value = (test_workspace_physical_id, {})
-        test_workspace_resource_status = {api.RESOURCE_PHYSICAL_ID: test_workspace_physical_id}
+        test_workspace_databricks_id = {api.WORKSPACE_RESOURCE_PATH: '/test/path'}
+        stack_api._deploy_workspace.return_value = (test_workspace_databricks_id, {})
+        test_workspace_resource_status = {api.RESOURCE_DATABRICKS_ID: test_workspace_databricks_id}
         stack_api._deploy_resource(TEST_WORKSPACE_NB_RESOURCE,
                                    resource_status=test_workspace_resource_status,
                                    overwrite=True)
         stack_api._deploy_workspace.assert_called()
         assert stack_api._deploy_workspace.call_args[0][0] == \
             TEST_WORKSPACE_NB_RESOURCE[api.RESOURCE_PROPERTIES]
-        assert stack_api._deploy_workspace.call_args[0][1] == test_workspace_physical_id
+        assert stack_api._deploy_workspace.call_args[0][1] == test_workspace_databricks_id
 
         # A dbfs resource should have _deploy_resource call on _deploy_workspace
         stack_api._deploy_dbfs = mock.MagicMock()
-        stack_api._deploy_dbfs.return_value = (TEST_DBFS_FILE_PHYSICAL_ID, {})
+        stack_api._deploy_dbfs.return_value = (TEST_DBFS_FILE_DATABRICKS_ID, {})
         stack_api._deploy_resource(TEST_DBFS_FILE_RESOURCE,
                                    resource_status=TEST_DBFS_FILE_STATUS,
                                    overwrite_dbfs=True)
@@ -418,7 +419,7 @@ class TestStackApi(object):
         assert stack_api._deploy_dbfs.call_args[0][0] == \
             TEST_DBFS_FILE_RESOURCE[api.RESOURCE_PROPERTIES]
         assert stack_api._deploy_dbfs.call_args[0][1] == \
-            TEST_DBFS_FILE_STATUS[api.RESOURCE_PHYSICAL_ID]
+            TEST_DBFS_FILE_STATUS[api.RESOURCE_DATABRICKS_ID]
 
         # If there is a nonexistent type, raise a StackError.
         resource_badtype = {

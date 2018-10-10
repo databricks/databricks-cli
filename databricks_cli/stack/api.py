@@ -54,7 +54,7 @@ RESOURCE_SERVICE = 'service'
 RESOURCE_PROPERTIES = 'properties'
 
 # Resource Status Fields
-RESOURCE_PHYSICAL_ID = 'physical_id'
+RESOURCE_DATABRICKS_ID = 'databricks_id'
 RESOURCE_DEPLOY_OUTPUT = 'deploy_output'
 RESOURCE_DEPLOY_TIMESTAMP = 'timestamp'
 CLI_VERSION_KEY = 'cli_version'
@@ -160,23 +160,23 @@ class StackApi(object):
         ex. {'id': 'example-resource', 'service': 'jobs', 'properties': {...}}
         :param resource_status: A dict of the resource's deployment info from the last
         deployment. Will be None if this is the first deployment.
-        ex. {'id': 'example-resource', 'service': 'jobs', 'physical_id': {...}}
+        ex. {'id': 'example-resource', 'service': 'jobs', 'databricks_id': {...}}
         :return: dict resource_status- A dictionary of deployment information of the
         resource to be stored at deploy time. It includes the resource id of the resource along
         with the physical id and deploy output of the resource.
-        ex. {'id': 'example-resource', 'service': 'jobs', 'physical_id': {'job_id': 123},
+        ex. {'id': 'example-resource', 'service': 'jobs', 'databricks_id': {'job_id': 123},
         'timestamp': 123456789, 'deploy_output': {..}}
         """
         resource_id = resource_config.get(RESOURCE_ID)
         resource_service = resource_config.get(RESOURCE_SERVICE)
         resource_properties = resource_config.get(RESOURCE_PROPERTIES)
-        physical_id = resource_status.get(RESOURCE_PHYSICAL_ID) if resource_status else None
+        databricks_id = resource_status.get(RESOURCE_DATABRICKS_ID) if resource_status else None
 
         if resource_service == JOBS_SERVICE:
             click.echo('Deploying job "{}" with properties: \n{}'.format(resource_id, json.dumps(
                 resource_properties, indent=2, separators=(',', ': '))))
-            new_physical_id, deploy_output = self._deploy_job(resource_properties,
-                                                              physical_id)
+            new_databricks_id, deploy_output = self._deploy_job(resource_properties,
+                                                                databricks_id)
         elif resource_service == WORKSPACE_SERVICE:
             click.echo(
                 'Deploying workspace asset "{}" with properties \n{}'
@@ -185,9 +185,9 @@ class StackApi(object):
                 )
             )
             overwrite = kwargs.get('overwrite', False)
-            new_physical_id, deploy_output = self._deploy_workspace(resource_properties,
-                                                                    physical_id,
-                                                                    overwrite)
+            new_databricks_id, deploy_output = self._deploy_workspace(resource_properties,
+                                                                      databricks_id,
+                                                                      overwrite)
         elif resource_service == DBFS_SERVICE:
             click.echo(
                 'Deploying DBFS asset "{}" with properties \n{}'.format(
@@ -195,9 +195,9 @@ class StackApi(object):
                 )
             )
             overwrite = kwargs.get('overwrite', False)
-            new_physical_id, deploy_output = self._deploy_dbfs(resource_properties,
-                                                               physical_id,
-                                                               overwrite)
+            new_databricks_id, deploy_output = self._deploy_dbfs(resource_properties,
+                                                                 databricks_id,
+                                                                 overwrite)
         else:
             raise StackError('Resource service "{}" not supported'.format(resource_service))
 
@@ -206,7 +206,7 @@ class StackApi(object):
                                RESOURCE_DEPLOY_TIMESTAMP:
                                    # Milliseconds since epoch.
                                    int(time.mktime(datetime.now().timetuple()) * MS_SEC),
-                               RESOURCE_PHYSICAL_ID: new_physical_id,
+                               RESOURCE_DATABRICKS_ID: new_databricks_id,
                                RESOURCE_DEPLOY_OUTPUT: deploy_output}
         return new_resource_status
 
@@ -236,31 +236,31 @@ class StackApi(object):
             click.echo('Resource service "{}" not supported for download. '
                        'skipping.'.format(resource_service))
 
-    def _deploy_job(self, resource_properties, physical_id=None):
+    def _deploy_job(self, resource_properties, databricks_id=None):
         """
         Deploys a job resource by either creating a job if the job isn't kept track of through
-        the physical_id of the job or updating an existing job. The job is created or updated using
-        the the settings specified in the inputted job_settings.
+        the databricks_id of the job or updating an existing job. The job is created or updated
+        using the the settings specified in the inputted job_settings.
 
         :param resource_properties: A dict of the Databricks JobSettings data structure
-        :param physical_id: A dict object containing 'job_id' field of job identifier in Databricks
-        server
+        :param databricks_id: A dict object containing 'job_id' field of job identifier in
+        Databricks server
 
-        :return: tuple of (physical_id, deploy_output), where physical_id contains a 'job_id' field
-        of the physical job_id of the job on databricks. deploy_output is the output of the job
-        from databricks when a GET request is called for it.
+        :return: tuple of (databricks_id, deploy_output), where databricks_id contains a 'job_id'
+        field of the physical job_id of the job on databricks. deploy_output is the output of the
+        job from databricks when a GET request is called for it.
         """
         job_settings = resource_properties  # resource_properties of jobs are solely job settings.
 
-        if physical_id:
-            job_id = physical_id.get(JOBS_RESOURCE_JOB_ID)
+        if databricks_id:
+            job_id = databricks_id.get(JOBS_RESOURCE_JOB_ID)
             self._update_job(job_settings, job_id)
         else:
             job_id = self._put_job(job_settings)
         click.echo("Job deployed on Databricks with Job ID {}".format(job_id))
-        physical_id = {JOBS_RESOURCE_JOB_ID: job_id}
+        databricks_id = {JOBS_RESOURCE_JOB_ID: job_id}
         deploy_output = self.jobs_client.get_job(job_id)
-        return physical_id, deploy_output
+        return databricks_id, deploy_output
 
     def _put_job(self, job_settings):
         """
@@ -302,19 +302,19 @@ class StackApi(object):
 
         self.jobs_client.reset_job({'job_id': job_id, 'new_settings': job_settings})
 
-    def _deploy_workspace(self, resource_properties, physical_id, overwrite):
+    def _deploy_workspace(self, resource_properties, databricks_id, overwrite):
         """
         Deploy workspace asset.
 
         :param resource_properties: dict of properties for the workspace asset. Must contain the
         'source_path', 'path' and 'object_type' fields.
-        :param physical_id: dict containing physical identifier of workspace asset on databricks.
+        :param databricks_id: dict containing physical identifier of workspace asset on databricks.
         Should contain the field 'path'.
         :param overwrite: Whether or not to overwrite the contents of workspace notebooks.
-        :return: (dict, dict) of (physical_id, deploy_output). physical_id is the physical ID for
-        the stack status that contains the workspace path of the notebook or directory on datbricks.
-        deploy_output is the initial information about the asset on databricks at deploy time
-        returned by the REST API.
+        :return: (dict, dict) of (databricks_id, deploy_output). databricks_id is the physical ID
+        for the stack status that contains the workspace path of the notebook or directory on
+        datbricks. deploy_output is the initial information about the asset on databricks at deploy
+        time returned by the REST API.
         """
         local_path = resource_properties.get(WORKSPACE_RESOURCE_SOURCE_PATH)
         workspace_path = resource_properties.get(WORKSPACE_RESOURCE_PATH)
@@ -348,14 +348,15 @@ class StackApi(object):
             # Shouldn't reach here because of verification of object_type above.
             assert False
 
-        if physical_id and physical_id[WORKSPACE_RESOURCE_PATH] != workspace_path:
-            # physical_id['path'] is the workspace path from the last deployment. Alert when changed
+        if databricks_id and databricks_id[WORKSPACE_RESOURCE_PATH] != workspace_path:
+            # databricks_id['path'] is the workspace path from the last deployment. Alert when
+            # changed
             click.echo("Workspace asset had path changed from {} to {}"
-                       .format(physical_id[WORKSPACE_RESOURCE_PATH], workspace_path))
-        new_physical_id = {WORKSPACE_RESOURCE_PATH: workspace_path}
+                       .format(databricks_id[WORKSPACE_RESOURCE_PATH], workspace_path))
+        new_databricks_id = {WORKSPACE_RESOURCE_PATH: workspace_path}
         deploy_output = self.workspace_client.client.get_status(workspace_path)
 
-        return new_physical_id, deploy_output
+        return new_databricks_id, deploy_output
 
     def _download_workspace(self, resource_properties, overwrite):
         """
@@ -388,16 +389,16 @@ class StackApi(object):
             raise StackError('Invalid value for "{}" field: {}'
                              .format(WORKSPACE_RESOURCE_OBJECT_TYPE, object_type))
 
-    def _deploy_dbfs(self, resource_properties, physical_id, overwrite):
+    def _deploy_dbfs(self, resource_properties, databricks_id, overwrite):
         """
         Deploy dbfs asset.
 
         :param resource_properties: dict of properties for the dbfs asset. Must contain the
         'source_path', 'path' and 'is_dir' fields.
-        :param physical_id: dict containing physical identifier of dbfs asset on Databricks.
+        :param databricks_id: dict containing physical identifier of dbfs asset on Databricks.
         Should contain the field 'path'.
         :param overwrite: Whether or not to overwrite the contents of dbfs files.
-        :return: (dict, dict) of (physical_id, deploy_output). physical_id is a dict that
+        :return: (dict, dict) of (databricks_id, deploy_output). databricks_id is a dict that
         contains the dbfs path of the file on Databricks.
         ex.{"path":"dbfs:/path/in/dbfs"}
         deploy_output is the initial information about the dbfs asset at deploy time
@@ -420,14 +421,14 @@ class StackApi(object):
             click.echo('Uploading file from {} to DBFS at {}'.format(local_path, dbfs_path))
             self.dbfs_client.cp(recursive=False, overwrite=overwrite, src=local_path, dst=dbfs_path)
 
-        if physical_id and physical_id[DBFS_RESOURCE_PATH] != dbfs_path:
-            # physical_id['path'] is the dbfs path from the last deployment. Alert when changed
+        if databricks_id and databricks_id[DBFS_RESOURCE_PATH] != dbfs_path:
+            # databricks_id['path'] is the dbfs path from the last deployment. Alert when changed
             click.echo("Dbfs asset had path changed from {} to {}"
-                       .format(physical_id[DBFS_RESOURCE_PATH], dbfs_path))
-        new_physical_id = {DBFS_RESOURCE_PATH: dbfs_path}
+                       .format(databricks_id[DBFS_RESOURCE_PATH], dbfs_path))
+        new_databricks_id = {DBFS_RESOURCE_PATH: dbfs_path}
         deploy_output = self.dbfs_client.client.get_status(dbfs_path)
 
-        return new_physical_id, deploy_output
+        return new_databricks_id, deploy_output
 
     def _validate_config(self, stack_config):
         """
@@ -493,20 +494,20 @@ class StackApi(object):
             resource_id = resource_status.get(RESOURCE_ID)
             click.echo('Validating fields in resource status of resource with ID "{}"'
                        .format(resource_id))
-            self._assert_fields_in_dict([RESOURCE_SERVICE, RESOURCE_PHYSICAL_ID,
+            self._assert_fields_in_dict([RESOURCE_SERVICE, RESOURCE_DATABRICKS_ID,
                                          RESOURCE_DEPLOY_OUTPUT], resource_status)
 
             resource_service = resource_status.get(RESOURCE_SERVICE)
-            resource_physical_id = resource_status.get(RESOURCE_PHYSICAL_ID)
+            resource_databricks_id = resource_status.get(RESOURCE_DATABRICKS_ID)
 
             click.echo('Validating fields in "{}" of {} resource status'
-                       .format(RESOURCE_PHYSICAL_ID, resource_service))
+                       .format(RESOURCE_DATABRICKS_ID, resource_service))
             if resource_service == JOBS_SERVICE:
-                self._assert_fields_in_dict([JOBS_RESOURCE_JOB_ID], resource_physical_id)
+                self._assert_fields_in_dict([JOBS_RESOURCE_JOB_ID], resource_databricks_id)
             elif resource_service == WORKSPACE_SERVICE:
-                self._assert_fields_in_dict([WORKSPACE_RESOURCE_PATH], resource_physical_id)
+                self._assert_fields_in_dict([WORKSPACE_RESOURCE_PATH], resource_databricks_id)
             elif resource_service == DBFS_SERVICE:
-                self._assert_fields_in_dict([DBFS_RESOURCE_PATH], resource_physical_id)
+                self._assert_fields_in_dict([DBFS_RESOURCE_PATH], resource_databricks_id)
             else:
                 raise StackError("{} not a valid resource status service".format(resource_service))
 
