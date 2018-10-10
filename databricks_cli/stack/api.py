@@ -46,7 +46,7 @@ DBFS_SERVICE = 'dbfs'
 # Config Outer Fields
 STACK_NAME = 'name'
 STACK_RESOURCES = 'resources'
-STACK_DEPLOYED = 'deployed'  # For Stack Status
+STACK_DEPLOYED = 'deployed_resources'  # For Stack Status
 
 # Resource Fields
 RESOURCE_ID = 'id'
@@ -56,7 +56,6 @@ RESOURCE_PROPERTIES = 'properties'
 # Resource Status Fields
 RESOURCE_DATABRICKS_ID = 'databricks_id'
 RESOURCE_DEPLOY_OUTPUT = 'deploy_output'
-RESOURCE_DEPLOY_TIMESTAMP = 'timestamp'
 CLI_VERSION_KEY = 'cli_version'
 
 # Job Service Properties
@@ -123,10 +122,10 @@ class StackApi(object):
             new_resource_status = self._deploy_resource(resource_config, resource_status, **kwargs)
             resource_statuses.append(new_resource_status)
             click.echo('#' * 80)
-        # stack deploy status is original config with deployed resource statuses added
-        new_stack_status = copy.deepcopy(stack_config)
-        new_stack_status.update({STACK_DEPLOYED: resource_statuses})
-        new_stack_status.update({CLI_VERSION_KEY: CLI_VERSION})
+
+        new_stack_status = {STACK_NAME: stack_name,
+                            CLI_VERSION_KEY: CLI_VERSION,
+                            STACK_DEPLOYED: resource_statuses}
 
         # Validate that the status has been created correctly
         self._validate_status(new_stack_status)
@@ -163,9 +162,8 @@ class StackApi(object):
         ex. {'id': 'example-resource', 'service': 'jobs', 'databricks_id': {...}}
         :return: dict resource_status- A dictionary of deployment information of the
         resource to be stored at deploy time. It includes the resource id of the resource along
-        with the physical id and deploy output of the resource.
-        ex. {'id': 'example-resource', 'service': 'jobs', 'databricks_id': {'job_id': 123},
-        'timestamp': 123456789, 'deploy_output': {..}}
+        with the databricks id and deploy output of the resource.
+        ex. {'id': 'example-resource', 'service': 'jobs', 'databricks_id': {'job_id': 123}}
         """
         resource_id = resource_config.get(RESOURCE_ID)
         resource_service = resource_config.get(RESOURCE_SERVICE)
@@ -203,11 +201,7 @@ class StackApi(object):
 
         new_resource_status = {RESOURCE_ID: resource_id,
                                RESOURCE_SERVICE: resource_service,
-                               RESOURCE_DEPLOY_TIMESTAMP:
-                                   # Milliseconds since epoch.
-                                   int(time.mktime(datetime.now().timetuple()) * MS_SEC),
-                               RESOURCE_DATABRICKS_ID: new_databricks_id,
-                               RESOURCE_DEPLOY_OUTPUT: deploy_output}
+                               RESOURCE_DATABRICKS_ID: new_databricks_id}
         return new_resource_status
 
     def _download_resource(self, resource_config, **kwargs):
@@ -487,15 +481,15 @@ class StackApi(object):
         :return: None. Raises errors to stop deployment if there is a problem.
         """
         click.echo('Validating fields in stack status...')
-        self._assert_fields_in_dict([STACK_NAME, STACK_RESOURCES, STACK_DEPLOYED], stack_status)
+        self._assert_fields_in_dict([STACK_NAME, STACK_DEPLOYED], stack_status)
 
         for resource_status in stack_status.get(STACK_DEPLOYED):
             self._assert_fields_in_dict([RESOURCE_ID], resource_status)
             resource_id = resource_status.get(RESOURCE_ID)
             click.echo('Validating fields in resource status of resource with ID "{}"'
                        .format(resource_id))
-            self._assert_fields_in_dict([RESOURCE_SERVICE, RESOURCE_DATABRICKS_ID,
-                                         RESOURCE_DEPLOY_OUTPUT], resource_status)
+            self._assert_fields_in_dict([RESOURCE_SERVICE, RESOURCE_DATABRICKS_ID],
+                                        resource_status)
 
             resource_service = resource_status.get(RESOURCE_SERVICE)
             resource_databricks_id = resource_status.get(RESOURCE_DATABRICKS_ID)

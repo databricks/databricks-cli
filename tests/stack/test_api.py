@@ -98,32 +98,27 @@ TEST_DBFS_DIR_RESOURCE = {
 TEST_JOB_STATUS = {
     api.RESOURCE_ID: TEST_RESOURCE_ID,
     api.RESOURCE_SERVICE: api.JOBS_SERVICE,
-    api.RESOURCE_DATABRICKS_ID: TEST_JOB_DATABRICKS_ID,
-    api.RESOURCE_DEPLOY_OUTPUT: {}
+    api.RESOURCE_DATABRICKS_ID: TEST_JOB_DATABRICKS_ID
 }
 TEST_WORKSPACE_NB_STATUS = {
     api.RESOURCE_ID: TEST_RESOURCE_WORKSPACE_NB_ID,
     api.RESOURCE_SERVICE: api.WORKSPACE_SERVICE,
-    api.RESOURCE_DATABRICKS_ID: TEST_WORKSPACE_NB_DATABRICKS_ID,
-    api.RESOURCE_DEPLOY_OUTPUT: {}
+    api.RESOURCE_DATABRICKS_ID: TEST_WORKSPACE_NB_DATABRICKS_ID
 }
 TEST_WORKSPACE_DIR_STATUS = {
     api.RESOURCE_ID: TEST_RESOURCE_WORKSPACE_DIR_ID,
     api.RESOURCE_SERVICE: api.WORKSPACE_SERVICE,
-    api.RESOURCE_DATABRICKS_ID: TEST_WORKSPACE_DIR_DATABRICKS_ID,
-    api.RESOURCE_DEPLOY_OUTPUT: {}
+    api.RESOURCE_DATABRICKS_ID: TEST_WORKSPACE_DIR_DATABRICKS_ID
 }
 TEST_DBFS_FILE_STATUS = {
     api.RESOURCE_ID: TEST_RESOURCE_DBFS_FILE_ID,
     api.RESOURCE_SERVICE: api.DBFS_SERVICE,
-    api.RESOURCE_DATABRICKS_ID: TEST_DBFS_FILE_DATABRICKS_ID,
-    api.RESOURCE_DEPLOY_OUTPUT: {}
+    api.RESOURCE_DATABRICKS_ID: TEST_DBFS_FILE_DATABRICKS_ID
 }
 TEST_DBFS_DIR_STATUS = {
     api.RESOURCE_ID: TEST_RESOURCE_DBFS_DIR_ID,
     api.RESOURCE_SERVICE: api.DBFS_SERVICE,
-    api.RESOURCE_DATABRICKS_ID: TEST_DBFS_DIR_DATABRICKS_ID,
-    api.RESOURCE_DEPLOY_OUTPUT: {}
+    api.RESOURCE_DATABRICKS_ID: TEST_DBFS_DIR_DATABRICKS_ID
 }
 TEST_STACK = {
     api.STACK_NAME: "test-stack",
@@ -135,11 +130,6 @@ TEST_STACK = {
 }
 TEST_STATUS = {
     api.STACK_NAME: "test-stack",
-    api.STACK_RESOURCES: [TEST_JOB_RESOURCE,
-                          TEST_WORKSPACE_NB_RESOURCE,
-                          TEST_WORKSPACE_DIR_RESOURCE,
-                          TEST_DBFS_FILE_RESOURCE,
-                          TEST_DBFS_DIR_RESOURCE],
     api.STACK_DEPLOYED: [TEST_JOB_STATUS,
                          TEST_WORKSPACE_NB_STATUS,
                          TEST_WORKSPACE_DIR_STATUS,
@@ -390,7 +380,6 @@ class TestStackApi(object):
                                                          resource_status=test_job_resource_status)
         assert api.RESOURCE_ID in new_resource_status
         assert api.RESOURCE_DATABRICKS_ID in new_resource_status
-        assert api.RESOURCE_DEPLOY_OUTPUT in new_resource_status
         assert api.RESOURCE_SERVICE in new_resource_status
         stack_api._deploy_job.assert_called()
         assert stack_api._deploy_job.call_args[0][0] == TEST_JOB_RESOURCE[api.RESOURCE_PROPERTIES]
@@ -552,15 +541,23 @@ class TestStackApi(object):
                         f.write("print('test')\n")
 
         new_stack_status_1 = stack_api.deploy(test_stack)
-        # new stack status should have an identical list of "resources"
-        assert new_stack_status_1.get(api.STACK_RESOURCES) == test_stack.get(api.STACK_RESOURCES)
-        for deployed_resource in new_stack_status_1.get(api.STACK_DEPLOYED):
-            # All functions to pull the deployed output were mocked to return deploy_output
-            assert deployed_resource.get(api.RESOURCE_DEPLOY_OUTPUT) == test_deploy_output
+        new_databricks_ids_1 = [deployed_resource.get(api.RESOURCE_DATABRICKS_ID)
+                                for deployed_resource in new_stack_status_1.get(api.STACK_DEPLOYED)]
+        test_databricks_ids_1 = [{"job_id": 12345},
+                               TEST_WORKSPACE_NB_DATABRICKS_ID,
+                               TEST_WORKSPACE_DIR_DATABRICKS_ID,
+                               TEST_DBFS_FILE_DATABRICKS_ID,
+                               TEST_DBFS_DIR_DATABRICKS_ID]
+        assert new_databricks_ids_1 == test_databricks_ids_1
 
         # stack_api.deploy should create a valid stack status when given an existing
         # stack_status
         new_stack_status_2 = stack_api.deploy(test_stack, stack_status=TEST_STATUS)
-        assert new_stack_status_2.get(api.STACK_RESOURCES) == test_stack.get(api.STACK_RESOURCES)
-        for deployed_resource in new_stack_status_2.get(api.STACK_DEPLOYED):
-            assert deployed_resource.get(api.RESOURCE_DEPLOY_OUTPUT) == test_deploy_output
+        new_databricks_ids_2 = [deployed_resource.get(api.RESOURCE_DATABRICKS_ID)
+                                for deployed_resource in new_stack_status_2.get(api.STACK_DEPLOYED)]
+        test_databricks_ids_2 = [TEST_JOB_DATABRICKS_ID,
+                                 TEST_WORKSPACE_NB_DATABRICKS_ID,
+                                 TEST_WORKSPACE_DIR_DATABRICKS_ID,
+                                 TEST_DBFS_FILE_DATABRICKS_ID,
+                                 TEST_DBFS_DIR_DATABRICKS_ID]
+        assert new_databricks_ids_2 == test_databricks_ids_2
