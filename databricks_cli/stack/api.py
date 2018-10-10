@@ -172,7 +172,7 @@ class StackApi(object):
             click.echo('Deploying job "{}" with properties: \n{}'.format(resource_id, json.dumps(
                 resource_properties, indent=2, separators=(',', ': '))))
             new_databricks_id, _ = self._deploy_job(resource_properties,
-                                                                databricks_id)
+                                                    databricks_id)
         elif resource_service == WORKSPACE_SERVICE:
             click.echo(
                 'Deploying workspace asset "{}" with properties \n{}'
@@ -182,8 +182,8 @@ class StackApi(object):
             )
             overwrite = kwargs.get('overwrite', False)
             new_databricks_id, _ = self._deploy_workspace(resource_properties,
-                                                                      databricks_id,
-                                                                      overwrite)
+                                                          databricks_id,
+                                                          overwrite)
         elif resource_service == DBFS_SERVICE:
             click.echo(
                 'Deploying DBFS asset "{}" with properties \n{}'.format(
@@ -192,8 +192,8 @@ class StackApi(object):
             )
             overwrite = kwargs.get('overwrite', False)
             new_databricks_id, _ = self._deploy_dbfs(resource_properties,
-                                                                 databricks_id,
-                                                                 overwrite)
+                                                     databricks_id,
+                                                     overwrite)
         else:
             raise StackError('Resource service "{}" not supported'.format(resource_service))
 
