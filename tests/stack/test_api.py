@@ -35,6 +35,7 @@ import pytest
 import databricks_cli.stack.api as api
 import databricks_cli.workspace.api as workspace_api
 from databricks_cli.stack.exceptions import StackError
+from databricks_cli.version import version as CLI_VERSION
 
 TEST_JOB_SETTINGS = {
     api.JOBS_RESOURCE_NAME: 'test job'
@@ -130,6 +131,7 @@ TEST_STACK = {
 }
 TEST_STATUS = {
     api.STACK_NAME: "test-stack",
+    api.CLI_VERSION_KEY: CLI_VERSION,
     api.STACK_DEPLOYED: [TEST_JOB_STATUS,
                          TEST_WORKSPACE_NB_STATUS,
                          TEST_WORKSPACE_DIR_STATUS,
@@ -541,23 +543,25 @@ class TestStackApi(object):
                         f.write("print('test')\n")
 
         new_stack_status_1 = stack_api.deploy(test_stack)
-        new_databricks_ids_1 = [deployed_resource.get(api.RESOURCE_DATABRICKS_ID)
-                                for deployed_resource in new_stack_status_1.get(api.STACK_DEPLOYED)]
-        test_databricks_ids_1 = [{"job_id": 12345},
-                                 TEST_WORKSPACE_NB_DATABRICKS_ID,
-                                 TEST_WORKSPACE_DIR_DATABRICKS_ID,
-                                 TEST_DBFS_FILE_DATABRICKS_ID,
-                                 TEST_DBFS_DIR_DATABRICKS_ID]
-        assert new_databricks_ids_1 == test_databricks_ids_1
+        test_job_status_1 = {
+            api.RESOURCE_ID: TEST_RESOURCE_ID,
+            api.RESOURCE_SERVICE: api.JOBS_SERVICE,
+            api.RESOURCE_DATABRICKS_ID: {"job_id": 12345}
+        }
+        test_stack_status_1 = {
+            api.STACK_NAME: "test-stack",
+            api.CLI_VERSION_KEY: CLI_VERSION,
+            api.STACK_DEPLOYED: [test_job_status_1,
+                                 TEST_WORKSPACE_NB_STATUS,
+                                 TEST_WORKSPACE_DIR_STATUS,
+                                 TEST_DBFS_FILE_STATUS,
+                                 TEST_DBFS_DIR_STATUS,
+                                 ]
+        }
+        assert new_stack_status_1 == test_stack_status_1
 
         # stack_api.deploy should create a valid stack status when given an existing
         # stack_status
         new_stack_status_2 = stack_api.deploy(test_stack, stack_status=TEST_STATUS)
-        new_databricks_ids_2 = [deployed_resource.get(api.RESOURCE_DATABRICKS_ID)
-                                for deployed_resource in new_stack_status_2.get(api.STACK_DEPLOYED)]
-        test_databricks_ids_2 = [TEST_JOB_DATABRICKS_ID,
-                                 TEST_WORKSPACE_NB_DATABRICKS_ID,
-                                 TEST_WORKSPACE_DIR_DATABRICKS_ID,
-                                 TEST_DBFS_FILE_DATABRICKS_ID,
-                                 TEST_DBFS_DIR_DATABRICKS_ID]
-        assert new_databricks_ids_2 == test_databricks_ids_2
+        test_stack_status_2 = TEST_STATUS
+        assert new_stack_status_2 == test_stack_status_2

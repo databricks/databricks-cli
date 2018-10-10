@@ -171,6 +171,7 @@ class StackApi(object):
         if resource_service == JOBS_SERVICE:
             click.echo('Deploying job "{}" with properties: \n{}'.format(resource_id, json.dumps(
                 resource_properties, indent=2, separators=(',', ': '))))
+            # TODO: clean the return of _deploy_job since deploy_out is no longer needed
             new_databricks_id, _ = self._deploy_job(resource_properties,
                                                     databricks_id)
         elif resource_service == WORKSPACE_SERVICE:
@@ -181,6 +182,7 @@ class StackApi(object):
                 )
             )
             overwrite = kwargs.get('overwrite', False)
+            # TODO: clean the return of _deploy_workspace since deploy_out is no longer needed
             new_databricks_id, _ = self._deploy_workspace(resource_properties,
                                                           databricks_id,
                                                           overwrite)
@@ -191,6 +193,7 @@ class StackApi(object):
                 )
             )
             overwrite = kwargs.get('overwrite', False)
+            # TODO: clean the return of _deploy_dbfs since deploy_out is no longer needed
             new_databricks_id, _ = self._deploy_dbfs(resource_properties,
                                                      databricks_id,
                                                      overwrite)
