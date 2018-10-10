@@ -142,14 +142,14 @@ def download(api_client, config_path, **kwargs):
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
-             short_help='Utility to deploy and download Databricks resource stacks.')
+             short_help='[Experimental] Utility to deploy and download Databricks resource stacks.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
 @debug_option
 @profile_option
 def stack_group():
     """
-    Utility to deploy and download Databricks resource stacks.
+    [Experimental] Utility to deploy and download Databricks resource stacks.
     """
     pass
 
