@@ -544,10 +544,10 @@ class TestStackApi(object):
         new_databricks_ids_1 = [deployed_resource.get(api.RESOURCE_DATABRICKS_ID)
                                 for deployed_resource in new_stack_status_1.get(api.STACK_DEPLOYED)]
         test_databricks_ids_1 = [{"job_id": 12345},
-                               TEST_WORKSPACE_NB_DATABRICKS_ID,
-                               TEST_WORKSPACE_DIR_DATABRICKS_ID,
-                               TEST_DBFS_FILE_DATABRICKS_ID,
-                               TEST_DBFS_DIR_DATABRICKS_ID]
+                                 TEST_WORKSPACE_NB_DATABRICKS_ID,
+                                 TEST_WORKSPACE_DIR_DATABRICKS_ID,
+                                 TEST_DBFS_FILE_DATABRICKS_ID,
+                                 TEST_DBFS_DIR_DATABRICKS_ID]
         assert new_databricks_ids_1 == test_databricks_ids_1
 
         # stack_api.deploy should create a valid stack status when given an existing

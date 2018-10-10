@@ -24,8 +24,6 @@
 import os
 import json
 from datetime import datetime
-import time
-import copy
 
 import click
 
@@ -173,7 +171,7 @@ class StackApi(object):
         if resource_service == JOBS_SERVICE:
             click.echo('Deploying job "{}" with properties: \n{}'.format(resource_id, json.dumps(
                 resource_properties, indent=2, separators=(',', ': '))))
-            new_databricks_id, deploy_output = self._deploy_job(resource_properties,
+            new_databricks_id, _ = self._deploy_job(resource_properties,
                                                                 databricks_id)
         elif resource_service == WORKSPACE_SERVICE:
             click.echo(
@@ -183,7 +181,7 @@ class StackApi(object):
                 )
             )
             overwrite = kwargs.get('overwrite', False)
-            new_databricks_id, deploy_output = self._deploy_workspace(resource_properties,
+            new_databricks_id, _ = self._deploy_workspace(resource_properties,
                                                                       databricks_id,
                                                                       overwrite)
         elif resource_service == DBFS_SERVICE:
@@ -193,7 +191,7 @@ class StackApi(object):
                 )
             )
             overwrite = kwargs.get('overwrite', False)
-            new_databricks_id, deploy_output = self._deploy_dbfs(resource_properties,
+            new_databricks_id, _ = self._deploy_dbfs(resource_properties,
                                                                  databricks_id,
                                                                  overwrite)
         else:
