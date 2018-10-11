@@ -5,9 +5,18 @@
       "id": "example-notebook",
       "service": "workspace",
       "properties": {
-        "source_path": "dev/notebook.scala",
-        "path": "/Shared/stack-cli-examples/dev/notebook",
+        "source_path": "project/notebook.scala",
+        "path": "/tmp/stack-cli-examples/workspace-example/notebook",
         "object_type": "NOTEBOOK"
+      }
+    },
+    {
+      "id": "example-dbfs",
+      "service": "dbfs",
+      "properties": {
+        "source_path": "project/notebook.scala",
+        "path": "dbfs:/tmp/stack-cli-examples/dbfs-example/notebook",
+        "is_dir": false
       }
     },
     {
@@ -26,7 +35,7 @@
         "timeout_seconds": 1200,
         "max_retries": 2,
         "notebook_task": {
-          "notebook_path": "/Shared/stack-cli-examples/dev/notebook"
+          "notebook_path": "/tmp/stack-cli-examples/workspace-example/notebook"
         }
       }
     }
