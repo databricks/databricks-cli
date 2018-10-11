@@ -35,6 +35,7 @@ import pytest
 import databricks_cli.stack.api as api
 import databricks_cli.workspace.api as workspace_api
 from databricks_cli.stack.exceptions import StackError
+from databricks_cli.version import version as CLI_VERSION
 
 TEST_JOB_SETTINGS = {
     api.JOBS_RESOURCE_NAME: 'test job'
@@ -98,32 +99,27 @@ TEST_DBFS_DIR_RESOURCE = {
 TEST_JOB_STATUS = {
     api.RESOURCE_ID: TEST_RESOURCE_ID,
     api.RESOURCE_SERVICE: api.JOBS_SERVICE,
-    api.RESOURCE_DATABRICKS_ID: TEST_JOB_DATABRICKS_ID,
-    api.RESOURCE_DEPLOY_OUTPUT: {}
+    api.RESOURCE_DATABRICKS_ID: TEST_JOB_DATABRICKS_ID
 }
 TEST_WORKSPACE_NB_STATUS = {
     api.RESOURCE_ID: TEST_RESOURCE_WORKSPACE_NB_ID,
     api.RESOURCE_SERVICE: api.WORKSPACE_SERVICE,
-    api.RESOURCE_DATABRICKS_ID: TEST_WORKSPACE_NB_DATABRICKS_ID,
-    api.RESOURCE_DEPLOY_OUTPUT: {}
+    api.RESOURCE_DATABRICKS_ID: TEST_WORKSPACE_NB_DATABRICKS_ID
 }
 TEST_WORKSPACE_DIR_STATUS = {
     api.RESOURCE_ID: TEST_RESOURCE_WORKSPACE_DIR_ID,
     api.RESOURCE_SERVICE: api.WORKSPACE_SERVICE,
-    api.RESOURCE_DATABRICKS_ID: TEST_WORKSPACE_DIR_DATABRICKS_ID,
-    api.RESOURCE_DEPLOY_OUTPUT: {}
+    api.RESOURCE_DATABRICKS_ID: TEST_WORKSPACE_DIR_DATABRICKS_ID
 }
 TEST_DBFS_FILE_STATUS = {
     api.RESOURCE_ID: TEST_RESOURCE_DBFS_FILE_ID,
     api.RESOURCE_SERVICE: api.DBFS_SERVICE,
-    api.RESOURCE_DATABRICKS_ID: TEST_DBFS_FILE_DATABRICKS_ID,
-    api.RESOURCE_DEPLOY_OUTPUT: {}
+    api.RESOURCE_DATABRICKS_ID: TEST_DBFS_FILE_DATABRICKS_ID
 }
 TEST_DBFS_DIR_STATUS = {
     api.RESOURCE_ID: TEST_RESOURCE_DBFS_DIR_ID,
     api.RESOURCE_SERVICE: api.DBFS_SERVICE,
-    api.RESOURCE_DATABRICKS_ID: TEST_DBFS_DIR_DATABRICKS_ID,
-    api.RESOURCE_DEPLOY_OUTPUT: {}
+    api.RESOURCE_DATABRICKS_ID: TEST_DBFS_DIR_DATABRICKS_ID
 }
 TEST_STACK = {
     api.STACK_NAME: "test-stack",
@@ -135,11 +131,7 @@ TEST_STACK = {
 }
 TEST_STATUS = {
     api.STACK_NAME: "test-stack",
-    api.STACK_RESOURCES: [TEST_JOB_RESOURCE,
-                          TEST_WORKSPACE_NB_RESOURCE,
-                          TEST_WORKSPACE_DIR_RESOURCE,
-                          TEST_DBFS_FILE_RESOURCE,
-                          TEST_DBFS_DIR_RESOURCE],
+    api.CLI_VERSION_KEY: CLI_VERSION,
     api.STACK_DEPLOYED: [TEST_JOB_STATUS,
                          TEST_WORKSPACE_NB_STATUS,
                          TEST_WORKSPACE_DIR_STATUS,
@@ -212,35 +204,25 @@ class TestStackApi(object):
         stack_api.jobs_client = _TestJobsClient()
         # TEST CASE 1:
         # stack_api._deploy_job should create job if databricks_id not given job doesn't exist
-        res_databricks_id_1, res_deploy_output_1 = stack_api._deploy_job(test_job_settings)
-        assert stack_api.jobs_client.get_job(res_databricks_id_1[api.JOBS_RESOURCE_JOB_ID]) == \
-            res_deploy_output_1
-        assert res_deploy_output_1[api.JOBS_RESOURCE_JOB_ID] == \
-            res_databricks_id_1[api.JOBS_RESOURCE_JOB_ID]
-        assert test_job_settings == res_deploy_output_1['job_settings']
+        res_databricks_id_1 = stack_api._deploy_job(test_job_settings)
+        assert res_databricks_id_1 == {api.JOBS_RESOURCE_JOB_ID: 12345}
 
         # TEST CASE 2:
         # stack_api._deploy_job should reset job if databricks_id given.
-        res_databricks_id_2, res_deploy_output_2 = stack_api._deploy_job(alt_test_job_settings,
-                                                                         res_databricks_id_1)
+        res_databricks_id_2 = stack_api._deploy_job(alt_test_job_settings,
+                                                    res_databricks_id_1)
         # physical job id not changed from last update
         assert res_databricks_id_2[api.JOBS_RESOURCE_JOB_ID] == \
             res_databricks_id_1[api.JOBS_RESOURCE_JOB_ID]
-        assert res_deploy_output_2[api.JOBS_RESOURCE_JOB_ID] == \
-            res_databricks_id_2[api.JOBS_RESOURCE_JOB_ID]
-        assert alt_test_job_settings == res_deploy_output_2['job_settings']
 
         # TEST CASE 3:
         # stack_api._deploy_job should reset job if a databricks_id not given, but job with same
         # name found
         alt_test_job_settings['new_property'] = 'new_property_value'
-        res_databricks_id_3, res_deploy_output_3 = stack_api._deploy_job(alt_test_job_settings)
+        res_databricks_id_3 = stack_api._deploy_job(alt_test_job_settings)
         # physical job id not changed from last update
         assert res_databricks_id_3[api.JOBS_RESOURCE_JOB_ID] == \
             res_databricks_id_2[api.JOBS_RESOURCE_JOB_ID]
-        assert res_deploy_output_3[api.JOBS_RESOURCE_JOB_ID] == \
-            res_databricks_id_3[api.JOBS_RESOURCE_JOB_ID]
-        assert alt_test_job_settings == res_deploy_output_3['job_settings']
 
         # TEST CASE 4
         # If a databricks_id is not given but there is already multiple jobs of the same name in
@@ -284,7 +266,7 @@ class TestStackApi(object):
         os.makedirs(test_workspace_dir_properties[api.WORKSPACE_RESOURCE_SOURCE_PATH])
 
         # Test Input of Workspace directory properties.
-        dir_databricks_id, dir_deploy_output = \
+        dir_databricks_id = \
             stack_api._deploy_workspace(test_workspace_dir_properties, None, True)
         stack_api.workspace_client.import_workspace_dir.assert_called_once()
         assert stack_api.workspace_client.import_workspace_dir.call_args[0][0] == \
@@ -293,10 +275,9 @@ class TestStackApi(object):
             test_workspace_dir_properties[api.WORKSPACE_RESOURCE_PATH]
         assert dir_databricks_id == {
             api.WORKSPACE_RESOURCE_PATH: test_workspace_dir_properties[api.WORKSPACE_RESOURCE_PATH]}
-        assert dir_deploy_output == test_deploy_output
 
         # Test Input of Workspace notebook properties.
-        nb_databricks_id, nb_deploy_output = \
+        nb_databricks_id = \
             stack_api._deploy_workspace(test_workspace_nb_properties, None, True)
         stack_api.workspace_client.import_workspace.assert_called_once()
         assert stack_api.workspace_client.import_workspace.call_args[0][0] == \
@@ -305,7 +286,6 @@ class TestStackApi(object):
             test_workspace_nb_properties[api.WORKSPACE_RESOURCE_PATH]
         assert nb_databricks_id == {api.WORKSPACE_RESOURCE_PATH:
                                     test_workspace_nb_properties[api.WORKSPACE_RESOURCE_PATH]}
-        assert nb_deploy_output == test_deploy_output
 
         # Should raise error if resource object_type doesn't match actually is in filesystem.
         test_workspace_dir_properties.update(
@@ -343,7 +323,7 @@ class TestStackApi(object):
                                                              api.DBFS_RESOURCE_SOURCE_PATH])})
         os.makedirs(test_dbfs_dir_properties[api.DBFS_RESOURCE_SOURCE_PATH])
 
-        dir_databricks_id, dir_deploy_output = \
+        dir_databricks_id = \
             stack_api._deploy_dbfs(test_dbfs_dir_properties, None, True)
         assert stack_api.dbfs_client.cp.call_count == 1
         assert stack_api.dbfs_client.cp.call_args[1]['recursive'] is True
@@ -354,9 +334,8 @@ class TestStackApi(object):
             test_dbfs_dir_properties[api.DBFS_RESOURCE_PATH]
         assert dir_databricks_id == {api.DBFS_RESOURCE_PATH:
                                      test_dbfs_dir_properties[api.DBFS_RESOURCE_PATH]}
-        assert dir_deploy_output == test_deploy_output
 
-        nb_databricks_id, nb_deploy_output = \
+        nb_databricks_id = \
             stack_api._deploy_dbfs(test_dbfs_file_properties, None, True)
         assert stack_api.dbfs_client.cp.call_count == 2
         assert stack_api.dbfs_client.cp.call_args[1]['recursive'] is False
@@ -367,7 +346,6 @@ class TestStackApi(object):
             test_dbfs_file_properties[api.DBFS_RESOURCE_PATH]
         assert nb_databricks_id == {api.DBFS_RESOURCE_PATH:
                                     test_dbfs_file_properties[api.DBFS_RESOURCE_PATH]}
-        assert nb_deploy_output == test_deploy_output
 
         # Should raise error if resource properties is_dir field isn't consistent with whether the
         # resource is a directory or not locally.
@@ -390,7 +368,6 @@ class TestStackApi(object):
                                                          resource_status=test_job_resource_status)
         assert api.RESOURCE_ID in new_resource_status
         assert api.RESOURCE_DATABRICKS_ID in new_resource_status
-        assert api.RESOURCE_DEPLOY_OUTPUT in new_resource_status
         assert api.RESOURCE_SERVICE in new_resource_status
         stack_api._deploy_job.assert_called()
         assert stack_api._deploy_job.call_args[0][0] == TEST_JOB_RESOURCE[api.RESOURCE_PROPERTIES]
@@ -552,15 +529,25 @@ class TestStackApi(object):
                         f.write("print('test')\n")
 
         new_stack_status_1 = stack_api.deploy(test_stack)
-        # new stack status should have an identical list of "resources"
-        assert new_stack_status_1.get(api.STACK_RESOURCES) == test_stack.get(api.STACK_RESOURCES)
-        for deployed_resource in new_stack_status_1.get(api.STACK_DEPLOYED):
-            # All functions to pull the deployed output were mocked to return deploy_output
-            assert deployed_resource.get(api.RESOURCE_DEPLOY_OUTPUT) == test_deploy_output
+        test_job_status_1 = {
+            api.RESOURCE_ID: TEST_RESOURCE_ID,
+            api.RESOURCE_SERVICE: api.JOBS_SERVICE,
+            api.RESOURCE_DATABRICKS_ID: {"job_id": 12345}
+        }
+        test_stack_status_1 = {
+            api.STACK_NAME: "test-stack",
+            api.CLI_VERSION_KEY: CLI_VERSION,
+            api.STACK_DEPLOYED: [test_job_status_1,
+                                 TEST_WORKSPACE_NB_STATUS,
+                                 TEST_WORKSPACE_DIR_STATUS,
+                                 TEST_DBFS_FILE_STATUS,
+                                 TEST_DBFS_DIR_STATUS,
+                                 ]
+        }
+        assert new_stack_status_1 == test_stack_status_1
 
         # stack_api.deploy should create a valid stack status when given an existing
         # stack_status
         new_stack_status_2 = stack_api.deploy(test_stack, stack_status=TEST_STATUS)
-        assert new_stack_status_2.get(api.STACK_RESOURCES) == test_stack.get(api.STACK_RESOURCES)
-        for deployed_resource in new_stack_status_2.get(api.STACK_DEPLOYED):
-            assert deployed_resource.get(api.RESOURCE_DEPLOY_OUTPUT) == test_deploy_output
+        test_stack_status_2 = TEST_STATUS
+        assert new_stack_status_2 == test_stack_status_2
