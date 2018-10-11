@@ -1,12 +1,12 @@
 {
-  "name": "cli-example-nb-stack",
+  "name": "notebook-job-project",
   "resources": [
     {
       "id": "example-notebook",
       "service": "workspace",
       "properties": {
-        "source_path": "dev/notebook.scala",
-        "path": "/Shared/stack-cli-examples/dev/notebook",
+        "source_path": "notebooks/hello.scala",
+        "path": "/databricks/stack-cli-examples/notebook-job-project/hello.scala",
         "object_type": "NOTEBOOK"
       }
     },
@@ -14,19 +14,16 @@
       "id": "example-job",
       "service": "jobs",
       "properties": {
-        "name": "Stack CLI Sample Job",
+        "name": "[Databricks] Stack CLI Example: Hello",
         "new_cluster": {
           "spark_version": "4.0.x-scala2.11",
-          "node_type_id": "r3.xlarge",
-          "aws_attributes": {
-            "availability": "SPOT"
-          },
+          "node_type_id": "Standard_F16s",
           "num_workers": 1
         },
         "timeout_seconds": 1200,
         "max_retries": 2,
         "notebook_task": {
-          "notebook_path": "/Shared/stack-cli-examples/dev/notebook"
+          "notebook_path": "/databricks/stack-cli-examples/notebook-job-project/hello.scala"
         }
       }
     }
