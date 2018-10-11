@@ -1,22 +1,13 @@
 {
-  "name": "cli-example-nb-stack",
+  "name": "aws-notebook-job-project",
   "resources": [
     {
       "id": "example-notebook",
       "service": "workspace",
       "properties": {
-        "source_path": "project/notebook.scala",
-        "path": "/tmp/stack-cli-examples/workspace-example/notebook",
+        "source_path": "notebooks/hello.scala",
+        "path": "/databricks/stack-cli-examples/notebook-job-project/notebooks/hello.scala",
         "object_type": "NOTEBOOK"
-      }
-    },
-    {
-      "id": "example-dbfs",
-      "service": "dbfs",
-      "properties": {
-        "source_path": "project/notebook.scala",
-        "path": "dbfs:/tmp/stack-cli-examples/dbfs-example/notebook",
-        "is_dir": false
       }
     },
     {
@@ -35,7 +26,7 @@
         "timeout_seconds": 1200,
         "max_retries": 2,
         "notebook_task": {
-          "notebook_path": "/tmp/stack-cli-examples/workspace-example/notebook"
+          "notebook_path": "/databricks/stack-cli-examples/notebook-job-project/notebooks/hello.scala"
         }
       }
     }
