@@ -1,20 +1,20 @@
-## Examples using Databricks Stack CLI
+# Examples using Databricks Stack CLI
 
-Here we provide examples on how to use Databricks Stack CLI to deploy and download Databricks resource stacks
+Here we provide examples on how to use Databricks Stack CLI to manage Databricks resource stacks.
 
-### Example: notebook-job-project
+## Example: notebook-job-project
 
-In this example we deploy a notebook to Azure workspace and create a job for the notebook.
+In this example we deploy a notebook to Azure Databricks workspace and create a job for the notebook.
 
-#### Commands:
+### Commands:
 
-Go to the corresponding project directory:
+⋅⋅* Go to the corresponding project directory:
 
 ```
 cd notebook-job-project
 ```
 
-Deploy the stack configuration:
+⋅⋅* Deploy the stack configuration:
 
 ```
 databricks stack deploy --profile PROFILE project-stack-config.json -o
