@@ -8,13 +8,13 @@ In this example we deploy a notebook to Azure Databricks workspace and create a 
 
 ### Commands:
 
-⋅⋅* Go to the corresponding project directory:
+* Go to the corresponding project directory:
 
 ```
 cd notebook-job-project
 ```
 
-⋅⋅* Deploy the stack configuration:
+* Deploy the stack configuration:
 
 ```
 databricks stack deploy --profile PROFILE project-stack-config.json -o
