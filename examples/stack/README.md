@@ -17,7 +17,7 @@ cd notebook-job-project
 * Deploy the stack configuration:
 
 ```
-databricks stack deploy --profile PROFILE project-stack-config.json -o
+databricks stack deploy --profile $PROFILE project-stack-config.json -o
 ```
 
 After the stack is successfully deployed, a stack status file `project-stack-config.deployed.json` will be created in the same directory.
