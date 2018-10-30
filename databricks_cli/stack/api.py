@@ -292,12 +292,11 @@ class StackApi(object):
         try:
             self.jobs_client.reset_job({'job_id': job_id, 'new_settings': job_settings})
         except HTTPError:
-            raise StackError('Warning: Job ID could not be found in the workspace while the status '
-                             'file still contains the Job ID {}. Please resolve the inconsistency '
+            raise StackError('Job ID could not be found in the workspace while the status file '
+                             'still contains the Job ID {}. Please resolve the inconsistency '
                              'before proceeding. Aborting stack deployment ...'.format(job_id))
 
-
-def _deploy_workspace(self, resource_properties, databricks_id, overwrite):
+    def _deploy_workspace(self, resource_properties, databricks_id, overwrite):
         """
         Deploy workspace asset.
 

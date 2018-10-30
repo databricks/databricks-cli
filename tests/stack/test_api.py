@@ -247,11 +247,11 @@ class TestStackApi(object):
         # databricks_id, create another job.
         deleted_job_settings = TEST_JOB_DELETED_SETTINGS
         databricks_id_deleted = {api.JOBS_RESOURCE_JOB_ID: job_id_deleted}
-        # Job reset is aborted. Warning message about the inconsistency should appear
+        # Job reset is aborted. Error message about the inconsistency should appear
         with pytest.raises(StackError):
             stack_api._deploy_job(deleted_job_settings, databricks_id_deleted)
 
-def test_deploy_workspace(self, stack_api, tmpdir):
+    def test_deploy_workspace(self, stack_api, tmpdir):
         """
             stack_api._deploy_workspace should call certain workspace client functions depending
             on object_type and error when object_type is defined incorrectly.
