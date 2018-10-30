@@ -146,20 +146,20 @@ class _TestJobsClient(object):
         self.jobs_in_databricks = {}
         self.available_job_id = [1234, 12345]
 
-    def get_job(self, job_id):
+    def get_job(self, job_id, headers=None):
         if job_id not in self.jobs_in_databricks:
             # Job created is not found.
             raise HTTPError('Job not Found')
         else:
             return self.jobs_in_databricks[job_id]
 
-    def reset_job(self, data):
+    def reset_job(self, data, headers=None):
         if data[api.JOBS_RESOURCE_JOB_ID] not in self.jobs_in_databricks:
             raise HTTPError('Job Not Found')
         self.jobs_in_databricks[data[api.JOBS_RESOURCE_JOB_ID]]['job_settings'] = \
             data['new_settings']
 
-    def create_job(self, job_settings):
+    def create_job(self, job_settings, headers=None):
         job_id = self.available_job_id.pop()
         new_job_json = {api.JOBS_RESOURCE_JOB_ID: job_id,
                         'job_settings': job_settings.copy(),
@@ -168,7 +168,7 @@ class _TestJobsClient(object):
         self.jobs_in_databricks[job_id] = new_job_json
         return new_job_json
 
-    def _list_jobs_by_name(self, job_name):
+    def _list_jobs_by_name(self, job_name, headers=None):
         return [job for job in self.jobs_in_databricks.values()
                 if job['job_settings']['name'] == job_name]
 

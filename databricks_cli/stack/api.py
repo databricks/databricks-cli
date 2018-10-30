@@ -76,7 +76,7 @@ class StackApi(object):
         self.workspace_client = WorkspaceApi(api_client)
         self.dbfs_client = DbfsApi(api_client)
 
-    def deploy(self, stack_config, stack_status=None, **kwargs):
+    def deploy(self, stack_config, stack_status=None, headers=None, **kwargs):
         """
         Deploys a stack given stack JSON configuration template at path config_path.
 
@@ -116,7 +116,10 @@ class StackApi(object):
             resource_status = resource_id_to_status.get(resource_map_key) \
                 if resource_map_key in resource_id_to_status else None
             # Deploy resource, get resource_status
-            new_resource_status = self._deploy_resource(resource_config, resource_status, **kwargs)
+            new_resource_status = self._deploy_resource(resource_config,
+                                                        resource_status,
+                                                        headers=headers,
+                                                        **kwargs)
             resource_statuses.append(new_resource_status)
             click.echo('#' * 80)
 
@@ -130,7 +133,7 @@ class StackApi(object):
 
         return new_stack_status
 
-    def download(self, stack_config, **kwargs):
+    def download(self, stack_config, headers=None, **kwargs):
         """
         Downloads a stack given a dict of the stack configuration.
         :param stack_config: dict of stack configuration. Must contain 'name' and 'resources' field.
@@ -143,10 +146,10 @@ class StackApi(object):
         click.echo('#' * 80)
         for resource_config in stack_config.get(STACK_RESOURCES):
             # Deploy resource, get resource_status
-            self._download_resource(resource_config, **kwargs)
+            self._download_resource(resource_config, headers=headers, **kwargs)
             click.echo('#' * 80)
 
-    def _deploy_resource(self, resource_config, resource_status=None, **kwargs):
+    def _deploy_resource(self, resource_config, resource_status=None, headers=None, **kwargs):
         """
         Deploys a resource given a resource information extracted from the stack JSON configuration
         template.
@@ -171,7 +174,8 @@ class StackApi(object):
             click.echo('Deploying job "{}" with properties: \n{}'.format(resource_id, json.dumps(
                 resource_properties, indent=2, separators=(',', ': '))))
             new_databricks_id = self._deploy_job(resource_properties,
-                                                 databricks_id)
+                                                 databricks_id,
+                                                 headers=headers)
         elif resource_service == WORKSPACE_SERVICE:
             click.echo(
                 'Deploying workspace asset "{}" with properties \n{}'
@@ -182,7 +186,8 @@ class StackApi(object):
             overwrite = kwargs.get('overwrite', False)
             new_databricks_id = self._deploy_workspace(resource_properties,
                                                        databricks_id,
-                                                       overwrite)
+                                                       overwrite,
+                                                       headers=headers)
         elif resource_service == DBFS_SERVICE:
             click.echo(
                 'Deploying DBFS asset "{}" with properties \n{}'.format(
@@ -192,7 +197,8 @@ class StackApi(object):
             overwrite = kwargs.get('overwrite', False)
             new_databricks_id = self._deploy_dbfs(resource_properties,
                                                   databricks_id,
-                                                  overwrite)
+                                                  overwrite,
+                                                  headers=headers)
         else:
             raise StackError('Resource service "{}" not supported'.format(resource_service))
 
@@ -201,7 +207,7 @@ class StackApi(object):
                                RESOURCE_DATABRICKS_ID: new_databricks_id}
         return new_resource_status
 
-    def _download_resource(self, resource_config, **kwargs):
+    def _download_resource(self, resource_config, headers=None, **kwargs):
         """
         Downloads a resource given a resource information extracted from the stack JSON
         configuration template.
@@ -222,12 +228,12 @@ class StackApi(object):
                 )
             )
             overwrite = kwargs.get('overwrite', False)
-            self._download_workspace(resource_properties, overwrite)
+            self._download_workspace(resource_properties, overwrite, headers=headers)
         else:
             click.echo('Resource service "{}" not supported for download. '
                        'skipping.'.format(resource_service))
 
-    def _deploy_job(self, resource_properties, databricks_id=None):
+    def _deploy_job(self, resource_properties, databricks_id=None, headers=None):
         """
         Deploys a job resource by either creating a job if the job isn't kept track of through
         the databricks_id of the job or updating an existing job. The job is created or updated
@@ -244,14 +250,14 @@ class StackApi(object):
 
         if databricks_id:
             job_id = databricks_id.get(JOBS_RESOURCE_JOB_ID)
-            self._update_job(job_settings, job_id)
+            self._update_job(job_settings, job_id, headers=headers)
         else:
-            job_id = self._put_job(job_settings)
+            job_id = self._put_job(job_settings, headers=headers)
         click.echo("Job deployed on Databricks with Job ID {}".format(job_id))
         databricks_id = {JOBS_RESOURCE_JOB_ID: job_id}
         return databricks_id
 
-    def _put_job(self, job_settings):
+    def _put_job(self, job_settings, headers=None):
         """
         Given settings of the job in job_settings, create a new job. For purposes of idempotency
         and to reduce leaked resources in alpha versions of stack deployment, if a job exists
@@ -262,7 +268,7 @@ class StackApi(object):
         :return: job_id, Physical ID of job on Databricks server.
         """
         job_name = job_settings.get(JOBS_RESOURCE_NAME)
-        jobs_same_name = self.jobs_client._list_jobs_by_name(job_name)
+        jobs_same_name = self.jobs_client._list_jobs_by_name(job_name, headers=headers)
         if len(jobs_same_name) > 1:
             raise StackError('Multiple jobs with the same name "{}" already exist, aborting'
                              ' stack deployment'.format(job_name))
@@ -275,13 +281,13 @@ class StackApi(object):
                        'be overwritten'.format(job_name, creator_name, date_created))
             # Calling jobs_client.reset_job directly so as to not call same level function.
             self.jobs_client.reset_job({'job_id': existing_job.get('job_id'),
-                                        'new_settings': job_settings})
+                                        'new_settings': job_settings}, headers=headers)
             return existing_job.get('job_id')
         else:
-            job_id = self.jobs_client.create_job(job_settings).get('job_id')
+            job_id = self.jobs_client.create_job(job_settings, headers=headers).get('job_id')
             return job_id
 
-    def _update_job(self, job_settings, job_id):
+    def _update_job(self, job_settings, job_id, headers=None):
         """
         Given job settings and an existing job_id of a job, update the job settings on databricks.
 
@@ -289,9 +295,10 @@ class StackApi(object):
         :param job_id: physical job_id of job in databricks server.
         """
 
-        self.jobs_client.reset_job({'job_id': job_id, 'new_settings': job_settings})
+        self.jobs_client.reset_job({'job_id': job_id, 'new_settings': job_settings},
+                                   headers=headers)
 
-    def _deploy_workspace(self, resource_properties, databricks_id, overwrite):
+    def _deploy_workspace(self, resource_properties, databricks_id, overwrite, headers=None):
         """
         Deploy workspace asset.
 
@@ -327,12 +334,12 @@ class StackApi(object):
                                  "Please check file extension of notebook file.")
             language, fmt = language_fmt
             # Create needed directories in workspace.
-            self.workspace_client.mkdirs(os.path.dirname(workspace_path))
+            self.workspace_client.mkdirs(os.path.dirname(workspace_path), headers=headers)
             self.workspace_client.import_workspace(local_path, workspace_path, language, fmt,
-                                                   overwrite)
+                                                   overwrite, headers=headers)
         elif object_type == DIRECTORY:
             self.workspace_client.import_workspace_dir(local_path, workspace_path, overwrite,
-                                                       exclude_hidden_files=True)
+                                                       exclude_hidden_files=True, headers=headers)
         else:
             # Shouldn't reach here because of verification of object_type above.
             assert False
@@ -346,7 +353,7 @@ class StackApi(object):
 
         return new_databricks_id
 
-    def _download_workspace(self, resource_properties, overwrite):
+    def _download_workspace(self, resource_properties, overwrite, headers=None):
         """
         Download workspace asset.
 
@@ -370,14 +377,16 @@ class StackApi(object):
             local_dir = os.path.dirname(os.path.abspath(local_path))
             if not os.path.exists(local_dir):
                 os.makedirs(local_dir)
-            self.workspace_client.export_workspace(workspace_path, local_path, fmt, overwrite)
+            self.workspace_client.export_workspace(workspace_path, local_path, fmt, overwrite,
+                                                   headers=headers)
         elif object_type == DIRECTORY:
-            self.workspace_client.export_workspace_dir(workspace_path, local_path, overwrite)
+            self.workspace_client.export_workspace_dir(workspace_path, local_path, overwrite,
+                                                       headers=headers)
         else:
             raise StackError('Invalid value for "{}" field: {}'
                              .format(WORKSPACE_RESOURCE_OBJECT_TYPE, object_type))
 
-    def _deploy_dbfs(self, resource_properties, databricks_id, overwrite):
+    def _deploy_dbfs(self, resource_properties, databricks_id, overwrite, headers=None):
         """
         Deploy dbfs asset.
 
@@ -401,10 +410,12 @@ class StackApi(object):
                              .format(local_path, dir_or_file, str(is_dir).lower()))
         if is_dir:
             click.echo('Uploading directory from {} to DBFS at {}'.format(local_path, dbfs_path))
-            self.dbfs_client.cp(recursive=True, overwrite=overwrite, src=local_path, dst=dbfs_path)
+            self.dbfs_client.cp(recursive=True, overwrite=overwrite, src=local_path, dst=dbfs_path,
+                                headers=headers)
         else:
             click.echo('Uploading file from {} to DBFS at {}'.format(local_path, dbfs_path))
-            self.dbfs_client.cp(recursive=False, overwrite=overwrite, src=local_path, dst=dbfs_path)
+            self.dbfs_client.cp(recursive=False, overwrite=overwrite, src=local_path, dst=dbfs_path,
+                                headers=headers)
 
         if databricks_id and databricks_id[DBFS_RESOURCE_PATH] != dbfs_path:
             # databricks_id['path'] is the dbfs path from the last deployment. Alert when changed
