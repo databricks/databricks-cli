@@ -27,26 +27,27 @@ class JobsApi(object):
     def __init__(self, api_client):
         self.client = JobsService(api_client)
 
-    def create_job(self, json):
-        return self.client.client.perform_query('POST', '/jobs/create', data=json)
+    def create_job(self, json, headers=None):
+        return self.client.client.perform_query('POST', '/jobs/create', data=json, headers=headers)
 
-    def list_jobs(self):
-        return self.client.list_jobs()
+    def list_jobs(self, headers=None):
+        return self.client.list_jobs(headers=headers)
 
-    def delete_job(self, job_id):
-        return self.client.delete_job(job_id)
+    def delete_job(self, job_id, headers=None):
+        return self.client.delete_job(job_id, headers=headers)
 
-    def get_job(self, job_id):
-        return self.client.get_job(job_id)
+    def get_job(self, job_id, headers=None):
+        return self.client.get_job(job_id, headers=headers)
 
-    def reset_job(self, json):
-        return self.client.client.perform_query('POST', '/jobs/reset', data=json)
+    def reset_job(self, json, headers=None):
+        return self.client.client.perform_query('POST', '/jobs/reset', data=json, headers=headers)
 
-    def run_now(self, job_id, jar_params, notebook_params, python_params, spark_submit_params):
+    def run_now(self, job_id, jar_params, notebook_params, python_params, spark_submit_params,
+                headers=None):
         return self.client.run_now(job_id, jar_params, notebook_params, python_params,
-                                   spark_submit_params)
+                                   spark_submit_params, headers=headers)
 
-    def _list_jobs_by_name(self, name):
-        jobs = self.list_jobs()['jobs']
+    def _list_jobs_by_name(self, name, headers=None):
+        jobs = self.list_jobs(headers=headers)['jobs']
         result = list(filter(lambda job: job['settings']['name'] == name, jobs))
         return result
