@@ -40,6 +40,9 @@ from databricks_cli.version import version as CLI_VERSION
 TEST_JOB_SETTINGS = {
     api.JOBS_RESOURCE_NAME: 'test job'
 }
+TEST_JOB_DELETED_SETTINGS = {
+    api.JOBS_RESOURCE_NAME: 'deleted test job'
+}
 TEST_JOB_RESOURCE_ID = 'test job'
 TEST_JOB_RESOURCE = {
     api.RESOURCE_ID: TEST_JOB_RESOURCE_ID,
@@ -140,6 +143,7 @@ TEST_STATUS = {
                          ]
 }
 
+job_id_deleted = 111
 
 class _TestJobsClient(object):
     def __init__(self):
@@ -154,10 +158,13 @@ class _TestJobsClient(object):
             return self.jobs_in_databricks[job_id]
 
     def reset_job(self, data):
-        if data[api.JOBS_RESOURCE_JOB_ID] not in self.jobs_in_databricks:
+        if data[api.JOBS_RESOURCE_JOB_ID] == job_id_deleted:
+            raise HTTPError
+        elif data[api.JOBS_RESOURCE_JOB_ID] not in self.jobs_in_databricks:
             raise HTTPError('Job Not Found')
         self.jobs_in_databricks[data[api.JOBS_RESOURCE_JOB_ID]]['job_settings'] = \
             data['new_settings']
+
 
     def create_job(self, job_settings):
         job_id = self.available_job_id.pop()
@@ -235,7 +242,16 @@ class TestStackApi(object):
         with pytest.raises(StackError):
             stack_api._deploy_job(alt_test_job_settings)
 
-    def test_deploy_workspace(self, stack_api, tmpdir):
+        # TEST CASE 5
+        # If a databricks_id is deleted from the workspace while the status file contains that
+        # databricks_id, create another job.
+        deleted_job_settings = TEST_JOB_DELETED_SETTINGS
+        databricks_id_deleted = {api.JOBS_RESOURCE_JOB_ID: job_id_deleted}
+        # Job reset is aborted. Warning message about the inconsistency should appear
+        with pytest.raises(StackError):
+            stack_api._deploy_job(deleted_job_settings, databricks_id_deleted)
+
+def test_deploy_workspace(self, stack_api, tmpdir):
         """
             stack_api._deploy_workspace should call certain workspace client functions depending
             on object_type and error when object_type is defined incorrectly.
