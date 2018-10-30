@@ -127,6 +127,7 @@ class WorkspaceApi(object):
 
     def import_workspace_dir(self, source_path, target_path, overwrite, exclude_hidden_files,
                              headers=None):
+        # pylint: disable=too-many-locals
         filenames = os.listdir(source_path)
         if exclude_hidden_files:
             # for now, just exclude hidden files or directories based on starting '.'
