@@ -24,6 +24,7 @@
 import os
 import json
 from datetime import datetime
+from requests.exceptions import HTTPError
 
 import click
 
@@ -288,10 +289,15 @@ class StackApi(object):
         :param job_settings: job settings to update the job with.
         :param job_id: physical job_id of job in databricks server.
         """
+        try:
+            self.jobs_client.reset_job({'job_id': job_id, 'new_settings': job_settings})
+        except HTTPError:
+            click.echo('Warning: Job ID could not be found in the workspace while the status '
+                       'file still contains the Job ID {}. Please resolve the inconsistency '
+                       'before proceeding. Aborting job reset ...'.format(job_id))
 
-        self.jobs_client.reset_job({'job_id': job_id, 'new_settings': job_settings})
 
-    def _deploy_workspace(self, resource_properties, databricks_id, overwrite):
+def _deploy_workspace(self, resource_properties, databricks_id, overwrite):
         """
         Deploy workspace asset.
 
