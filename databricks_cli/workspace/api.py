@@ -125,7 +125,8 @@ class WorkspaceApi(object):
     def delete(self, workspace_path, is_recursive, headers=None):
         self.client.delete(workspace_path, is_recursive, headers=headers)
 
-    def import_workspace_dir(self, source_path, target_path, overwrite, exclude_hidden_files, headers=None):
+    def import_workspace_dir(self, source_path, target_path, overwrite, exclude_hidden_files,
+                             headers=None):
         filenames = os.listdir(source_path)
         if exclude_hidden_files:
             # for now, just exclude hidden files or directories based on starting '.'
@@ -140,13 +141,15 @@ class WorkspaceApi(object):
             # don't use os.path.join here since it will set \ on Windows
             cur_dst = target_path.rstrip('/') + '/' + filename
             if os.path.isdir(cur_src):
-                self.import_workspace_dir(cur_src, cur_dst, overwrite, exclude_hidden_files, headers=headers)
+                self.import_workspace_dir(cur_src, cur_dst, overwrite, exclude_hidden_files,
+                                          headers=headers)
             elif os.path.isfile(cur_src):
                 ext = WorkspaceLanguage.get_extension(cur_src)
                 if ext != '':
                     cur_dst = cur_dst[:-len(ext)]
                     (language, file_format) = WorkspaceLanguage.to_language_and_format(cur_src)
-                    self.import_workspace(cur_src, cur_dst, language, file_format, overwrite, headers=headers)
+                    self.import_workspace(cur_src, cur_dst, language, file_format, overwrite,
+                                          headers=headers)
                     click.echo('{} -> {}'.format(cur_src, cur_dst))
                 else:
                     extensions = ', '.join(WorkspaceLanguage.EXTENSIONS)
@@ -168,7 +171,8 @@ class WorkspaceApi(object):
             elif obj.is_notebook:
                 cur_dst = cur_dst + WorkspaceLanguage.to_extension(obj.language)
                 try:
-                    self.export_workspace(cur_src, cur_dst, WorkspaceFormat.SOURCE, overwrite, headers=headers)
+                    self.export_workspace(cur_src, cur_dst, WorkspaceFormat.SOURCE, overwrite,
+                                          headers=headers)
                     click.echo('{} -> {}'.format(cur_src, cur_dst))
                 except LocalFileExistsException:
                     click.echo('{} already exists locally as {}. Skip.'.format(cur_src, cur_dst))

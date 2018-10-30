@@ -113,7 +113,8 @@ class DbfsApi(object):
         offset = 0
         with open(dst_path, 'wb') as local_file:
             while offset < length:
-                response = self.client.read(dbfs_path.absolute_path, offset, BUFFER_SIZE_BYTES, headers=headers)
+                response = self.client.read(dbfs_path.absolute_path, offset, BUFFER_SIZE_BYTES,
+                                            headers=headers)
                 bytes_read = response['bytes_read']
                 data = response['data']
                 offset += bytes_read
@@ -212,7 +213,8 @@ class DbfsApi(object):
             else:
                 dbfs_path_src = DbfsPath(src)
                 if not self.get_status(dbfs_path_src, headers=headers).is_dir:
-                    self._copy_from_dbfs_non_recursive(dbfs_path_src, dst, overwrite, headers=headers)
+                    self._copy_from_dbfs_non_recursive(dbfs_path_src, dst, overwrite,
+                                                       headers=headers)
                 self._copy_from_dbfs_recursive(dbfs_path_src, dst, overwrite, headers=headers)
         elif not DbfsPath.is_valid(src) and not DbfsPath.is_valid(dst):
             error_and_quit('Both paths provided are from your local filesystem. '
