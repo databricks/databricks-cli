@@ -33,6 +33,7 @@ import json
 import warnings
 import requests
 import ssl
+import copy
 
 from . import version
 
@@ -98,7 +99,9 @@ class ApiClient(object):
         if headers is None:
             headers = self.default_headers
         else:
-            headers = self.default_headers.update(headers)
+            tmp_headers = copy.deepcopy(self.default_headers)
+            tmp_headers.update(headers)
+            headers = tmp_headers
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", exceptions.InsecureRequestWarning)
