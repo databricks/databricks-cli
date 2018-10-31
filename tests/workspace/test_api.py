@@ -143,7 +143,7 @@ class TestWorkspaceApi(object):
 
         workspace_api.export_workspace = mock.MagicMock()
 
-        def _list_objects_mock(path):
+        def _list_objects_mock(path, headers=None):
             if path == '/':
                 return [
                     WorkspaceFileInfo('/a', api.DIRECTORY),

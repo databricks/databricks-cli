@@ -97,6 +97,8 @@ class ApiClient(object):
         """set up connection and perform query"""
         if headers is None:
             headers = self.default_headers
+        else:
+            headers = self.default_headers.update(headers)
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", exceptions.InsecureRequestWarning)
