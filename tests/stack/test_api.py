@@ -242,7 +242,9 @@ class TestStackApi(object):
         # TEST CASE 5
         # If a databricks_id is not found in workspace, then abort
         nonexisting_job_settings = TEST_JOB_NONEXISTING_SETTINGS
-        nonexisting_databricks_id = {api.JOBS_RESOURCE_JOB_ID: stack_api.jobs_client.nonexisting_job_id}
+        nonexisting_databricks_id = {
+            api.JOBS_RESOURCE_JOB_ID: stack_api.jobs_client.nonexisting_job_id
+        }
         # Job deployment is aborted. Error message about the inconsistency should appear
         with pytest.raises(StackError):
             stack_api._deploy_job(nonexisting_job_settings, nonexisting_databricks_id)
