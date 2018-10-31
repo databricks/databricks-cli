@@ -33,6 +33,7 @@ import json
 import warnings
 import requests
 import ssl
+import copy
 
 from . import version
 
