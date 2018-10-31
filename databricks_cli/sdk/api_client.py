@@ -100,7 +100,7 @@ class ApiClient(object):
             headers = self.default_headers
         else:
             tmp_headers = copy.deepcopy(self.default_headers)
-            tmp_headers.update(self.default_headers)
+            tmp_headers.update(headers)
             headers = tmp_headers
 
         with warnings.catch_warnings():
