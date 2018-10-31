@@ -143,12 +143,11 @@ TEST_STATUS = {
                          ]
 }
 
-job_id_deleted = 111
-
 class _TestJobsClient(object):
     def __init__(self):
         self.jobs_in_databricks = {}
         self.available_job_id = [1234, 12345]
+        self.deleted_job_id = 111
 
     def get_job(self, job_id, headers=None):
         if job_id not in self.jobs_in_databricks:
@@ -158,8 +157,10 @@ class _TestJobsClient(object):
             return self.jobs_in_databricks[job_id]
           
     def reset_job(self, data, headers=None):
-        if data[api.JOBS_RESOURCE_JOB_ID] == job_id_deleted:
-            raise HTTPError
+        if data[api.JOBS_RESOURCE_JOB_ID] == self.deleted_job_id:
+            raise HTTPError('Job ID could not be found in the workspace while '
+                            'the status file still contains the Job ID {}'
+                            .format(self.deleted_job_id))
         elif data[api.JOBS_RESOURCE_JOB_ID] not in self.jobs_in_databricks:
             raise HTTPError('Job Not Found')
         self.jobs_in_databricks[data[api.JOBS_RESOURCE_JOB_ID]]['job_settings'] = \
@@ -245,7 +246,7 @@ class TestStackApi(object):
         # If a databricks_id is deleted from the workspace while the status file contains that
         # databricks_id, create another job.
         deleted_job_settings = TEST_JOB_DELETED_SETTINGS
-        databricks_id_deleted = {api.JOBS_RESOURCE_JOB_ID: job_id_deleted}
+        databricks_id_deleted = {api.JOBS_RESOURCE_JOB_ID: stack_api.jobs_client.deleted_job_id}
         # Job reset is aborted. Error message about the inconsistency should appear
         with pytest.raises(StackError):
             stack_api._deploy_job(deleted_job_settings, databricks_id_deleted)
