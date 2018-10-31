@@ -143,6 +143,7 @@ TEST_STATUS = {
                          ]
 }
 
+
 class _TestJobsClient(object):
     def __init__(self):
         self.jobs_in_databricks = {}
@@ -155,7 +156,7 @@ class _TestJobsClient(object):
             raise HTTPError('Job not Found')
         else:
             return self.jobs_in_databricks[job_id]
-          
+
     def reset_job(self, data, headers=None):
         if data[api.JOBS_RESOURCE_JOB_ID] == self.deleted_job_id:
             raise HTTPError('Job ID could not be found in the workspace while '
