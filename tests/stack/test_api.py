@@ -40,6 +40,9 @@ from databricks_cli.version import version as CLI_VERSION
 TEST_JOB_SETTINGS = {
     api.JOBS_RESOURCE_NAME: 'test job'
 }
+TEST_JOB_NONEXISTING_SETTINGS = {
+    api.JOBS_RESOURCE_NAME: 'non-existing test job in workspace'
+}
 TEST_JOB_RESOURCE_ID = 'test job'
 TEST_JOB_RESOURCE = {
     api.RESOURCE_ID: TEST_JOB_RESOURCE_ID,
@@ -145,6 +148,7 @@ class _TestJobsClient(object):
     def __init__(self):
         self.jobs_in_databricks = {}
         self.available_job_id = [1234, 12345]
+        self.nonexisting_job_id = 111
 
     def get_job(self, job_id, headers=None):
         if job_id not in self.jobs_in_databricks:
@@ -234,6 +238,16 @@ class TestStackApi(object):
         }
         with pytest.raises(StackError):
             stack_api._deploy_job(alt_test_job_settings)
+
+        # TEST CASE 5
+        # If a databricks_id is not found in workspace, then abort
+        nonexisting_job_settings = TEST_JOB_NONEXISTING_SETTINGS
+        nonexisting_databricks_id = {
+            api.JOBS_RESOURCE_JOB_ID: stack_api.jobs_client.nonexisting_job_id
+        }
+        # Job deployment is aborted. Error message about the inconsistency should appear
+        with pytest.raises(StackError):
+            stack_api._deploy_job(nonexisting_job_settings, nonexisting_databricks_id)
 
     def test_deploy_workspace(self, stack_api, tmpdir):
         """
