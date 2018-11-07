@@ -115,6 +115,26 @@ def restart_cli(api_client, cluster_id):
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--cluster-id', required=True, type=ClusterIdClickType(),
               help=ClusterIdClickType.help)
+@click.option('--num-workers', required=True, type=click.INT,
+              help='Number of workers')
+@debug_option
+@profile_option
+@provide_api_client
+@eat_exceptions
+def resize_cli(api_client, cluster_id, num_workers):
+    """Resizes a Databricks cluster given its ID.
+
+    Provide a `--num-workers` parameter to indicate the new cluster size.
+
+    If the cluster is not currently in a RUNNING state, this will cause an
+    error to occur.
+    """
+    ClusterApi(api_client).resize_cluster(cluster_id, num_workers)
+
+
+@click.command(context_settings=CONTEXT_SETTINGS)
+@click.option('--cluster-id', required=True, type=ClusterIdClickType(),
+              help=ClusterIdClickType.help)
 @debug_option
 @profile_option
 @eat_exceptions
@@ -246,6 +266,7 @@ clusters_group.add_command(create_cli, name='create')
 clusters_group.add_command(edit_cli, name='edit')
 clusters_group.add_command(start_cli, name='start')
 clusters_group.add_command(restart_cli, name='restart')
+clusters_group.add_command(resize_cli, name='resize')
 clusters_group.add_command(delete_cli, name='delete')
 clusters_group.add_command(get_cli, name='get')
 clusters_group.add_command(list_cli, name='list')
