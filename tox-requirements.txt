@@ -1,10 +1,10 @@
 # Test reqs
-prospector[with_pyroma]==0.12.7
-pylint==1.8.2
-pep8-naming==0.5.0
-pytest==3.2.1
+prospector[with_pyroma]==1.1.1
+pylint==1.9.3
+pep8-naming==0.7.0
+pytest==3.7.1
 mock==2.0.0
-decorator==4.2.1
-rstcheck==3.2
+decorator==4.3.0
+rstcheck==3.3
 pytest-cov
 codecov
