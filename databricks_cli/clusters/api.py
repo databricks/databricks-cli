@@ -39,6 +39,9 @@ class ClusterApi(object):
     def restart_cluster(self, cluster_id):
         return self.client.restart_cluster(cluster_id)
 
+    def resize_cluster(self, cluster_id, num_workers):
+        return self.client.resize_cluster(cluster_id, num_workers=num_workers)
+
     def delete_cluster(self, cluster_id):
         return self.client.delete_cluster(cluster_id)
 

@@ -81,6 +81,14 @@ def test_restart_cli(cluster_api_mock):
 
 
 @provide_conf
+def test_resize_cli(cluster_api_mock):
+    runner = CliRunner()
+    runner.invoke(cli.resize_cli, ['--cluster-id', CLUSTER_ID, '--num-workers', 17])
+    assert cluster_api_mock.resize_cluster.call_args[0][0] == CLUSTER_ID
+    assert cluster_api_mock.resize_cluster.call_args[0][1] == 17
+
+
+@provide_conf
 def test_delete_cli(cluster_api_mock):
     runner = CliRunner()
     runner.invoke(cli.delete_cli, ['--cluster-id', CLUSTER_ID])
