@@ -35,6 +35,8 @@ import requests
 import ssl
 import copy
 
+from urllib import urlencode
+
 from . import version
 
 from requests.adapters import HTTPAdapter
@@ -105,8 +107,12 @@ class ApiClient(object):
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", exceptions.InsecureRequestWarning)
-            resp = self.session.request(method, self.url + path, data = json.dumps(data),
-                verify = self.verify, headers = headers)
+            if method == 'GET':
+                resp = self.session.request(method, self.url + path + "?" + urlencode(data),
+                    verify = self.verify, headers = headers)
+            else:
+                resp = self.session.request(method, self.url + path, data = json.dumps(data),
+                    verify = self.verify, headers = headers)
 
         try:
             resp.raise_for_status()
