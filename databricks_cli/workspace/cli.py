@@ -147,22 +147,24 @@ def delete_cli(api_client, workspace_path, recursive):
 @click.argument('source_path')
 @click.argument('target_path')
 @click.option('--overwrite', '-o', is_flag=True, default=False)
+@click.option('--format', '-f', default=WorkspaceFormat.SOURCE, type=FormatClickType())
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def export_dir_cli(api_client, source_path, target_path, overwrite):
+def export_dir_cli(api_client, source_path, target_path, format, overwrite):
     """
     Recursively exports a directory from the Databricks workspace.
 
     Only directories and notebooks are exported. Notebooks are always exported in the SOURCE
     format. Notebooks will also have the extension of .scala, .py, .sql, or .r appended
     depending on the language type.
+    ADDED format -- jeffreybreen
     """
     workspace_api = WorkspaceApi(api_client)
     assert workspace_api.get_status(source_path).is_dir, 'The source path must be a directory. {}' \
         .format(source_path)
-    workspace_api.export_workspace_dir(source_path, target_path, overwrite)
+    workspace_api.export_workspace_dir(source_path, target_path, format, overwrite)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
