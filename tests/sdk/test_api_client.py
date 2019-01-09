@@ -57,5 +57,6 @@ def test_content_from_server_on_error(m):
     m.get('https://databricks.com/api/2.0/endpoint', status_code=400, text=json.dumps(data))
     client = ApiClient(user='apple', password='banana', host='https://databricks.com')
     error_message_contains = "{'cucumber': 'dade'}"
-    with pytest.raises(requests.exceptions.HTTPError, match=error_message_contains):
+    with pytest.raises(requests.exceptions.HTTPError) as e:
         client.perform_query('GET', '/endpoint')
+        assert error_message_contains in e.value.message

@@ -6,6 +6,8 @@ To isolate dependencies from your global python installation, it is important to
 Another option would be to use docker directly, i.e. 
 ```bash
 docker run -it -v `echo $PWD`:/root python:3.6.8 bash
+docker run -it -v `echo $PWD`:/root python:2.7.12 bash
+
 ```
 
 - `pip install -e .`

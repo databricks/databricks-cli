@@ -114,9 +114,9 @@ class ApiClient(object):
         except requests.exceptions.HTTPError as e:
             message = e.args[0]
             try:
-                reason = pprint.pformat(json.loads(resp.content), indent=2)
+                reason = pprint.pformat(json.loads(resp.text), indent=2)
                 message += '\n Response from server: \n {}'.format(reason)
-            except json.decoder.JSONDecodeError:
+            except ValueError:
                 pass
             raise requests.exceptions.HTTPError(message, response=e.response)
         return resp.json()
