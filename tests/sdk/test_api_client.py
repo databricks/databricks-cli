@@ -20,6 +20,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import json
+
+import pytest
+import requests
+import requests_mock
 
 from databricks_cli.sdk.api_client import ApiClient
 
@@ -29,3 +34,29 @@ def test_api_client_constructor():
     client = ApiClient(user='apple', password='banana', host='https://databricks.com')
     # echo -n "apple:banana" | base64
     assert client.default_headers['Authorization'] == 'Basic YXBwbGU6YmFuYW5h'
+
+@pytest.fixture()
+def m():
+    with requests_mock.Mocker() as m:
+        yield m
+
+def test_simple_request(m):
+    data = {'cucumber': 'dade'}
+    m.get('https://databricks.com/api/2.0/endpoint', text=json.dumps(data))
+    client = ApiClient(user='apple', password='banana', host='https://databricks.com')
+    assert client.perform_query('GET', '/endpoint') == data
+
+def test_no_content_from_server_on_error(m):
+    m.get('https://databricks.com/api/2.0/endpoint', status_code=400, text='some html message')
+    client = ApiClient(user='apple', password='banana', host='https://databricks.com')
+    with pytest.raises(requests.exceptions.HTTPError):
+        client.perform_query('GET', '/endpoint')
+
+def test_content_from_server_on_error(m):
+    data = {'cucumber': 'dade'}
+    m.get('https://databricks.com/api/2.0/endpoint', status_code=400, text=json.dumps(data))
+    client = ApiClient(user='apple', password='banana', host='https://databricks.com')
+    error_message_contains = "{'cucumber': 'dade'}"
+    with pytest.raises(requests.exceptions.HTTPError) as e:
+        client.perform_query('GET', '/endpoint')
+        assert error_message_contains in e.value.message
