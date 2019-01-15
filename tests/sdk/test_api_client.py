@@ -60,3 +60,7 @@ def test_content_from_server_on_error(m):
     with pytest.raises(requests.exceptions.HTTPError) as e:
         client.perform_query('GET', '/endpoint')
         assert error_message_contains in e.value.message
+
+def test_api_client_url_with_queryparams():
+    client = ApiClient(host='https://databricks.com/?o=123')
+    assert client.url == 'https://databricks.com/api/2.0'
