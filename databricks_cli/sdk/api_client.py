@@ -34,6 +34,7 @@ import warnings
 import requests
 import ssl
 import copy
+import pprint
 
 from . import version
 
@@ -111,5 +112,11 @@ class ApiClient(object):
         try:
             resp.raise_for_status()
         except requests.exceptions.HTTPError as e:
-            raise e
+            message = e.args[0]
+            try:
+                reason = pprint.pformat(json.loads(resp.text), indent=2)
+                message += '\n Response from server: \n {}'.format(reason)
+            except ValueError:
+                pass
+            raise requests.exceptions.HTTPError(message, response=e.response)
         return resp.json()
