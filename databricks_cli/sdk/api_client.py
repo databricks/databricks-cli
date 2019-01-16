@@ -74,8 +74,8 @@ class ApiClient(object):
         self.session.mount('https://', TlsV1HttpAdapter())
 
         parsed_url = urlparse(host)
-        scheme = parsed_url[0]
-        hostname = parsed_url[1]
+        scheme = parsed_url.scheme
+        hostname = parsed_url.hostname
         self.url = "%s://%s/api/%s" % (scheme, hostname, apiVersion)
         if user is not None and password is not None:
             encoded_auth = (user + ":" + password).encode()
