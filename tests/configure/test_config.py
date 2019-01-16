@@ -136,7 +136,7 @@ def test_command_headers():
     def test_command(api_client, x): # noqa
         click.echo(json.dumps(api_client.default_headers))
 
-    with mock.patch("databricks_cli.configure.provider.DatabricksConfig") as config_mock:
+    with mock.patch("databricks_cli.configure.config.get_config") as config_mock:
         with mock.patch("uuid.uuid1") as uuid_mock:
             config_mock.return_value = DatabricksConfig.from_token(TEST_HOST, TEST_TOKEN)
             uuid_mock.return_value = '1234'
