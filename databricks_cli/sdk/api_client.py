@@ -39,6 +39,7 @@ import pprint
 from . import version
 
 from requests.adapters import HTTPAdapter
+from six.moves.urllib.parse import urlparse
 
 try:
     from requests.packages.urllib3.poolmanager import PoolManager
@@ -72,7 +73,10 @@ class ApiClient(object):
         self.session = requests.Session()
         self.session.mount('https://', TlsV1HttpAdapter())
 
-        self.url = "%s/api/%s" % (host, apiVersion)
+        parsed_url = urlparse(host)
+        scheme = parsed_url.scheme
+        hostname = parsed_url.hostname
+        self.url = "%s://%s/api/%s" % (scheme, hostname, apiVersion)
         if user is not None and password is not None:
             encoded_auth = (user + ":" + password).encode()
             user_header_data = "Basic " + base64.standard_b64encode(encoded_auth).decode()
@@ -108,7 +112,6 @@ class ApiClient(object):
             warnings.simplefilter("ignore", exceptions.InsecureRequestWarning)
             resp = self.session.request(method, self.url + path, data = json.dumps(data),
                 verify = self.verify, headers = headers)
-
         try:
             resp.raise_for_status()
         except requests.exceptions.HTTPError as e:

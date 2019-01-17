@@ -60,3 +60,18 @@ def test_content_from_server_on_error(m):
     with pytest.raises(requests.exceptions.HTTPError) as e:
         client.perform_query('GET', '/endpoint')
         assert error_message_contains in e.value.message
+
+def test_api_client_url_parsing():
+    client = ApiClient(host='https://databricks.com')
+    assert client.url == 'https://databricks.com/api/2.0'
+
+    client = ApiClient(host='https://databricks.com/?o=123')
+    assert client.url == 'https://databricks.com/api/2.0'
+
+    client = ApiClient(host='https://databricks.com?o=123')
+    assert client.url == 'https://databricks.com/api/2.0'
+
+    # NOTE: this technically is not possible since we validate that the "host" has a prefix of https:// in
+    # databricks_cli.configure.cli
+    client = ApiClient(host='http://databricks.com')
+    assert client.url == 'http://databricks.com/api/2.0'
