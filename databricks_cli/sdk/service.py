@@ -294,7 +294,7 @@ class ClusterService(object):
     def edit_cluster(self, cluster_id, num_workers=None, autoscale=None, cluster_name=None,
                      spark_version=None, spark_conf=None, aws_attributes=None, node_type_id=None,
                      driver_node_type_id=None, ssh_public_keys=None, custom_tags=None,
-                     cluster_log_conf=None, spark_env_vars=None, autotermination_minutes=None,
+                     cluster_log_conf=None, init_scripts=None, spark_env_vars=None, autotermination_minutes=None,
                      enable_elastic_disk=None, cluster_source=None, headers=None):
         _data = {}
         if cluster_id is not None:
@@ -327,6 +327,8 @@ class ClusterService(object):
             _data['cluster_log_conf'] = cluster_log_conf
             if not isinstance(cluster_log_conf, dict):
                 raise TypeError('Expected databricks.ClusterLogConf() or dict for field cluster_log_conf')
+        if init_scripts is not None:
+            _data['init_scripts'] = init_scripts
         if spark_env_vars is not None:
             _data['spark_env_vars'] = spark_env_vars
         if autotermination_minutes is not None:
