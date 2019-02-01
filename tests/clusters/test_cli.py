@@ -96,6 +96,13 @@ def test_delete_cli(cluster_api_mock):
 
 
 @provide_conf
+def test_permanent_delete_cli(cluster_api_mock):
+    runner = CliRunner()
+    runner.invoke(cli.permanent_delete_cli, ['--cluster-id', CLUSTER_ID])
+    assert cluster_api_mock.permanent_delete.call_args[0][0] == CLUSTER_ID
+
+
+@provide_conf
 def test_get_cli(cluster_api_mock):
     cluster_api_mock.get_cluster.return_value = '{}'
     runner = CliRunner()

@@ -59,3 +59,6 @@ class ClusterApi(object):
 
     def spark_versions(self):
         return self.client.list_spark_versions()
+
+    def permanent_delete(self, cluster_id):
+        return self.client.permanent_delete_cluster(cluster_id)
