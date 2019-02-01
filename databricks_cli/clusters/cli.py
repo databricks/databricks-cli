@@ -248,6 +248,23 @@ def spark_versions_cli(api_client):
     click.echo(pretty_format(ClusterApi(api_client).spark_versions()))
 
 
+@click.command(context_settings=CONTEXT_SETTINGS)
+@click.option('--cluster-id', required=True, type=ClusterIdClickType(),
+              help=ClusterIdClickType.help)
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def permanent_delete_cli(api_client, cluster_id):
+    """
+    Permanently deletes a Spark cluster.
+
+    If the cluster is running, it is terminated and its resources are asynchronously removed.
+    If the cluster is terminated, then it is immediately removed.
+    """
+    ClusterApi(api_client).permanent_delete(cluster_id)
+
+
 @click.group(context_settings=CONTEXT_SETTINGS,
              short_help='Utility to interact with Databricks clusters.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
@@ -273,3 +290,4 @@ clusters_group.add_command(list_cli, name='list')
 clusters_group.add_command(list_zones_cli, name='list-zones')
 clusters_group.add_command(list_node_types_cli, name='list-node-types')
 clusters_group.add_command(spark_versions_cli, name='spark-versions')
+clusters_group.add_command(permanent_delete_cli, name='permanent-delete')
