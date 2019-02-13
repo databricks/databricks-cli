@@ -33,7 +33,8 @@ from databricks_cli.workspace.types import WorkspaceLanguage
 TEST_WORKSPACE_PATH = '/test/workspace/path'
 TEST_JSON_RESPONSE = {
     'path': TEST_WORKSPACE_PATH,
-    'object_type': api.DIRECTORY
+    'object_type': api.DIRECTORY,
+    'created_at': 124
 }
 TEST_LANGUAGE = 'PYTHON'
 TEST_FMT = 'SOURCE'
