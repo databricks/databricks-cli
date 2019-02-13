@@ -262,6 +262,20 @@ def test_uninstall_cli_all(libraries_api_mock):
 
 
 @provide_conf
+def test_uninstall_cli_all_for_no_libraries(libraries_api_mock):
+    runner = CliRunner()
+    libraries_api_mock.cluster_status.return_value = {
+        "library_statuses": [
+        ],
+        "cluster_id": TEST_CLUSTER_ID,
+    }
+    runner.invoke(cli.uninstall_cli, [
+        '--cluster-id', TEST_CLUSTER_ID,
+        '--all'])
+    libraries_api_mock.uninstall_libraries.assert_not_called()
+
+
+@provide_conf
 def test_uninstall_cli_jar(libraries_api_mock):
     test_jar = 'dbfs:/test.jar'
     runner = CliRunner()

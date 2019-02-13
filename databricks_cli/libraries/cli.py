@@ -239,6 +239,8 @@ def uninstall_cli(api_client, cluster_id, all, jar, egg, whl, maven_coordinates,
         libraries_api = LibrariesApi(api_client)
         library_statuses = libraries_api.cluster_status(cluster_id).get('library_statuses', [])
         libraries = [l_status['library'] for l_status in library_statuses]
+        if len(libraries) == 0:
+            return
         libraries_api.uninstall_libraries(cluster_id, libraries)
         _uninstall_cli_exit_help(cluster_id)
         return
