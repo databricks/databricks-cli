@@ -110,8 +110,12 @@ class ApiClient(object):
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", exceptions.InsecureRequestWarning)
-            resp = self.session.request(method, self.url + path, data = json.dumps(data),
-                verify = self.verify, headers = headers)
+            if method == 'GET':
+                resp = self.session.request(method, self.url + path, params = data,
+                    verify = self.verify, headers = headers)
+            else:
+                resp = self.session.request(method, self.url + path, data = json.dumps(data),
+                    verify = self.verify, headers = headers)
         try:
             resp.raise_for_status()
         except requests.exceptions.HTTPError as e:
