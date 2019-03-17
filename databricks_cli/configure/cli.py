@@ -34,6 +34,8 @@ PROMPT_HOST = 'Databricks Host (should begin with https://)'
 PROMPT_USERNAME = 'Username'
 PROMPT_PASSWORD = 'Password' #  NOQA
 PROMPT_TOKEN = 'Token' #  NOQA
+PROMPT_ORG_ID = 'Workspace Org ID (Azure Databricks only)'
+PROMPT_RESOURCE_ID = 'Workspace Resource ID (Azure Databricks only)'
 
 
 def _configure_cli_token(profile, insecure):
@@ -41,6 +43,17 @@ def _configure_cli_token(profile, insecure):
     host = click.prompt(PROMPT_HOST, default=config.host, type=_DbfsHost())
     token = click.prompt(PROMPT_TOKEN, default=config.token)
     new_config = DatabricksConfig.from_token(host, token, insecure)
+    update_and_persist_config(profile, new_config)
+
+
+def _configure_cli_aad_token(profile, insecure):
+    import readline  #  NOQA magic import enables input > 1024 characters, needed for long azure ad token
+    config = ProfileConfigProvider(profile).get_config() or DatabricksConfig.empty()
+    host = click.prompt(PROMPT_HOST, default=config.host, type=_DbfsHost())
+    token = click.prompt(PROMPT_TOKEN, default=config.token)
+    org_id = click.prompt(PROMPT_ORG_ID, default=str('' or config.org_id))
+    resource_id = click.prompt(PROMPT_RESOURCE_ID, default=str('' or config.resource_id))
+    new_config = DatabricksConfig.from_token(host, token, insecure, org_id, resource_id)
     update_and_persist_config(profile, new_config)
 
 
@@ -63,10 +76,11 @@ def _configure_cli_password(profile, insecure):
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Configures host and authentication info for the CLI.')
 @click.option('--token', show_default=True, is_flag=True, default=False)
+@click.option('--aad-token', show_default=True, is_flag=True, default=False)
 @click.option('--insecure', show_default=True, is_flag=True, default=None)
 @debug_option
 @profile_option
-def configure_cli(token, insecure):
+def configure_cli(token, aad_token, insecure):
     """
     Configures host and authentication info for the CLI.
     """
@@ -74,6 +88,8 @@ def configure_cli(token, insecure):
     insecure_str = str(insecure) if insecure is not None else None
     if token:
         _configure_cli_token(profile, insecure_str)
+    elif aad_token:
+        _configure_cli_aad_token(profile, insecure_str)
     else:
         _configure_cli_password(profile, insecure_str)
 

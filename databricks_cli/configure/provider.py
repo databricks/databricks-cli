@@ -36,6 +36,8 @@ USERNAME = 'username'
 PASSWORD = 'password' # NOQA
 TOKEN = 'token'
 INSECURE = 'insecure'
+ORG_ID = 'org_id'
+RESOURCE_ID = 'resource_id'
 DEFAULT_SECTION = 'DEFAULT'
 
 # User-provided override for the DatabricksConfigProvider
@@ -97,6 +99,8 @@ def update_and_persist_config(profile, databricks_config):
     _set_option(raw_config, profile, PASSWORD, databricks_config.password)
     _set_option(raw_config, profile, TOKEN, databricks_config.token)
     _set_option(raw_config, profile, INSECURE, databricks_config.insecure)
+    _set_option(raw_config, profile, ORG_ID, databricks_config.org_id)
+    _set_option(raw_config, profile, RESOURCE_ID, databricks_config.resource_id)
     _overwrite_config(raw_config)
 
 
@@ -208,7 +212,9 @@ class EnvironmentVariableConfigProvider(DatabricksConfigProvider):
         password = os.environ.get('DATABRICKS_PASSWORD')
         token = os.environ.get('DATABRICKS_TOKEN')
         insecure = os.environ.get('DATABRICKS_INSECURE')
-        config = DatabricksConfig(host, username, password, token, insecure)
+        org_id = os.environ.get('DATABRICKS_ORG_ID')
+        resource_id = os.environ.get('DATABRICKS_RESOURCE_ID')
+        config = DatabricksConfig(host, username, password, token, insecure, org_id, resource_id)
         if config.is_valid:
             return config
         return None
@@ -226,23 +232,27 @@ class ProfileConfigProvider(DatabricksConfigProvider):
         password = _get_option_if_exists(raw_config, self.profile, PASSWORD)
         token = _get_option_if_exists(raw_config, self.profile, TOKEN)
         insecure = _get_option_if_exists(raw_config, self.profile, INSECURE)
-        config = DatabricksConfig(host, username, password, token, insecure)
+        org_id = _get_option_if_exists(raw_config, self.profile, ORG_ID)
+        resource_id = _get_option_if_exists(raw_config, self.profile, RESOURCE_ID)
+        config = DatabricksConfig(host, username, password, token, insecure, org_id, resource_id)
         if config.is_valid:
             return config
         return None
 
 
 class DatabricksConfig(object):
-    def __init__(self, host, username, password, token, insecure): # noqa
+    def __init__(self, host, username, password, token, insecure, org_id=None, resource_id=None): # noqa
         self.host = host
         self.username = username
         self.password = password
         self.token = token
         self.insecure = insecure
+        self.org_id = org_id
+        self.resource_id = resource_id
 
     @classmethod
-    def from_token(cls, host, token, insecure=None):
-        return DatabricksConfig(host, None, None, token, insecure)
+    def from_token(cls, host, token, insecure=None, org_id=None, resource_id=None):
+        return DatabricksConfig(host, None, None, token, insecure, org_id, resource_id)
 
     @classmethod
     def from_password(cls, host, username, password, insecure=None):
@@ -250,7 +260,7 @@ class DatabricksConfig(object):
 
     @classmethod
     def empty(cls):
-        return DatabricksConfig(None, None, None, None, None)
+        return DatabricksConfig(None, None, None, None, None, None, None)
 
     @property
     def is_valid_with_token(self):

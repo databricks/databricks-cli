@@ -84,7 +84,12 @@ def profile_option(f):
 def _get_api_client(config, command_name=""):
     verify = config.insecure is None
     if config.is_valid_with_token:
+        headers = {}
+        if config.org_id:
+            headers['X-Databricks-Org-Id'] = config.org_id
+        if config.resource_id:
+            headers['X-Databricks-Azure-Workspace-Resource-Id'] = config.resource_id
         return ApiClient(host=config.host, token=config.token, verify=verify,
-                         command_name=command_name)
+                         command_name=command_name, default_headers=headers)
     return ApiClient(user=config.username, password=config.password,
                      host=config.host, verify=verify, command_name=command_name)

@@ -32,6 +32,8 @@ TEST_HOST = 'https://test.cloud.databricks.com'
 TEST_USER = 'monkey@databricks.com'
 TEST_PASSWORD = 'banana' # NOQA
 TEST_TOKEN = 'dapiTESTING'
+TEST_ORG_ID = '123456789'
+TEST_RESOURCE_ID = '/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/banna/providers/Microsoft.Databricks/workspaces/apple' # NOQA
 
 TEST_PROFILE = 'dev'
 TEST_HOST_2 = 'https://test2.cloud.databricks.com'
@@ -77,3 +79,15 @@ def test_configure_cli_insecure():
     assert get_config().host == TEST_HOST
     assert get_config().token == TEST_TOKEN
     assert get_config().insecure == 'True'
+
+
+def test_configure_aad_token():
+    runner = CliRunner()
+    runner.invoke(cli.configure_cli, ['--aad-token'],
+                  input=(TEST_HOST + '\n' + TEST_TOKEN 
+                  + '\n' + TEST_ORG_ID + '\n' + TEST_RESOURCE_ID))
+    assert get_config().host == TEST_HOST
+    assert get_config().token == TEST_TOKEN
+    assert get_config().org_id == TEST_ORG_ID
+    assert get_config().resource_id == TEST_RESOURCE_ID
+    assert get_config().insecure is None
