@@ -51,13 +51,13 @@ def _configure_cli_aad_token(profile, insecure):
     config = ProfileConfigProvider(profile).get_config() or DatabricksConfig.empty()
     host = click.prompt(PROMPT_HOST, default=config.host, type=_DbfsHost())
     token = click.prompt(PROMPT_TOKEN, default=config.token)
-    
+
     default_org_id = '' if config.org_id is None else config.org_id
     org_id = click.prompt(PROMPT_ORG_ID, default=default_org_id)
-    
+
     default_resource_id = '' if config.resource_id is None else config.resource_id
     resource_id = click.prompt(PROMPT_RESOURCE_ID, default=default_resource_id)
-    
+
     new_config = DatabricksConfig.from_token(host, token, insecure, org_id, resource_id)
     update_and_persist_config(profile, new_config)
 
