@@ -131,7 +131,7 @@ class ApiClient(object):
 
 
 def _translate_boolean_to_query_param(value):
-    assert not isinstance(value, list), 'The value of the data dict cannot be a list'
+    assert not isinstance(value, list), 'GET parameters cannot pass list of objects'
     if isinstance(value, bool):
         if value:
             return 'true'
