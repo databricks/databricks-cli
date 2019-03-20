@@ -35,6 +35,9 @@ def test_api_client_constructor():
     # echo -n "apple:banana" | base64
     assert client.default_headers['Authorization'] == 'Basic YXBwbGU6YmFuYW5h'
 
+
+requests_mock.mock.case_sensitive = True
+
 @pytest.fixture()
 def m():
     with requests_mock.Mocker() as m:
@@ -60,6 +63,41 @@ def test_content_from_server_on_error(m):
     with pytest.raises(requests.exceptions.HTTPError) as e:
         client.perform_query('GET', '/endpoint')
         assert error_message_contains in e.value.message
+
+
+def test_get_request_with_true_param(m):
+    data = {'cucumber': 'dade'}
+    m.get('https://databricks.com/api/2.0/endpoint?active_only=true', text=json.dumps(data))
+    client = ApiClient(user='apple', password='banana', host='https://databricks.com')
+    assert client.perform_query('GET', '/endpoint', {'active_only': True}) == data
+
+
+def test_get_request_with_false_param(m):
+    data = {'cucumber': 'dade'}
+    m.get('https://databricks.com/api/2.0/endpoint?active_only=false', text=json.dumps(data))
+    client = ApiClient(user='apple', password='banana', host='https://databricks.com')
+    assert client.perform_query('GET', '/endpoint', {'active_only': False}) == data
+
+
+def test_get_request_with_int_param(m):
+    data = {'cucumber': 'dade'}
+    m.get('https://databricks.com/api/2.0/endpoint?job_id=0', text=json.dumps(data))
+    client = ApiClient(user='apple', password='banana', host='https://databricks.com')
+    assert client.perform_query('GET', '/endpoint', {'job_id': 0}) == data
+
+
+def test_get_request_with_float_param(m):
+    data = {'cucumber': 'dade'}
+    m.get('https://databricks.com/api/2.0/endpoint?job_id=0.25', text=json.dumps(data))
+    client = ApiClient(user='apple', password='banana', host='https://databricks.com')
+    assert client.perform_query('GET', '/endpoint', {'job_id': 0.25}) == data
+
+
+def test_get_request_with_list_param(m):
+    client = ApiClient(user='apple', password='banana', host='https://databricks.com')
+    with pytest.raises(AssertionError, message='cannot pass list of objects'):
+        client.perform_query('GET', '/endpoint', {'job_id': ['a','b']})
+
 
 def test_api_client_url_parsing():
     client = ApiClient(host='https://databricks.com')

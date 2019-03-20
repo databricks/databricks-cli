@@ -111,7 +111,8 @@ class ApiClient(object):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", exceptions.InsecureRequestWarning)
             if method == 'GET':
-                resp = self.session.request(method, self.url + path, params = data,
+                translated_data = {k: _translate_boolean_to_query_param(data[k]) for k in data}
+                resp = self.session.request(method, self.url + path, params = translated_data,
                     verify = self.verify, headers = headers)
             else:
                 resp = self.session.request(method, self.url + path, data = json.dumps(data),
@@ -127,3 +128,13 @@ class ApiClient(object):
                 pass
             raise requests.exceptions.HTTPError(message, response=e.response)
         return resp.json()
+
+
+def _translate_boolean_to_query_param(value):
+    assert not isinstance(value, list), 'GET parameters cannot pass list of objects'
+    if isinstance(value, bool):
+        if value:
+            return 'true'
+        else:
+            return 'false'
+    return value
