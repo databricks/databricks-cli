@@ -60,4 +60,3 @@ cli.add_command(groups_group, name='groups')
 
 if __name__ == "__main__":
     cli()
-
