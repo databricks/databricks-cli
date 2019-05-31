@@ -234,6 +234,15 @@ class DbfsApi(object):
         else:
             assert False, 'not reached'
 
+    def cat(self, src):
+        temp_path = self._create_local_temp_path(False)
+        try:
+            self.cp(False, True, src, temp_path)
+            with open(temp_path) as f:
+                click.echo(f.read(), nl=False)
+        finally:
+            self._remove_local_temp_path(False, temp_path)
+
     def _create_local_temp_path(self, recursive):
         # create a temp file/dir to store the data
         if recursive:
