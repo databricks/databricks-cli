@@ -102,8 +102,7 @@ def cp_cli(api_client, recursive, overwrite, src, dst):
     """
     Copy files to and from DBFS.
 
-    Note that this function will fail if the src and dst are both on the local filesystem
-    or if they are both DBFS paths.
+    Note that this function will fail if the src and dst are both on the local filesystem.
 
     For non-recursive copies, if the dst is a directory, the file will be placed inside the
     directory. For example ``dbfs cp dbfs:/apple.txt .`` will create a file at `./apple.txt`.

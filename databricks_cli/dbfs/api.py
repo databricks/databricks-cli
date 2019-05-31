@@ -24,6 +24,9 @@
 from base64 import b64encode, b64decode
 
 import os
+import shutil
+import tempfile
+
 import click
 
 from requests.exceptions import HTTPError
@@ -221,8 +224,24 @@ class DbfsApi(object):
                            'To use this utility, one of the src or dst must be prefixed '
                            'with dbfs:/')
         elif DbfsPath.is_valid(src) and DbfsPath.is_valid(dst):
-            error_and_quit('Both paths provided are from the DBFS filesystem. '
-                           'To copy between the DBFS filesystem, you currently must copy the '
-                           'file from DBFS to your local filesystem and then back.')
+            temp_path = self._create_local_temp_path(recursive)
+
+            try:
+                self.cp(recursive, True, src, temp_path)
+                self.cp(recursive, overwrite, temp_path, dst)
+            finally:
+                self._remove_local_temp_path(recursive, temp_path)
         else:
             assert False, 'not reached'
+
+    def _create_local_temp_path(self, recursive):
+        # create a temp file/dir to store the data
+        if recursive:
+            return tempfile.mkdtemp()
+        return tempfile.mkstemp()[1]
+
+    def _remove_local_temp_path(self, recursive, path):
+        if recursive:
+            shutil.rmtree(path)
+        else:
+            os.remove(path)
