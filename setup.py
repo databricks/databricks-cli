@@ -52,10 +52,12 @@ setup(
     long_description=io.open('README.rst', encoding='utf-8').read(),
     license='Apache License 2.0',
     classifiers=[
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7'
     ],
     keywords='databricks cli',
     url='https://github.com/databricks/databricks-cli'
