@@ -33,9 +33,8 @@ class JobsApi(object):
     def list_jobs(self, headers=None):
         resp = self.client.list_jobs(headers=headers)
         if 'jobs' not in resp:
-            return {'jobs': []}
-        else:
-            return resp
+            resp['jobs'] = []
+        return resp
 
     def delete_job(self, job_id, headers=None):
         return self.client.delete_job(job_id, headers=headers)
