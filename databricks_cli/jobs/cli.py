@@ -71,11 +71,6 @@ def reset_cli(api_client, json_file, json, job_id):
 
     The specification for the json option can be found
     https://docs.databricks.com/api/latest/jobs.html#jobsjobsettings
-
-    NOTE. The json parameter described above is not the same as what is normally POSTed
-    in the request body to the reset endpoint. Instead it is the object
-    defined in the top level "new_settings" field. The job ID is provided
-    by the --job-id option.
     """
     if not bool(json_file) ^ bool(json):
         raise RuntimeError('Either --json-file or --json should be provided')
