@@ -206,7 +206,7 @@ class SparkTaskContextConfigProvider(DatabricksConfigProvider):
     @staticmethod
     def _get_spark_task_context_or_none():
         try:
-            from pyspark import TaskContext
+            from pyspark import TaskContext  # pylint: disable=import-error
             return TaskContext.get()
         except:
             return None
