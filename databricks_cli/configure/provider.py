@@ -200,6 +200,7 @@ class DefaultConfigProvider(DatabricksConfigProvider):
                 return config
         return None
 
+
 class SparkTaskContextConfigProvider(DatabricksConfigProvider):
     """Loads credentials from Spark TaskContext if running in a Spark Executor."""
     
@@ -208,7 +209,7 @@ class SparkTaskContextConfigProvider(DatabricksConfigProvider):
         try:
             from pyspark import TaskContext  # pylint: disable=import-error
             return TaskContext.get()
-        except:
+        except ImportError:
             return None
 
     def get_config(self):
