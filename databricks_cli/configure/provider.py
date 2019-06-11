@@ -215,11 +215,12 @@ class SparkTaskContextConfigProvider(DatabricksConfigProvider):
         context = self._get_spark_task_context_or_none()
         if context is not None:
             host = context.getLocalProperty("spark.databricks.api.url")
-       	    token = context.getLocalProperty("spark.databricks.token")
+            token = context.getLocalProperty("spark.databricks.token")
             config = DatabricksConfig.from_token(host=host, token=token)
             if config.is_valid:
                 return config
         return None
+
 
 class EnvironmentVariableConfigProvider(DatabricksConfigProvider):
     """Loads from system environment variables."""
