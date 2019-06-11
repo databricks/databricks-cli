@@ -145,9 +145,7 @@ def test_get_config_uses_task_context_variable():
                 raise Exception("should not get here.")
     ctx_class = "databricks_cli.configure.provider.SparkTaskContextConfigProvider._get_spark_task_context_or_none"
     with patch(ctx_class) as get_context_mock:
-        def get_context(*args, **kwargs):
-            return TaskContextMock()
-        get_context_mock.side_effect = get_context
+        get_context_mock.return_value = TaskContextMock()
         config = get_config()
         assert config.host == "url"
         assert config.token == "token"
