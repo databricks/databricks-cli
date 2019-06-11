@@ -133,6 +133,27 @@ def test_get_config_uses_default_profile():
     assert config.token == "hello"
 
 
+def test_get_config_uses_task_context_variable():
+    class TaskContextMock:
+        def getLocalProperty(self, x):
+            if x == "spark.databricks.api.url":
+                return "url"
+            elif x == "spark.databricks.token":
+                return "token"
+            else:
+                raise Exception("should not get here.")
+    ctx_class = "databricks_cli.configure.provider.SparkTaskContextConfigProvider._get_spark_task_context_or_none"
+    with patch(ctx_class) as get_context_mock:
+        def get_context(*args, **kwargs):
+            return TaskContextMock()
+        get_context_mock.side_effect = get_context
+        config = get_config()
+        assert config.host == "url"
+        assert config.token == "token"
+        assert config.username is None
+        assert config.password is None
+
+
 def test_get_config_uses_env_variable():
     with patch.dict('os.environ', {'DATABRICKS_HOST': TEST_HOST,
                                    'DATABRICKS_USERNAME': TEST_USER,

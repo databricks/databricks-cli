@@ -185,20 +185,41 @@ class DatabricksConfigProvider(object):
 
 
 class DefaultConfigProvider(DatabricksConfigProvider):
-    """Prefers environment variables, and then the default profile."""
+    """Look for credentials in a chain of default locations."""
     def __init__(self):
-        self.env_provider = EnvironmentVariableConfigProvider()
-        self.default_profile_provider = ProfileConfigProvider()
+        self._providers = (
+            SparkTaskContextConfigProvider(),
+            EnvironmentVariableConfigProvider(),
+            ProfileConfigProvider()
+        )
 
     def get_config(self):
-        env_config = self.env_provider.get_config()
-        if env_config:
-            return env_config
+        for provider in self._providers:
+            config = provider.get_config()
+            if config is not None and config.is_valid:
+                return config
+        return None
 
-        profile_config = self.default_profile_provider.get_config()
-        if profile_config:
-            return profile_config
+class SparkTaskContextConfigProvider(DatabricksConfigProvider):
+    """Loads credentials from Spark TaskContext if running in a Spark Executor."""
+    
+    @staticmethod
+    def _get_spark_task_context_or_none():
+        try:
+            from pyspark import TaskContext
+            return TaskContext.get()
+        except:
+            return None
 
+    def get_config(self):
+        context = self._get_spark_task_context_or_none()
+        if context is not None:
+            host = context.getLocalProperty("spark.databricks.api.url")
+       	    token = context.getLocalProperty("spark.databricks.token")
+            config = DatabricksConfig.from_token(host=host, token=token)
+            if config.is_valid:
+                return config
+        return None
 
 class EnvironmentVariableConfigProvider(DatabricksConfigProvider):
     """Loads from system environment variables."""
