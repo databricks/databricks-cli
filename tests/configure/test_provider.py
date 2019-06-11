@@ -28,7 +28,8 @@ import pytest
 
 from databricks_cli.configure.provider import DatabricksConfig, DEFAULT_SECTION, \
     update_and_persist_config, get_config_for_profile, get_config, \
-    set_config_provider, ProfileConfigProvider, _get_path, DatabricksConfigProvider
+    set_config_provider, ProfileConfigProvider, _get_path, DatabricksConfigProvider,\
+    SparkTaskContextConfigProvider
 from databricks_cli.utils import InvalidConfigurationError
 
 
@@ -152,6 +153,10 @@ def test_get_config_uses_task_context_variable():
         assert config.token == "token"
         assert config.username is None
         assert config.password is None
+
+
+def test_task_context_provider_does_not_break_stuff():
+   assert SparkTaskContextConfigProvider().get_config() is None
 
 
 def test_get_config_uses_env_variable():
