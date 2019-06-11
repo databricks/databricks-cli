@@ -136,14 +136,15 @@ def test_get_config_uses_default_profile():
 
 def test_get_config_uses_task_context_variable():
     class TaskContextMock:
-        def getLocalProperty(self, x):
+        def getLocalProperty(self, x):  # pylint: disable=function-lowercase
             if x == "spark.databricks.api.url":
                 return "url"
             elif x == "spark.databricks.token":
                 return "token"
             else:
                 raise Exception("should not get here.")
-    ctx_class = "databricks_cli.configure.provider.SparkTaskContextConfigProvider._get_spark_task_context_or_none"
+    ctx_class = ("databricks_cli.configure.provider.SparkTaskContextConfigProvider."
+                 "_get_spark_task_context_or_none")
     with patch(ctx_class) as get_context_mock:
         get_context_mock.return_value = TaskContextMock()
         config = get_config()
@@ -154,7 +155,7 @@ def test_get_config_uses_task_context_variable():
 
 
 def test_task_context_provider_does_not_break_stuff():
-   assert SparkTaskContextConfigProvider().get_config() is None
+    assert SparkTaskContextConfigProvider().get_config() is None
 
 
 def test_get_config_uses_env_variable():
