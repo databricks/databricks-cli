@@ -136,7 +136,7 @@ def test_get_config_uses_default_profile():
 
 def test_get_config_uses_task_context_variable():
     class TaskContextMock(object):
- 
+
         def __init__(self):
             pass
 
@@ -145,6 +145,8 @@ def test_get_config_uses_task_context_variable():
                 return "url"
             elif x == "spark.databricks.token":
                 return "token"
+            elif x == "spark.databricks.ignoreTls":
+                return "True"
             else:
                 raise Exception("should not get here.")
 
@@ -155,6 +157,7 @@ def test_get_config_uses_task_context_variable():
         config = get_config()
         assert config.host == "url"
         assert config.token == "token"
+        assert config.insecure = "True"
         assert config.username is None
         assert config.password is None
 
