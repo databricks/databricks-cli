@@ -136,7 +136,7 @@ def test_get_config_uses_default_profile():
 
 def test_get_config_uses_task_context_variable():
     class TaskContextMock:
-        def getLocalProperty(self, x):  # pylint: disable=function-lowercase
+        def getLocalProperty(self, x):  # NOQA
             if x == "spark.databricks.api.url":
                 return "url"
             elif x == "spark.databricks.token":

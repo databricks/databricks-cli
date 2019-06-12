@@ -203,7 +203,7 @@ class DefaultConfigProvider(DatabricksConfigProvider):
 
 class SparkTaskContextConfigProvider(DatabricksConfigProvider):
     """Loads credentials from Spark TaskContext if running in a Spark Executor."""
-    
+
     @staticmethod
     def _get_spark_task_context_or_none():
         try:
