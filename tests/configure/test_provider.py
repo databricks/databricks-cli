@@ -157,7 +157,7 @@ def test_get_config_uses_task_context_variable():
         config = get_config()
         assert config.host == "url"
         assert config.token == "token"
-        assert config.insecure = "True"
+        assert config.insecure == "True"
         assert config.username is None
         assert config.password is None
 
