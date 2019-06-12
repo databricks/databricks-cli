@@ -136,7 +136,7 @@ def test_get_config_uses_default_profile():
 
 def test_get_config_uses_task_context_variable():
     class TaskContextMock(object):
-        
+ 
         def __init__(self):
             pass
 
