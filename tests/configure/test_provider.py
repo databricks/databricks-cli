@@ -135,7 +135,11 @@ def test_get_config_uses_default_profile():
 
 
 def test_get_config_uses_task_context_variable():
-    class TaskContextMock:
+    class TaskContextMock(object):
+        
+        def __init__(self):
+            pass
+
         def getLocalProperty(self, x):  # NOQA
             if x == "spark.databricks.api.url":
                 return "url"
@@ -143,6 +147,7 @@ def test_get_config_uses_task_context_variable():
                 return "token"
             else:
                 raise Exception("should not get here.")
+
     ctx_class = ("databricks_cli.configure.provider.SparkTaskContextConfigProvider."
                  "_get_spark_task_context_or_none")
     with patch(ctx_class) as get_context_mock:
