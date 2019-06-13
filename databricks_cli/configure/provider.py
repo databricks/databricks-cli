@@ -185,19 +185,49 @@ class DatabricksConfigProvider(object):
 
 
 class DefaultConfigProvider(DatabricksConfigProvider):
-    """Prefers environment variables, and then the default profile."""
+    """Look for credentials in a chain of default locations."""
     def __init__(self):
-        self.env_provider = EnvironmentVariableConfigProvider()
-        self.default_profile_provider = ProfileConfigProvider()
+        self._providers = (
+            SparkTaskContextConfigProvider(),
+            EnvironmentVariableConfigProvider(),
+            ProfileConfigProvider()
+        )
 
     def get_config(self):
-        env_config = self.env_provider.get_config()
-        if env_config:
-            return env_config
+        for provider in self._providers:
+            config = provider.get_config()
+            if config is not None and config.is_valid:
+                return config
+        return None
 
-        profile_config = self.default_profile_provider.get_config()
-        if profile_config:
-            return profile_config
+
+class SparkTaskContextConfigProvider(DatabricksConfigProvider):
+    """Loads credentials from Spark TaskContext if running in a Spark Executor."""
+
+    @staticmethod
+    def _get_spark_task_context_or_none():
+        try:
+            from pyspark import TaskContext  # pylint: disable=import-error
+            return TaskContext.get()
+        except ImportError:
+            return None
+
+    @staticmethod
+    def set_insecure(x):
+        from pyspark import SparkContext  # pylint: disable=import-error      
+        new_val = "True" if x else None
+        SparkContext._active_spark_context.setLocalProperty("spark.databricks.ignoreTls", new_val)
+
+    def get_config(self):
+        context = self._get_spark_task_context_or_none()
+        if context is not None:
+            host = context.getLocalProperty("spark.databricks.api.url")
+            token = context.getLocalProperty("spark.databricks.token")
+            insecure = context.getLocalProperty("spark.databricks.ignoreTls")
+            config = DatabricksConfig.from_token(host=host, token=token, insecure=insecure)
+            if config.is_valid:
+                return config
+        return None
 
 
 class EnvironmentVariableConfigProvider(DatabricksConfigProvider):

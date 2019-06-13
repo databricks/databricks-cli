@@ -28,7 +28,8 @@ import pytest
 
 from databricks_cli.configure.provider import DatabricksConfig, DEFAULT_SECTION, \
     update_and_persist_config, get_config_for_profile, get_config, \
-    set_config_provider, ProfileConfigProvider, _get_path, DatabricksConfigProvider
+    set_config_provider, ProfileConfigProvider, _get_path, DatabricksConfigProvider,\
+    SparkTaskContextConfigProvider
 from databricks_cli.utils import InvalidConfigurationError
 
 
@@ -131,6 +132,38 @@ def test_get_config_uses_default_profile():
     assert config.is_valid_with_token
     assert config.host == "hosty"
     assert config.token == "hello"
+
+
+def test_get_config_uses_task_context_variable():
+    class TaskContextMock(object):
+
+        def __init__(self):
+            pass
+
+        def getLocalProperty(self, x):  # NOQA
+            if x == "spark.databricks.api.url":
+                return "url"
+            elif x == "spark.databricks.token":
+                return "token"
+            elif x == "spark.databricks.ignoreTls":
+                return "True"
+            else:
+                raise Exception("should not get here.")
+
+    ctx_class = ("databricks_cli.configure.provider.SparkTaskContextConfigProvider."
+                 "_get_spark_task_context_or_none")
+    with patch(ctx_class) as get_context_mock:
+        get_context_mock.return_value = TaskContextMock()
+        config = get_config()
+        assert config.host == "url"
+        assert config.token == "token"
+        assert config.insecure == "True"
+        assert config.username is None
+        assert config.password is None
+
+
+def test_task_context_provider_does_not_break_stuff():
+    assert SparkTaskContextConfigProvider().get_config() is None
 
 
 def test_get_config_uses_env_variable():
