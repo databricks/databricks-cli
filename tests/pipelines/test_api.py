@@ -145,6 +145,36 @@ def test_get_files_to_upload_all(DbfsPathMock, pipelines_api):
     assert len(llo_tuples) == 4
 
 
+def test_library_object_serialization_deserialization():
+    libraries = [
+        {'jar':'//absolute/path/abc.ext'},
+        {'jar': '/relative/path.ext'},
+        {'jar': 'file://file/scheme/abs/path.ext'},
+        {'jar': 'file:/file/scheme/relative/path.ext'},
+        {'jar': 'FILE:/all/caps.ext'},
+        {'egg': 'FiLe:/weird/case.ext'},
+        {'whl': 'file.ext'},
+        {'whl': 's3:/s3/path/file.ext'},
+        {'jar': 'dbfs:/dbfs/path/file.ext'}
+    ]
+    library_objects = [
+        LibraryObject('jar', '//absolute/path/abc.ext'),
+        LibraryObject('jar', '/relative/path.ext'),
+        LibraryObject('jar', 'file://file/scheme/abs/path.ext'),
+        LibraryObject('jar', 'file:/file/scheme/relative/path.ext'),
+        LibraryObject('jar', 'FILE:/all/caps.ext'),
+        LibraryObject('egg', 'FiLe:/weird/case.ext'),
+        LibraryObject('whl', 'file.ext'),
+        LibraryObject('whl', 's3:/s3/path/file.ext'),
+        LibraryObject('jar', 'dbfs:/dbfs/path/file.ext')
+    ]
+    llo = LibraryObject.convert_from_libraries(libraries)
+    assert len(llo) == len(library_objects)
+    for i in range(len(llo)):
+        assert llo[i].path == library_objects[i].path
+        assert llo[i].lib_type == library_objects[i].lib_type
+    libs = LibraryObject.convert_to_libraries(library_objects)
+    assert libs == libraries
 
 
 @mock.patch('databricks_cli.pipelines.api.PipelinesApi._get_credentials_for_request')

@@ -25,7 +25,7 @@
 from hashlib import sha1
 import os
 
-from six.moves.urllib.parse import urlsplit
+from six.moves import urllib
 
 from databricks_cli.sdk import DeltaPipelinesService
 from databricks_cli.dbfs.api import DbfsApi
@@ -37,6 +37,8 @@ from databricks_cli.configure.config import get_profile_from_context
 from databricks_cli.configure.provider import get_config, ProfileConfigProvider
 from databricks_cli.utils import InvalidConfigurationError
 
+BUFFER_SIZE = 1024 * 64
+
 
 class PipelinesApi(object):
     def __init__(self, api_client):
@@ -47,7 +49,7 @@ class PipelinesApi(object):
     def _partition_libraries_and_extract_local_paths(lib_objects):
         local_lib_objects, rest_lib_objects = [], []
         for lib_object in lib_objects:
-            uri_scheme = urlsplit(lib_object.path).scheme
+            uri_scheme = urllib.parse.urlsplit(lib_object.path).scheme
             if lib_object.lib_type == 'jar' and uri_scheme == '':
                 local_lib_objects.append(lib_object)
             elif lib_object.lib_type == 'jar' and uri_scheme.lower() == 'file':
@@ -59,7 +61,6 @@ class PipelinesApi(object):
     @staticmethod
     def _get_hashed_path(path):
         hash_buffer = sha1()
-        BUFFER_SIZE = 1024 * 64
         try:
             with open(path, 'rb') as f:
                 while True:
@@ -79,14 +80,15 @@ class PipelinesApi(object):
                         , local_lib_objects))
 
     def _get_files_to_upload(self, local_lib_objects, remote_lib_objects):
-        transformed_remote_lib_objects = map(lambda rlo: LibraryObject(rlo.lib_type, DbfsPath(rlo.path))
-                                             , remote_lib_objects)
+        transformed_remote_lib_objects = map(
+            lambda rlo: LibraryObject(rlo.lib_type, DbfsPath(rlo.path))
+            , remote_lib_objects)
         return list(filter(lambda lo_tuple: not self.dbfs_client.file_exists(lo_tuple[1].path)
                            , zip(local_lib_objects, transformed_remote_lib_objects)))
 
     """
-    Only required until the deploy/delete APIs requires the credentials in the body as well as the header.
-     Once the API requirement is relaxed, this function can be stripped out and 
+    Only required until the deploy/delete APIs requires the credentials in the body as well 
+    as the header.Once the API requirement is relaxed, this function can be stripped out and 
      includes for this function removed.
     """
     @staticmethod
