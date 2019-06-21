@@ -84,7 +84,6 @@ class PipelinesApi(object):
         return list(filter(lambda lo_tuple: not self.dbfs_client.file_exists(lo_tuple[1].path)
                            , zip(local_lib_objects, transformed_remote_lib_objects)))
 
-
     """
     Only required until the deploy/delete APIs requires the credentials in the body as well as the header.
      Once the API requirement is relaxed, this function can be stripped out and 
@@ -120,7 +119,10 @@ class PipelinesApi(object):
         rest_lib_objects.extend(remote_lib_objects)
         spec['libraries'] = LibraryObject.convert_to_libraries(rest_lib_objects)
         spec['credentials'] = self._get_credentials_for_request()
-        self.client.client.perform_query('PUT', '/pipelines/{}'.format(spec['id']), data=spec, headers=headers)
+        self.client.client.perform_query('PUT',
+                                         '/pipelines/{}'.format(spec['id']),
+                                         data=spec,
+                                         headers=headers)
 
     def delete(self, pipeline_id, headers=None):
         self.client.delete(pipeline_id, self._get_credentials_for_request(), headers)
