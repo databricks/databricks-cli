@@ -31,7 +31,10 @@ class JobsApi(object):
         return self.client.client.perform_query('POST', '/jobs/create', data=json, headers=headers)
 
     def list_jobs(self, headers=None):
-        return self.client.list_jobs(headers=headers)
+        resp = self.client.list_jobs(headers=headers)
+        if 'jobs' not in resp:
+            resp['jobs'] = []
+        return resp
 
     def delete_job(self, job_id, headers=None):
         return self.client.delete_job(job_id, headers=headers)
