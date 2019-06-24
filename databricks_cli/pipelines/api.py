@@ -76,21 +76,21 @@ class PipelinesApi(object):
         return path
 
     def _get_remote_mappings(self, local_lib_objects):
-        return list(map(lambda llo: LibraryObject(llo.lib_type, self._get_hashed_path(llo.path))
-                        , local_lib_objects))
+        return list(map(lambda llo: LibraryObject(llo.lib_type, self._get_hashed_path(llo.path)),
+                        local_lib_objects))
 
     def _get_files_to_upload(self, local_lib_objects, remote_lib_objects):
         transformed_remote_lib_objects = map(
-            lambda rlo: LibraryObject(rlo.lib_type, DbfsPath(rlo.path))
-            , remote_lib_objects)
-        return list(filter(lambda lo_tuple: not self.dbfs_client.file_exists(lo_tuple[1].path)
-                           , zip(local_lib_objects, transformed_remote_lib_objects)))
+            lambda rlo: LibraryObject(rlo.lib_type, DbfsPath(rlo.path)),
+            remote_lib_objects)
+        return list(filter(lambda lo_tuple: not self.dbfs_client.file_exists(lo_tuple[1].path),
+                           zip(local_lib_objects, transformed_remote_lib_objects)))
 
-    """
-    Only required until the deploy/delete APIs requires the credentials in the body as well 
-    as the header.Once the API requirement is relaxed, this function can be stripped out and 
-     includes for this function removed.
-    """
+    #
+    # Only required until the deploy/delete APIs requires the credentials in the body as well
+    # as the header.Once the API requirement is relaxed, this function can be stripped out and
+    # includes for this function removed.
+    #
     @staticmethod
     def _get_credentials_for_request():
         profile = get_profile_from_context()
@@ -108,7 +108,8 @@ class PipelinesApi(object):
 
     def deploy(self, spec, headers=None):
         lib_objects = LibraryObject.convert_from_libraries(spec.get('libraries', []))
-        local_lib_objects, rest_lib_objects = self._partition_libraries_and_extract_local_paths(lib_objects)
+        local_lib_objects, rest_lib_objects = \
+            self._partition_libraries_and_extract_local_paths(lib_objects)
         remote_lib_objects = self._get_remote_mappings(local_lib_objects)
         upload_files = self._get_files_to_upload(local_lib_objects, remote_lib_objects)
 

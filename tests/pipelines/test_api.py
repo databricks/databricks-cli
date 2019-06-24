@@ -21,6 +21,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint:disable=redefined-outer-name
+
 import mock
 import pytest
 
@@ -35,10 +37,18 @@ HEADERS = 'dummy_headers'
 
 @pytest.fixture()
 def pipelines_api():
-    with mock.patch('databricks_cli.pipelines.api.DeltaPipelinesService') as DeltaPipelinesServiceMock:
+    with mock.patch('databricks_cli.pipelines.api.DeltaPipelinesService') \
+            as DeltaPipelinesServiceMock:
         DeltaPipelinesServiceMock.return_value = mock.MagicMock()
         _pipelines_api = api.PipelinesApi(None)
         yield _pipelines_api
+
+
+def assert_library_object_lists_are_same(actual_llo, expected_llo):
+    assert len(actual_llo) == len(expected_llo)
+    for actual, expected in zip(actual_llo, expected_llo):
+        assert actual.lib_type == expected.lib_type
+        assert actual.path == expected.path
 
 
 def test_partition_correctly_identifies_local_paths(pipelines_api):
@@ -62,15 +72,8 @@ def test_partition_correctly_identifies_local_paths(pipelines_api):
     ]
     expected_rest = []
     llo, rest = pipelines_api._partition_libraries_and_extract_local_paths(libraries)
-    assert len(llo) == len(expected_llo)
-    for i in range(len(llo)):
-        assert llo[i].lib_type == expected_llo[i].lib_type
-        assert llo[i].path == expected_llo[i].path
-
-    assert len(rest) == len(expected_rest)
-    for i in range(len(rest)):
-        assert rest[i].lib_type == expected_rest[i].lib_type
-        assert rest[i].path == expected_rest[i].path
+    assert_library_object_lists_are_same(llo, expected_llo)
+    assert_library_object_lists_are_same(rest, expected_rest)
 
 
 def test_partition_correctly_identifies_remote_paths(pipelines_api):
@@ -96,20 +99,13 @@ def test_partition_correctly_identifies_remote_paths(pipelines_api):
         LibraryObject('whl', '/rel/path.ext')
     ]
     llo, rest = pipelines_api._partition_libraries_and_extract_local_paths(libraries)
-    assert len(llo) == len(expected_llo)
-    for i in range(len(llo)):
-        assert llo[i].lib_type == expected_llo[i].lib_type
-        assert llo[i].path == expected_llo[i].path
-
-    assert len(rest) == len(expected_rest)
-    for i in range(len(rest)):
-        assert rest[i].lib_type == expected_rest[i].lib_type
-        assert rest[i].path == expected_rest[i].path
+    assert_library_object_lists_are_same(llo, expected_llo)
+    assert_library_object_lists_are_same(rest, expected_rest)
 
 
 @mock.patch('databricks_cli.dbfs.api.DbfsApi.file_exists', lambda a, b: True)
 @mock.patch('databricks_cli.dbfs.dbfs_path.DbfsPath.validate')
-def test_get_files_to_upload_none(DbfsPathMock, pipelines_api):
+def test_get_files_to_upload_none(dbfs_path_validate_mock, pipelines_api):
     local_lib_objects = [
         LibraryObject('jar', '//absolute/path/abc.ext'),
         LibraryObject('jar', '/relative/path.ext'),
@@ -124,11 +120,12 @@ def test_get_files_to_upload_none(DbfsPathMock, pipelines_api):
     ]
     llo_tuples = pipelines_api._get_files_to_upload(local_lib_objects, remote_lib_objects)
     assert len(llo_tuples) == 0
+    assert dbfs_path_validate_mock.call_count == 4
 
 
 @mock.patch('databricks_cli.dbfs.api.DbfsApi.file_exists', lambda a, b: False)
 @mock.patch('databricks_cli.dbfs.dbfs_path.DbfsPath.validate')
-def test_get_files_to_upload_all(DbfsPathMock, pipelines_api):
+def test_get_files_to_upload_all(dbfs_path_validate_mock, pipelines_api):
     local_lib_objects = [
         LibraryObject('jar', '/absolute/path/abc.ext'),
         LibraryObject('jar', '/relative/path.ext'),
@@ -143,11 +140,12 @@ def test_get_files_to_upload_all(DbfsPathMock, pipelines_api):
     ]
     llo_tuples = pipelines_api._get_files_to_upload(local_lib_objects, remote_lib_objects)
     assert len(llo_tuples) == 4
+    assert dbfs_path_validate_mock.call_count == 4
 
 
 def test_library_object_serialization_deserialization():
     libraries = [
-        {'jar':'//absolute/path/abc.ext'},
+        {'jar': '//absolute/path/abc.ext'},
         {'jar': '/relative/path.ext'},
         {'jar': 'file://file/scheme/abs/path.ext'},
         {'jar': 'file:/file/scheme/relative/path.ext'},
@@ -169,10 +167,8 @@ def test_library_object_serialization_deserialization():
         LibraryObject('jar', 'dbfs:/dbfs/path/file.ext')
     ]
     llo = LibraryObject.convert_from_libraries(libraries)
-    assert len(llo) == len(library_objects)
-    for i in range(len(llo)):
-        assert llo[i].path == library_objects[i].path
-        assert llo[i].lib_type == library_objects[i].lib_type
+    assert_library_object_lists_are_same(llo, library_objects)
+
     libs = LibraryObject.convert_to_libraries(library_objects)
     assert libs == libraries
 
