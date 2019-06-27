@@ -212,6 +212,10 @@ class ClusterService(object):
 
         return self.client.perform_query('GET', '/clusters/list', data=_data, headers=headers)
 
+    def cluster_events(self, cluster_id, headers=None):
+        _data = {'cluster_id': cluster_id}
+        return self.client.perform_query('POST', '/clusters/events', data=_data, headers=headers)
+
     def create_cluster(self, num_workers=None, autoscale=None, cluster_name=None, spark_version=None,
                        spark_conf=None, aws_attributes=None, node_type_id=None,
                        driver_node_type_id=None, ssh_public_keys=None, custom_tags=None,

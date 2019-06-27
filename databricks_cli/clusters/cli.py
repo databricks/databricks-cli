@@ -265,6 +265,20 @@ def permanent_delete_cli(api_client, cluster_id):
     ClusterApi(api_client).permanent_delete(cluster_id)
 
 
+@click.command(context_settings=CONTEXT_SETTINGS)
+@click.option('--cluster-id', required=True, type=ClusterIdClickType(),
+              help=ClusterIdClickType.help)
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def cluster_events_cli(api_client, cluster_id):
+    """
+    Gets events for a Spark cluster.
+    """
+    click.echo(pretty_format(ClusterApi(api_client).cluster_events(cluster_id)))
+
+
 @click.group(context_settings=CONTEXT_SETTINGS,
              short_help='Utility to interact with Databricks clusters.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
@@ -291,3 +305,5 @@ clusters_group.add_command(list_zones_cli, name='list-zones')
 clusters_group.add_command(list_node_types_cli, name='list-node-types')
 clusters_group.add_command(spark_versions_cli, name='spark-versions')
 clusters_group.add_command(permanent_delete_cli, name='permanent-delete')
+clusters_group.add_command(cluster_events_cli, name='events')
+

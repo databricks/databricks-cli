@@ -62,3 +62,6 @@ class ClusterApi(object):
 
     def permanent_delete(self, cluster_id):
         return self.client.permanent_delete_cluster(cluster_id)
+
+    def cluster_events(self, cluster_id):
+        return self.client.cluster_events(cluster_id)
