@@ -150,3 +150,8 @@ class LibraryObject(object):
         for lib_object in lib_objects:
             libraries.append({lib_object.lib_type: lib_object.path})
         return libraries
+
+    def __eq__(self, other):
+        if not isinstance(other, LibraryObject):
+            return NotImplemented
+        return self.path == other

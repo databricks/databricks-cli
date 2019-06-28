@@ -82,8 +82,8 @@ class SecretPrincipalClickType(ParamType):
     help = 'The name of the principal.'
 
 
-class PipelinesSpecPathClickType(ParamType):
-    name = 'SPEC_PATH'
+class PipelineSpecClickType(ParamType):
+    name = 'SPEC'
     help = 'The path to the pipelines spec file'
 
 

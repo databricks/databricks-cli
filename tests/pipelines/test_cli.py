@@ -138,6 +138,17 @@ def test_deploy_delete_cli_incorrect_spec_extension(pipelines_api_mock, tmpdir):
     assert result.exit_code == 1
     assert pipelines_api_mock.delete.call_count == 0
 
+    path_no_extension = tmpdir.join('/spec').strpath
+    with open(path_no_extension, 'w') as f:
+        f.write(DEPLOY_SPEC)
+    result = runner.invoke(cli.deploy_cli, ['--spec', path_no_extension])
+    assert result.exit_code == 1
+    assert pipelines_api_mock.deploy.call_count == 0
+
+    result = runner.invoke(cli.delete_cli, ['--spec', path_no_extension])
+    assert result.exit_code == 1
+    assert pipelines_api_mock.delete.call_count == 0
+
 
 @provide_conf
 def test_deploy_delete_cli_correct_spec_extensions(pipelines_api_mock, tmpdir):
@@ -149,17 +160,6 @@ def test_deploy_delete_cli_correct_spec_extensions(pipelines_api_mock, tmpdir):
     assert result.exit_code == 0
     assert pipelines_api_mock.deploy.call_count == 1
     result = runner.invoke(cli.delete_cli, ['--spec', path_json])
-    assert result.exit_code == 0
-    assert pipelines_api_mock.delete.call_count == 1
-    pipelines_api_mock.reset_mock()
-
-    path_no_extension = tmpdir.join('/spec').strpath
-    with open(path_no_extension, 'w') as f:
-        f.write(DEPLOY_SPEC)
-    result = runner.invoke(cli.deploy_cli, ['--spec', path_no_extension])
-    assert result.exit_code == 0
-    assert pipelines_api_mock.deploy.call_count == 1
-    result = runner.invoke(cli.delete_cli, ['--spec', path_no_extension])
     assert result.exit_code == 0
     assert pipelines_api_mock.delete.call_count == 1
     pipelines_api_mock.reset_mock()
