@@ -22,15 +22,20 @@
 # limitations under the License.
 
 # pylint:disable=redefined-outer-name
+# pylint:disable=unused-argument
 
+import copy
 import mock
 import pytest
 
 import databricks_cli.pipelines.api as api
 from databricks_cli.pipelines.api import LibraryObject
 
-DEPLOY_SPEC = {'id': '123'}
-PIPELINE_ID = '123'
+PIPELINE_ID = '123456'
+SPEC = {
+    'id': PIPELINE_ID,
+    'name': 'test_pipeline'
+}
 CREDENTIALS = 'dummy_credentials'
 HEADERS = 'dummy_headers'
 
@@ -42,13 +47,6 @@ def pipelines_api():
         DeltaPipelinesServiceMock.return_value = mock.MagicMock()
         _pipelines_api = api.PipelinesApi(None)
         yield _pipelines_api
-
-
-def assert_library_object_lists_are_same(actual_llo, expected_llo):
-    assert len(actual_llo) == len(expected_llo)
-    for actual, expected in zip(actual_llo, expected_llo):
-        assert actual.lib_type == expected.lib_type
-        assert actual.path == expected.path
 
 
 def test_partition_correctly_identifies_local_paths(pipelines_api):
@@ -72,8 +70,8 @@ def test_partition_correctly_identifies_local_paths(pipelines_api):
     ]
     expected_rest = []
     llo, rest = pipelines_api._partition_libraries_and_extract_local_paths(libraries)
-    assert_library_object_lists_are_same(llo, expected_llo)
-    assert_library_object_lists_are_same(rest, expected_rest)
+    assert llo == expected_llo
+    assert rest == expected_rest
 
 
 def test_partition_correctly_identifies_remote_paths(pipelines_api):
@@ -99,48 +97,8 @@ def test_partition_correctly_identifies_remote_paths(pipelines_api):
         LibraryObject('whl', '/rel/path.ext')
     ]
     llo, rest = pipelines_api._partition_libraries_and_extract_local_paths(libraries)
-    assert_library_object_lists_are_same(llo, expected_llo)
-    assert_library_object_lists_are_same(rest, expected_rest)
-
-
-@mock.patch('databricks_cli.dbfs.api.DbfsApi.file_exists', lambda a, b: True)
-@mock.patch('databricks_cli.dbfs.dbfs_path.DbfsPath.validate')
-def test_get_files_to_upload_none(dbfs_path_validate_mock, pipelines_api):
-    local_lib_objects = [
-        LibraryObject('jar', '//absolute/path/abc.ext'),
-        LibraryObject('jar', '/relative/path.ext'),
-        LibraryObject('jar', '//file/scheme/abs/path.ext'),
-        LibraryObject('jar', '/file/scheme/relative/path.ext')
-    ]
-    remote_lib_objects = [
-        LibraryObject('jar', 'dbfs:/pipeilnes/code/absolute/path/abc.ext'),
-        LibraryObject('jar', 'dbfs:/pipeilnes/code/relative/path.ext'),
-        LibraryObject('jar', 'dbfs:/pipeilnes/code//file/scheme/abs/path.ext'),
-        LibraryObject('jar', 'dbfs:/pipeilnes/code/file/scheme/relative/path.ext')
-    ]
-    llo_tuples = pipelines_api._get_files_to_upload(local_lib_objects, remote_lib_objects)
-    assert len(llo_tuples) == 0
-    assert dbfs_path_validate_mock.call_count == 4
-
-
-@mock.patch('databricks_cli.dbfs.api.DbfsApi.file_exists', lambda a, b: False)
-@mock.patch('databricks_cli.dbfs.dbfs_path.DbfsPath.validate')
-def test_get_files_to_upload_all(dbfs_path_validate_mock, pipelines_api):
-    local_lib_objects = [
-        LibraryObject('jar', '/absolute/path/abc.ext'),
-        LibraryObject('jar', '/relative/path.ext'),
-        LibraryObject('jar', '//file/scheme/abs/path.ext'),
-        LibraryObject('jar', '/file/scheme/relative/path.ext')
-    ]
-    remote_lib_objects = [
-        LibraryObject('jar', 'dbfs:/pipeilnes/code//absolute/path/abc.ext'),
-        LibraryObject('jar', 'dbfs:/pipeilnes/code/relative/path.ext'),
-        LibraryObject('jar', 'dbfs:/pipeilnes/code//file/scheme/abs/path.ext'),
-        LibraryObject('jar', 'dbfs:/pipeilnes/code/file/scheme/relative/path.ext')
-    ]
-    llo_tuples = pipelines_api._get_files_to_upload(local_lib_objects, remote_lib_objects)
-    assert len(llo_tuples) == 4
-    assert dbfs_path_validate_mock.call_count == 4
+    assert llo == expected_llo
+    assert rest == expected_rest
 
 
 def test_library_object_serialization_deserialization():
@@ -167,14 +125,60 @@ def test_library_object_serialization_deserialization():
         LibraryObject('jar', 'dbfs:/dbfs/path/file.ext')
     ]
     llo = LibraryObject.convert_from_libraries(libraries)
-    assert_library_object_lists_are_same(llo, library_objects)
+    assert llo == library_objects
 
     libs = LibraryObject.convert_to_libraries(library_objects)
     assert libs == libraries
 
 
+def file_exists_stub(self, dbfs_path):
+    exist_mapping = {
+        'dbfs:/pipelines/code/40bd001563085fc35165329ea1ff5c5ecbdbbeef.jar': True,  # sha1 of 123
+        'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar': False,  # sha1 of 456
+    }
+    return exist_mapping[dbfs_path.absolute_path]
+
+
+@mock.patch('databricks_cli.dbfs.api.DbfsApi.file_exists', file_exists_stub)
+@mock.patch('databricks_cli.dbfs.dbfs_path.DbfsPath.validate')
 @mock.patch('databricks_cli.pipelines.api.PipelinesApi._get_credentials_for_request')
-def test_delete_no_headers(get_credentials_mock, pipelines_api):
+@mock.patch('databricks_cli.dbfs.api.DbfsApi.put_file')
+def test_deploy(put_file_mock, get_credentials_mock, dbfs_path_validate, pipelines_api, tmpdir):
+    get_credentials_mock.return_value = CREDENTIALS
+    deploy_mock = pipelines_api.client.client.perform_query
+    # set-up the test
+    jar1 = tmpdir.join('/jar1.jar').strpath
+    jar2 = tmpdir.join('/jar2.jar').strpath
+    with open(jar1, 'w') as f:
+        f.write('123')
+    with open(jar2, 'w') as f:
+        f.write('456')
+    libraries = [{'jar': jar1}, {'jar': jar2}, {'jar': 'dbfs:/pipelines/code/file.jar'}]
+    SPEC['libraries'] = libraries
+    expected_spec = copy.deepcopy(SPEC)
+    expected_spec['libraries'] = [
+        {'jar': 'dbfs:/pipelines/code/file.jar'},
+        {'jar': 'dbfs:/pipelines/code/40bd001563085fc35165329ea1ff5c5ecbdbbeef.jar'},
+        {'jar': 'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar'},
+    ]
+    expected_spec['credentials'] = CREDENTIALS
+
+    pipelines_api.deploy(SPEC)
+    assert dbfs_path_validate.call_count == 2
+    assert put_file_mock.call_count == 1
+    assert put_file_mock.call_args[0][0] == jar2
+    assert put_file_mock.call_args[0][1].absolute_path ==\
+        'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar'
+    deploy_mock.assert_called_with('PUT', '/pipelines/{}'.format(PIPELINE_ID),
+                                   data=expected_spec, headers=None)
+
+    pipelines_api.deploy(SPEC, HEADERS)
+    deploy_mock.assert_called_with('PUT', '/pipelines/{}'.format(PIPELINE_ID),
+                                   data=expected_spec, headers=HEADERS)
+
+
+@mock.patch('databricks_cli.pipelines.api.PipelinesApi._get_credentials_for_request')
+def test_delete(get_credentials_mock, pipelines_api):
     get_credentials_mock.return_value = CREDENTIALS
     pipelines_api.delete(PIPELINE_ID)
     delete_mock = pipelines_api.client.delete
@@ -184,14 +188,7 @@ def test_delete_no_headers(get_credentials_mock, pipelines_api):
     assert delete_mock.call_args[0][1] == CREDENTIALS
     assert delete_mock.call_args[0][2] is None
 
-
-@mock.patch('databricks_cli.pipelines.api.PipelinesApi._get_credentials_for_request')
-def test_delete_headers(get_credentials_mock, pipelines_api):
-    get_credentials_mock.return_value = CREDENTIALS
     pipelines_api.delete(PIPELINE_ID, HEADERS)
-    delete_mock = pipelines_api.client.delete
-    assert get_credentials_mock.call_count == 1
-    assert delete_mock.call_count == 1
     assert delete_mock.call_args[0][0] == PIPELINE_ID
     assert delete_mock.call_args[0][1] == CREDENTIALS
     assert delete_mock.call_args[0][2] == HEADERS

@@ -154,4 +154,4 @@ class LibraryObject(object):
     def __eq__(self, other):
         if not isinstance(other, LibraryObject):
             return NotImplemented
-        return self.path == other
+        return self.path == other.path and self.lib_type == other.lib_type
