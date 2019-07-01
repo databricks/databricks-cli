@@ -57,11 +57,11 @@ def deploy_cli(api_client, spec_arg, spec):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Deletes a delta pipeline')
+               short_help='Stops a delta pipeline and cleans up Databricks resources associated with it')
 @click.argument('spec_arg', default=None, required=False)
 @click.option('--spec', default=None, help=PipelineSpecClickType.help)
 @click.option('--pipeline-id', default=None,
-              help='Stops a delta pipeline and cleans up Databricks resources associated with it')
+              help='id associated with the pipeline to be stopped')
 @debug_option
 @profile_option
 @eat_exceptions
