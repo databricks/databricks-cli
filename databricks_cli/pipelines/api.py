@@ -38,6 +38,7 @@ from databricks_cli.configure.provider import get_config, ProfileConfigProvider
 from databricks_cli.utils import InvalidConfigurationError
 
 BUFFER_SIZE = 1024 * 64
+base_pipelines_dir = 'dbfs:/pipelines/code/'
 
 
 class PipelinesApi(object):
@@ -45,72 +46,19 @@ class PipelinesApi(object):
         self.client = DeltaPipelinesService(api_client)
         self.dbfs_client = DbfsApi(api_client)
 
-    @staticmethod
-    def _partition_libraries_and_extract_local_paths(lib_objects):
-        local_lib_objects, rest_lib_objects = [], []
-        for lib_object in lib_objects:
-            uri_scheme = urllib.parse.urlsplit(lib_object.path).scheme
-            if lib_object.lib_type == 'jar' and uri_scheme == '':
-                local_lib_objects.append(lib_object)
-            elif lib_object.lib_type == 'jar' and uri_scheme.lower() == 'file':
-                local_lib_objects.append(LibraryObject(lib_object.lib_type, lib_object.path[5:]))
-            else:
-                rest_lib_objects.append(lib_object)
-        return local_lib_objects, rest_lib_objects
-
-    @staticmethod
-    def _get_hashed_path(path):
-        hash_buffer = sha1()
-        try:
-            with open(path, 'rb') as f:
-                while True:
-                    data = f.read(BUFFER_SIZE)
-                    if not data:
-                        break
-                    hash_buffer.update(data)
-        except Exception as e:
-            raise RuntimeError('Error \'{}\' while processing {}'.format(e, path))
-
-        file_hash = hash_buffer.hexdigest()
-        path = 'dbfs:/pipelines/code/{}{}'.format(file_hash, os.path.splitext(path)[1])
-        return path
-
-    def _get_remote_mappings(self, local_lib_objects):
-        return list(map(lambda llo: LibraryObject(llo.lib_type, self._get_hashed_path(llo.path)),
-                        local_lib_objects))
-
-    def _get_files_to_upload(self, local_lib_objects, remote_lib_objects):
-        transformed_remote_lib_objects = map(
-            lambda rlo: LibraryObject(rlo.lib_type, DbfsPath(rlo.path)),
-            remote_lib_objects)
-        return list(filter(lambda lo_tuple: not self.dbfs_client.file_exists(lo_tuple[1].path),
-                           zip(local_lib_objects, transformed_remote_lib_objects)))
-
-    #
-    # Only required until the deploy/delete APIs requires the credentials in the body as well
-    # as the header.Once the API requirement is relaxed, this function can be stripped out and
-    # includes for this function removed.
-    #
-    @staticmethod
-    def _get_credentials_for_request():
-        profile = get_profile_from_context()
-        if profile:
-            config = ProfileConfigProvider.get_config(profile)
-        else:
-            config = get_config()
-        if not config or not config.is_valid:
-            raise InvalidConfigurationError.for_profile(profile)
-
-        if config.is_valid_with_token:
-            return {'token': config.token}
-        else:
-            return {'user': config.username, 'password': config.password}
-
     def deploy(self, spec, headers=None):
+        """
+        Pipelines Deploy API
+        :param spec:
+        :param headers:
+        :return:
+        """
         lib_objects = LibraryObject.convert_from_libraries(spec.get('libraries', []))
         local_lib_objects, rest_lib_objects = \
             self._partition_libraries_and_extract_local_paths(lib_objects)
-        remote_lib_objects = self._get_remote_mappings(local_lib_objects)
+        remote_lib_objects = list(map(lambda llo:
+                                      LibraryObject(llo.lib_type, self._get_hashed_path(llo.path)),
+                                      local_lib_objects))
         upload_files = self._get_files_to_upload(local_lib_objects, remote_lib_objects)
 
         for llo, rlo in upload_files:
@@ -128,7 +76,90 @@ class PipelinesApi(object):
                                          headers=headers)
 
     def delete(self, pipeline_id, headers=None):
+        """
+        Pipelines Delete API
+        :param pipeline_id:
+        :param headers:
+        :return:
+        """
         self.client.delete(pipeline_id, self._get_credentials_for_request(), headers)
+
+    @staticmethod
+    def _partition_libraries_and_extract_local_paths(lib_objects):
+        """
+        Partitions the given set of libraries into local and remote by checking uri scheme
+        :param lib_objects: List[LibraryObject]
+        :return: List[List[LibraryObject], List[LibraryObject]]
+        """
+        local_lib_objects, rest_lib_objects = [], []
+        for lib_object in lib_objects:
+            uri_scheme = urllib.parse.urlsplit(lib_object.path).scheme
+            if lib_object.lib_type == 'jar' and uri_scheme == '':
+                local_lib_objects.append(lib_object)
+            elif lib_object.lib_type == 'jar' and uri_scheme.lower() == 'file':
+                if lib_object.path.startswith('file:////'):
+                    raise RuntimeError('Invalid file uri scheme')
+                local_lib_objects.append(LibraryObject(lib_object.lib_type, lib_object.path[5:]))
+            else:
+                rest_lib_objects.append(lib_object)
+        return local_lib_objects, rest_lib_objects
+
+    @staticmethod
+    def _get_hashed_path(path):
+        """
+        Finds the corresponding dbfs file path for the file located at the supplied path by
+        calculating its hash.
+        :param path: String
+        :return: String
+        """
+        hash_buffer = sha1()
+        try:
+            with open(path, 'rb') as f:
+                while True:
+                    data = f.read(BUFFER_SIZE)
+                    if not data:
+                        break
+                    hash_buffer.update(data)
+        except Exception as e:
+            raise RuntimeError('Error \'{}\' while processing {}'.format(e, path))
+
+        file_hash = hash_buffer.hexdigest()
+        path = '{}{}{}'.format(base_pipelines_dir, file_hash, os.path.splitext(path)[1])
+        return path
+
+    def _get_files_to_upload(self, local_lib_objects, remote_lib_objects):
+        """
+        Returns a Local/Remote pair for every file that needs to be uploaded to dbfs
+        :param local_lib_objects: List[LibraryObject]
+        :param remote_lib_objects: List[LibraryObject]
+        :return: List[(LibraryObject, LibraryObject)]
+        """
+        transformed_remote_lib_objects = map(
+            lambda rlo: LibraryObject(rlo.lib_type, DbfsPath(rlo.path)),
+            remote_lib_objects)
+        return list(filter(lambda lo_tuple: not self.dbfs_client.file_exists(lo_tuple[1].path),
+                           zip(local_lib_objects, transformed_remote_lib_objects)))
+
+    @staticmethod
+    def _get_credentials_for_request():
+        """
+        Only required until the deploy/delete APIs requires the credentials in the body as well
+        as the header.Once the API requirement is relaxed, this function can be stripped out and
+        includes for this function removed.
+        :return:
+        """
+        profile = get_profile_from_context()
+        if profile:
+            config = ProfileConfigProvider.get_config(profile)
+        else:
+            config = get_config()
+        if not config or not config.is_valid:
+            raise InvalidConfigurationError.for_profile(profile)
+
+        if config.is_valid_with_token:
+            return {'token': config.token}
+        else:
+            return {'user': config.username, 'password': config.password}
 
 
 class LibraryObject(object):
@@ -138,6 +169,11 @@ class LibraryObject(object):
 
     @classmethod
     def convert_from_libraries(cls, libraries):
+        """
+        Serialize Libraries into LibraryObjects
+        :param libraries: List[Dictionary{String, String}]
+        :return: List[LibraryObject]
+        """
         lib_objects = []
         for library in libraries:
             for lib_type, path in library.items():
@@ -146,12 +182,22 @@ class LibraryObject(object):
 
     @classmethod
     def convert_to_libraries(cls, lib_objects):
+        """
+        Deserialize LibraryObjects
+        :param lib_objects: List[LibraryObject]
+        :return: List[Dictionary{String, String}]
+        """
         libraries = []
         for lib_object in lib_objects:
             libraries.append({lib_object.lib_type: lib_object.path})
         return libraries
 
     def __eq__(self, other):
+        """
+        Equality Comparison
+        :param other:
+        :return:
+        """
         if not isinstance(other, LibraryObject):
             return NotImplemented
         return self.path == other.path and self.lib_type == other.lib_type

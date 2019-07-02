@@ -84,7 +84,7 @@ class SecretPrincipalClickType(ParamType):
 
 class PipelineSpecClickType(ParamType):
     name = 'SPEC'
-    help = 'The path to the pipelines spec file'
+    help = 'The path to the pipelines deployment spec file'
 
 
 class OneOfOption(Option):
