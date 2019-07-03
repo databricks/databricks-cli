@@ -24,6 +24,7 @@
 # pylint:disable=redefined-outer-name
 # pylint:disable=unused-argument
 
+import os
 import copy
 import mock
 import pytest
@@ -49,89 +50,7 @@ def pipelines_api():
         yield _pipelines_api
 
 
-def test_partition_correctly_identifies_local_paths(pipelines_api):
-    libraries = [
-        LibraryObject('jar', '//absolute/path/abc.ext'),
-        LibraryObject('jar', '/relative/path.ext'),
-        LibraryObject('jar', 'file://file/scheme/abs/path.ext'),
-        LibraryObject('jar', 'file:/file/scheme/relative/path.ext'),
-        LibraryObject('jar', 'FILE:/all/caps.ext'),
-        LibraryObject('jar', 'FiLe:/weird/case.ext'),
-        LibraryObject('jar', 'file.ext')
-    ]
-    expected_llo = [
-        LibraryObject('jar', '//absolute/path/abc.ext'),
-        LibraryObject('jar', '/relative/path.ext'),
-        LibraryObject('jar', '//file/scheme/abs/path.ext'),
-        LibraryObject('jar', '/file/scheme/relative/path.ext'),
-        LibraryObject('jar', '/all/caps.ext'),
-        LibraryObject('jar', '/weird/case.ext'),
-        LibraryObject('jar', 'file.ext')
-    ]
-    expected_rest = []
-    llo, rest = pipelines_api._partition_libraries_and_extract_local_paths(libraries)
-    assert llo == expected_llo
-    assert rest == expected_rest
-
-
-def test_partition_correctly_identifies_remote_paths(pipelines_api):
-    libraries = [
-        LibraryObject('jar', 'dbfs:/absolute/path/abc.ext'),
-        LibraryObject('jar', 's3:file://file/scheme/abs/path.ext'),
-        LibraryObject('jar', 's3:file:/file/scheme/relative/path.ext'),
-        LibraryObject('jar', 'scheme:file.ext'),
-        LibraryObject('jar', 'scheme://abs/path.ext'),
-        LibraryObject('jar', 'scheme:/rel/path.ext'),
-        LibraryObject('egg', 'file:/rel/path.ext'),
-        LibraryObject('whl', '/rel/path.ext')
-    ]
-    expected_llo = []
-    expected_rest = [
-        LibraryObject('jar', 'dbfs:/absolute/path/abc.ext'),
-        LibraryObject('jar', 's3:file://file/scheme/abs/path.ext'),
-        LibraryObject('jar', 's3:file:/file/scheme/relative/path.ext'),
-        LibraryObject('jar', 'scheme:file.ext'),
-        LibraryObject('jar', 'scheme://abs/path.ext'),
-        LibraryObject('jar', 'scheme:/rel/path.ext'),
-        LibraryObject('egg', 'file:/rel/path.ext'),
-        LibraryObject('whl', '/rel/path.ext')
-    ]
-    llo, rest = pipelines_api._partition_libraries_and_extract_local_paths(libraries)
-    assert llo == expected_llo
-    assert rest == expected_rest
-
-
-def test_library_object_serialization_deserialization():
-    libraries = [
-        {'jar': '//absolute/path/abc.ext'},
-        {'jar': '/relative/path.ext'},
-        {'jar': 'file://file/scheme/abs/path.ext'},
-        {'jar': 'file:/file/scheme/relative/path.ext'},
-        {'jar': 'FILE:/all/caps.ext'},
-        {'egg': 'FiLe:/weird/case.ext'},
-        {'whl': 'file.ext'},
-        {'whl': 's3:/s3/path/file.ext'},
-        {'jar': 'dbfs:/dbfs/path/file.ext'}
-    ]
-    library_objects = [
-        LibraryObject('jar', '//absolute/path/abc.ext'),
-        LibraryObject('jar', '/relative/path.ext'),
-        LibraryObject('jar', 'file://file/scheme/abs/path.ext'),
-        LibraryObject('jar', 'file:/file/scheme/relative/path.ext'),
-        LibraryObject('jar', 'FILE:/all/caps.ext'),
-        LibraryObject('egg', 'FiLe:/weird/case.ext'),
-        LibraryObject('whl', 'file.ext'),
-        LibraryObject('whl', 's3:/s3/path/file.ext'),
-        LibraryObject('jar', 'dbfs:/dbfs/path/file.ext')
-    ]
-    llo = LibraryObject.convert_from_libraries(libraries)
-    assert llo == library_objects
-
-    libs = LibraryObject.convert_to_libraries(library_objects)
-    assert libs == libraries
-
-
-def file_exists_stub(self, dbfs_path):
+def file_exists_stub(_, dbfs_path):
     exist_mapping = {
         'dbfs:/pipelines/code/40bd001563085fc35165329ea1ff5c5ecbdbbeef.jar': True,  # sha1 of 123
         'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar': False,  # sha1 of 456
@@ -144,31 +63,63 @@ def file_exists_stub(self, dbfs_path):
 @mock.patch('databricks_cli.pipelines.api.PipelinesApi._get_credentials_for_request')
 @mock.patch('databricks_cli.dbfs.api.DbfsApi.put_file')
 def test_deploy(put_file_mock, get_credentials_mock, dbfs_path_validate, pipelines_api, tmpdir):
+    """
+    Scenarios Tested:
+    1. All three types of local file paths (absolute, relative, file: scheme)
+    2. File already present in dbfs
+    3. Local files already present in dbfs
+    4. Local files that need to be uploaded to dbfs
+    Every test local file which has '123' written to it is expected to be already present in Dbfs.
+    A test local file which has '456' written to it is not present in Dbfs and therefore must be.
+    uploaded to dbfs.
+    :param put_file_mock:
+    :param get_credentials_mock:
+    :param dbfs_path_validate:
+    :param pipelines_api:
+    :param tmpdir:
+    :return:
+    """
     get_credentials_mock.return_value = CREDENTIALS
     deploy_mock = pipelines_api.client.client.perform_query
     # set-up the test
     jar1 = tmpdir.join('/jar1.jar').strpath
     jar2 = tmpdir.join('/jar2.jar').strpath
+    jar3 = tmpdir.join('/jar3.jar').strpath
+    jar4 = tmpdir.join('/jar4.jar').strpath
+    jar3_relpath = os.path.relpath(jar3, os.getcwd())
+    jar4_file_prefix = 'file:{}'.format(jar4)
     with open(jar1, 'w') as f:
         f.write('123')
     with open(jar2, 'w') as f:
         f.write('456')
-    libraries = [{'jar': jar1}, {'jar': jar2}, {'jar': 'dbfs:/pipelines/code/file.jar'}]
+    with open(jar3, 'w') as f:
+        f.write('456')
+    with open(jar4, 'w') as f:
+        f.write('456')
+    libraries = [{'jar': 'dbfs:/pipelines/code/file.jar'},
+                 {'jar': jar1},
+                 {'jar': jar2},
+                 {'jar': jar3_relpath},
+                 {'jar': jar4_file_prefix}]
     SPEC['libraries'] = libraries
     expected_spec = copy.deepcopy(SPEC)
     expected_spec['libraries'] = [
         {'jar': 'dbfs:/pipelines/code/file.jar'},
         {'jar': 'dbfs:/pipelines/code/40bd001563085fc35165329ea1ff5c5ecbdbbeef.jar'},
         {'jar': 'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar'},
+        {'jar': 'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar'},
+        {'jar': 'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar'}
     ]
     expected_spec['credentials'] = CREDENTIALS
 
     pipelines_api.deploy(SPEC)
-    assert dbfs_path_validate.call_count == 2
-    assert put_file_mock.call_count == 1
-    assert put_file_mock.call_args[0][0] == jar2
-    assert put_file_mock.call_args[0][1].absolute_path ==\
+    assert dbfs_path_validate.call_count == 4
+    assert put_file_mock.call_count == 3
+    assert put_file_mock.call_args_list[0][0][0] == jar2
+    assert put_file_mock.call_args_list[0][0][1].absolute_path ==\
         'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar'
+    assert put_file_mock.call_args_list[1][0][0] == jar3_relpath
+    assert put_file_mock.call_args_list[2][0][0] == jar4
     deploy_mock.assert_called_with('PUT', '/pipelines/{}'.format(PIPELINE_ID),
                                    data=expected_spec, headers=None)
 
@@ -192,3 +143,74 @@ def test_delete(get_credentials_mock, pipelines_api):
     assert delete_mock.call_args[0][0] == PIPELINE_ID
     assert delete_mock.call_args[0][1] == CREDENTIALS
     assert delete_mock.call_args[0][2] == HEADERS
+
+
+def test_partition_local_remote(pipelines_api):
+    libraries = [
+        LibraryObject('jar', '/absolute/path/abc.ext'),
+        LibraryObject('jar', 'relative/path.ext'),
+        LibraryObject('jar', 'file:///file/scheme/abs/path.ext'),
+        LibraryObject('jar', 'file://file/scheme/two/slashes/path.ext'),
+        LibraryObject('jar', 'FILE:/all/caps.ext'),
+        LibraryObject('jar', 'FiLe:/weird/case.ext'),
+        LibraryObject('jar', 'file.ext'),
+        # remote
+        LibraryObject('jar', 'dbfs:/absolute/path/abc.ext'),
+        LibraryObject('jar', 's3:file:/file/scheme/abs/path.ext'),
+        LibraryObject('jar', 'scheme:file.ext'),
+        LibraryObject('jar', 'scheme:/abs/path.ext'),
+        LibraryObject('jar', 'scheme://abs/path.ext'),
+        LibraryObject('egg', 'file:/abs/path.ext'),
+        LibraryObject('whl', 'rel/path.ext')
+    ]
+    expected_llo = [
+        LibraryObject('jar', '/absolute/path/abc.ext'),
+        LibraryObject('jar', 'relative/path.ext'),
+        LibraryObject('jar', '///file/scheme/abs/path.ext'),
+        LibraryObject('jar', '//file/scheme/two/slashes/path.ext'),
+        LibraryObject('jar', '/all/caps.ext'),
+        LibraryObject('jar', '/weird/case.ext'),
+        LibraryObject('jar', 'file.ext')
+    ]
+    expected_rest = [
+        LibraryObject('jar', 'dbfs:/absolute/path/abc.ext'),
+        LibraryObject('jar', 's3:file:/file/scheme/abs/path.ext'),
+        LibraryObject('jar', 'scheme:file.ext'),
+        LibraryObject('jar', 'scheme:/abs/path.ext'),
+        LibraryObject('jar', 'scheme://abs/path.ext'),
+        LibraryObject('egg', 'file:/abs/path.ext'),
+        LibraryObject('whl', 'rel/path.ext')
+    ]
+    llo, rest = pipelines_api._partition_libraries_and_extract_local_paths(libraries)
+    assert llo == expected_llo
+    assert rest == expected_rest
+
+
+def test_library_object_serialization_deserialization():
+    libraries = [
+        {'jar': '/absolute/path/abc.ext'},
+        {'jar': 'relative/path.ext'},
+        {'jar': 'file://file/scheme/abs/path.ext'},
+        {'jar': 'file:/file/scheme/relative/path.ext'},
+        {'jar': 'FILE:/all/caps.ext'},
+        {'egg': 'FiLe:/weird/case.ext'},
+        {'whl': 'file.ext'},
+        {'whl': 's3:/s3/path/file.ext'},
+        {'jar': 'dbfs:/dbfs/path/file.ext'}
+    ]
+    library_objects = [
+        LibraryObject('jar', '/absolute/path/abc.ext'),
+        LibraryObject('jar', 'relative/path.ext'),
+        LibraryObject('jar', 'file://file/scheme/abs/path.ext'),
+        LibraryObject('jar', 'file:/file/scheme/relative/path.ext'),
+        LibraryObject('jar', 'FILE:/all/caps.ext'),
+        LibraryObject('egg', 'FiLe:/weird/case.ext'),
+        LibraryObject('whl', 'file.ext'),
+        LibraryObject('whl', 's3:/s3/path/file.ext'),
+        LibraryObject('jar', 'dbfs:/dbfs/path/file.ext')
+    ]
+    llo = LibraryObject.convert_from_libraries(libraries)
+    assert llo == library_objects
+
+    libs = LibraryObject.convert_to_libraries(library_objects)
+    assert libs == libraries
