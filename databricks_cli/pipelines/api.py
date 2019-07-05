@@ -47,12 +47,6 @@ class PipelinesApi(object):
         self.dbfs_client = DbfsApi(api_client)
 
     def deploy(self, spec, headers=None):
-        """
-        Pipelines Deploy API
-        :param spec:
-        :param headers:
-        :return:
-        """
         lib_objects = LibraryObject.convert_from_libraries(spec.get('libraries', []))
         local_lib_objects, rest_lib_objects = \
             self._partition_libraries_and_extract_local_paths(lib_objects)
@@ -67,8 +61,8 @@ class PipelinesApi(object):
             except Exception as e:
                 raise RuntimeError('Error \'{}\' while uploading {}'.format(e, llo.path))
 
-        rest_lib_objects.extend(remote_lib_objects)
-        spec['libraries'] = LibraryObject.convert_to_libraries(rest_lib_objects)
+        spec['libraries'] = LibraryObject.convert_to_libraries(rest_lib_objects +
+                                                               remote_lib_objects)
         spec['credentials'] = self._get_credentials_for_request()
         self.client.client.perform_query('PUT',
                                          '/pipelines/{}'.format(spec['id']),
@@ -76,12 +70,6 @@ class PipelinesApi(object):
                                          headers=headers)
 
     def delete(self, pipeline_id, headers=None):
-        """
-        Pipelines Delete API
-        :param pipeline_id:
-        :param headers:
-        :return:
-        """
         self.client.delete(pipeline_id, self._get_credentials_for_request(), headers)
 
     @staticmethod
@@ -89,7 +77,7 @@ class PipelinesApi(object):
         """
         Partitions the given set of libraries into local and remote by checking uri scheme
         :param lib_objects: List[LibraryObject]
-        :return: List[List[LibraryObject], List[LibraryObject]]
+        :return: List[List[LibraryObject], List[LibraryObject]] [Local, Remote]
         """
         local_lib_objects, rest_lib_objects = [], []
         for lib_object in lib_objects:
@@ -97,7 +85,7 @@ class PipelinesApi(object):
             if lib_object.lib_type == 'jar' and uri_scheme == '':
                 local_lib_objects.append(lib_object)
             elif lib_object.lib_type == 'jar' and uri_scheme.lower() == 'file':
-                if lib_object.path.startswith('file:////'):
+                if lib_object.path[4:].startswith(':////'):
                     raise RuntimeError('Invalid file uri scheme')
                 local_lib_objects.append(LibraryObject(lib_object.lib_type, lib_object.path[5:]))
             else:
@@ -109,8 +97,8 @@ class PipelinesApi(object):
         """
         Finds the corresponding dbfs file path for the file located at the supplied path by
         calculating its hash.
-        :param path: String
-        :return: String
+        :param path: Local File Path
+        :return: Remote Path (pipeline_base_dir + file_hash (dot) file_extension)
         """
         hash_buffer = sha1()
         try:
@@ -129,7 +117,9 @@ class PipelinesApi(object):
 
     def _get_files_to_upload(self, local_lib_objects, remote_lib_objects):
         """
-        Returns a Local/Remote pair for every file that needs to be uploaded to dbfs
+        Returns a Local/Remote pair for every file that needs to be uploaded to dbfs. Files are
+        stored under base_pipelines_dir defined above, and we only upload files that don't already
+        exist in dbfs.
         :param local_lib_objects: List[LibraryObject]
         :param remote_lib_objects: List[LibraryObject]
         :return: List[(LibraryObject, LibraryObject)]
@@ -143,10 +133,9 @@ class PipelinesApi(object):
     @staticmethod
     def _get_credentials_for_request():
         """
-        Only required until the deploy/delete APIs requires the credentials in the body as well
-        as the header.Once the API requirement is relaxed, this function can be stripped out and
+        Only required while the deploy/delete APIs require credentials in the body as well
+        as the header. Once the API requirement is relaxed, this function can be stripped out and
         includes for this function removed.
-        :return:
         """
         profile = get_profile_from_context()
         if profile:
@@ -193,11 +182,6 @@ class LibraryObject(object):
         return libraries
 
     def __eq__(self, other):
-        """
-        Equality Comparison
-        :param other:
-        :return:
-        """
         if not isinstance(other, LibraryObject):
             return NotImplemented
         return self.path == other.path and self.lib_type == other.lib_type

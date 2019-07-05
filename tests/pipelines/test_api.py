@@ -72,12 +72,6 @@ def test_deploy(put_file_mock, get_credentials_mock, dbfs_path_validate, pipelin
     Every test local file which has '123' written to it is expected to be already present in Dbfs.
     A test local file which has '456' written to it is not present in Dbfs and therefore must be.
     uploaded to dbfs.
-    :param put_file_mock:
-    :param get_credentials_mock:
-    :param dbfs_path_validate:
-    :param pipelines_api:
-    :param tmpdir:
-    :return:
     """
     get_credentials_mock.return_value = CREDENTIALS
     deploy_mock = pipelines_api.client.client.perform_query
@@ -147,6 +141,7 @@ def test_delete(get_credentials_mock, pipelines_api):
 
 def test_partition_local_remote(pipelines_api):
     libraries = [
+        # local files
         LibraryObject('jar', '/absolute/path/abc.ext'),
         LibraryObject('jar', 'relative/path.ext'),
         LibraryObject('jar', 'file:///file/scheme/abs/path.ext'),
@@ -154,7 +149,7 @@ def test_partition_local_remote(pipelines_api):
         LibraryObject('jar', 'FILE:/all/caps.ext'),
         LibraryObject('jar', 'FiLe:/weird/case.ext'),
         LibraryObject('jar', 'file.ext'),
-        # remote
+        # shouldn't be uploaded
         LibraryObject('jar', 'dbfs:/absolute/path/abc.ext'),
         LibraryObject('jar', 's3:file:/file/scheme/abs/path.ext'),
         LibraryObject('jar', 'scheme:file.ext'),

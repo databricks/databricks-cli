@@ -44,10 +44,6 @@ from databricks_cli.configure.config import provide_api_client, profile_option, 
 def deploy_cli(api_client, spec_arg, spec):
     """
     Deploys a delta pipeline according to the pipeline specification.
-    :param api_client:
-    :param spec_arg:
-    :param spec:
-    :return:
     """
     if bool(spec_arg) == bool(spec):
         raise RuntimeError('The spec should be provided either by an option or argument')
@@ -70,10 +66,6 @@ def deploy_cli(api_client, spec_arg, spec):
 def delete_cli(api_client, spec_arg, spec, pipeline_id):
     """
     Stops a delta pipeline and cleans up Databricks resources associated with it
-    :param api_client:
-    :param spec:
-    :param pipeline_id:
-    :return:
     """
     # Only one out of spec/pipeline_id/spec_arg should be supplied
     if bool(spec_arg) + bool(spec) + bool(pipeline_id) != 1:
@@ -89,8 +81,6 @@ def _read_spec(src):
     """
     Reads the spec at src as a JSON if no file extension is provided, or if in the extension format
     if the format is supported.
-    :param src:
-    :return: json of the spec
     """
     extension = os.path.splitext(src)[1]
     if extension.lower() == '.json':
