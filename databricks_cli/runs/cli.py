@@ -157,7 +157,7 @@ def get_output_cli(api_client, run_id):
     """
     Gets the output of a run
 
-    The output schema is documented https://docs.databricks.com/api/latest/jobs.html#runs-get-output.
+    The output schema is documented https://docs.databricks.com/api/latest/jobs.html#runs-get-output
     """
     click.echo(pretty_format(RunsApi(api_client).get_run_output(run_id)))
 
