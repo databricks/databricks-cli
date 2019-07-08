@@ -83,6 +83,10 @@ def profile_option(f):
 
 def _get_api_client(config, command_name=""):
     verify = config.insecure is None
+
+    if config.is_debugging and config.debugging == "1":
+        ApiClient.enable_debug_logging()
+
     if config.is_valid_with_token:
         return ApiClient(host=config.host, token=config.token, verify=verify,
                          command_name=command_name)
