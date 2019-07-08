@@ -41,7 +41,8 @@ from databricks_cli.version import print_version_callback, version
 @provide_api_client
 def create_token_cli(api_client, lifetime_seconds, comment):
     """
-    Create and return a token. This call returns the error QUOTA_EXCEEDED if the caller exceeds the token quota, which is 600.
+    Create and return a token.
+    This call returns the error QUOTA_EXCEEDED if the caller exceeds the token quota, which is 600.
     """
     content = TokensApi(api_client).create(lifetime_seconds, comment)
     click.echo(pretty_format(content))
@@ -72,7 +73,9 @@ def list_cli(api_client):
 @provide_api_client
 def revoke_cli(api_client, token_id):
     """
-    Revoke an access token. This call returns the error RESOURCE_DOES_NOT_EXIST if a token with the specified ID is not valid.
+    Revoke an access token.
+    This call returns the error RESOURCE_DOES_NOT_EXIST
+    if a token with the specified ID is not valid.
     """
     content = TokensApi(api_client).revoke(token_id)
     click.echo(pretty_format(content))
