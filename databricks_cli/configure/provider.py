@@ -267,8 +267,10 @@ class DatabricksConfig(object):
         self.host = host
         self.username = username
 
+        self.password = None
         if self.password == 'stdin':
-            self.password = getpass.getpass("Password to connect to databricks at [" + self.host + "]: ")
+            message = 'Password to connect to databricks at [{}]: '.format(self.host)
+            self.password = getpass.getpass(message)
         else:
             self.password = password
 
