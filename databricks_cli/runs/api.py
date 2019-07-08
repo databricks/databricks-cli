@@ -39,3 +39,6 @@ class RunsApi(object):
 
     def cancel_run(self, run_id):
         return self.client.cancel_run(run_id)
+
+    def get_run_output(self, run_id):
+        return self.client.get_run_output(run_id)
