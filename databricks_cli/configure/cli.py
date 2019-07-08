@@ -85,7 +85,7 @@ def configure_cli(token, insecure, stdin):
     if token:
         _configure_cli_token(profile, insecure_str)
     elif stdin:
-        _configure_cli_stdin()
+        _configure_cli_stdin(profile, insecure_str)
     else:
         _configure_cli_password(profile, insecure_str)
 
