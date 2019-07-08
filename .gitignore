@@ -10,3 +10,7 @@ build
 databricks_cli.egg-info
 .idea
 *.iml
+venv
+.DS_Store
+.coverage
+.tox/
