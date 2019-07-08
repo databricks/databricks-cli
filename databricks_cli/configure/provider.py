@@ -20,7 +20,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import getpass
 from abc import abstractmethod, ABCMeta
 from configparser import ConfigParser
 import os
@@ -33,7 +33,7 @@ _home = expanduser('~')
 CONFIG_FILE_ENV_VAR = "DATABRICKS_CONFIG_FILE"
 HOST = 'host'
 USERNAME = 'username'
-PASSWORD = 'password' # NOQA
+PASSWORD = 'password'  # NOQA
 TOKEN = 'token'
 INSECURE = 'insecure'
 DEFAULT_SECTION = 'DEFAULT'
@@ -263,10 +263,15 @@ class ProfileConfigProvider(DatabricksConfigProvider):
 
 
 class DatabricksConfig(object):
-    def __init__(self, host, username, password, token, insecure): # noqa
+    def __init__(self, host, username, password, token, insecure):  # noqa
         self.host = host
         self.username = username
-        self.password = password
+
+        if self.password == 'stdin':
+            self.password = getpass.getpass("Password to connect to databricks at [" + self.host + "]: ")
+        else:
+            self.password = password
+
         self.token = token
         self.insecure = insecure
 
