@@ -5,3 +5,9 @@
 .*project
 env
 .envrc
+venv
+.DS_Store
+.idea
+.coverage
+.tox/
+databricks_cli.egg-info/
