@@ -527,7 +527,7 @@ class WorkspaceService(object):
         return self.client.perform_query('GET', '/workspace/list', data=_data, headers=headers)
 
     def import_workspace(self, path, format=None, language=None, content=None, overwrite=None,
-               headers=None):
+                         headers=None):
         _data = {}
         if path is not None:
             _data['path'] = path
@@ -706,3 +706,24 @@ class GroupsService(object):
             _data['group_name'] = group_name
         return self.client.perform_query('GET', '/groups/list-parents', data=_data, headers=headers)
 
+
+class TokensService(object):
+    def __init__(self, client):
+        self.client = client
+
+    def create(self, lifetime_seconds, comment, headers=None):
+        _data = {
+            'lifetime_seconds': lifetime_seconds,
+            'comment': comment
+        }
+        return self.client.perform_query('POST', '/token/create', data=_data, headers=headers)
+
+    def list(self, headers=None):
+        _data = {}
+        return self.client.perform_query('GET', '/token/list', headers=headers)
+
+    def revoke(self, token_id, headers=None):
+        _data = {
+            'token_id': token_id
+        }
+        return self.client.perform_query('POST', '/token/delete', data=_data, headers=headers)
