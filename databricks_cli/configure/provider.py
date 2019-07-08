@@ -287,7 +287,6 @@ class DatabricksConfig(object):
         self.insecure = insecure
         self.debugging = debugging
 
-
     @classmethod
     def from_token(cls, host, token, insecure=None):
         return DatabricksConfig(host, None, None, token, insecure)
