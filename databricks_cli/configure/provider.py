@@ -37,6 +37,7 @@ PASSWORD = 'password'  # NOQA
 TOKEN = 'token'
 INSECURE = 'insecure'
 DEFAULT_SECTION = 'DEFAULT'
+DEBUG = 'debug'
 
 # User-provided override for the DatabricksConfigProvider
 _config_provider = None
@@ -238,7 +239,11 @@ class EnvironmentVariableConfigProvider(DatabricksConfigProvider):
         password = os.environ.get('DATABRICKS_PASSWORD')
         token = os.environ.get('DATABRICKS_TOKEN')
         insecure = os.environ.get('DATABRICKS_INSECURE')
-        config = DatabricksConfig(host, username, password, token, insecure)
+        debugging = os.environ.get('DATABRICKS_DEBUGGING')
+        if debugging is None:
+            debugging = 0
+
+        config = DatabricksConfig(host, username, password, token, insecure, debugging=debugging)
         if config.is_valid:
             return config
         return None
@@ -256,14 +261,18 @@ class ProfileConfigProvider(DatabricksConfigProvider):
         password = _get_option_if_exists(raw_config, self.profile, PASSWORD)
         token = _get_option_if_exists(raw_config, self.profile, TOKEN)
         insecure = _get_option_if_exists(raw_config, self.profile, INSECURE)
-        config = DatabricksConfig(host, username, password, token, insecure)
+        debugging = _get_option_if_exists(raw_config, self.profile, DEBUG)
+        if debugging is None:
+            debugging = 0
+
+        config = DatabricksConfig(host, username, password, token, insecure, debugging=debugging)
         if config.is_valid:
             return config
         return None
 
 
 class DatabricksConfig(object):
-    def __init__(self, host, username, password, token, insecure):  # noqa
+    def __init__(self, host, username, password, token, insecure, debugging=0):  # noqa
         self.host = host
         self.username = username
 
@@ -274,6 +283,8 @@ class DatabricksConfig(object):
 
         self.token = token
         self.insecure = insecure
+        self.debugging = debugging
+
 
     @classmethod
     def from_token(cls, host, token, insecure=None):
@@ -298,3 +309,7 @@ class DatabricksConfig(object):
     @property
     def is_valid(self):
         return self.is_valid_with_token or self.is_valid_with_password
+
+    @property
+    def is_debugging(self):
+        return self.debugging
