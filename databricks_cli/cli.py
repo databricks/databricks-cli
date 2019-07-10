@@ -57,3 +57,6 @@ cli.add_command(libraries_group, name='libraries')
 cli.add_command(secrets_group, name='secrets')
 cli.add_command(stack_group, name='stack')
 cli.add_command(groups_group, name='groups')
+
+if __name__ == "__main__":
+    cli()

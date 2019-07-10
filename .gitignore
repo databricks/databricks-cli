@@ -5,3 +5,8 @@
 .*project
 env
 .envrc
+dist
+build
+databricks_cli.egg-info
+.idea
+*.iml
