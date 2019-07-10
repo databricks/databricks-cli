@@ -224,33 +224,40 @@ class DbfsApi(object):
                            'To use this utility, one of the src or dst must be prefixed '
                            'with dbfs:/')
         elif DbfsPath.is_valid(src) and DbfsPath.is_valid(dst):
-            temp_path = self._create_local_temp_path(recursive)
-
-            try:
+            with TempDir() as temp_dir:
+                # Always copy to <temp_dir>/temp since this will work no matter if it's a recursive or a non-recursive
+                # copy.
+                temp_path = temp_dir.path('temp')
                 self.cp(recursive, True, src, temp_path)
                 self.cp(recursive, overwrite, temp_path, dst)
-            finally:
-                self._remove_local_temp_path(recursive, temp_path)
         else:
             assert False, 'not reached'
 
     def cat(self, src):
-        temp_path = self._create_local_temp_path(False)
-        try:
+        with TempDir() as temp_dir:
+            temp_path = temp_dir.path('temp')
             self.cp(False, True, src, temp_path)
             with open(temp_path) as f:
                 click.echo(f.read(), nl=False)
-        finally:
-            self._remove_local_temp_path(False, temp_path)
 
-    def _create_local_temp_path(self, recursive):
-        # create a temp file/dir to store the data
-        if recursive:
-            return tempfile.mkdtemp()
-        return tempfile.mkstemp()[1]
 
-    def _remove_local_temp_path(self, recursive, path):
-        if recursive:
-            shutil.rmtree(path)
-        else:
-            os.remove(path)
+class TempDir(object):
+    def __init__(self, remove_on_exit=True):
+        self._dir = None
+        self._path = None
+        self._remove = remove_on_exit
+
+    def __enter__(self):
+        self._path = os.path.abspath(tempfile.mkdtemp())
+        assert os.path.exists(self._path)
+        return self
+
+    def __exit__(self, tp, val, traceback):
+        if self._remove and os.path.exists(self._path):
+            shutil.rmtree(self._path)
+
+        assert not self._remove or not os.path.exists(self._path)
+        assert os.path.exists(os.getcwd())
+
+    def path(self, *path):
+        return os.path.join(self._path, *path)

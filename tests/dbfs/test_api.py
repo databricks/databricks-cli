@@ -151,3 +151,17 @@ class TestDbfsApi(object):
 
         with open(test_file_path, 'r') as f:
             assert f.read() == 'x'
+
+    def test_cat(self, dbfs_api):
+        dbfs_api.client.get_status.return_value = {
+            'path': '/test',
+            'is_dir': False,
+            'file_size': 1
+        }
+        dbfs_api.client.read.return_value = {
+            'bytes_read': 1,
+            'data': b64encode(b'a'),
+        }
+        with mock.patch('databricks_cli.dbfs.api.click') as click_mock:
+            dbfs_api.cat('dbfs:/whatever-doesnt-matter')
+            click_mock.echo.assert_called_with('a', nl=False)
