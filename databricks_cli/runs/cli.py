@@ -126,6 +126,21 @@ def get_cli(api_client, run_id):
 @profile_option
 @eat_exceptions
 @provide_api_client
+def get_output_cli(api_client, run_id):
+    """
+    Gets the output of a run
+
+    The output schema is documented https://docs.databricks.com/api/latest/jobs.html#runs-get-output
+    """
+    click.echo(pretty_format(RunsApi(api_client).get_run_output(run_id)))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS)
+@click.option('--run-id', required=True, type=RunIdClickType())
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
 def cancel_cli(api_client, run_id):
     """
     Cancels the run specified.
@@ -151,3 +166,4 @@ runs_group.add_command(submit_cli, name='submit')
 runs_group.add_command(list_cli, name='list')
 runs_group.add_command(get_cli, name='get')
 runs_group.add_command(cancel_cli, name='cancel')
+runs_group.add_command(get_output_cli, name='get-output')
