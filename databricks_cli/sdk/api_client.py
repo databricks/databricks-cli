@@ -30,7 +30,6 @@ A common class to be used by client of different APIs
 
 import base64
 import json
-import logging
 import warnings
 import requests
 import ssl
@@ -129,27 +128,6 @@ class ApiClient(object):
                 pass
             raise requests.exceptions.HTTPError(message, response=e.response)
         return resp.json()
-
-    @classmethod
-    def enable_debug_logging(cls):
-        # These two lines enable debugging at httplib level (requests->urllib3->http.client)
-        # You will see the REQUEST, including HEADERS and DATA, and RESPONSE with HEADERS but without DATA.
-        # The only thing missing will be the response.body which is not logged.
-        try:
-            import http.client as http_client
-        except ImportError:
-            # Python 2
-            import httplib as http_client
-
-        print ("HTTP debugging enabled")
-        http_client.HTTPConnection.debuglevel = 1
-
-        # You must initialize logging, otherwise you'll not see debug output.
-        logging.basicConfig()
-        logging.getLogger().setLevel(logging.DEBUG)
-        requests_log = logging.getLogger("requests.packages.urllib3")
-        requests_log.setLevel(logging.DEBUG)
-        requests_log.propagate = True
 
 
 def _translate_boolean_to_query_param(value):

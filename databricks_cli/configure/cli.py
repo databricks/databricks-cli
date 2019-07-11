@@ -32,24 +32,15 @@ from databricks_cli.configure.config import profile_option, get_profile_from_con
 
 PROMPT_HOST = 'Databricks Host (should begin with https://)'
 PROMPT_USERNAME = 'Username'
-PROMPT_PASSWORD = 'Password [enter stdin to read from stdin every time]' #  NOQA
+PROMPT_PASSWORD = 'Password' #  NOQA
 PROMPT_TOKEN = 'Token' #  NOQA
 
 
 def _configure_cli_token(profile, insecure):
     config = ProfileConfigProvider(profile).get_config() or DatabricksConfig.empty()
     host = click.prompt(PROMPT_HOST, default=config.host, type=_DbfsHost())
-    token = click.prompt(PROMPT_TOKEN, default=config.token, hide_input=True)
+    token = click.prompt(PROMPT_TOKEN, default=config.token)
     new_config = DatabricksConfig.from_token(host, token, insecure)
-    update_and_persist_config(profile, new_config)
-
-
-def _configure_cli_stdin(profile, insecure):
-    config = ProfileConfigProvider(profile).get_config() or DatabricksConfig.empty()
-    host = click.prompt(PROMPT_HOST, default=config.host, type=_DbfsHost())
-    username = click.prompt(PROMPT_USERNAME, default=config.username)
-    password = 'stdin'
-    new_config = DatabricksConfig.from_password(host, username, password, insecure)
     update_and_persist_config(profile, new_config)
 
 
@@ -73,10 +64,9 @@ def _configure_cli_password(profile, insecure):
                short_help='Configures host and authentication info for the CLI.')
 @click.option('--token', show_default=True, is_flag=True, default=False)
 @click.option('--insecure', show_default=True, is_flag=True, default=None)
-@click.option('--stdin', show_default=True, is_flag=True, default=False)
 @debug_option
 @profile_option
-def configure_cli(token, insecure, stdin):
+def configure_cli(token, insecure):
     """
     Configures host and authentication info for the CLI.
     """
@@ -84,8 +74,6 @@ def configure_cli(token, insecure, stdin):
     insecure_str = str(insecure) if insecure is not None else None
     if token:
         _configure_cli_token(profile, insecure_str)
-    elif stdin:
-        _configure_cli_stdin(profile, insecure_str)
     else:
         _configure_cli_password(profile, insecure_str)
 
