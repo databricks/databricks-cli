@@ -225,8 +225,8 @@ class DbfsApi(object):
                            'with dbfs:/')
         elif DbfsPath.is_valid(src) and DbfsPath.is_valid(dst):
             with TempDir() as temp_dir:
-                # Always copy to <temp_dir>/temp since this will work no matter if it's a recursive or a non-recursive
-                # copy.
+                # Always copy to <temp_dir>/temp since this will work no matter if it's a
+                # recursive or a non-recursive copy.
                 temp_path = temp_dir.path('temp')
                 self.cp(recursive, True, src, temp_path)
                 self.cp(recursive, overwrite, temp_path, dst)
