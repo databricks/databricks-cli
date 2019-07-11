@@ -22,6 +22,7 @@
 # limitations under the License.
 import logging
 
+import click
 from click import ParamType, Option, MissingParameter, UsageError
 
 
@@ -118,7 +119,7 @@ class ContextObject(object):
             # Python 2
             import httplib as http_client
 
-        print ("HTTP debugging enabled")
+        click.echo("HTTP debugging enabled")
         http_client.HTTPConnection.debuglevel = 1
 
         # You must initialize logging, otherwise you'll not see debug output.
