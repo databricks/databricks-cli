@@ -24,6 +24,9 @@
 from base64 import b64encode, b64decode
 
 import os
+import shutil
+import tempfile
+
 import click
 
 from requests.exceptions import HTTPError
@@ -221,8 +224,40 @@ class DbfsApi(object):
                            'To use this utility, one of the src or dst must be prefixed '
                            'with dbfs:/')
         elif DbfsPath.is_valid(src) and DbfsPath.is_valid(dst):
-            error_and_quit('Both paths provided are from the DBFS filesystem. '
-                           'To copy between the DBFS filesystem, you currently must copy the '
-                           'file from DBFS to your local filesystem and then back.')
+            with TempDir() as temp_dir:
+                # Always copy to <temp_dir>/temp since this will work no matter if it's a
+                # recursive or a non-recursive copy.
+                temp_path = temp_dir.path('temp')
+                self.cp(recursive, True, src, temp_path)
+                self.cp(recursive, overwrite, temp_path, dst)
         else:
             assert False, 'not reached'
+
+    def cat(self, src):
+        with TempDir() as temp_dir:
+            temp_path = temp_dir.path('temp')
+            self.cp(False, True, src, temp_path)
+            with open(temp_path) as f:
+                click.echo(f.read(), nl=False)
+
+
+class TempDir(object):
+    def __init__(self, remove_on_exit=True):
+        self._dir = None
+        self._path = None
+        self._remove = remove_on_exit
+
+    def __enter__(self):
+        self._path = os.path.abspath(tempfile.mkdtemp())
+        assert os.path.exists(self._path)
+        return self
+
+    def __exit__(self, tp, val, traceback):
+        if self._remove and os.path.exists(self._path):
+            shutil.rmtree(self._path)
+
+        assert not self._remove or not os.path.exists(self._path)
+        assert os.path.exists(os.getcwd())
+
+    def path(self, *path):
+        return os.path.join(self._path, *path)

@@ -102,8 +102,7 @@ def cp_cli(api_client, recursive, overwrite, src, dst):
     """
     Copy files to and from DBFS.
 
-    Note that this function will fail if the src and dst are both on the local filesystem
-    or if they are both DBFS paths.
+    Note that this function will fail if the src and dst are both on the local filesystem.
 
     For non-recursive copies, if the dst is a directory, the file will be placed inside the
     directory. For example ``dbfs cp dbfs:/apple.txt .`` will create a file at `./apple.txt`.
@@ -146,9 +145,23 @@ def dbfs_group():
     pass
 
 
+@click.command(context_settings=CONTEXT_SETTINGS)
+@click.argument('src')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def cat_cli(api_client, src):
+    """
+    Show the contents of a file. Does not work for directories.
+    """
+    DbfsApi(api_client).cat(src)
+
+
 dbfs_group.add_command(configure_cli, name='configure')
 dbfs_group.add_command(ls_cli, name='ls')
 dbfs_group.add_command(mkdirs_cli, name='mkdirs')
 dbfs_group.add_command(rm_cli, name='rm')
 dbfs_group.add_command(cp_cli, name='cp')
 dbfs_group.add_command(mv_cli, name='mv')
+dbfs_group.add_command(cat_cli, name='cat')
