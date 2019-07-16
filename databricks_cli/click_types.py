@@ -21,6 +21,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import click
 from click import ParamType, Option, MissingParameter, UsageError
 
 
@@ -103,6 +104,22 @@ class ContextObject(object):
 
     def set_debug(self, debug=False):
         self._debug = debug
+
+        if not self._debug:
+            return
+
+        # These two lines enable debugging at httplib level (requests->urllib3->http.client)
+        # You will see the REQUEST, including HEADERS and DATA,
+        # and RESPONSE with HEADERS but without DATA.
+        # The only thing missing will be the response.body which is not logged.
+        try:
+            import http.client as http_client
+        except ImportError:
+            # Python 2
+            import httplib as http_client
+
+        click.echo("HTTP debugging enabled")
+        http_client.HTTPConnection.debuglevel = 1
 
     @property
     def debug_mode(self):
