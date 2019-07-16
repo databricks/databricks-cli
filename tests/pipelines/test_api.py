@@ -204,8 +204,8 @@ def test_library_object_serialization_deserialization():
         LibraryObject('whl', 's3:/s3/path/file.ext'),
         LibraryObject('jar', 'dbfs:/dbfs/path/file.ext')
     ]
-    llo = LibraryObject.convert_from_libraries(libraries)
+    llo = LibraryObject.from_json(libraries)
     assert llo == library_objects
 
-    libs = LibraryObject.convert_to_libraries(library_objects)
+    libs = LibraryObject.to_json(library_objects)
     assert libs == libraries

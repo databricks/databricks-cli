@@ -47,12 +47,11 @@ class PipelinesApi(object):
         self.dbfs_client = DbfsApi(api_client)
 
     def deploy(self, spec, headers=None):
-        lib_objects = LibraryObject.convert_from_libraries(spec.get('libraries', []))
+        lib_objects = LibraryObject.from_json(spec.get('libraries', []))
         local_lib_objects, rest_lib_objects = \
             self._partition_libraries_and_extract_local_paths(lib_objects)
-        remote_lib_objects = list(map(lambda llo:
-                                      LibraryObject(llo.lib_type, self._get_hashed_path(llo.path)),
-                                      local_lib_objects))
+        remote_lib_objects = [LibraryObject(llo.lib_type, self._get_hashed_path(llo.path))
+                              for llo in local_lib_objects]
         upload_files = self._get_files_to_upload(local_lib_objects, remote_lib_objects)
 
         for llo, rlo in upload_files:
@@ -61,8 +60,8 @@ class PipelinesApi(object):
             except Exception as e:
                 raise RuntimeError('Error \'{}\' while uploading {}'.format(e, llo.path))
 
-        spec['libraries'] = LibraryObject.convert_to_libraries(rest_lib_objects +
-                                                               remote_lib_objects)
+        spec['libraries'] = LibraryObject.to_json(rest_lib_objects +
+                                                  remote_lib_objects)
         spec['credentials'] = self._get_credentials_for_request()
         self.client.client.perform_query('PUT',
                                          '/pipelines/{}'.format(spec['id']),
@@ -75,7 +74,9 @@ class PipelinesApi(object):
     @staticmethod
     def _partition_libraries_and_extract_local_paths(lib_objects):
         """
-        Partitions the given set of libraries into local and remote by checking uri scheme
+        Partitions the given set of libraries into local and remote by checking uri scheme.
+        Local libraries are (currently) jar files with a file scheme or no scheme at all.
+        All other libraries are remote libraries.
         :param lib_objects: List[LibraryObject]
         :return: List[List[LibraryObject], List[LibraryObject]] [Local, Remote]
         """
@@ -85,7 +86,9 @@ class PipelinesApi(object):
             if lib_object.lib_type == 'jar' and uri_scheme == '':
                 local_lib_objects.append(lib_object)
             elif lib_object.lib_type == 'jar' and uri_scheme.lower() == 'file':
-                if lib_object.path[4:].startswith(':////'):
+                # atleast 1 / and no more than 3
+                if lib_object.path[4:].startswith(':////')\
+                        or not lib_object.path[4:].startswith(':/'):
                     raise RuntimeError('Invalid file uri scheme')
                 local_lib_objects.append(LibraryObject(lib_object.lib_type, lib_object.path[5:]))
             else:
@@ -124,9 +127,8 @@ class PipelinesApi(object):
         :param remote_lib_objects: List[LibraryObject]
         :return: List[(LibraryObject, LibraryObject)]
         """
-        transformed_remote_lib_objects = map(
-            lambda rlo: LibraryObject(rlo.lib_type, DbfsPath(rlo.path)),
-            remote_lib_objects)
+        transformed_remote_lib_objects = [LibraryObject(rlo.lib_type, DbfsPath(rlo.path))
+                                          for rlo in remote_lib_objects]
         return list(filter(lambda lo_tuple: not self.dbfs_client.file_exists(lo_tuple[1].path),
                            zip(local_lib_objects, transformed_remote_lib_objects)))
 
@@ -157,7 +159,7 @@ class LibraryObject(object):
         self.lib_type = lib_type
 
     @classmethod
-    def convert_from_libraries(cls, libraries):
+    def from_json(cls, libraries):
         """
         Serialize Libraries into LibraryObjects
         :param libraries: List[Dictionary{String, String}]
@@ -170,7 +172,7 @@ class LibraryObject(object):
         return lib_objects
 
     @classmethod
-    def convert_to_libraries(cls, lib_objects):
+    def to_json(cls, lib_objects):
         """
         Deserialize LibraryObjects
         :param lib_objects: List[LibraryObject]
