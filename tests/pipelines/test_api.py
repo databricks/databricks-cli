@@ -167,7 +167,7 @@ def test_partition_local_remote(pipelines_api):
         LibraryObject('jar', '/weird/case.ext'),
         LibraryObject('jar', 'file.ext')
     ]
-    expected_rest = [
+    expected_external = [
         LibraryObject('jar', 'dbfs:/absolute/path/abc.ext'),
         LibraryObject('jar', 's3:file:/file/scheme/abs/path.ext'),
         LibraryObject('jar', 'scheme:file.ext'),
@@ -176,9 +176,9 @@ def test_partition_local_remote(pipelines_api):
         LibraryObject('egg', 'file:/abs/path.ext'),
         LibraryObject('whl', 'rel/path.ext')
     ]
-    llo, rest = pipelines_api._partition_libraries_and_extract_local_paths(libraries)
+    llo, external = pipelines_api._identify_local_libraries(libraries)
     assert llo == expected_llo
-    assert rest == expected_rest
+    assert external == expected_external
 
 
 def test_library_object_serialization_deserialization():

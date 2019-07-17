@@ -31,7 +31,6 @@ from databricks_cli.sdk import DeltaPipelinesService
 from databricks_cli.dbfs.api import DbfsApi
 from databricks_cli.dbfs.dbfs_path import DbfsPath
 
-
 # These imports are specific to the credentials part
 from databricks_cli.configure.config import get_profile_from_context
 from databricks_cli.configure.provider import get_config, ProfileConfigProvider
@@ -48,20 +47,11 @@ class PipelinesApi(object):
 
     def deploy(self, spec, headers=None):
         lib_objects = LibraryObject.from_json(spec.get('libraries', []))
-        local_lib_objects, rest_lib_objects = \
-            self._partition_libraries_and_extract_local_paths(lib_objects)
-        remote_lib_objects = [LibraryObject(llo.lib_type, self._get_hashed_path(llo.path))
-                              for llo in local_lib_objects]
-        upload_files = self._get_files_to_upload(local_lib_objects, remote_lib_objects)
+        local_lib_objects, external_lib_objects = \
+            self._identify_local_libraries(lib_objects)
 
-        for llo, rlo in upload_files:
-            try:
-                self.dbfs_client.put_file(llo.path, rlo.path, False)
-            except Exception as e:
-                raise RuntimeError('Error \'{}\' while uploading {}'.format(e, llo.path))
-
-        spec['libraries'] = LibraryObject.to_json(rest_lib_objects +
-                                                  remote_lib_objects)
+        spec['libraries'] = LibraryObject.to_json(external_lib_objects +
+                                                  self._upload_local_libraries(local_lib_objects))
         spec['credentials'] = self._get_credentials_for_request()
         self.client.client.perform_query('PUT',
                                          '/pipelines/{}'.format(spec['id']),
@@ -72,15 +62,15 @@ class PipelinesApi(object):
         self.client.delete(pipeline_id, self._get_credentials_for_request(), headers)
 
     @staticmethod
-    def _partition_libraries_and_extract_local_paths(lib_objects):
+    def _identify_local_libraries(lib_objects):
         """
-        Partitions the given set of libraries into local and remote by checking uri scheme.
+        Partitions the given set of libraries into local and those already present in dbfs/s3 etc.
         Local libraries are (currently) jar files with a file scheme or no scheme at all.
-        All other libraries are remote libraries.
+        All other libraries should be present in a supported external source.
         :param lib_objects: List[LibraryObject]
-        :return: List[List[LibraryObject], List[LibraryObject]] [Local, Remote]
+        :return: List[List[LibraryObject], List[LibraryObject]] ([Local, External])
         """
-        local_lib_objects, rest_lib_objects = [], []
+        local_lib_objects, external_lib_objects = [], []
         for lib_object in lib_objects:
             uri_scheme = urllib.parse.urlsplit(lib_object.path).scheme
             if lib_object.lib_type == 'jar' and uri_scheme == '':
@@ -92,8 +82,26 @@ class PipelinesApi(object):
                     raise RuntimeError('Invalid file uri scheme')
                 local_lib_objects.append(LibraryObject(lib_object.lib_type, lib_object.path[5:]))
             else:
-                rest_lib_objects.append(lib_object)
-        return local_lib_objects, rest_lib_objects
+                external_lib_objects.append(lib_object)
+        return local_lib_objects, external_lib_objects
+
+    def _upload_local_libraries(self, local_lib_objects):
+        remote_lib_objects = [LibraryObject(llo.lib_type, self._get_hashed_path(llo.path))
+                              for llo in local_lib_objects]
+
+        transformed_remote_lib_objects = [LibraryObject(rlo.lib_type, DbfsPath(rlo.path))
+                                          for rlo in remote_lib_objects]
+        upload_files = [llo_tuple for llo_tuple in
+                        zip(local_lib_objects, transformed_remote_lib_objects)
+                        if not self.dbfs_client.file_exists(llo_tuple[1].path)]
+
+        for llo, rlo in upload_files:
+            try:
+                self.dbfs_client.put_file(llo.path, rlo.path, False)
+            except Exception as e:
+                raise RuntimeError('Error \'{}\' while uploading {}'.format(e, llo.path))
+
+        return remote_lib_objects
 
     @staticmethod
     def _get_hashed_path(path):
@@ -118,26 +126,11 @@ class PipelinesApi(object):
         path = '{}{}{}'.format(base_pipelines_dir, file_hash, os.path.splitext(path)[1])
         return path
 
-    def _get_files_to_upload(self, local_lib_objects, remote_lib_objects):
-        """
-        Returns a Local/Remote pair for every file that needs to be uploaded to dbfs. Files are
-        stored under base_pipelines_dir defined above, and we only upload files that don't already
-        exist in dbfs.
-        :param local_lib_objects: List[LibraryObject]
-        :param remote_lib_objects: List[LibraryObject]
-        :return: List[(LibraryObject, LibraryObject)]
-        """
-        transformed_remote_lib_objects = [LibraryObject(rlo.lib_type, DbfsPath(rlo.path))
-                                          for rlo in remote_lib_objects]
-        return list(filter(lambda lo_tuple: not self.dbfs_client.file_exists(lo_tuple[1].path),
-                           zip(local_lib_objects, transformed_remote_lib_objects)))
-
     @staticmethod
     def _get_credentials_for_request():
         """
         Only required while the deploy/delete APIs require credentials in the body as well
-        as the header. Once the API requirement is relaxed, this function can be stripped out and
-        includes for this function removed.
+        as the header. Once the API requirement is relaxed, we can remove this function"
         """
         profile = get_profile_from_context()
         if profile:

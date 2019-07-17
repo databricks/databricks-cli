@@ -44,6 +44,10 @@ from databricks_cli.configure.config import provide_api_client, profile_option, 
 def deploy_cli(api_client, spec_arg, spec):
     """
     Deploys a delta pipeline according to the pipeline specification.
+    * The pipeline spec is a deployment specification that explains how to run a
+    Delta Pipeline on Databricks.
+    * The CLI simply forwards the spec to Databricks.
+    * All the local libraries referenced in the spec are uploaded to DBFS.
     """
     if bool(spec_arg) == bool(spec):
         raise RuntimeError('The spec should be provided either by an option or argument')
