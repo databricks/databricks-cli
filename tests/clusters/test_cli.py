@@ -165,5 +165,6 @@ def test_cluster_events_output_json(cluster_api_mock):
     with mock.patch('databricks_cli.clusters.cli.click.echo') as echo_mock:
         cluster_api_mock.cluster_events.return_value = EVENTS_RETURN
         runner = CliRunner()
-        runner.invoke(cli.cluster_events_cli, ['--cluster-id', 'abc', '--output', 'json'])
+        runner.invoke(cli.cluster_events_cli, ['--cluster-id', CLUSTER_ID, '--output', 'json'])
+        assert cluster_api_mock.cluster_events.call_args[0][0] == CLUSTER_ID
         assert echo_mock.call_args[0][0] == pretty_format(EVENTS_RETURN)
