@@ -268,15 +268,37 @@ def permanent_delete_cli(api_client, cluster_id):
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--cluster-id', required=True, type=ClusterIdClickType(),
               help=ClusterIdClickType.help)
+@click.option('--start-time', required=False, default=None,
+              help="The start time in epoch milliseconds. If unprovided, returns events starting "
+                   "from the beginning of time.")
+@click.option('--end-time', required=False, default=None,
+              help="The end time in epoch milliseconds. If unprovided, returns events up to the "
+                   "current time")
+@click.option('--order', required=False, default=None,
+              help="The order to list events in; either ASC or DESC. Defaults to DESC.")
+@click.option('--event-type', required=False, default=None,
+              help="An event types to filter on (specify multiple event types by passing "
+                   "the --event-type option multiple times). If empty, all event types "
+                   "are returned.", multiple=True)
+@click.option('--offset', required=False, default=None,
+              help="The offset in the result set. Defaults to 0 (no offset). When an offset is "
+                   "specified and the results are requested in descending order, the end_time "
+                   "field is required.")
+@click.option('--limit', required=False, default=None,
+              help="The maximum number of events to include in a page of events. Defaults to 50, "
+                   "and maximum allowed value is 500.")
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def cluster_events_cli(api_client, cluster_id):
+def cluster_events_cli(api_client, cluster_id, start_time, end_time, order, event_type, offset,
+                       limit):
     """
     Gets events for a Spark cluster.
     """
-    click.echo(pretty_format(ClusterApi(api_client).cluster_events(cluster_id)))
+    click.echo(pretty_format(ClusterApi(api_client).cluster_events(
+        cluster_id=cluster_id, start_time=start_time, end_time=end_time, order=order,
+        event_types=event_type, offset=offset, limit=limit)))
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
@@ -306,4 +328,3 @@ clusters_group.add_command(list_node_types_cli, name='list-node-types')
 clusters_group.add_command(spark_versions_cli, name='spark-versions')
 clusters_group.add_command(permanent_delete_cli, name='permanent-delete')
 clusters_group.add_command(cluster_events_cli, name='events')
-
