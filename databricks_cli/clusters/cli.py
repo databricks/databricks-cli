@@ -20,7 +20,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import time
+from datetime import datetime
 from json import loads as json_loads
 
 import click
@@ -173,6 +174,17 @@ def _clusters_to_table(clusters_json):
     return ret
 
 
+def _cluster_events_to_table(events_json):
+    ret = []
+    timezone = time.tzname[time.daylight]
+    for event in events_json.get('events', []):
+        formatted_time = "%s %s" % (
+            datetime.fromtimestamp(event['timestamp'] / 1000.).strftime('%Y-%m-%d %H:%M:%S'),
+            timezone)
+        ret.append((formatted_time, event['type'], event['details']))
+    return ret
+
+
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Lists active and recently terminated clusters.')
 @click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
@@ -287,18 +299,23 @@ def permanent_delete_cli(api_client, cluster_id):
 @click.option('--limit', required=False, default=None,
               help="The maximum number of events to include in a page of events. Defaults to 50, "
                    "and maximum allowed value is 500.")
+@click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
 def cluster_events_cli(api_client, cluster_id, start_time, end_time, order, event_type, offset,
-                       limit):
+                       limit, output):
     """
     Gets events for a Spark cluster.
     """
-    click.echo(pretty_format(ClusterApi(api_client).cluster_events(
+    events_json = ClusterApi(api_client).cluster_events(
         cluster_id=cluster_id, start_time=start_time, end_time=end_time, order=order,
-        event_types=event_type, offset=offset, limit=limit)))
+        event_types=event_type, offset=offset, limit=limit)
+    if OutputClickType.is_json(output):
+        click.echo(pretty_format(events_json))
+    else:
+        click.echo(tabulate(_cluster_events_to_table(events_json), tablefmt='plain'))
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
