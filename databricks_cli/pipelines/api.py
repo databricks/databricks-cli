@@ -79,7 +79,7 @@ class PipelinesApi(object):
                 # exactly 1 or 3
                 if parsed_uri.path.startswith('//') or parsed_uri.netloc != '':
                     raise RuntimeError('invalid file uri scheme, '
-                                       'did you mean to use file:/ or file://')
+                                       'did you mean to use file:/ or file:///')
                 local_lib_objects.append(LibraryObject(lib_object.lib_type, parsed_uri.path))
             else:
                 external_lib_objects.append(lib_object)
