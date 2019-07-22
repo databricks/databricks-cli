@@ -145,7 +145,6 @@ def test_partition_local_remote(pipelines_api):
         LibraryObject('jar', '/absolute/path/abc.ext'),
         LibraryObject('jar', 'relative/path.ext'),
         LibraryObject('jar', 'file:///file/scheme/abs/path.ext'),
-        LibraryObject('jar', 'file://file/scheme/two/slashes/path.ext'),
         LibraryObject('jar', 'FILE:/all/caps.ext'),
         LibraryObject('jar', 'FiLe:/weird/case.ext'),
         LibraryObject('jar', 'file.ext'),
@@ -161,8 +160,7 @@ def test_partition_local_remote(pipelines_api):
     expected_llo = [
         LibraryObject('jar', '/absolute/path/abc.ext'),
         LibraryObject('jar', 'relative/path.ext'),
-        LibraryObject('jar', '///file/scheme/abs/path.ext'),
-        LibraryObject('jar', '//file/scheme/two/slashes/path.ext'),
+        LibraryObject('jar', '/file/scheme/abs/path.ext'),
         LibraryObject('jar', '/all/caps.ext'),
         LibraryObject('jar', '/weird/case.ext'),
         LibraryObject('jar', 'file.ext')
@@ -185,7 +183,6 @@ def test_library_object_serialization_deserialization():
     libraries = [
         {'jar': '/absolute/path/abc.ext'},
         {'jar': 'relative/path.ext'},
-        {'jar': 'file://file/scheme/abs/path.ext'},
         {'jar': 'file:/file/scheme/relative/path.ext'},
         {'jar': 'FILE:/all/caps.ext'},
         {'egg': 'FiLe:/weird/case.ext'},
@@ -196,7 +193,6 @@ def test_library_object_serialization_deserialization():
     library_objects = [
         LibraryObject('jar', '/absolute/path/abc.ext'),
         LibraryObject('jar', 'relative/path.ext'),
-        LibraryObject('jar', 'file://file/scheme/abs/path.ext'),
         LibraryObject('jar', 'file:/file/scheme/relative/path.ext'),
         LibraryObject('jar', 'FILE:/all/caps.ext'),
         LibraryObject('egg', 'FiLe:/weird/case.ext'),

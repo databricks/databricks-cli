@@ -72,15 +72,15 @@ class PipelinesApi(object):
         """
         local_lib_objects, external_lib_objects = [], []
         for lib_object in lib_objects:
-            uri_scheme = urllib.parse.urlsplit(lib_object.path).scheme
-            if lib_object.lib_type == 'jar' and uri_scheme == '':
+            parsed_uri = urllib.parse.urlparse(lib_object.path)
+            if lib_object.lib_type == 'jar' and parsed_uri.scheme == '':
                 local_lib_objects.append(lib_object)
-            elif lib_object.lib_type == 'jar' and uri_scheme.lower() == 'file':
-                # atleast 1 / and no more than 3
-                if lib_object.path[4:].startswith(':////')\
-                        or not lib_object.path[4:].startswith(':/'):
-                    raise RuntimeError('Invalid file uri scheme')
-                local_lib_objects.append(LibraryObject(lib_object.lib_type, lib_object.path[5:]))
+            elif lib_object.lib_type == 'jar' and parsed_uri.scheme.lower() == 'file':
+                # exactly 1 or 3
+                if parsed_uri.path.startswith('//') or parsed_uri.netloc != '':
+                    raise RuntimeError('invalid file uri scheme, '
+                                       'did you mean to use file:/ or file://')
+                local_lib_objects.append(LibraryObject(lib_object.lib_type, parsed_uri.path))
             else:
                 external_lib_objects.append(lib_object)
         return local_lib_objects, external_lib_objects
