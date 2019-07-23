@@ -37,7 +37,7 @@ from databricks_cli.configure.provider import get_config, ProfileConfigProvider
 from databricks_cli.utils import InvalidConfigurationError
 
 BUFFER_SIZE = 1024 * 64
-base_pipelines_dir = 'dbfs:/pipelines/code/'
+base_pipelines_dir = 'dbfs:/pipelines/code'
 
 
 class PipelinesApi(object):
@@ -107,7 +107,7 @@ class PipelinesApi(object):
     def _get_hashed_path(path):
         """
         Finds the corresponding dbfs file path for the file located at the supplied path by
-        calculating its hash.
+        calculating its hash using SHA1.
         :param path: Local File Path
         :return: Remote Path (pipeline_base_dir + file_hash (dot) file_extension)
         """
@@ -123,7 +123,8 @@ class PipelinesApi(object):
             raise RuntimeError('Error \'{}\' while processing {}'.format(e, path))
 
         file_hash = hash_buffer.hexdigest()
-        path = '{}{}{}'.format(base_pipelines_dir, file_hash, os.path.splitext(path)[1])
+        # splittext includes the period in the extension
+        path = '{}/{}{}'.format(base_pipelines_dir, file_hash, os.path.splitext(path)[1])
         return path
 
     @staticmethod

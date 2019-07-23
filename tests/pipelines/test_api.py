@@ -23,6 +23,8 @@
 
 # pylint:disable=redefined-outer-name
 # pylint:disable=unused-argument
+#pylint: disable-msg=too-many-locals
+
 
 import os
 import copy
@@ -76,10 +78,10 @@ def test_deploy(put_file_mock, get_credentials_mock, dbfs_path_validate, pipelin
     get_credentials_mock.return_value = CREDENTIALS
     deploy_mock = pipelines_api.client.client.perform_query
     # set-up the test
-    jar1 = tmpdir.join('/jar1.jar').strpath
-    jar2 = tmpdir.join('/jar2.jar').strpath
-    jar3 = tmpdir.join('/jar3.jar').strpath
-    jar4 = tmpdir.join('/jar4.jar').strpath
+    jar1 = tmpdir.join('jar1.jar').strpath
+    jar2 = tmpdir.join('jar2.jar').strpath
+    jar3 = tmpdir.join('jar3.jar').strpath
+    jar4 = tmpdir.join('jar4.jar').strpath
     jar3_relpath = os.path.relpath(jar3, os.getcwd())
     jar4_file_prefix = 'file:{}'.format(jar4)
     with open(jar1, 'w') as f:
@@ -95,7 +97,8 @@ def test_deploy(put_file_mock, get_credentials_mock, dbfs_path_validate, pipelin
                  {'jar': jar2},
                  {'jar': jar3_relpath},
                  {'jar': jar4_file_prefix}]
-    SPEC['libraries'] = libraries
+    spec = copy.deepcopy(SPEC)
+    spec['libraries'] = libraries
     expected_spec = copy.deepcopy(SPEC)
     expected_spec['libraries'] = [
         {'jar': 'dbfs:/pipelines/code/file.jar'},
@@ -106,7 +109,7 @@ def test_deploy(put_file_mock, get_credentials_mock, dbfs_path_validate, pipelin
     ]
     expected_spec['credentials'] = CREDENTIALS
 
-    pipelines_api.deploy(SPEC)
+    pipelines_api.deploy(spec)
     assert dbfs_path_validate.call_count == 4
     assert put_file_mock.call_count == 3
     assert put_file_mock.call_args_list[0][0][0] == jar2
@@ -117,7 +120,7 @@ def test_deploy(put_file_mock, get_credentials_mock, dbfs_path_validate, pipelin
     deploy_mock.assert_called_with('PUT', '/pipelines/{}'.format(PIPELINE_ID),
                                    data=expected_spec, headers=None)
 
-    pipelines_api.deploy(SPEC, HEADERS)
+    pipelines_api.deploy(spec, HEADERS)
     deploy_mock.assert_called_with('PUT', '/pipelines/{}'.format(PIPELINE_ID),
                                    data=expected_spec, headers=HEADERS)
 
