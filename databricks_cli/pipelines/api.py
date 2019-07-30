@@ -96,10 +96,7 @@ class PipelinesApi(object):
                         if not self.dbfs_client.file_exists(llo_tuple[1].path)]
 
         for llo, rlo in upload_files:
-            try:
-                self.dbfs_client.put_file(llo.path, rlo.path, False)
-            except Exception as e:
-                raise RuntimeError('Error \'{}\' while uploading {}'.format(e, llo.path))
+            self.dbfs_client.put_file(llo.path, rlo.path, False)
 
         return remote_lib_objects
 
@@ -112,18 +109,15 @@ class PipelinesApi(object):
         :return: Remote Path (pipeline_base_dir + file_hash (dot) file_extension)
         """
         hash_buffer = sha1()
-        try:
-            with open(path, 'rb') as f:
-                while True:
-                    data = f.read(BUFFER_SIZE)
-                    if not data:
-                        break
-                    hash_buffer.update(data)
-        except Exception as e:
-            raise RuntimeError('Error \'{}\' while processing {}'.format(e, path))
+        with open(path, 'rb') as f:
+            while True:
+                data = f.read(BUFFER_SIZE)
+                if not data:
+                    break
+                hash_buffer.update(data)
 
         file_hash = hash_buffer.hexdigest()
-        # splittext includes the period in the extension
+        # splitext includes the period in the extension
         path = '{}/{}{}'.format(base_pipelines_dir, file_hash, os.path.splitext(path)[1])
         return path
 
