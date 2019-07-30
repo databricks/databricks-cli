@@ -794,3 +794,46 @@ class InstancePoolService(object):
     def list_instance_pools(self, headers=None):
         _data = {}
         return self.client.perform_query('GET', '/instance-pools/list', data=_data, headers=headers)
+
+
+class DeltaPipelinesService(object):
+    def __init__(self, client):
+        self.client = client
+
+    def deploy(self, pipeline_id=None, id=None, name=None, storage=None, filters=None,
+               clusters=None, libraries=None, transformations=None, credentials=None,
+               headers=None):
+        _data = {}
+        if pipeline_id is not None:
+            _data['pipeline_id'] = pipeline_id
+        if id is not None:
+            _data['id'] = id
+        if name is not None:
+            _data['name'] = name
+        if storage is not None:
+            _data['storage'] = storage
+        if filters is not None:
+            _data['filters'] = filters
+            if not isinstance(filters, dict):
+                raise TypeError('Expected databricks.Filters() or dict for field filters')
+        if clusters is not None:
+            _data['clusters'] = clusters
+        if libraries is not None:
+            _data['libraries'] = libraries
+        if transformations is not None:
+            _data['transformations'] = transformations
+        if credentials is not None:
+            _data['credentials'] = credentials
+            if not isinstance(credentials, dict):
+                raise TypeError('Expected databricks.Credentials() or dict for field credentials')
+        return self.client.perform_query('PUT', '/pipelines/{}'.format(pipeline_id), data=_data, headers=headers)
+
+    def delete(self, pipeline_id=None, credentials=None, headers=None):
+        _data = {}
+        if pipeline_id is not None:
+            _data['pipeline_id'] = pipeline_id
+        if credentials is not None:
+            _data['credentials'] = credentials
+            if not isinstance(credentials, dict):
+                raise TypeError('Expected databricks.Credentials() or dict for field credentials')
+        return self.client.perform_query('DELETE', '/pipelines/{}'.format(pipeline_id), data=_data, headers=headers)

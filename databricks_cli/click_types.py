@@ -90,6 +90,11 @@ class SecretPrincipalClickType(ParamType):
     help = 'The name of the principal.'
 
 
+class PipelineSpecClickType(ParamType):
+    name = 'SPEC'
+    help = 'The path to the pipelines deployment spec file'
+
+
 class OneOfOption(Option):
     def __init__(self, *args, **kwargs):
         self.one_of = kwargs.pop('one_of')

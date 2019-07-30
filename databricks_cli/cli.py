@@ -37,6 +37,7 @@ from databricks_cli.secrets.cli import secrets_group
 from databricks_cli.stack.cli import stack_group
 from databricks_cli.groups.cli import groups_group
 from databricks_cli.instance_pools.cli import instance_pools_group
+from databricks_cli.pipelines.cli import pipelines_group
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
@@ -59,6 +60,7 @@ cli.add_command(secrets_group, name='secrets')
 cli.add_command(stack_group, name='stack')
 cli.add_command(groups_group, name='groups')
 cli.add_command(instance_pools_group, name="instance-pools")
+cli.add_command(pipelines_group, name='pipelines')
 
 if __name__ == "__main__":
     cli()
