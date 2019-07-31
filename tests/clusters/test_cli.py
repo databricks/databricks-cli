@@ -163,7 +163,18 @@ def test_list_clusters_output_json(cluster_api_mock):
 @provide_conf
 def test_cluster_events_output_json(cluster_api_mock):
     with mock.patch('databricks_cli.clusters.cli.click.echo') as echo_mock:
-        cluster_api_mock.cluster_events.return_value = EVENTS_RETURN
+        cluster_api_mock.get_events.return_value = EVENTS_RETURN
         runner = CliRunner()
         runner.invoke(cli.cluster_events_cli, ['--cluster-id', CLUSTER_ID, '--output', 'json'])
         assert echo_mock.call_args[0][0] == pretty_format(EVENTS_RETURN)
+
+
+@provide_conf
+def test_cluster_events_output_table(cluster_api_mock):
+    cluster_api_mock.get_events.return_value = EVENTS_RETURN
+    runner = CliRunner()
+    stdout = runner.invoke(cli.cluster_events_cli, ['--cluster-id', CLUSTER_ID]).stdout
+    stdout_lines = stdout.split('\n')
+    print(stdout_lines)
+    # Check that the timestamp 1559334105421 matches the table format!
+    assert any(['2019-05-31 13:21:45 PDT  AUTOSCALING_STATS_REPORT' in l for l in stdout_lines])

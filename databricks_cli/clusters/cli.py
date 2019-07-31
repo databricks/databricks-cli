@@ -287,7 +287,7 @@ def permanent_delete_cli(api_client, cluster_id):
               help="The end time in epoch milliseconds. If unprovided, returns events up to the "
                    "current time")
 @click.option('--order', required=False, default=None,
-              help="The order to list events in; either ASC or DESC. Defaults to DESC.")
+              help="The order to list events in; either ASC or DESC. Defaults to DESC (most recent first).")
 @click.option('--event-type', required=False, default=None,
               help="An event types to filter on (specify multiple event types by passing "
                    "the --event-type option multiple times). If empty, all event types "
@@ -309,7 +309,7 @@ def cluster_events_cli(api_client, cluster_id, start_time, end_time, order, even
     """
     Gets events for a Spark cluster.
     """
-    events_json = ClusterApi(api_client).cluster_events(
+    events_json = ClusterApi(api_client).get_events(
         cluster_id=cluster_id, start_time=start_time, end_time=end_time, order=order,
         event_types=event_type, offset=offset, limit=limit)
     if OutputClickType.is_json(output):
