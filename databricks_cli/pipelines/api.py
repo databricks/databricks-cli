@@ -38,6 +38,7 @@ from databricks_cli.utils import InvalidConfigurationError
 
 BUFFER_SIZE = 1024 * 64
 base_pipelines_dir = 'dbfs:/pipelines/code'
+supported_lib_types = {'jar', 'whl'}
 
 
 class PipelinesApi(object):
@@ -73,9 +74,9 @@ class PipelinesApi(object):
         local_lib_objects, external_lib_objects = [], []
         for lib_object in lib_objects:
             parsed_uri = urllib.parse.urlparse(lib_object.path)
-            if lib_object.lib_type == 'jar' and parsed_uri.scheme == '':
+            if lib_object.lib_type in supported_lib_types and parsed_uri.scheme == '':
                 local_lib_objects.append(lib_object)
-            elif lib_object.lib_type == 'jar' and parsed_uri.scheme.lower() == 'file':
+            elif lib_object.lib_type in supported_lib_types and parsed_uri.scheme.lower() == 'file':
                 # exactly 1 or 3
                 if parsed_uri.path.startswith('//') or parsed_uri.netloc != '':
                     raise RuntimeError('invalid file uri scheme, '
