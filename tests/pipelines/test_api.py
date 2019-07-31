@@ -151,14 +151,14 @@ def test_partition_local_remote(pipelines_api):
         LibraryObject('jar', 'FILE:/all/caps.ext'),
         LibraryObject('jar', 'FiLe:/weird/case.ext'),
         LibraryObject('jar', 'file.ext'),
+        LibraryObject('whl', 'rel/path.ext'),
         # shouldn't be uploaded
         LibraryObject('jar', 'dbfs:/absolute/path/abc.ext'),
         LibraryObject('jar', 's3:file:/file/scheme/abs/path.ext'),
         LibraryObject('jar', 'scheme:file.ext'),
         LibraryObject('jar', 'scheme:/abs/path.ext'),
         LibraryObject('jar', 'scheme://abs/path.ext'),
-        LibraryObject('egg', 'file:/abs/path.ext'),
-        LibraryObject('whl', 'rel/path.ext')
+        LibraryObject('egg', 'file:/abs/path.ext')
     ]
     expected_llo = [
         LibraryObject('jar', '/absolute/path/abc.ext'),
@@ -166,7 +166,8 @@ def test_partition_local_remote(pipelines_api):
         LibraryObject('jar', '/file/scheme/abs/path.ext'),
         LibraryObject('jar', '/all/caps.ext'),
         LibraryObject('jar', '/weird/case.ext'),
-        LibraryObject('jar', 'file.ext')
+        LibraryObject('jar', 'file.ext'),
+        LibraryObject('whl', 'rel/path.ext')
     ]
     expected_external = [
         LibraryObject('jar', 'dbfs:/absolute/path/abc.ext'),
@@ -174,8 +175,7 @@ def test_partition_local_remote(pipelines_api):
         LibraryObject('jar', 'scheme:file.ext'),
         LibraryObject('jar', 'scheme:/abs/path.ext'),
         LibraryObject('jar', 'scheme://abs/path.ext'),
-        LibraryObject('egg', 'file:/abs/path.ext'),
-        LibraryObject('whl', 'rel/path.ext')
+        LibraryObject('egg', 'file:/abs/path.ext')
     ]
     llo, external = pipelines_api._identify_local_libraries(libraries)
     assert llo == expected_llo
