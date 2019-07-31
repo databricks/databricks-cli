@@ -32,7 +32,8 @@ from databricks_cli.version import print_version_callback, version
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Create a token.')
 @click.option('--lifetime-seconds', required=False, default=60 * 60 * 24 * 90,
-              help="Number of seconds for the token to live for. The default is 129600 seconds or 90 days.")
+              help="Number of seconds for the token to live for. The default is 129600 seconds or "
+                   "90 days.")
 @click.option('--comment', required=True,
               help="String describing what the token is for.")
 @debug_option
