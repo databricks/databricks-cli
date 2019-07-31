@@ -176,8 +176,9 @@ def _clusters_to_table(clusters_json):
 
 def _cluster_events_to_table(events_json):
     ret = []
-    timezone = time.tzname[time.daylight]
     for event in events_json.get('events', []):
+        timestamp = event['timestamp'] / 1000
+        timezone = time.tzname[time.localtime(timestamp).tm_isdst]
         formatted_time = "%s %s" % (
             datetime.fromtimestamp(event['timestamp'] / 1000.).strftime('%Y-%m-%d %H:%M:%S'),
             timezone)
