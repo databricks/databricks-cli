@@ -288,7 +288,7 @@ def permanent_delete_cli(api_client, cluster_id):
               help="The end time in epoch milliseconds. If unprovided, returns events up to the "
                    "current time")
 @click.option('--order', required=False, default=None,
-              help="The order to list events in; either ASC or DESC. Defaults to DESC (most recent first).")
+              help="The order to list events in; either ASC or DESC. Defaults to DESC (most recent first)")
 @click.option('--event-type', required=False, default=None,
               help="An event types to filter on (specify multiple event types by passing "
                    "the --event-type option multiple times). If empty, all event types "
