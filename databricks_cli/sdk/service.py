@@ -571,7 +571,7 @@ class SecretService(object):
         self.client = client
 
     def create_scope(self, scope, initial_manage_principal=None, scope_backend_type=None,
-                     is_databricks_managed=None, headers=None):
+                     headers=None):
         _data = {}
         if scope is not None:
             _data['scope'] = scope
@@ -579,8 +579,6 @@ class SecretService(object):
             _data['initial_manage_principal'] = initial_manage_principal
         if scope_backend_type is not None:
             _data['scope_backend_type'] = scope_backend_type
-        if is_databricks_managed is not None:
-            _data['is_databricks_managed'] = is_databricks_managed
         return self.client.perform_query('POST', '/secrets/scopes/create', data=_data, headers=headers)
     
     def delete_scope(self, scope, headers=None):

@@ -30,11 +30,11 @@ from databricks_cli.version import print_version_callback, version
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Create a new token')
-@click.option('--lifetime-seconds', required=False, default=60 * 24 * 90,
-              help="Number of seconds for the token to live for")
+               short_help='Create a token.')
+@click.option('--lifetime-seconds', required=False, default=60 * 60 * 24 * 90,
+              help="Number of seconds for the token to live for. The default is 129600 seconds or 90 days.")
 @click.option('--comment', required=True,
-              help="What the token is for")
+              help="String describing what the token is for.")
 @debug_option
 @profile_option
 @eat_exceptions  # noqa
@@ -49,7 +49,7 @@ def create_token_cli(api_client, lifetime_seconds, comment):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='List tokens for a user/cluster pair')
+               short_help='List tokens for the calling user.')
 @debug_option
 @profile_option
 @eat_exceptions  # noqa
@@ -57,14 +57,13 @@ def create_token_cli(api_client, lifetime_seconds, comment):
 def list_cli(api_client):
     """
     List all the valid tokens for a user-workspace pair.
-
     """
     content = TokensApi(api_client).list()
     click.echo(pretty_format(content))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Revoke a token')
+               short_help='Revoke an access token.')
 @click.option('--token-id', required=True,
               help="Token id to revoke")
 @debug_option
@@ -74,6 +73,7 @@ def list_cli(api_client):
 def revoke_cli(api_client, token_id):
     """
     Revoke an access token.
+
     This call returns the error RESOURCE_DOES_NOT_EXIST
     if a token with the specified ID is not valid.
     """
@@ -89,7 +89,7 @@ def revoke_cli(api_client, token_id):
 @profile_option
 @eat_exceptions
 def tokens_group():
-    """Provide utility to interact with Databricks tokens."""
+    """Utility to interact with Databricks tokens."""
     pass
 
 
