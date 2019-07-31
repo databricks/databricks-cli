@@ -216,6 +216,8 @@ class EnvironmentVariableConfigProvider(DatabricksConfigProvider):
 class ProfileConfigProvider(DatabricksConfigProvider):
     """Loads from the databrickscfg file."""
     def __init__(self, profile=DEFAULT_SECTION):
+        if profile is None:
+            profile = DEFAULT_SECTION
         self.profile = profile
 
     def get_config(self):

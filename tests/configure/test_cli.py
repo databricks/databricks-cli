@@ -26,7 +26,7 @@
 from click.testing import CliRunner
 
 import databricks_cli.configure.cli as cli
-from databricks_cli.configure.provider import get_config, ProfileConfigProvider
+from databricks_cli.configure.provider import get_config, ProfileConfigProvider, get_config_for_profile, DEFAULT_SECTION
 
 TEST_HOST = 'https://test.cloud.databricks.com'
 TEST_USER = 'monkey@databricks.com'
@@ -57,10 +57,12 @@ def test_configure_cli_token():
     assert get_config().token == TEST_TOKEN
     assert get_config().insecure is None
 
-    runner.invoke(cli.configure_cli, ['--token'],
-                  input=(TEST_HOST + '\n' + '\n'))
-    assert get_config_for_profile(DEFAULT_SECTION).host == TEST_HOST
-    assert get_config_for_profile(DEFAULT_SECTION).token == TEST_TOKEN
+    stdout = runner.invoke(cli.configure_cli, ['--token'],
+                  input=(TEST_HOST + '\n' + '\n')).stdout
+    assert TEST_TOKEN not in stdout
+    assert len(TEST_TOKEN) * '*' in stdout
+    assert get_config().host == TEST_HOST
+    assert get_config().token == TEST_TOKEN
 
 
 def test_configure_two_sections():
