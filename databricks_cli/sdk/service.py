@@ -78,7 +78,7 @@ class JobsService(object):
         if max_concurrent_runs is not None:
             _data['max_concurrent_runs'] = max_concurrent_runs
         return self.client.perform_query('POST', '/jobs/create', data=_data, headers=headers)
-
+    
     def submit_run(self, run_name=None, existing_cluster_id=None, new_cluster=None, libraries=None,
                    notebook_task=None, spark_jar_task=None, spark_python_task=None,
                    spark_submit_task=None, timeout_seconds=None, headers=None):
@@ -112,7 +112,7 @@ class JobsService(object):
         if timeout_seconds is not None:
             _data['timeout_seconds'] = timeout_seconds
         return self.client.perform_query('POST', '/jobs/runs/submit', data=_data, headers=headers)
-
+    
     def reset_job(self, job_id, new_settings, headers=None):
         _data = {}
         if job_id is not None:
@@ -122,24 +122,24 @@ class JobsService(object):
             if not isinstance(new_settings, dict):
                 raise TypeError('Expected databricks.JobSettings() or dict for field new_settings')
         return self.client.perform_query('POST', '/jobs/reset', data=_data, headers=headers)
-
+    
     def delete_job(self, job_id, headers=None):
         _data = {}
         if job_id is not None:
             _data['job_id'] = job_id
         return self.client.perform_query('POST', '/jobs/delete', data=_data, headers=headers)
-
+    
     def get_job(self, job_id, headers=None):
         _data = {}
         if job_id is not None:
             _data['job_id'] = job_id
         return self.client.perform_query('GET', '/jobs/get', data=_data, headers=headers)
-
+    
     def list_jobs(self, headers=None):
         _data = {}
-
+    
         return self.client.perform_query('GET', '/jobs/list', data=_data, headers=headers)
-
+    
     def run_now(self, job_id=None, jar_params=None, notebook_params=None, python_params=None,
                 spark_submit_params=None, headers=None):
         _data = {}
@@ -154,7 +154,7 @@ class JobsService(object):
         if spark_submit_params is not None:
             _data['spark_submit_params'] = spark_submit_params
         return self.client.perform_query('POST', '/jobs/run-now', data=_data, headers=headers)
-
+    
     def list_runs(self, job_id=None, active_only=None, completed_only=None, offset=None,
                   limit=None, headers=None):
         _data = {}
@@ -169,31 +169,31 @@ class JobsService(object):
         if limit is not None:
             _data['limit'] = limit
         return self.client.perform_query('GET', '/jobs/runs/list', data=_data, headers=headers)
-
+    
     def get_run(self, run_id=None, headers=None):
         _data = {}
         if run_id is not None:
             _data['run_id'] = run_id
         return self.client.perform_query('GET', '/jobs/runs/get', data=_data, headers=headers)
-
+    
     def delete_run(self, run_id=None, headers=None):
         _data = {}
         if run_id is not None:
             _data['run_id'] = run_id
         return self.client.perform_query('POST', '/jobs/runs/delete', data=_data, headers=headers)
-
+    
     def cancel_run(self, run_id, headers=None):
         _data = {}
         if run_id is not None:
             _data['run_id'] = run_id
         return self.client.perform_query('POST', '/jobs/runs/cancel', data=_data, headers=headers)
-
+    
     def get_run_output(self, run_id, headers=None):
         _data = {}
         if run_id is not None:
             _data['run_id'] = run_id
         return self.client.perform_query('GET', '/jobs/runs/get-output', data=_data, headers=headers)
-
+    
     def export_run(self, run_id, views_to_export=None, headers=None):
         _data = {}
         if run_id is not None:
@@ -201,7 +201,7 @@ class JobsService(object):
         if views_to_export is not None:
             _data['views_to_export'] = views_to_export
         return self.client.perform_query('GET', '/jobs/runs/export', data=_data, headers=headers)
-
+     
 
 class ClusterService(object):
     def __init__(self, client):
@@ -209,9 +209,9 @@ class ClusterService(object):
 
     def list_clusters(self, headers=None):
         _data = {}
-
+    
         return self.client.perform_query('GET', '/clusters/list', data=_data, headers=headers)
-
+    
     def create_cluster(self, num_workers=None, autoscale=None, cluster_name=None, spark_version=None,
                        spark_conf=None, aws_attributes=None, node_type_id=None,
                        driver_node_type_id=None, ssh_public_keys=None, custom_tags=None,
@@ -258,36 +258,36 @@ class ClusterService(object):
         if instance_pool_id is not None:
             _data['instance_pool_id'] = instance_pool_id
         return self.client.perform_query('POST', '/clusters/create', data=_data, headers=headers)
-
+    
     def start_cluster(self, cluster_id, headers=None):
         _data = {}
         if cluster_id is not None:
             _data['cluster_id'] = cluster_id
         return self.client.perform_query('POST', '/clusters/start', data=_data, headers=headers)
-
+    
     def list_spark_versions(self, headers=None):
         _data = {}
-
+    
         return self.client.perform_query('GET', '/clusters/spark-versions', data=_data, headers=headers)
-
+    
     def delete_cluster(self, cluster_id, headers=None):
         _data = {}
         if cluster_id is not None:
             _data['cluster_id'] = cluster_id
         return self.client.perform_query('POST', '/clusters/delete', data=_data, headers=headers)
-
+    
     def permanent_delete_cluster(self, cluster_id, headers=None):
         _data = {}
         if cluster_id is not None:
             _data['cluster_id'] = cluster_id
         return self.client.perform_query('POST', '/clusters/permanent-delete', data=_data, headers=headers)
-
+    
     def restart_cluster(self, cluster_id, headers=None):
         _data = {}
         if cluster_id is not None:
             _data['cluster_id'] = cluster_id
         return self.client.perform_query('POST', '/clusters/restart', data=_data, headers=headers)
-
+    
     def resize_cluster(self, cluster_id, num_workers=None, autoscale=None, headers=None):
         _data = {}
         if cluster_id is not None:
@@ -299,7 +299,7 @@ class ClusterService(object):
             if not isinstance(autoscale, dict):
                 raise TypeError('Expected databricks.AutoScale() or dict for field autoscale')
         return self.client.perform_query('POST', '/clusters/resize', data=_data, headers=headers)
-
+    
     def edit_cluster(self, cluster_id, num_workers=None, autoscale=None, cluster_name=None,
                      spark_version=None, spark_conf=None, aws_attributes=None, node_type_id=None,
                      driver_node_type_id=None, ssh_public_keys=None, custom_tags=None,
@@ -348,35 +348,35 @@ class ClusterService(object):
         if instance_pool_id is not None:
             _data['instance_pool_id'] = instance_pool_id
         return self.client.perform_query('POST', '/clusters/edit', data=_data, headers=headers)
-
+    
     def get_cluster(self, cluster_id, headers=None):
         _data = {}
         if cluster_id is not None:
             _data['cluster_id'] = cluster_id
         return self.client.perform_query('GET', '/clusters/get', data=_data, headers=headers)
-
+    
     def pin_cluster(self, cluster_id, headers=None):
         _data = {}
         if cluster_id is not None:
             _data['cluster_id'] = cluster_id
         return self.client.perform_query('POST', '/clusters/pin', data=_data, headers=headers)
-
+    
     def unpin_cluster(self, cluster_id, headers=None):
         _data = {}
         if cluster_id is not None:
             _data['cluster_id'] = cluster_id
         return self.client.perform_query('POST', '/clusters/unpin', data=_data, headers=headers)
-
+    
     def list_node_types(self, headers=None):
         _data = {}
-
+    
         return self.client.perform_query('GET', '/clusters/list-node-types', data=_data, headers=headers)
-
+    
     def list_available_zones(self, headers=None):
         _data = {}
-
+    
         return self.client.perform_query('GET', '/clusters/list-zones', data=_data, headers=headers)
-
+    
     def get_events(self, cluster_id, start_time=None, end_time=None, order=None, event_types=None,
                    offset=None, limit=None, headers=None):
         _data = {}
@@ -395,7 +395,7 @@ class ClusterService(object):
         if limit is not None:
             _data['limit'] = limit
         return self.client.perform_query('POST', '/clusters/events', data=_data, headers=headers)
-
+     
 
 class ManagedLibraryService(object):
     def __init__(self, client):
@@ -406,12 +406,12 @@ class ManagedLibraryService(object):
         if cluster_id is not None:
             _data['cluster_id'] = cluster_id
         return self.client.perform_query('GET', '/libraries/cluster-status', data=_data, headers=headers)
-
+    
     def all_cluster_statuses(self, headers=None):
         _data = {}
-
+    
         return self.client.perform_query('GET', '/libraries/all-cluster-statuses', data=_data, headers=headers)
-
+    
     def install_libraries(self, cluster_id, libraries=None, headers=None):
         _data = {}
         if cluster_id is not None:
@@ -419,7 +419,7 @@ class ManagedLibraryService(object):
         if libraries is not None:
             _data['libraries'] = libraries
         return self.client.perform_query('POST', '/libraries/install', data=_data, headers=headers)
-
+    
     def uninstall_libraries(self, cluster_id, libraries=None, headers=None):
         _data = {}
         if cluster_id is not None:
@@ -427,7 +427,7 @@ class ManagedLibraryService(object):
         if libraries is not None:
             _data['libraries'] = libraries
         return self.client.perform_query('POST', '/libraries/uninstall', data=_data, headers=headers)
-
+     
 
 class DbfsService(object):
     def __init__(self, client):
@@ -442,19 +442,19 @@ class DbfsService(object):
         if length is not None:
             _data['length'] = length
         return self.client.perform_query('GET', '/dbfs/read', data=_data, headers=headers)
-
+    
     def get_status(self, path, headers=None):
         _data = {}
         if path is not None:
             _data['path'] = path
         return self.client.perform_query('GET', '/dbfs/get-status', data=_data, headers=headers)
-
+    
     def list(self, path, headers=None):
         _data = {}
         if path is not None:
             _data['path'] = path
         return self.client.perform_query('GET', '/dbfs/list', data=_data, headers=headers)
-
+    
     def put(self, path, contents=None, overwrite=None, headers=None):
         _data = {}
         if path is not None:
@@ -464,13 +464,13 @@ class DbfsService(object):
         if overwrite is not None:
             _data['overwrite'] = overwrite
         return self.client.perform_query('POST', '/dbfs/put', data=_data, headers=headers)
-
+    
     def mkdirs(self, path, headers=None):
         _data = {}
         if path is not None:
             _data['path'] = path
         return self.client.perform_query('POST', '/dbfs/mkdirs', data=_data, headers=headers)
-
+    
     def move(self, source_path, destination_path, headers=None):
         _data = {}
         if source_path is not None:
@@ -478,7 +478,7 @@ class DbfsService(object):
         if destination_path is not None:
             _data['destination_path'] = destination_path
         return self.client.perform_query('POST', '/dbfs/move', data=_data, headers=headers)
-
+    
     def delete(self, path, recursive=None, headers=None):
         _data = {}
         if path is not None:
@@ -486,7 +486,7 @@ class DbfsService(object):
         if recursive is not None:
             _data['recursive'] = recursive
         return self.client.perform_query('POST', '/dbfs/delete', data=_data, headers=headers)
-
+    
     def create(self, path, overwrite=None, headers=None):
         _data = {}
         if path is not None:
@@ -494,7 +494,7 @@ class DbfsService(object):
         if overwrite is not None:
             _data['overwrite'] = overwrite
         return self.client.perform_query('POST', '/dbfs/create', data=_data, headers=headers)
-
+    
     def add_block(self, handle, data, headers=None):
         _data = {}
         if handle is not None:
@@ -502,13 +502,13 @@ class DbfsService(object):
         if data is not None:
             _data['data'] = data
         return self.client.perform_query('POST', '/dbfs/add-block', data=_data, headers=headers)
-
+    
     def close(self, handle, headers=None):
         _data = {}
         if handle is not None:
             _data['handle'] = handle
         return self.client.perform_query('POST', '/dbfs/close', data=_data, headers=headers)
-
+     
 
 class WorkspaceService(object):
     def __init__(self, client):
@@ -519,15 +519,15 @@ class WorkspaceService(object):
         if path is not None:
             _data['path'] = path
         return self.client.perform_query('POST', '/workspace/mkdirs', data=_data, headers=headers)
-
+    
     def list(self, path, headers=None):
         _data = {}
         if path is not None:
             _data['path'] = path
         return self.client.perform_query('GET', '/workspace/list', data=_data, headers=headers)
-
+    
     def import_workspace(self, path, format=None, language=None, content=None, overwrite=None,
-                         headers=None):
+               headers=None):
         _data = {}
         if path is not None:
             _data['path'] = path
@@ -540,7 +540,7 @@ class WorkspaceService(object):
         if overwrite is not None:
             _data['overwrite'] = overwrite
         return self.client.perform_query('POST', '/workspace/import', data=_data, headers=headers)
-
+    
     def export_workspace(self, path, format=None, direct_download=None, headers=None):
         _data = {}
         if path is not None:
@@ -550,7 +550,7 @@ class WorkspaceService(object):
         if direct_download is not None:
             _data['direct_download'] = direct_download
         return self.client.perform_query('GET', '/workspace/export', data=_data, headers=headers)
-
+    
     def delete(self, path, recursive=None, headers=None):
         _data = {}
         if path is not None:
@@ -558,20 +558,20 @@ class WorkspaceService(object):
         if recursive is not None:
             _data['recursive'] = recursive
         return self.client.perform_query('POST', '/workspace/delete', data=_data, headers=headers)
-
+    
     def get_status(self, path, headers=None):
         _data = {}
         if path is not None:
             _data['path'] = path
         return self.client.perform_query('GET', '/workspace/get-status', data=_data, headers=headers)
-
+     
 
 class SecretService(object):
     def __init__(self, client):
         self.client = client
 
     def create_scope(self, scope, initial_manage_principal=None, scope_backend_type=None,
-                     headers=None):
+                     is_databricks_managed=None, headers=None):
         _data = {}
         if scope is not None:
             _data['scope'] = scope
@@ -579,19 +579,21 @@ class SecretService(object):
             _data['initial_manage_principal'] = initial_manage_principal
         if scope_backend_type is not None:
             _data['scope_backend_type'] = scope_backend_type
+        if is_databricks_managed is not None:
+            _data['is_databricks_managed'] = is_databricks_managed
         return self.client.perform_query('POST', '/secrets/scopes/create', data=_data, headers=headers)
-
+    
     def delete_scope(self, scope, headers=None):
         _data = {}
         if scope is not None:
             _data['scope'] = scope
         return self.client.perform_query('POST', '/secrets/scopes/delete', data=_data, headers=headers)
-
+    
     def list_scopes(self, headers=None):
         _data = {}
-
+    
         return self.client.perform_query('GET', '/secrets/scopes/list', data=_data, headers=headers)
-
+    
     def put_secret(self, scope, key, string_value=None, bytes_value=None, headers=None):
         _data = {}
         if scope is not None:
@@ -603,7 +605,7 @@ class SecretService(object):
         if bytes_value is not None:
             _data['bytes_value'] = bytes_value
         return self.client.perform_query('POST', '/secrets/put', data=_data, headers=headers)
-
+    
     def delete_secret(self, scope, key, headers=None):
         _data = {}
         if scope is not None:
@@ -611,13 +613,13 @@ class SecretService(object):
         if key is not None:
             _data['key'] = key
         return self.client.perform_query('POST', '/secrets/delete', data=_data, headers=headers)
-
+    
     def list_secrets(self, scope, headers=None):
         _data = {}
         if scope is not None:
             _data['scope'] = scope
         return self.client.perform_query('GET', '/secrets/list', data=_data, headers=headers)
-
+    
     def put_acl(self, scope, principal, permission, headers=None):
         _data = {}
         if scope is not None:
@@ -627,7 +629,7 @@ class SecretService(object):
         if permission is not None:
             _data['permission'] = permission
         return self.client.perform_query('POST', '/secrets/acls/put', data=_data, headers=headers)
-
+    
     def delete_acl(self, scope, principal, headers=None):
         _data = {}
         if scope is not None:
@@ -635,13 +637,13 @@ class SecretService(object):
         if principal is not None:
             _data['principal'] = principal
         return self.client.perform_query('POST', '/secrets/acls/delete', data=_data, headers=headers)
-
+    
     def list_acls(self, scope, headers=None):
         _data = {}
         if scope is not None:
             _data['scope'] = scope
         return self.client.perform_query('GET', '/secrets/acls/list', data=_data, headers=headers)
-
+    
     def get_acl(self, scope, principal, headers=None):
         _data = {}
         if scope is not None:
@@ -649,7 +651,7 @@ class SecretService(object):
         if principal is not None:
             _data['principal'] = principal
         return self.client.perform_query('GET', '/secrets/acls/get', data=_data, headers=headers)
-
+     
 
 class GroupsService(object):
     def __init__(self, client):
@@ -660,7 +662,7 @@ class GroupsService(object):
         if group_name is not None:
             _data['group_name'] = group_name
         return self.client.perform_query('POST', '/groups/create', data=_data, headers=headers)
-
+    
     def add_to_group(self, parent_name, user_name=None, group_name=None, headers=None):
         _data = {}
         if user_name is not None:
@@ -670,7 +672,7 @@ class GroupsService(object):
         if parent_name is not None:
             _data['parent_name'] = parent_name
         return self.client.perform_query('POST', '/groups/add-member', data=_data, headers=headers)
-
+    
     def remove_from_group(self, parent_name, user_name=None, group_name=None, headers=None):
         _data = {}
         if user_name is not None:
@@ -680,24 +682,24 @@ class GroupsService(object):
         if parent_name is not None:
             _data['parent_name'] = parent_name
         return self.client.perform_query('POST', '/groups/remove-member', data=_data, headers=headers)
-
+    
     def get_groups(self, headers=None):
         _data = {}
-
+    
         return self.client.perform_query('GET', '/groups/list', data=_data, headers=headers)
-
+    
     def get_group_members(self, group_name, headers=None):
         _data = {}
         if group_name is not None:
             _data['group_name'] = group_name
         return self.client.perform_query('GET', '/groups/list-members', data=_data, headers=headers)
-
+    
     def remove_group(self, group_name, headers=None):
         _data = {}
         if group_name is not None:
             _data['group_name'] = group_name
         return self.client.perform_query('POST', '/groups/delete', data=_data, headers=headers)
-
+    
     def get_groups_for_principal(self, user_name=None, group_name=None, headers=None):
         _data = {}
         if user_name is not None:
@@ -705,25 +707,28 @@ class GroupsService(object):
         if group_name is not None:
             _data['group_name'] = group_name
         return self.client.perform_query('GET', '/groups/list-parents', data=_data, headers=headers)
+     
 
-
-class TokensService(object):
+class TokenService(object):
     def __init__(self, client):
         self.client = client
 
-    def create(self, lifetime_seconds, comment, headers=None):
-        _data = {
-            'lifetime_seconds': lifetime_seconds,
-            'comment': comment
-        }
-        return self.client.perform_query('POST', '/token/create', data=_data, headers=headers)
-
-    def list(self, headers=None):
+    def create_token(self, lifetime_seconds=None, comment=None, headers=None):
         _data = {}
-        return self.client.perform_query('GET', '/token/list', headers=headers)
-
-    def revoke(self, token_id, headers=None):
-        _data = {
-            'token_id': token_id
-        }
+        if lifetime_seconds is not None:
+            _data['lifetime_seconds'] = lifetime_seconds
+        if comment is not None:
+            _data['comment'] = comment
+        return self.client.perform_query('POST', '/token/create', data=_data, headers=headers)
+    
+    def list_tokens(self, headers=None):
+        _data = {}
+    
+        return self.client.perform_query('GET', '/token/list', data=_data, headers=headers)
+    
+    def revoke_token(self, token_id, headers=None):
+        _data = {}
+        if token_id is not None:
+            _data['token_id'] = token_id
         return self.client.perform_query('POST', '/token/delete', data=_data, headers=headers)
+     
