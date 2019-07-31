@@ -20,18 +20,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from databricks_cli.sdk import TokensService
+from databricks_cli.sdk import TokenService
 
 
 class TokensApi(object):
     def __init__(self, api_client):
-        self.client = TokensService(api_client)
+        self.client = TokenService(api_client)
 
     def create(self, lifetime_seconds, comment):
-        return self.client.create(lifetime_seconds, comment)
+        return self.client.create_token(lifetime_seconds, comment)
 
     def list(self):
-        return self.client.list()
+        return self.client.list_tokens()
 
     def revoke(self, token_id):
-        return self.client.revoke(token_id)
+        return self.client.revoke_token(token_id)
