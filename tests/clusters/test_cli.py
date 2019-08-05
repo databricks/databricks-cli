@@ -118,6 +118,28 @@ LIST_RETURN = {
     }]
 }
 
+EVENTS_RETURN = {
+    "events": [
+        {
+            "cluster_id": "0524-220842-flub264",
+            "timestamp": 1559334105421,
+            "type": "AUTOSCALING_STATS_REPORT",
+            "details": {
+                "autoscaling_stats": {
+                    "total_instance_seconds": 6530,
+                    "unused_instance_seconds": 6530
+                }
+            }
+        },
+    ],
+    "next_page": {
+        "cluster_id": "0524-220842-flub264",
+        "end_time": 1562624262942,
+        "offset": 50
+    },
+    "total_count": 87
+}
+
 
 @provide_conf
 def test_list_jobs(cluster_api_mock):
@@ -136,3 +158,23 @@ def test_list_clusters_output_json(cluster_api_mock):
         runner = CliRunner()
         runner.invoke(cli.list_cli, ['--output', 'json'])
         assert echo_mock.call_args[0][0] == pretty_format(LIST_RETURN)
+
+
+@provide_conf
+def test_cluster_events_output_json(cluster_api_mock):
+    with mock.patch('databricks_cli.clusters.cli.click.echo') as echo_mock:
+        cluster_api_mock.get_events.return_value = EVENTS_RETURN
+        runner = CliRunner()
+        runner.invoke(cli.cluster_events_cli, ['--cluster-id', CLUSTER_ID, '--output', 'json'])
+        assert echo_mock.call_args[0][0] == pretty_format(EVENTS_RETURN)
+
+
+@provide_conf
+def test_cluster_events_output_table(cluster_api_mock):
+    cluster_api_mock.get_events.return_value = EVENTS_RETURN
+    runner = CliRunner()
+    stdout = runner.invoke(cli.cluster_events_cli, ['--cluster-id', CLUSTER_ID]).stdout
+    stdout_lines = stdout.split('\n')
+    # Check that the timestamp 1559334105421 gets converted to the right time! It's hard to do an
+    # exact match because of time zones.
+    assert any(['2019-05-31' in l for l in stdout_lines])
