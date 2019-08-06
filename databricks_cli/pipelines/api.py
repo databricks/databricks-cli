@@ -123,8 +123,9 @@ class PipelinesApi(object):
         if extension == 'whl':
             # Wheels need to follow the format described in the PEP, so we simply
             # pre-pend the content hash to the wheel_name
+            # basename in Python returns the extension as well
             wheel_name = os.path.basename(path)
-            path = '{}/{}/{}.{}'.format(base_pipelines_dir, file_hash, wheel_name, extension)
+            path = '{}/{}/{}'.format(base_pipelines_dir, file_hash, wheel_name)
         else:
             path = '{}/{}.{}'.format(base_pipelines_dir, file_hash, extension)
         return path
