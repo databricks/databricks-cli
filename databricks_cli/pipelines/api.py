@@ -119,7 +119,15 @@ class PipelinesApi(object):
 
         file_hash = hash_buffer.hexdigest()
         # splitext includes the period in the extension
-        path = '{}/{}{}'.format(base_pipelines_dir, file_hash, os.path.splitext(path)[1])
+        extension = os.path.splitext(path)[1][1:]
+        if extension == 'whl':
+            # Wheels need to follow the format described in the PEP, so we simply
+            # pre-pend the content hash to the wheel_name
+            # basename in Python returns the extension as well
+            wheel_name = os.path.basename(path)
+            path = '{}/{}/{}'.format(base_pipelines_dir, file_hash, wheel_name)
+        else:
+            path = '{}/{}.{}'.format(base_pipelines_dir, file_hash, extension)
         return path
 
     @staticmethod
