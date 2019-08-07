@@ -56,6 +56,8 @@ def file_exists_stub(_, dbfs_path):
     exist_mapping = {
         'dbfs:/pipelines/code/40bd001563085fc35165329ea1ff5c5ecbdbbeef.jar': True,  # sha1 of 123
         'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar': False,  # sha1 of 456
+        'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18/wheel-name-conv.whl':
+            False  # sha1 456
     }
     return exist_mapping[dbfs_path.absolute_path]
 
@@ -82,6 +84,7 @@ def test_deploy(put_file_mock, get_credentials_mock, dbfs_path_validate, pipelin
     jar2 = tmpdir.join('jar2.jar').strpath
     jar3 = tmpdir.join('jar3.jar').strpath
     jar4 = tmpdir.join('jar4.jar').strpath
+    wheel1 = tmpdir.join('wheel-name-conv.whl').strpath
     jar3_relpath = os.path.relpath(jar3, os.getcwd())
     jar4_file_prefix = 'file:{}'.format(jar4)
     with open(jar1, 'w') as f:
@@ -92,11 +95,14 @@ def test_deploy(put_file_mock, get_credentials_mock, dbfs_path_validate, pipelin
         f.write('456')
     with open(jar4, 'w') as f:
         f.write('456')
+    with open(wheel1, 'w') as f:
+        f.write('456')
     libraries = [{'jar': 'dbfs:/pipelines/code/file.jar'},
                  {'jar': jar1},
                  {'jar': jar2},
                  {'jar': jar3_relpath},
-                 {'jar': jar4_file_prefix}]
+                 {'jar': jar4_file_prefix},
+                 {'whl': wheel1}]
     spec = copy.deepcopy(SPEC)
     spec['libraries'] = libraries
     expected_spec = copy.deepcopy(SPEC)
@@ -105,18 +111,21 @@ def test_deploy(put_file_mock, get_credentials_mock, dbfs_path_validate, pipelin
         {'jar': 'dbfs:/pipelines/code/40bd001563085fc35165329ea1ff5c5ecbdbbeef.jar'},
         {'jar': 'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar'},
         {'jar': 'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar'},
-        {'jar': 'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar'}
+        {'jar': 'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar'},
+        {'whl':
+            'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18/wheel-name-conv.whl'}
     ]
     expected_spec['credentials'] = CREDENTIALS
 
     pipelines_api.deploy(spec)
-    assert dbfs_path_validate.call_count == 4
-    assert put_file_mock.call_count == 3
+    assert dbfs_path_validate.call_count == 5
+    assert put_file_mock.call_count == 4
     assert put_file_mock.call_args_list[0][0][0] == jar2
     assert put_file_mock.call_args_list[0][0][1].absolute_path ==\
         'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar'
     assert put_file_mock.call_args_list[1][0][0] == jar3_relpath
     assert put_file_mock.call_args_list[2][0][0] == jar4
+    assert put_file_mock.call_args_list[3][0][0] == wheel1
     deploy_mock.assert_called_with('PUT', '/pipelines/{}'.format(PIPELINE_ID),
                                    data=expected_spec, headers=None)
 
