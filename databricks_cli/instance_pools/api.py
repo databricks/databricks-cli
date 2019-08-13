@@ -28,10 +28,10 @@ class InstancePoolsApi(object):
         self.client = InstancePoolService(api_client)
 
     def create_instance_pool(self, json):
-        return self.client.client.perform_query('POST', '/instance_pools/create', data=json)
+        return self.client.client.perform_query('POST', '/instance-pools/create', data=json)
 
     def edit_instance_pool(self, json):
-        return self.client.client.perform_query('POST', '/instance_pools/edit', data=json)
+        return self.client.client.perform_query('POST', '/instance-pools/edit', data=json)
 
     def delete_instance_pool(self, instance_pool_id):
         return self.client.delete_instance_pool(instance_pool_id)
