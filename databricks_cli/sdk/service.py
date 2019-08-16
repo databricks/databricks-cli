@@ -132,7 +132,6 @@ class JobsService(object):
         return self.client.perform_query('GET', '/jobs/get', data=_data, headers=headers)
     def list_jobs(self, headers=None):
         _data = {}
-    
         return self.client.perform_query('GET', '/jobs/list', data=_data, headers=headers)
     def run_now(self, job_id=None, jar_params=None, notebook_params=None, python_params=None,
                 spark_submit_params=None, headers=None):
@@ -196,7 +195,6 @@ class ClusterService(object):
 
     def list_clusters(self, headers=None):
         _data = {}
-    
         return self.client.perform_query('GET', '/clusters/list', data=_data, headers=headers)
     def create_cluster(self, num_workers=None, autoscale=None, cluster_name=None, spark_version=None,
                        spark_conf=None, aws_attributes=None, node_type_id=None,
@@ -253,7 +251,6 @@ class ClusterService(object):
         return self.client.perform_query('POST', '/clusters/start', data=_data, headers=headers)
     def list_spark_versions(self, headers=None):
         _data = {}
-    
         return self.client.perform_query('GET', '/clusters/spark-versions', data=_data, headers=headers)
     def delete_cluster(self, cluster_id, headers=None):
         _data = {}
@@ -348,11 +345,9 @@ class ClusterService(object):
         return self.client.perform_query('POST', '/clusters/unpin', data=_data, headers=headers)
     def list_node_types(self, headers=None):
         _data = {}
-    
         return self.client.perform_query('GET', '/clusters/list-node-types', data=_data, headers=headers)
     def list_available_zones(self, headers=None):
         _data = {}
-    
         return self.client.perform_query('GET', '/clusters/list-zones', data=_data, headers=headers)
     def get_events(self, cluster_id, start_time=None, end_time=None, order=None, event_types=None,
                    offset=None, limit=None, headers=None):
@@ -384,7 +379,6 @@ class ManagedLibraryService(object):
         return self.client.perform_query('GET', '/libraries/cluster-status', data=_data, headers=headers)
     def all_cluster_statuses(self, headers=None):
         _data = {}
-    
         return self.client.perform_query('GET', '/libraries/all-cluster-statuses', data=_data, headers=headers)
     def install_libraries(self, cluster_id, libraries=None, headers=None):
         _data = {}
@@ -545,7 +539,6 @@ class SecretService(object):
         return self.client.perform_query('POST', '/secrets/scopes/delete', data=_data, headers=headers)
     def list_scopes(self, headers=None):
         _data = {}
-    
         return self.client.perform_query('GET', '/secrets/scopes/list', data=_data, headers=headers)
     def put_secret(self, scope, key, string_value=None, bytes_value=None, headers=None):
         _data = {}
@@ -628,7 +621,6 @@ class GroupsService(object):
         return self.client.perform_query('POST', '/groups/remove-member', data=_data, headers=headers)
     def get_groups(self, headers=None):
         _data = {}
-    
         return self.client.perform_query('GET', '/groups/list', data=_data, headers=headers)
     def get_group_members(self, group_name, headers=None):
         _data = {}
