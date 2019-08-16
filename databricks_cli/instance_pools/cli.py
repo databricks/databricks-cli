@@ -110,10 +110,15 @@ def get_cli(api_client, instance_pool_id):
 
 def _instance_pools_to_table(instance_pools_json):
     ret = []
+    stats_headers = ['idle_count', 'used_count', 'pending_idle_count', 'pending_used_count']
     for c in instance_pools_json.get('instance_pools', []):
-        ret.append((c['instance_pool_id'], truncate_string(c['instance_pool_name']), c['stats']))
+        pool_stats = []
+        pool_stats.append(c['instance_pool_id'])
+        pool_stats.append(truncate_string(c['instance_pool_name']))
+        for header in stats_headers:
+            pool_stats.append(c['stats'][header])
+        ret.append(pool_stats)
     return ret
-
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Lists active and recently terminated instance pools.')
@@ -124,13 +129,16 @@ def _instance_pools_to_table(instance_pools_json):
 @provide_api_client
 def list_cli(api_client, output):
     """
-    Lists active and recently terminated instance pools.
+    Lists active instance pools with the stats of the pools.
     """
     instance_pools_json = InstancePoolsApi(api_client).list_instance_pool()
     if OutputClickType.is_json(output):
         click.echo(pretty_format(instance_pools_json))
     else:
-        click.echo(tabulate(_instance_pools_to_table(instance_pools_json), tablefmt='plain'))
+        headers = ['ID', 'NAME', 'IDLE INSTANCES', 'USED INSTANCES', 'PENDING IDLE INSTANCES',
+                   'PENDING USED INSTANCES']
+        click.echo(tabulate(_instance_pools_to_table(instance_pools_json), headers=headers,
+                            tablefmt='plain', numalign='left'))
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
