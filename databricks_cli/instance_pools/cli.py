@@ -90,9 +90,6 @@ def delete_cli(api_client, instance_pool_id):
     Removes a Databricks instance pool given its ID.
 
     The instance pool is removed asynchronously. Once the deletion has completed,
-
-    Use ``databricks instance_pools get --instance-pool-id INSTANCE_POOL_ID`` to check
-    termination states.
     """
     InstancePoolsApi(api_client).delete_instance_pool(instance_pool_id)
 
