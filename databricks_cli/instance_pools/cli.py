@@ -21,8 +21,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from json import loads as json_loads
-
 import click
 from tabulate import tabulate
 
@@ -72,13 +70,9 @@ def edit_cli(api_client, json_file, json):
     """
     if not bool(json_file) ^ bool(json):
         raise RuntimeError('Either --json-file or --json should be provided')
-    if json_file:
-        with open(json_file, 'r') as f:
-            json = f.read()
-    # deser_json = json_loads(json)
-    # InstancePoolsApi(api_client).edit_instance_pool(deser_json)
     json_cli_base(json_file, json,
-                  lambda json: InstancePoolsApi(api_client).edit_instance_pool(json))
+                  lambda json: InstancePoolsApi(api_client).edit_instance_pool(json),
+                  print_response=False)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
@@ -123,7 +117,8 @@ def _instance_pools_to_table(instance_pools_json):
         pool_stats.append(truncate_string(c['instance_pool_name']))
         for header in stats_headers:
             pool_stats.append(c['stats'][header])
-        ret.append(pool_stats)
+        # clone the content in the pool_stats. Pool_stats will be re-used in next iteration.
+        ret.append(pool_stats[:])
     return ret
 
 

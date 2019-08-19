@@ -33,9 +33,9 @@ import databricks_cli.instance_pools.cli as cli
 from databricks_cli.utils import pretty_format
 from tests.utils import provide_conf
 
-CREATE_RETURN = {'pool_id': 'instance_pool_id'}
-CREATE_JSON = '{"name": "instance_pool_name"}'
-EDIT_JSON = '{"pool_id": "instance_pool_id"}'
+CREATE_RETURN = {'instance_pool_id': 'test_id'}
+CREATE_JSON = '{"instance_pool_name": "test_name"}'
+EDIT_JSON = '{"instance_pool_id": "test_id"}'
 
 
 @pytest.fixture()
