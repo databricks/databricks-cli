@@ -528,7 +528,7 @@ class WorkspaceService(object):
         return self.client.perform_query('GET', '/workspace/list', data=_data, headers=headers)
 
     def import_workspace(self, path, format=None, language=None, content=None, overwrite=None,
-                         headers=None):
+               headers=None):
         _data = {}
         if path is not None:
             _data['path'] = path
