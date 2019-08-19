@@ -36,9 +36,9 @@ from databricks_cli.version import print_version_callback, version
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--json-file', default=None, type=click.Path(),
-              help='File containing JSON request to POST to /api/2.0/instance_pools/create.')
+              help='File containing JSON request to POST to /api/2.0/instance-pools/create.')
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/instance_pools/create'))
+              help=JsonClickType.help('/api/2.0/instance-pools/create'))
 @debug_option
 @profile_option
 @eat_exceptions
@@ -50,15 +50,15 @@ def create_cli(api_client, json_file, json):
     The specification for the request json can be found at
     https://docs.databricks.com/api/latest/instance-pools.html#create
     """
-    json_cli_base(json_file, json, lambda json: InstancePoolsApi(api_client).
-                  create_instance_pool(json))
+    json_cli_base(json_file, json,
+                  lambda json: InstancePoolsApi(api_client).create_instance_pool(json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--json-file', default=None, type=click.Path(),
-              help='File containing JSON request to POST to /api/2.0/instance_pools/edit.')
+              help='File containing JSON request to POST to /api/2.0/instance-pools/edit.')
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/instance_pools/edit'))
+              help=JsonClickType.help('/api/2.0/instance-pools/edit'))
 @debug_option
 @profile_option
 @eat_exceptions
@@ -75,8 +75,10 @@ def edit_cli(api_client, json_file, json):
     if json_file:
         with open(json_file, 'r') as f:
             json = f.read()
-    deser_json = json_loads(json)
-    InstancePoolsApi(api_client).edit_instance_pool(deser_json)
+    # deser_json = json_loads(json)
+    # InstancePoolsApi(api_client).edit_instance_pool(deser_json)
+    json_cli_base(json_file, json,
+                  lambda json: InstancePoolsApi(api_client).edit_instance_pool(json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
@@ -88,9 +90,12 @@ def edit_cli(api_client, json_file, json):
 @provide_api_client
 def delete_cli(api_client, instance_pool_id):
     """
-    Removes a Databricks instance pool given its ID.
+    Deletes a Databricks instance pool given its ID.
 
-    The instance pool is removed asynchronously. Once the deletion has completed,
+    This permanently deletes the instance pool. The idle instances in the pool are terminated
+    asynchronously. New clusters cannot attach to the pool. Running clusters attached to the pool
+    continue to run but cannot auto-scale up. Terminated clusters attached to the pool will fail to
+    start until they are edited to no longer use the pool.
     """
     InstancePoolsApi(api_client).delete_instance_pool(instance_pool_id)
 
@@ -104,7 +109,7 @@ def delete_cli(api_client, instance_pool_id):
 @provide_api_client
 def get_cli(api_client, instance_pool_id):
     """
-    Retrieves metadata about a instance pool.
+    Retrieves metadata about an instance pool.
     """
     click.echo(pretty_format(InstancePoolsApi(api_client).get_instance_pool(instance_pool_id)))
 
@@ -133,7 +138,7 @@ def list_cli(api_client, output):
     """
     Lists active instance pools with the stats of the pools.
     """
-    instance_pools_json = InstancePoolsApi(api_client).list_instance_pool()
+    instance_pools_json = InstancePoolsApi(api_client).list_instance_pools()
     if OutputClickType.is_json(output):
         click.echo(pretty_format(instance_pools_json))
     else:

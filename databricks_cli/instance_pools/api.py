@@ -39,5 +39,5 @@ class InstancePoolsApi(object):
     def get_instance_pool(self, instance_pool_id):
         return self.client.get_instance_pool(instance_pool_id)
 
-    def list_instance_pool(self):
+    def list_instance_pools(self):
         return self.client.list_instance_pools()

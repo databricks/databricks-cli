@@ -33,9 +33,9 @@ import databricks_cli.instance_pools.cli as cli
 from databricks_cli.utils import pretty_format
 from tests.utils import provide_conf
 
-CREATE_RETURN = {'pool_id': 'test'}
-CREATE_JSON = '{"name": "test_pool"}'
-EDIT_JSON = '{"pool_id": "test"}'
+CREATE_RETURN = {'pool_id': 'instance_pool_id'}
+CREATE_JSON = '{"name": "instance_pool_name"}'
+EDIT_JSON = '{"pool_id": "instance_pool_id"}'
 
 
 @pytest.fixture()
@@ -87,10 +87,10 @@ LIST_RETURN = {
         'instance_pool_id': 'test_id',
         'instance_pool_name': 'test_name',
         "stats": {
-            "idle_count": 0,
-            "pending_used_count": 0,
-            "pending_idle_count": 0,
-            "used_count": 0
+            "idle_count": 1,
+            "pending_used_count": 2,
+            "pending_idle_count": 3,
+            "used_count": 4
         }
     }]
 }
@@ -99,12 +99,12 @@ LIST_RETURN = {
 @provide_conf
 def test_list_jobs(instance_pool_api_mock):
     with mock.patch('databricks_cli.instance_pools.cli.click.echo') as echo_mock:
-        instance_pool_api_mock.list_instance_pool.return_value = LIST_RETURN
+        instance_pool_api_mock.list_instance_pools.return_value = LIST_RETURN
         runner = CliRunner()
         runner.invoke(cli.list_cli)
         headers = ['ID', 'NAME', 'IDLE INSTANCES', 'USED INSTANCES', 'PENDING IDLE INSTANCES',
                    'PENDING USED INSTANCES']
-        assert echo_mock.call_args[0][0] == tabulate([('test_id', 'test_name', 0, 0, 0, 0)],
+        assert echo_mock.call_args[0][0] == tabulate([('test_id', 'test_name', 1, 4, 3, 2)],
                                                      headers=headers, tablefmt='plain',
                                                      numalign='left')
 
@@ -112,7 +112,7 @@ def test_list_jobs(instance_pool_api_mock):
 @provide_conf
 def test_list_instance_pool_output_json(instance_pool_api_mock):
     with mock.patch('databricks_cli.instance_pools.cli.click.echo') as echo_mock:
-        instance_pool_api_mock.list_instance_pool.return_value = LIST_RETURN
+        instance_pool_api_mock.list_instance_pools.return_value = LIST_RETURN
         runner = CliRunner()
         runner.invoke(cli.list_cli, ['--output', 'json'])
         assert echo_mock.call_args[0][0] == pretty_format(LIST_RETURN)
