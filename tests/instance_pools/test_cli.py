@@ -52,68 +52,66 @@ def test_create_cli_json(instance_pool_api_mock):
         instance_pool_api_mock.create_instance_pool.return_value = CREATE_RETURN
         runner = CliRunner()
         runner.invoke(cli.create_cli, ['--json', CREATE_JSON])
-        print "lucky test"
-        print(instance_pool_api_mock.create_instance_pool.call_args)
-        # assert instance_pool_api_mock.create_instance_pool.call_args[0][0] == json.loads(CREATE_JSON)
-        # assert echo_mock.call_args[0][0] == pretty_format(CREATE_RETURN)
+        assert instance_pool_api_mock.create_instance_pool.call_args[0][0] == json.loads(CREATE_JSON)
+        assert echo_mock.call_args[0][0] == pretty_format(CREATE_RETURN)
 
 
-# @provide_conf
-# def test_edit_cli_json(instance_pool_api_mock):
-#     runner = CliRunner()
-#     runner.invoke(cli.edit_cli, ['--json', EDIT_JSON])
-#     assert instance_pool_api_mock.edit_instance_pool.call_args[0][0] == json.loads(EDIT_JSON)
-#
-#
-# INSTANCE_POOL_ID = 'test'
-#
-#
-# @provide_conf
-# def test_delete_cli(instance_pool_api_mock):
-#     runner = CliRunner()
-#     runner.invoke(cli.delete_cli, ['--instance-pool-id', INSTANCE_POOL_ID])
-#     assert instance_pool_api_mock.delete_instance_pool.call_args[0][0] == INSTANCE_POOL_ID
-#
-#
-# @provide_conf
-# def test_get_cli(instance_pool_api_mock):
-#     instance_pool_api_mock.get_instance_pool.return_value = '{}'
-#     runner = CliRunner()
-#     runner.invoke(cli.get_cli, ['--instance-pool-id', INSTANCE_POOL_ID])
-#     assert instance_pool_api_mock.get_instance_pool.call_args[0][0] == INSTANCE_POOL_ID
-#
-#
-# LIST_RETURN = {
-#     'instance_pools': [{
-#         'instance_pool_id': 'test_id',
-#         'instance_pool_name': 'test_name',
-#         "stats": {
-#             "idle_count": 0,
-#             "pending_used_count": 0,
-#             "pending_idle_count": 0,
-#             "used_count": 0
-#         }
-#     }]
-# }
-#
-#
-# @provide_conf
-# def test_list_jobs(instance_pool_api_mock):
-#     with mock.patch('databricks_cli.instance_pools.cli.click.echo') as echo_mock:
-#         instance_pool_api_mock.list_instance_pools.return_value = LIST_RETURN
-#         runner = CliRunner()
-#         runner.invoke(cli.list_cli)
-#         headers = ['ID', 'NAME', 'IDLE INSTANCES', 'USED INSTANCES', 'PENDING IDLE INSTANCES',
-#                    'PENDING USED INSTANCES']
-#         assert echo_mock.call_args[0][0] == \
-#                tabulate([('test_id', 'test_name', '0', '0', '0', '0')], headers=headers,
-#                         tablefmt='plain')
-#
-#
-# @provide_conf
-# def test_list_instance_pool_output_json(instance_pool_api_mock):
-#     with mock.patch('databricks_cli.instance_pools.cli.click.echo') as echo_mock:
-#         instance_pool_api_mock.list_instance_pools.return_value = LIST_RETURN
-#         runner = CliRunner()
-#         runner.invoke(cli.list_cli, ['--output', 'json'])
-#         assert echo_mock.call_args[0][0] == pretty_format(LIST_RETURN)
+@provide_conf
+def test_edit_cli_json(instance_pool_api_mock):
+    runner = CliRunner()
+    runner.invoke(cli.edit_cli, ['--json', EDIT_JSON])
+    assert instance_pool_api_mock.edit_instance_pool.call_args[0][0] == json.loads(EDIT_JSON)
+
+
+INSTANCE_POOL_ID = 'test'
+
+
+@provide_conf
+def test_delete_cli(instance_pool_api_mock):
+    runner = CliRunner()
+    runner.invoke(cli.delete_cli, ['--instance-pool-id', INSTANCE_POOL_ID])
+    assert instance_pool_api_mock.delete_instance_pool.call_args[0][0] == INSTANCE_POOL_ID
+
+
+@provide_conf
+def test_get_cli(instance_pool_api_mock):
+    instance_pool_api_mock.get_instance_pool.return_value = '{}'
+    runner = CliRunner()
+    runner.invoke(cli.get_cli, ['--instance-pool-id', INSTANCE_POOL_ID])
+    assert instance_pool_api_mock.get_instance_pool.call_args[0][0] == INSTANCE_POOL_ID
+
+
+LIST_RETURN = {
+    'instance_pools': [{
+        'instance_pool_id': 'test_id',
+        'instance_pool_name': 'test_name',
+        "stats": {
+            "idle_count": 0,
+            "pending_used_count": 0,
+            "pending_idle_count": 0,
+            "used_count": 0
+        }
+    }]
+}
+
+
+@provide_conf
+def test_list_jobs(instance_pool_api_mock):
+    with mock.patch('databricks_cli.instance_pools.cli.click.echo') as echo_mock:
+        instance_pool_api_mock.list_instance_pools.return_value = LIST_RETURN
+        runner = CliRunner()
+        runner.invoke(cli.list_cli)
+        headers = ['ID', 'NAME', 'IDLE INSTANCES', 'USED INSTANCES', 'PENDING IDLE INSTANCES',
+                   'PENDING USED INSTANCES']
+        assert echo_mock.call_args[0][0] == \
+               tabulate([('test_id', 'test_name', '0', '0', '0', '0')], headers=headers,
+                        tablefmt='plain')
+
+
+@provide_conf
+def test_list_instance_pool_output_json(instance_pool_api_mock):
+    with mock.patch('databricks_cli.instance_pools.cli.click.echo') as echo_mock:
+        instance_pool_api_mock.list_instance_pools.return_value = LIST_RETURN
+        runner = CliRunner()
+        runner.invoke(cli.list_cli, ['--output', 'json'])
+        assert echo_mock.call_args[0][0] == pretty_format(LIST_RETURN)
