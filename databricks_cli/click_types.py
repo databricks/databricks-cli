@@ -71,7 +71,8 @@ class ClusterIdClickType(ParamType):
 class InstancePoolIdClickType(ParamType):
     name = 'INSTANCE_POOL_ID'
     help = ('Can be found in the URL at '
-            'https://*.cloud.databricks.com/#setting/clusters/instance-pools/view/$INSTANCE_POOL_ID')
+            'https://*.cloud.databricks.com/#setting/clusters/instance-pools/view/'
+            '$INSTANCE_POOL_ID')
 
 
 class SecretScopeClickType(ParamType):

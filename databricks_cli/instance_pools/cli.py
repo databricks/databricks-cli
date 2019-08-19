@@ -50,7 +50,8 @@ def create_cli(api_client, json_file, json):
     The specification for the request json can be found at
     https://docs.databricks.com/api/latest/instance-pools.html#create
     """
-    json_cli_base(json_file, json, lambda json: InstancePoolsApi(api_client).create_instance_pool(json))
+    json_cli_base(json_file, json, lambda json: InstancePoolsApi(api_client).
+                  create_instance_pool(json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
@@ -119,6 +120,7 @@ def _instance_pools_to_table(instance_pools_json):
             pool_stats.append(c['stats'][header])
         ret.append(pool_stats)
     return ret
+
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Lists active and recently terminated instance pools.')
