@@ -29,7 +29,7 @@ import pytest
 from tabulate import tabulate
 from click.testing import CliRunner
 
-import databricks_cli.clusters.cli as cli
+import databricks_cli.instance_pools.cli as cli
 from databricks_cli.utils import pretty_format
 from tests.utils import provide_conf
 
