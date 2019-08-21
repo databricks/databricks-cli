@@ -56,7 +56,7 @@ def add_member_cli(api_client, parent_name, user_name, group_name):
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help="Create a new group with the given name.")
-@click.option("--group-name", required=True)
+@click.option("--group-name", required=True, help='Name of the group to create.')
 @debug_option
 @profile_option
 @eat_exceptions
@@ -69,7 +69,7 @@ def create_cli(api_client, group_name):
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help="Return all of the members of a particular group.")
-@click.option("--group-name", required=True)
+@click.option("--group-name", required=True, help='Name of the group to list members for.')
 @debug_option
 @profile_option
 @eat_exceptions
