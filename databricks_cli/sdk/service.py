@@ -706,3 +706,87 @@ class GroupsService(object):
             _data['group_name'] = group_name
         return self.client.perform_query('GET', '/groups/list-parents', data=_data, headers=headers)
 
+
+class InstancePoolService(object):
+    def __init__(self, client):
+        self.client = client
+
+    def create_instance_pool(self, instance_pool_name=None, min_idle_instances=None, max_capacity=None,
+                             aws_attributes=None, node_type_id=None, custom_tags=None,
+                             idle_instance_autotermination_minutes=None, enable_elastic_disk=None,
+                             disk_spec=None, preloaded_spark_versions=None, headers=None):
+        _data = {}
+        if instance_pool_name is not None:
+            _data['instance_pool_name'] = instance_pool_name
+        if min_idle_instances is not None:
+            _data['min_idle_instances'] = min_idle_instances
+        if max_capacity is not None:
+            _data['max_capacity'] = max_capacity
+        if aws_attributes is not None:
+            _data['aws_attributes'] = aws_attributes
+            if not isinstance(aws_attributes, dict):
+                raise TypeError('Expected databricks.InstancePoolAwsAttributes() or dict for field aws_attributes')
+        if node_type_id is not None:
+            _data['node_type_id'] = node_type_id
+        if custom_tags is not None:
+            _data['custom_tags'] = custom_tags
+        if idle_instance_autotermination_minutes is not None:
+            _data['idle_instance_autotermination_minutes'] = idle_instance_autotermination_minutes
+        if enable_elastic_disk is not None:
+            _data['enable_elastic_disk'] = enable_elastic_disk
+        if disk_spec is not None:
+            _data['disk_spec'] = disk_spec
+            if not isinstance(disk_spec, dict):
+                raise TypeError('Expected databricks.DiskSpec() or dict for field disk_spec')
+        if preloaded_spark_versions is not None:
+            _data['preloaded_spark_versions'] = preloaded_spark_versions
+        return self.client.perform_query('POST', '/instance-pools/create', data=_data, headers=headers)
+
+    def delete_instance_pool(self, instance_pool_id=None, headers=None):
+        _data = {}
+        if instance_pool_id is not None:
+            _data['instance_pool_id'] = instance_pool_id
+        return self.client.perform_query('POST', '/instance-pools/delete', data=_data, headers=headers)
+
+    def edit_instance_pool(self, instance_pool_id, instance_pool_name=None, min_idle_instances=None,
+                           max_capacity=None, aws_attributes=None, node_type_id=None, custom_tags=None,
+                           idle_instance_autotermination_minutes=None, enable_elastic_disk=None,
+                           disk_spec=None, preloaded_spark_versions=None, headers=None):
+        _data = {}
+        if instance_pool_id is not None:
+            _data['instance_pool_id'] = instance_pool_id
+        if instance_pool_name is not None:
+            _data['instance_pool_name'] = instance_pool_name
+        if min_idle_instances is not None:
+            _data['min_idle_instances'] = min_idle_instances
+        if max_capacity is not None:
+            _data['max_capacity'] = max_capacity
+        if aws_attributes is not None:
+            _data['aws_attributes'] = aws_attributes
+            if not isinstance(aws_attributes, dict):
+                raise TypeError('Expected databricks.InstancePoolAwsAttributes() or dict for field aws_attributes')
+        if node_type_id is not None:
+            _data['node_type_id'] = node_type_id
+        if custom_tags is not None:
+            _data['custom_tags'] = custom_tags
+        if idle_instance_autotermination_minutes is not None:
+            _data['idle_instance_autotermination_minutes'] = idle_instance_autotermination_minutes
+        if enable_elastic_disk is not None:
+            _data['enable_elastic_disk'] = enable_elastic_disk
+        if disk_spec is not None:
+            _data['disk_spec'] = disk_spec
+            if not isinstance(disk_spec, dict):
+                raise TypeError('Expected databricks.DiskSpec() or dict for field disk_spec')
+        if preloaded_spark_versions is not None:
+            _data['preloaded_spark_versions'] = preloaded_spark_versions
+        return self.client.perform_query('POST', '/instance-pools/edit', data=_data, headers=headers)
+
+    def get_instance_pool(self, instance_pool_id=None, headers=None):
+        _data = {}
+        if instance_pool_id is not None:
+            _data['instance_pool_id'] = instance_pool_id
+        return self.client.perform_query('GET', '/instance-pools/get', data=_data, headers=headers)
+
+    def list_instance_pools(self, headers=None):
+        _data = {}
+        return self.client.perform_query('GET', '/instance-pools/list', data=_data, headers=headers)
