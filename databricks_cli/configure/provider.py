@@ -189,6 +189,7 @@ class DefaultConfigProvider(DatabricksConfigProvider):
     def __init__(self):
         self._providers = (
             SparkTaskContextConfigProvider(),
+            SparkDriverConfigProvider(),
             EnvironmentVariableConfigProvider(),
             ProfileConfigProvider()
         )
@@ -220,6 +221,36 @@ class SparkTaskContextConfigProvider(DatabricksConfigProvider):
 
     def get_config(self):
         context = self._get_spark_task_context_or_none()
+        if context is not None:
+            host = context.getLocalProperty("spark.databricks.api.url")
+            token = context.getLocalProperty("spark.databricks.token")
+            insecure = context.getLocalProperty("spark.databricks.ignoreTls")
+            config = DatabricksConfig.from_token(host=host, token=token, insecure=insecure)
+            if config.is_valid:
+                return config
+        return None
+
+
+class SparkDriverConfigProvider(DatabricksConfigProvider):
+    """Loads credentials from SparkContext if running in a Spark driver."""
+
+    @staticmethod
+    def _get_spark_context_or_none():
+        try:
+            from pyspark import SparkContext  # pylint: disable=import-error
+            return SparkContext._active_spark_context
+        except ImportError:
+            return None
+
+
+    @staticmethod
+    def set_insecure(x):
+        from pyspark import SparkContext  # pylint: disable=import-error
+        new_val = "True" if x else None
+        SparkContext._active_spark_context.setLocalProperty("spark.databricks.ignoreTls", new_val)
+
+    def get_config(self):
+        context = SparkDriverConfigProvider._get_spark_context_or_none()
         if context is not None:
             host = context.getLocalProperty("spark.databricks.api.url")
             token = context.getLocalProperty("spark.databricks.token")
