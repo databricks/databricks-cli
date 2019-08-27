@@ -242,7 +242,6 @@ class SparkDriverConfigProvider(DatabricksConfigProvider):
         except ImportError:
             return None
 
-
     @staticmethod
     def set_insecure(x):
         from pyspark import SparkContext  # pylint: disable=import-error
