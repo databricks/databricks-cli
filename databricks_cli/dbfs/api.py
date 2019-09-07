@@ -26,6 +26,7 @@ from base64 import b64encode, b64decode
 import os
 import shutil
 import tempfile
+import time
 
 import click
 
@@ -115,13 +116,23 @@ class DbfsApi(object):
         length = file_info.file_size
         offset = 0
         with open(dst_path, 'wb') as local_file:
+            retries_left = 5
             while offset < length:
-                response = self.client.read(dbfs_path.absolute_path, offset, BUFFER_SIZE_BYTES,
-                                            headers=headers)
-                bytes_read = response['bytes_read']
-                data = response['data']
-                offset += bytes_read
-                local_file.write(b64decode(data))
+                try:
+                    response = self.client.read(dbfs_path.absolute_path, offset, BUFFER_SIZE_BYTES,
+                                                headers=headers)
+                    bytes_read = response['bytes_read']
+                    data = response['data']
+                    offset += bytes_read
+                    local_file.write(b64decode(data))
+                    retries_left = 5
+                except:
+                    if retries_left > 0:
+                        time.sleep(1)
+                        print 'Error reading chunk, trying again (', retries_left, ' left)!'
+                        retries_left = retries_left - 1
+                    else:
+                        raise
 
     def delete(self, dbfs_path, recursive, headers=None):
         self.client.delete(dbfs_path.absolute_path, recursive=recursive, headers=headers)
