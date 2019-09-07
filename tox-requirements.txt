@@ -11,3 +11,4 @@ pytest-cov==2.5.1
 docutils==0.14
 codecov
 requests_mock==1.5.2
+prospector
