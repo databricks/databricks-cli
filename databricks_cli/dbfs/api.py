@@ -129,7 +129,7 @@ class DbfsApi(object):
                 except:
                     if retries_left > 0:
                         time.sleep(1)
-                        print 'Error reading chunk, trying again (', retries_left, ' left)!'
+                        print('Error reading chunk, trying again (' + str(retries_left) + ' left)!')
                         retries_left = retries_left - 1
                     else:
                         raise
