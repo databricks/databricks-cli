@@ -1,13 +1,17 @@
-FROM python:2.7
+FROM ubuntu:16.04
 
 WORKDIR /usr/src/databricks-cli
 
 COPY . .
 
-RUN pip install --upgrade pip && \
-    pip install -r dev-requirements.txt && \
-    pip list && \
-    ./lint.sh && \
-    pip install . 
+RUN apt-get update
 
-ENTRYPOINT [ "databricks" ]
+RUN apt-get install -y python-pip
+
+#RUN pip install --upgrade pip && \
+#    pip install -r dev-requirements.txt && \
+#    pip list && \
+#    ./lint.sh && \
+#    pip install . 
+
+#ENTRYPOINT [ "databricks" ]
