@@ -433,7 +433,7 @@ class DbfsService(object):
     def __init__(self, client):
         self.client = client
 
-    def read(self, path, offset=None, length=None, headers=None):
+    def read(self, path, offset=None, length=None, headers=None, timeout_seconds=None):
         _data = {}
         if path is not None:
             _data['path'] = path
@@ -441,7 +441,7 @@ class DbfsService(object):
             _data['offset'] = offset
         if length is not None:
             _data['length'] = length
-        return self.client.perform_query('GET', '/dbfs/read', data=_data, headers=headers)
+        return self.client.perform_query('GET', '/dbfs/read', data=_data, headers=headers, timeout_seconds=timeout_seconds)
 
     def get_status(self, path, headers=None):
         _data = {}

@@ -99,7 +99,7 @@ class ApiClient(object):
 
     # helper functions starting here
 
-    def perform_query(self, method, path, data = {}, headers = None):
+    def perform_query(self, method, path, data = {}, headers = None, timeout_seconds=None):
         """set up connection and perform query"""
         if headers is None:
             headers = self.default_headers
@@ -113,10 +113,10 @@ class ApiClient(object):
             if method == 'GET':
                 translated_data = {k: _translate_boolean_to_query_param(data[k]) for k in data}
                 resp = self.session.request(method, self.url + path, params = translated_data,
-                    verify = self.verify, headers = headers)
+                    verify = self.verify, headers = headers, timeout = timeout_seconds)
             else:
                 resp = self.session.request(method, self.url + path, data = json.dumps(data),
-                    verify = self.verify, headers = headers)
+                    verify = self.verify, headers = headers, timeout = timeout_seconds)
         try:
             resp.raise_for_status()
         except requests.exceptions.HTTPError as e:

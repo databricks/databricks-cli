@@ -116,11 +116,12 @@ class DbfsApi(object):
         length = file_info.file_size
         offset = 0
         with open(dst_path, 'wb') as local_file:
-            retries_left = 5
+            retries_left = 20
             while offset < length:
                 try:
                     response = self.client.read(dbfs_path.absolute_path, offset, BUFFER_SIZE_BYTES,
-                                                headers=headers)
+                                                headers=headers,
+                                                timeout_seconds=60)
                     bytes_read = response['bytes_read']
                     data = response['data']
                     offset += bytes_read
