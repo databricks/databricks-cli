@@ -271,8 +271,6 @@ class TestStackApi(object):
             os.path.dirname(test_workspace_nb_properties[api.WORKSPACE_RESOURCE_SOURCE_PATH]))
         with open(test_workspace_nb_properties[api.WORKSPACE_RESOURCE_SOURCE_PATH], 'w') as f:
             f.write("print('test')\n")
-
-
         test_workspace_dir_properties = TEST_WORKSPACE_DIR_PROPERTIES.copy()
         test_workspace_dir_properties.update(
             {api.WORKSPACE_RESOURCE_SOURCE_PATH: os.path.join(tmpdir.strpath,
