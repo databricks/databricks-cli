@@ -271,6 +271,8 @@ class TestStackApi(object):
             os.path.dirname(test_workspace_nb_properties[api.WORKSPACE_RESOURCE_SOURCE_PATH]))
         with open(test_workspace_nb_properties[api.WORKSPACE_RESOURCE_SOURCE_PATH], 'w') as f:
             f.write("print('test')\n")
+
+
         test_workspace_dir_properties = TEST_WORKSPACE_DIR_PROPERTIES.copy()
         test_workspace_dir_properties.update(
             {api.WORKSPACE_RESOURCE_SOURCE_PATH: os.path.join(tmpdir.strpath,
@@ -300,6 +302,13 @@ class TestStackApi(object):
             test_workspace_nb_properties[api.WORKSPACE_RESOURCE_PATH]
         assert nb_databricks_id == {api.WORKSPACE_RESOURCE_PATH:
                                     test_workspace_nb_properties[api.WORKSPACE_RESOURCE_PATH]}
+
+        # Test Input of Workspace notebook with html source
+        test_workspace_nb_properties.update(
+            {api.WORKSPACE_RESOURCE_SOURCE_PATH: 'test/notebook.html'})
+        nb_databricks_id = \
+            stack_api._deploy_workspace(test_workspace_nb_properties, None, True)
+        assert stack_api.workspace_client.import_workspace.call_args[0][0] == 'test/notebook.html'
 
         # Should raise error if resource object_type doesn't match actually is in filesystem.
         test_workspace_dir_properties.update(
