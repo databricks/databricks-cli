@@ -30,7 +30,7 @@ class WorkspaceLanguage(object):
     SQL = 'SQL'
     R = 'R'
     ALL = [SCALA, PYTHON, SQL, R]
-    EXTENSIONS = ['.scala', '.py', '.sql', '.SQL', '.r', '.R', '.ipynb']
+    EXTENSIONS = ['.scala', '.py', '.sql', '.SQL', '.r', '.R', '.ipynb', '.html']
 
     @classmethod
     def to_language_and_format(cls, path):
@@ -45,6 +45,8 @@ class WorkspaceLanguage(object):
             return (cls.R, WorkspaceFormat.SOURCE)
         elif ext == '.ipynb':
             return (cls.PYTHON, WorkspaceFormat.JUPYTER)
+        elif ext == '.html':
+            return (None, WorkspaceFormat.HTML)
 
     @classmethod
     def to_extension(cls, language):
