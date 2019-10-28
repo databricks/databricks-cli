@@ -64,12 +64,12 @@ LIST_SCOPES_RETURN = {
         "name": "my-scope",
         "backend_type": "DATABRICKS"
     }, {
-      "name": "akv-scope",
-      "backend_type": "AZURE_KEYVAULT",
-      "keyvault_metadata": {
-        "resource_id": "/subscriptions/01234567-0123-0123-0123-012345678901/resourceGroups/akvrg/providers/Microsoft.KeyVault/vaults/akvscope",
-        "dns_name": "https://akvscope.vault.azure.net/"
-      }
+        "name": "akv-scope",
+        "backend_type": "AZURE_KEYVAULT",
+        "keyvault_metadata": {
+            "resource_id": "/subscriptions/.../resource_id",
+            "dns_name": "https://akvscope.vault.azure.net/"
+        }
     }]
 }
 

@@ -65,7 +65,8 @@ def _scopes_to_table(scopes_json):
     ret = []
     for s in scopes_json.get('scopes', []):
         if "keyvault_metadata" in s:
-            ret.append((truncate_string(s['name']), s['backend_type'], s["keyvault_metadata"]["dns_name"]))
+            url = s["keyvault_metadata"]["dns_name"]
+            ret.append((truncate_string(s['name']), s['backend_type'], url))
         else:
             ret.append((truncate_string(s['name']), s['backend_type'], "N/A"))
     return ret
