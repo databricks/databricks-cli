@@ -142,6 +142,21 @@ def test_delete(pipelines_api):
     assert delete_mock.call_args[0][1] == HEADERS
 
 
+def test_get(pipelines_api):
+    pipelines_api.get(PIPELINE_ID)
+    get_mock = pipelines_api.client.get
+    assert get_mock.call_count == 1
+    assert get_mock.call_args[0][0] == PIPELINE_ID
+
+
+def test_reset(pipelines_api):
+    pipelines_api.reset(PIPELINE_ID)
+    reset_mock = pipelines_api.client.reset
+    assert reset_mock.call_count == 1
+    assert reset_mock.call_args[0][0] == PIPELINE_ID
+    assert reset_mock.call_args[0][1] is None
+
+
 def test_partition_local_remote(pipelines_api):
     libraries = [
         # local files

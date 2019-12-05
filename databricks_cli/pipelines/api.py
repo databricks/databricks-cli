@@ -56,6 +56,12 @@ class PipelinesApi(object):
     def delete(self, pipeline_id, headers=None):
         self.client.delete(pipeline_id, headers)
 
+    def get(self, pipeline_id, headers=None):
+        self.client.get(pipeline_id, headers)
+
+    def reset(self, pipeline_id, headers=None):
+        self.client.reset(pipeline_id, headers)
+
     @staticmethod
     def _identify_local_libraries(lib_objects):
         """
