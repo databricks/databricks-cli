@@ -31,11 +31,6 @@ from databricks_cli.sdk import DeltaPipelinesService
 from databricks_cli.dbfs.api import DbfsApi
 from databricks_cli.dbfs.dbfs_path import DbfsPath
 
-# These imports are specific to the credentials part
-from databricks_cli.configure.config import get_profile_from_context
-from databricks_cli.configure.provider import get_config, ProfileConfigProvider
-from databricks_cli.utils import InvalidConfigurationError
-
 BUFFER_SIZE = 1024 * 64
 base_pipelines_dir = 'dbfs:/pipelines/code'
 supported_lib_types = {'jar', 'whl'}
@@ -53,14 +48,19 @@ class PipelinesApi(object):
 
         spec['libraries'] = LibraryObject.to_json(external_lib_objects +
                                                   self._upload_local_libraries(local_lib_objects))
-        spec['credentials'] = self._get_credentials_for_request()
         self.client.client.perform_query('PUT',
                                          '/pipelines/{}'.format(spec['id']),
                                          data=spec,
                                          headers=headers)
 
     def delete(self, pipeline_id, headers=None):
-        self.client.delete(pipeline_id, self._get_credentials_for_request(), headers)
+        self.client.delete(pipeline_id, headers)
+
+    def get(self, pipeline_id, headers=None):
+        self.client.get(pipeline_id, headers)
+
+    def reset(self, pipeline_id, headers=None):
+        self.client.reset(pipeline_id, headers)
 
     @staticmethod
     def _identify_local_libraries(lib_objects):
@@ -129,25 +129,6 @@ class PipelinesApi(object):
         else:
             path = '{}/{}.{}'.format(base_pipelines_dir, file_hash, extension)
         return path
-
-    @staticmethod
-    def _get_credentials_for_request():
-        """
-        Only required while the deploy/delete APIs require credentials in the body as well
-        as the header. Once the API requirement is relaxed, we can remove this function"
-        """
-        profile = get_profile_from_context()
-        if profile:
-            config = ProfileConfigProvider.get_config(profile)
-        else:
-            config = get_config()
-        if not config or not config.is_valid:
-            raise InvalidConfigurationError.for_profile(profile)
-
-        if config.is_valid_with_token:
-            return {'token': config.token}
-        else:
-            return {'user': config.username, 'password': config.password}
 
 
 class LibraryObject(object):

@@ -39,7 +39,6 @@ SPEC = {
     'id': PIPELINE_ID,
     'name': 'test_pipeline'
 }
-CREDENTIALS = 'dummy_credentials'
 HEADERS = 'dummy_headers'
 
 
@@ -64,9 +63,8 @@ def file_exists_stub(_, dbfs_path):
 
 @mock.patch('databricks_cli.dbfs.api.DbfsApi.file_exists', file_exists_stub)
 @mock.patch('databricks_cli.dbfs.dbfs_path.DbfsPath.validate')
-@mock.patch('databricks_cli.pipelines.api.PipelinesApi._get_credentials_for_request')
 @mock.patch('databricks_cli.dbfs.api.DbfsApi.put_file')
-def test_deploy(put_file_mock, get_credentials_mock, dbfs_path_validate, pipelines_api, tmpdir):
+def test_deploy(put_file_mock, dbfs_path_validate, pipelines_api, tmpdir):
     """
     Scenarios Tested:
     1. All three types of local file paths (absolute, relative, file: scheme)
@@ -77,7 +75,6 @@ def test_deploy(put_file_mock, get_credentials_mock, dbfs_path_validate, pipelin
     A test local file which has '456' written to it is not present in Dbfs and therefore must be.
     uploaded to dbfs.
     """
-    get_credentials_mock.return_value = CREDENTIALS
     deploy_mock = pipelines_api.client.client.perform_query
     # set-up the test
     jar1 = tmpdir.join('jar1.jar').strpath
@@ -115,7 +112,6 @@ def test_deploy(put_file_mock, get_credentials_mock, dbfs_path_validate, pipelin
         {'whl':
             'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18/wheel-name-conv.whl'}
     ]
-    expected_spec['credentials'] = CREDENTIALS
 
     pipelines_api.deploy(spec)
     assert dbfs_path_validate.call_count == 5
@@ -134,21 +130,31 @@ def test_deploy(put_file_mock, get_credentials_mock, dbfs_path_validate, pipelin
                                    data=expected_spec, headers=HEADERS)
 
 
-@mock.patch('databricks_cli.pipelines.api.PipelinesApi._get_credentials_for_request')
-def test_delete(get_credentials_mock, pipelines_api):
-    get_credentials_mock.return_value = CREDENTIALS
+def test_delete(pipelines_api):
     pipelines_api.delete(PIPELINE_ID)
     delete_mock = pipelines_api.client.delete
-    assert get_credentials_mock.call_count == 1
     assert delete_mock.call_count == 1
     assert delete_mock.call_args[0][0] == PIPELINE_ID
-    assert delete_mock.call_args[0][1] == CREDENTIALS
-    assert delete_mock.call_args[0][2] is None
+    assert delete_mock.call_args[0][1] is None
 
     pipelines_api.delete(PIPELINE_ID, HEADERS)
     assert delete_mock.call_args[0][0] == PIPELINE_ID
-    assert delete_mock.call_args[0][1] == CREDENTIALS
-    assert delete_mock.call_args[0][2] == HEADERS
+    assert delete_mock.call_args[0][1] == HEADERS
+
+
+def test_get(pipelines_api):
+    pipelines_api.get(PIPELINE_ID)
+    get_mock = pipelines_api.client.get
+    assert get_mock.call_count == 1
+    assert get_mock.call_args[0][0] == PIPELINE_ID
+
+
+def test_reset(pipelines_api):
+    pipelines_api.reset(PIPELINE_ID)
+    reset_mock = pipelines_api.client.reset
+    assert reset_mock.call_count == 1
+    assert reset_mock.call_args[0][0] == PIPELINE_ID
+    assert reset_mock.call_args[0][1] is None
 
 
 def test_partition_local_remote(pipelines_api):

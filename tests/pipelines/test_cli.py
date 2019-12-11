@@ -174,3 +174,73 @@ def test_deploy_delete_cli_correct_spec_extensions(pipelines_api_mock, tmpdir):
     assert result.exit_code == 0
     assert pipelines_api_mock.delete.call_count == 1
     pipelines_api_mock.reset_mock()
+
+
+@provide_conf
+def test_reset_cli_spec_arg(pipelines_api_mock, tmpdir):
+    path = tmpdir.join('/spec.json').strpath
+    with open(path, 'w') as f:
+        f.write(DEPLOY_SPEC)
+    runner = CliRunner()
+    runner.invoke(cli.reset_cli, [path])
+    assert pipelines_api_mock.reset.call_args[0][0] == PIPELINE_ID
+
+
+@provide_conf
+def test_reset_cli_spec_option(pipelines_api_mock, tmpdir):
+    path = tmpdir.join('/spec.json').strpath
+    with open(path, 'w') as f:
+        f.write(DEPLOY_SPEC)
+    runner = CliRunner()
+    runner.invoke(cli.reset_cli, ['--spec', path])
+    assert pipelines_api_mock.reset.call_args[0][0] == PIPELINE_ID
+
+
+@provide_conf
+def test_reset_cli_id(pipelines_api_mock):
+    runner = CliRunner()
+    runner.invoke(cli.reset_cli, ['--pipeline-id', PIPELINE_ID])
+    assert pipelines_api_mock.reset.call_args[0][0] == PIPELINE_ID
+
+
+@provide_conf
+def test_reset_cli_no_id(pipelines_api_mock):
+    runner = CliRunner()
+    result = runner.invoke(cli.reset_cli, [])
+    assert result.exit_code == 1
+    assert pipelines_api_mock.reset.call_count == 0
+
+
+@provide_conf
+def test_get_cli_spec_arg(pipelines_api_mock, tmpdir):
+    path = tmpdir.join('/spec.json').strpath
+    with open(path, 'w') as f:
+        f.write(DEPLOY_SPEC)
+    runner = CliRunner()
+    runner.invoke(cli.get_cli, [path])
+    assert pipelines_api_mock.get.call_args[0][0] == PIPELINE_ID
+
+
+@provide_conf
+def test_get_cli_spec_option(pipelines_api_mock, tmpdir):
+    path = tmpdir.join('/spec.json').strpath
+    with open(path, 'w') as f:
+        f.write(DEPLOY_SPEC)
+    runner = CliRunner()
+    runner.invoke(cli.get_cli, ['--spec', path])
+    assert pipelines_api_mock.get.call_args[0][0] == PIPELINE_ID
+
+
+@provide_conf
+def test_get_cli_id(pipelines_api_mock):
+    runner = CliRunner()
+    runner.invoke(cli.get_cli, ['--pipeline-id', PIPELINE_ID])
+    assert pipelines_api_mock.get.call_args[0][0] == PIPELINE_ID
+
+
+@provide_conf
+def test_get_cli_no_id(pipelines_api_mock):
+    runner = CliRunner()
+    result = runner.invoke(cli.get_cli, [])
+    assert result.exit_code == 1
+    assert pipelines_api_mock.get.call_count == 0

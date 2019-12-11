@@ -26,7 +26,7 @@ import os
 
 import click
 
-from databricks_cli.click_types import PipelineSpecClickType
+from databricks_cli.click_types import PipelineSpecClickType, PipelineIdClickType
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS
 from databricks_cli.version import print_version_callback, version
 from databricks_cli.pipelines.api import PipelinesApi
@@ -36,18 +36,24 @@ from databricks_cli.configure.config import provide_api_client, profile_option, 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Deploys a delta pipeline according to the pipeline specification')
 @click.argument('spec_arg', default=None, required=False)
-@click.option('--spec', default=None, help=PipelineSpecClickType.help)
+@click.option('--spec', default=None, type=PipelineSpecClickType(), help=PipelineSpecClickType.help)
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
 def deploy_cli(api_client, spec_arg, spec):
     """
-    Deploys a delta pipeline according to the pipeline specification.
-    * The pipeline spec is a deployment specification that explains how to run a
-    Delta Pipeline on Databricks.
-    * The CLI simply forwards the spec to Databricks.
-    * All the local libraries referenced in the spec are uploaded to DBFS.
+    Deploys a delta pipeline according to the pipeline specification. The pipeline spec is a
+    specification that explains how to run a Delta Pipeline on Databricks. All local libraries
+    referenced in the spec are uploaded to DBFS.
+
+    Usage:
+
+    databricks pipelines deploy example.json
+
+    OR
+
+    databricks pipelines deploy --spec example.json
     """
     if bool(spec_arg) == bool(spec):
         raise RuntimeError('The spec should be provided either by an option or argument')
@@ -57,28 +63,95 @@ def deploy_cli(api_client, spec_arg, spec):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Stops a delta pipeline and cleans '
-                          'up Databricks resources associated with it')
+               short_help='Stops a delta pipeline and deletes its associated Databricks resources')
 @click.argument('spec_arg', default=None, required=False)
-@click.option('--spec', default=None, help=PipelineSpecClickType.help)
-@click.option('--pipeline-id', default=None,
-              help='id associated with the pipeline to be stopped')
+@click.option('--spec', default=None, type=PipelineSpecClickType(), help=PipelineSpecClickType.help)
+@click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
+              help=PipelineIdClickType.help)
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
 def delete_cli(api_client, spec_arg, spec, pipeline_id):
     """
-    Stops a delta pipeline and cleans up Databricks resources associated with it
+    Stops a delta pipeline and deletes its associated Databricks resources. The pipeline can be
+    resumed by deploying it again.
+
+    Usage:
+
+    databricks pipelines delete example.json
+
+    OR
+
+    databricks pipelines delete --spec example.json
+
+    OR
+
+    databricks pipelines delete --pipeline-id 1234
     """
-    # Only one out of spec/pipeline_id/spec_arg should be supplied
-    if bool(spec_arg) + bool(spec) + bool(pipeline_id) != 1:
-        raise RuntimeError('Either spec should be provided as an argument '
-                           'or option, or the pipeline-id should be provided')
-    if bool(spec_arg) or bool(spec):
-        src = spec_arg if bool(spec_arg) else spec
-        pipeline_id = _read_spec(src)["id"]
+    pipeline_id = _get_pipeline_id(spec_arg=spec_arg, spec=spec, pipeline_id=pipeline_id)
     PipelinesApi(api_client).delete(pipeline_id)
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Gets a delta pipeline\'s current spec and status')
+@click.argument('spec_arg', default=None, required=False)
+@click.option('--spec', default=None, type=PipelineSpecClickType(), help=PipelineSpecClickType.help)
+@click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
+              help=PipelineIdClickType.help)
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def get_cli(api_client, spec_arg, spec, pipeline_id):
+    """
+    Gets a delta pipeline's current spec and status.
+
+    Usage:
+
+    databricks pipelines get example.json
+
+    OR
+
+    databricks pipelines get --spec example.json
+
+    OR
+
+    databricks pipelines get --pipeline-id 1234
+    """
+    pipeline_id = _get_pipeline_id(spec_arg=spec_arg, spec=spec, pipeline_id=pipeline_id)
+    PipelinesApi(api_client).get(pipeline_id)
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Resets a delta pipeline so data can be reprocessed from scratch')
+@click.argument('spec_arg', default=None, required=False)
+@click.option('--spec', default=None, type=PipelineSpecClickType(), help=PipelineSpecClickType.help)
+@click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
+              help=PipelineIdClickType.help)
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def reset_cli(api_client, spec_arg, spec, pipeline_id):
+    """
+    Resets a delta pipeline by truncating tables and creating new checkpoint folders so data is
+    reprocessed from scratch.
+
+    Usage:
+
+    databricks pipelines reset example.json
+
+    OR
+
+    databricks pipelines reset --spec example.json
+
+    OR
+
+    databricks pipelines reset --pipeline-id 1234
+    """
+    pipeline_id = _get_pipeline_id(spec_arg=spec_arg, spec=spec, pipeline_id=pipeline_id)
+    PipelinesApi(api_client).reset(pipeline_id)
 
 
 def _read_spec(src):
@@ -93,6 +166,21 @@ def _read_spec(src):
         return json_loads(json)
     else:
         raise RuntimeError('The provided file extension for the spec is not supported')
+
+
+def _get_pipeline_id(spec_arg, spec, pipeline_id):
+    """
+    Ensures that the user has either specified a spec (either through argument or option) or a
+    pipeline ID directly, and returns the pipeline id to use.
+    """
+    # Only one out of spec/pipeline_id/spec_arg should be supplied
+    if bool(spec_arg) + bool(spec) + bool(pipeline_id) != 1:
+        raise RuntimeError('Either spec should be provided as an argument '
+                           'or option, or the pipeline-id should be provided')
+    if bool(spec_arg) or bool(spec):
+        src = spec_arg if bool(spec_arg) else spec
+        pipeline_id = _read_spec(src)["id"]
+    return pipeline_id
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
@@ -110,3 +198,5 @@ def pipelines_group():
 
 pipelines_group.add_command(deploy_cli, name='deploy')
 pipelines_group.add_command(delete_cli, name='delete')
+pipelines_group.add_command(get_cli, name='get')
+pipelines_group.add_command(reset_cli, name='reset')
