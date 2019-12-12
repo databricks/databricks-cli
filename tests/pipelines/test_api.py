@@ -49,8 +49,10 @@ HEADERS = {'dummy_header': 'dummy_value'}
 @pytest.fixture()
 def pipelines_api():
     client_mock = mock.MagicMock()
+
     def server_response(*args, **kwargs):
-        if args[0] == 'GET': return {'pipeline_id': PIPELINE_ID, 'state': 'RUNNING'}
+        if args[0] == 'GET':
+            return {'pipeline_id': PIPELINE_ID, 'state': 'RUNNING'}
     client_mock.perform_query = mock.MagicMock(side_effect=server_response)
     _pipelines_api = api.PipelinesApi(client_mock)
     yield _pipelines_api
@@ -127,10 +129,12 @@ def test_deploy(put_file_mock, dbfs_path_validate, pipelines_api, tmpdir):
     assert put_file_mock.call_args_list[2][0][0] == jar4
     assert put_file_mock.call_args_list[3][0][0] == wheel1
     client_mock = pipelines_api.client.client.perform_query
-    client_mock.assert_called_with('PUT', '/pipelines/' + PIPELINE_ID, data=expected_spec, headers=None)
+    client_mock.assert_called_with('PUT', '/pipelines/' + PIPELINE_ID,
+                                   data=expected_spec, headers=None)
 
     pipelines_api.deploy(spec, HEADERS)
-    client_mock.assert_called_with('PUT', '/pipelines/' + PIPELINE_ID, data=expected_spec, headers=HEADERS)
+    client_mock.assert_called_with('PUT', '/pipelines/' + PIPELINE_ID,
+                                   data=expected_spec, headers=HEADERS)
     assert client_mock.call_count == 2
 
 
@@ -138,10 +142,12 @@ def test_delete(pipelines_api):
     pipelines_api.delete(PIPELINE_ID)
     client_mock = pipelines_api.client.client.perform_query
     assert client_mock.call_count == 1
-    client_mock.assert_called_with('DELETE', '/pipelines/' + PIPELINE_ID, data=ID_ONLY_SPEC, headers=None)
+    client_mock.assert_called_with('DELETE', '/pipelines/' + PIPELINE_ID,
+                                   data=ID_ONLY_SPEC, headers=None)
 
     pipelines_api.delete(PIPELINE_ID, HEADERS)
-    client_mock.assert_called_with('DELETE', '/pipelines/' + PIPELINE_ID, data=ID_ONLY_SPEC, headers=HEADERS)
+    client_mock.assert_called_with('DELETE', '/pipelines/' + PIPELINE_ID,
+                                   data=ID_ONLY_SPEC, headers=HEADERS)
 
 
 def test_get(pipelines_api):
@@ -156,7 +162,8 @@ def test_reset(pipelines_api):
     pipelines_api.reset(PIPELINE_ID)
     client_mock = pipelines_api.client.client.perform_query
     assert client_mock.call_count == 1
-    client_mock.assert_called_with('POST', '/pipelines/{}/reset'.format(PIPELINE_ID), data=ID_ONLY_SPEC, headers=None)
+    client_mock.assert_called_with('POST', '/pipelines/{}/reset'.format(PIPELINE_ID),
+                                   data=ID_ONLY_SPEC, headers=None)
 
 
 def test_partition_local_remote(pipelines_api):
