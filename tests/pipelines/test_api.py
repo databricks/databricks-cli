@@ -37,18 +37,25 @@ from databricks_cli.pipelines.api import LibraryObject
 PIPELINE_ID = '123456'
 SPEC = {
     'id': PIPELINE_ID,
-    'name': 'test_pipeline'
+    'name': 'test_pipeline',
+    'storage': 'dbfs:/path'
 }
-HEADERS = 'dummy_headers'
+ID_ONLY_SPEC = {
+    'pipeline_id': PIPELINE_ID,
+}
+HEADERS = {'dummy_header': 'dummy_value'}
 
 
 @pytest.fixture()
 def pipelines_api():
-    with mock.patch('databricks_cli.pipelines.api.DeltaPipelinesService') \
-            as DeltaPipelinesServiceMock:
-        DeltaPipelinesServiceMock.return_value = mock.MagicMock()
-        _pipelines_api = api.PipelinesApi(None)
-        yield _pipelines_api
+    client_mock = mock.MagicMock()
+
+    def server_response(*args, **kwargs):
+        if args[0] == 'GET':
+            return {'pipeline_id': PIPELINE_ID, 'state': 'RUNNING'}
+    client_mock.perform_query = mock.MagicMock(side_effect=server_response)
+    _pipelines_api = api.PipelinesApi(client_mock)
+    yield _pipelines_api
 
 
 def file_exists_stub(_, dbfs_path):
@@ -75,7 +82,6 @@ def test_deploy(put_file_mock, dbfs_path_validate, pipelines_api, tmpdir):
     A test local file which has '456' written to it is not present in Dbfs and therefore must be.
     uploaded to dbfs.
     """
-    deploy_mock = pipelines_api.client.client.perform_query
     # set-up the test
     jar1 = tmpdir.join('jar1.jar').strpath
     jar2 = tmpdir.join('jar2.jar').strpath
@@ -122,39 +128,42 @@ def test_deploy(put_file_mock, dbfs_path_validate, pipelines_api, tmpdir):
     assert put_file_mock.call_args_list[1][0][0] == jar3_relpath
     assert put_file_mock.call_args_list[2][0][0] == jar4
     assert put_file_mock.call_args_list[3][0][0] == wheel1
-    deploy_mock.assert_called_with('PUT', '/pipelines/{}'.format(PIPELINE_ID),
+    client_mock = pipelines_api.client.client.perform_query
+    client_mock.assert_called_with('PUT', '/pipelines/' + PIPELINE_ID,
                                    data=expected_spec, headers=None)
 
     pipelines_api.deploy(spec, HEADERS)
-    deploy_mock.assert_called_with('PUT', '/pipelines/{}'.format(PIPELINE_ID),
+    client_mock.assert_called_with('PUT', '/pipelines/' + PIPELINE_ID,
                                    data=expected_spec, headers=HEADERS)
+    assert client_mock.call_count == 2
 
 
 def test_delete(pipelines_api):
     pipelines_api.delete(PIPELINE_ID)
-    delete_mock = pipelines_api.client.delete
-    assert delete_mock.call_count == 1
-    assert delete_mock.call_args[0][0] == PIPELINE_ID
-    assert delete_mock.call_args[0][1] is None
+    client_mock = pipelines_api.client.client.perform_query
+    assert client_mock.call_count == 1
+    client_mock.assert_called_with('DELETE', '/pipelines/' + PIPELINE_ID,
+                                   data=ID_ONLY_SPEC, headers=None)
 
     pipelines_api.delete(PIPELINE_ID, HEADERS)
-    assert delete_mock.call_args[0][0] == PIPELINE_ID
-    assert delete_mock.call_args[0][1] == HEADERS
+    client_mock.assert_called_with('DELETE', '/pipelines/' + PIPELINE_ID,
+                                   data=ID_ONLY_SPEC, headers=HEADERS)
 
 
 def test_get(pipelines_api):
-    pipelines_api.get(PIPELINE_ID)
-    get_mock = pipelines_api.client.get
-    assert get_mock.call_count == 1
-    assert get_mock.call_args[0][0] == PIPELINE_ID
+    response = pipelines_api.get(PIPELINE_ID)
+    client_mock = pipelines_api.client.client.perform_query
+    assert client_mock.call_count == 1
+    client_mock.assert_called_with('GET', '/pipelines/' + PIPELINE_ID, data={}, headers=None)
+    assert(response['pipeline_id'] == PIPELINE_ID and response['state'] == 'RUNNING')
 
 
 def test_reset(pipelines_api):
     pipelines_api.reset(PIPELINE_ID)
-    reset_mock = pipelines_api.client.reset
-    assert reset_mock.call_count == 1
-    assert reset_mock.call_args[0][0] == PIPELINE_ID
-    assert reset_mock.call_args[0][1] is None
+    client_mock = pipelines_api.client.client.perform_query
+    assert client_mock.call_count == 1
+    client_mock.assert_called_with('POST', '/pipelines/{}/reset'.format(PIPELINE_ID),
+                                   data=ID_ONLY_SPEC, headers=None)
 
 
 def test_partition_local_remote(pipelines_api):
