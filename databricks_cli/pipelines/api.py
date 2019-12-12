@@ -48,16 +48,14 @@ class PipelinesApi(object):
 
         spec['libraries'] = LibraryObject.to_json(external_lib_objects +
                                                   self._upload_local_libraries(local_lib_objects))
-        self.client.client.perform_query('PUT',
-                                         '/pipelines/{}'.format(spec['id']),
-                                         data=spec,
-                                         headers=headers)
+        pipeline_id = spec['id']
+        self.client.deploy_spec(pipeline_id, spec, headers)
 
     def delete(self, pipeline_id, headers=None):
         self.client.delete(pipeline_id, headers)
 
     def get(self, pipeline_id, headers=None):
-        self.client.get(pipeline_id, headers)
+        return self.client.get(pipeline_id, headers)
 
     def reset(self, pipeline_id, headers=None):
         self.client.reset(pipeline_id, headers)

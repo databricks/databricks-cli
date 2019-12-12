@@ -27,7 +27,7 @@ import os
 import click
 
 from databricks_cli.click_types import PipelineSpecClickType, PipelineIdClickType
-from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS
+from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format
 from databricks_cli.version import print_version_callback, version
 from databricks_cli.pipelines.api import PipelinesApi
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
@@ -120,7 +120,7 @@ def get_cli(api_client, spec_arg, spec, pipeline_id):
     databricks pipelines get --pipeline-id 1234
     """
     pipeline_id = _get_pipeline_id(spec_arg=spec_arg, spec=spec, pipeline_id=pipeline_id)
-    PipelinesApi(api_client).get(pipeline_id)
+    click.echo(pretty_format(PipelinesApi(api_client).get(pipeline_id)))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
