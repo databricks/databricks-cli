@@ -30,23 +30,27 @@ class WorkspaceLanguage(object):
     SQL = 'SQL'
     R = 'R'
     ALL = [SCALA, PYTHON, SQL, R]
-    EXTENSIONS = ['.scala', '.py', '.sql', '.SQL', '.r', '.R', '.ipynb', '.html']
+    EXTENSIONS = ['.scala', '.py', '.sql', '.SQL', '.r', '.R', '.ipynb', '.html', '.dbc']
 
     @classmethod
     def to_language_and_format(cls, path):
         ext = cls.get_extension(path).lower()
+        language_and_format = (None, None)
         if ext == '.scala':
-            return (cls.SCALA, WorkspaceFormat.SOURCE)
+            language_and_format = (cls.SCALA, WorkspaceFormat.SOURCE)
         elif ext == '.py':
-            return (cls.PYTHON, WorkspaceFormat.SOURCE)
+            language_and_format = (cls.PYTHON, WorkspaceFormat.SOURCE)
         elif ext == '.sql':
-            return (cls.SQL, WorkspaceFormat.SOURCE)
+            language_and_format = (cls.SQL, WorkspaceFormat.SOURCE)
         elif ext == '.r':
-            return (cls.R, WorkspaceFormat.SOURCE)
+            language_and_format = (cls.R, WorkspaceFormat.SOURCE)
         elif ext == '.ipynb':
-            return (cls.PYTHON, WorkspaceFormat.JUPYTER)
+            language_and_format = (cls.PYTHON, WorkspaceFormat.JUPYTER)
         elif ext == '.html':
-            return (None, WorkspaceFormat.HTML)
+            language_and_format = (None, WorkspaceFormat.HTML)
+        elif ext == '.dbc':
+            language_and_format = (None, WorkspaceFormat.DBC)
+        return language_and_format
 
     @classmethod
     def to_extension(cls, language):

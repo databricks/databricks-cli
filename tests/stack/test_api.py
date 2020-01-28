@@ -308,6 +308,13 @@ class TestStackApi(object):
             stack_api._deploy_workspace(test_workspace_nb_properties, None, True)
         assert stack_api.workspace_client.import_workspace.call_args[0][0] == 'test/notebook.html'
 
+        # Test Input of Workspace notebook with dbc source
+        test_workspace_nb_properties.update(
+            {api.WORKSPACE_RESOURCE_SOURCE_PATH: 'test/notebook.dbc'})
+        nb_databricks_id = \
+            stack_api._deploy_workspace(test_workspace_nb_properties, None, True)
+        assert stack_api.workspace_client.import_workspace.call_args[0][0] == 'test/notebook.dbc'
+
         # Should raise error if resource object_type doesn't match actually is in filesystem.
         test_workspace_dir_properties.update(
             {api.WORKSPACE_RESOURCE_OBJECT_TYPE: workspace_api.NOTEBOOK})
