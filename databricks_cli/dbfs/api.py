@@ -124,7 +124,17 @@ class DbfsApi(object):
                 local_file.write(b64decode(data))
 
     def delete(self, dbfs_path, recursive, headers=None):
-        self.client.delete(dbfs_path.absolute_path, recursive=recursive, headers=headers)
+        while True:
+            try:
+                self.client.delete(dbfs_path.absolute_path, recursive=recursive, headers=headers)
+            except HTTPError as e:
+                if (e.response.status_code and
+                    e.response.json()['error_code'] == 'REQUEST_LIMIT_EXCEEDED'):
+                    print "[debug] partial delete: %s" % e.response.json()['message']
+                    continue
+                else:
+                    raise e
+            break
 
     def mkdirs(self, dbfs_path, headers=None):
         self.client.mkdirs(dbfs_path.absolute_path, headers=headers)
