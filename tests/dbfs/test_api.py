@@ -48,6 +48,17 @@ def get_resource_does_not_exist_exception():
     return requests.exceptions.HTTPError(response=response)
 
 
+def get_request_limit_exceeded_exception():
+    response = requests.Response()
+    response.status_code = 429
+    response._content = ('{{"error_code": "{}","message": ""}}'.format(api.DbfsErrorCodes.REQUEST_LIMIT_EXCEEDED)).encode() #  NOQA
+    return requests.exceptions.HTTPError(response=response)
+
+
+def get_partial_delete_exception():
+    return get_request_limit_exceeded_exception()
+
+
 class TestFileInfo(object):
     def test_to_row_not_long_form_not_absolute(self):
         file_info = api.FileInfo(TEST_DBFS_PATH, False, 1)
@@ -165,3 +176,9 @@ class TestDbfsApi(object):
         with mock.patch('databricks_cli.dbfs.api.click') as click_mock:
             dbfs_api.cat('dbfs:/whatever-doesnt-matter')
             click_mock.echo.assert_called_with('a', nl=False)
+
+    def test_partial_delete(self, dbfs_api):
+        e = get_partial_delete_exception()
+        # Simulate 3 partial deletes followed by a full successful delete
+        dbfs_api.client.delete = mock.Mock(side_effect=[e, e, e, None])
+        dbfs_api.delete(DbfsPath('dbfs:/whatever-doesnt-matter'), recursive=True)
