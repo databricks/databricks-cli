@@ -86,7 +86,7 @@ def mkdirs_cli(api_client, workspace_path):
 @profile_option
 @eat_exceptions
 @provide_api_client
-def import_workspace_cli(api_client, source_path, target_path, language, format, overwrite): # NOQA
+def import_workspace_cli(api_client, source_path, target_path, language, fmt, overwrite): # NOQA
     """
     Imports a file from local to the Databricks workspace.
 
@@ -94,7 +94,7 @@ def import_workspace_cli(api_client, source_path, target_path, language, format,
     format is documented at
     https://docs.databricks.com/api/latest/workspace.html#notebookexportformat.
     """
-    WorkspaceApi(api_client).import_workspace(source_path, target_path, language, format, overwrite) # NOQA
+    WorkspaceApi(api_client).import_workspace(source_path, target_path, language, fmt, overwrite) # NOQA
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -107,7 +107,7 @@ def import_workspace_cli(api_client, source_path, target_path, language, format,
 @profile_option
 @eat_exceptions
 @provide_api_client
-def export_workspace_cli(api_client, source_path, target_path, format, overwrite): # NOQA
+def export_workspace_cli(api_client, source_path, target_path, fmt, overwrite): # NOQA
     """
     Exports a notebook from the Databricks workspace.
 
@@ -121,7 +121,7 @@ def export_workspace_cli(api_client, source_path, target_path, format, overwrite
             raise RuntimeError('Export can only be called on a notebook.')
         extension = WorkspaceLanguage.to_extension(file_info.language)
         target_path = os.path.join(target_path, file_info.basename + extension)
-    WorkspaceApi(api_client).export_workspace(source_path, target_path, format, overwrite) # NOQA
+    WorkspaceApi(api_client).export_workspace(source_path, target_path, fmt, overwrite) # NOQA
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -152,7 +152,7 @@ def delete_cli(api_client, workspace_path, recursive):
 @profile_option
 @eat_exceptions
 @provide_api_client
-def export_dir_cli(api_client, source_path, target_path, overwrite, format):
+def export_dir_cli(api_client, source_path, target_path, overwrite, fmt):
     """
     Recursively exports a directory from the Databricks workspace.
 
@@ -163,7 +163,7 @@ def export_dir_cli(api_client, source_path, target_path, overwrite, format):
     workspace_api = WorkspaceApi(api_client)
     assert workspace_api.get_status(source_path).is_dir, 'The source path must be a directory. {}' \
         .format(source_path)
-    workspace_api.export_workspace_dir(source_path, target_path, overwrite, format)
+    workspace_api.export_workspace_dir(source_path, target_path, overwrite, fmt)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -199,6 +199,7 @@ def workspace_group():
     Workspace paths must be absolute and be prefixed with `/`.
     """
     pass
+
 
 workspace_group.add_command(ls_cli, name='ls')
 workspace_group.add_command(ls_cli, name='list')
