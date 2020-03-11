@@ -48,15 +48,11 @@ def get_resource_does_not_exist_exception():
     return requests.exceptions.HTTPError(response=response)
 
 
-def get_request_limit_exceeded_exception():
-    response = requests.Response()
-    response.status_code = 429
-    response._content = ('{{"error_code": "{}","message": ""}}'.format(api.DbfsErrorCodes.REQUEST_LIMIT_EXCEEDED)).encode() #  NOQA
-    return requests.exceptions.HTTPError(response=response)
-
-
 def get_partial_delete_exception():
-    return get_request_limit_exceeded_exception()
+    response = requests.Response()
+    response.status_code = 503
+    response._content = ('{{"error_code": "{}","message": ""}}'.format(api.DbfsErrorCodes.PARTIAL_DELETE)).encode() #  NOQA
+    return requests.exceptions.HTTPError(response=response)
 
 
 class TestFileInfo(object):

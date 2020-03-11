@@ -69,7 +69,7 @@ class FileInfo(object):
 class DbfsErrorCodes(object):
     RESOURCE_DOES_NOT_EXIST = 'RESOURCE_DOES_NOT_EXIST'
     RESOURCE_ALREADY_EXISTS = 'RESOURCE_ALREADY_EXISTS'
-    REQUEST_LIMIT_EXCEEDED = 'REQUEST_LIMIT_EXCEEDED'
+    PARTIAL_DELETE = 'PARTIAL_DELETE'
 
 
 class DbfsApi(object):
@@ -130,8 +130,9 @@ class DbfsApi(object):
                 self.client.delete(dbfs_path.absolute_path, recursive=recursive, headers=headers)
             except HTTPError as e:
                 # Handle partial delete exceptions and retry until all the files have been deleted
-                if (e.response.status_code == 429 and
-                        e.response.json()['error_code'] == DbfsErrorCodes.REQUEST_LIMIT_EXCEEDED):
+                if (e.response.status_code == 503 and
+                        e.response.json()['error_code'] == DbfsErrorCodes.PARTIAL_DELETE):
+                    click.echo("Partial delete. Response: {}".format(e.response.json()))
                     continue
                 else:
                     raise e
