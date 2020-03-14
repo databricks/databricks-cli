@@ -240,9 +240,17 @@ class DbfsApi(object):
             with open(temp_path) as f:
                 click.echo(f.read(), nl=False)
 
+
+
+
+    def delete_async_start(self, dbfs_path, recursive, cluster_id, headers=None):
+        return self.client.delete_async_start(dbfs_path.absolute_path, recursive, cluster_id, headers=headers)
+
     def delete_async_status(self, rm_async_id, headers=None):
         return self.client.delete_async_status(rm_async_id, headers=headers)
 
+    def delete_async_cancel(self, rm_async_id, headers=None):
+        return self.client.delete_async_cancel(rm_async_id, headers=headers)
 
 
 class TempDir(object):
