@@ -514,6 +514,20 @@ class DbfsService(object):
         return self.client.perform_query('POST', '/dbfs/close', data=_data, headers=headers)
 
 
+
+
+
+
+
+    def delete_async_status(self, rm_async_id=None, headers=None):
+        _data = {}
+        if rm_async_id is not None:
+            _data['delete_job_id'] = rm_async_id
+            return self.client.perform_query('GET', '/dbfs-async/delete/get', data=_data, headers=headers)
+        else:
+            return self.client.perform_query('GET', '/dbfs-async/delete/list', data=_data, headers=headers)
+
+
 class WorkspaceService(object):
     def __init__(self, client):
         self.client = client

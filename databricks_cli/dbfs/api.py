@@ -240,6 +240,10 @@ class DbfsApi(object):
             with open(temp_path) as f:
                 click.echo(f.read(), nl=False)
 
+    def delete_async_status(self, rm_async_id, headers=None):
+        return self.client.delete_async_status(rm_async_id, headers=headers)
+
+
 
 class TempDir(object):
     def __init__(self, remove_on_exit=True):

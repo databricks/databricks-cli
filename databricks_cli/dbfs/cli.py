@@ -22,6 +22,7 @@
 # limitations under the License.
 
 import click
+import json
 from tabulate import tabulate
 
 from databricks_cli.utils import eat_exceptions, error_and_quit, CONTEXT_SETTINGS
@@ -87,6 +88,97 @@ def rm_cli(api_client, recursive, dbfs_path):
     To remove a directory you must provide the --recursive flag.
     """
     DbfsApi(api_client).delete(dbfs_path, recursive)
+
+
+@click.command(context_settings=CONTEXT_SETTINGS)
+@click.option('--recursive', '-r', is_flag=True, default=False)
+@click.argument('dbfs_path', type=DbfsPathClickType())
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def rm_async_start_cli(api_client, recursive, dbfs_path):
+    """
+    Start a rm-async request.
+
+    To remove a directory you must provide the --recursive flag.
+    """
+    print("rm async start")
+    print(dbfs_path)
+    print(recursive)
+
+
+def truncate_string(s, length=100):
+    if len(s) <= length:
+        return s
+    return s[:length] + '...'
+
+
+def _rm_async_status_to_row(run_json):
+    r = json.loads(run_json)
+    params = r['task']['notebook_task']['base_parameters']
+    state = r['state']
+    return (
+        r['run_id'],
+        params['path'], params['recursive'],
+        state['life_cycle_state'], state['result_state'],
+        r['run_page_url']
+    )
+
+
+def _rm_async_status_to_table(rm_async_id, runs_json):
+    ret = []
+    if rm_async_id is not None:
+        r = runs_json['delete_job_run']
+        ret.append(_rm_async_status_to_row(r))
+    else:
+        for r in runs_json['delete_job_runs']:
+            ret.append(_rm_async_status_to_row(r))
+    return ret
+
+
+@click.command(context_settings=CONTEXT_SETTINGS)
+@click.option('--rm-async-id', required=False)
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def rm_async_status_cli(api_client, rm_async_id):
+    """
+    Check the status of your rm-async request(s).
+    """
+    status = DbfsApi(api_client).delete_async_status(rm_async_id)
+    click.echo(tabulate(_rm_async_status_to_table(rm_async_id, status)))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS)
+@click.option('--rm-async-id', required=True)
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def rm_async_cancel_cli(api_client, rm_async_id):
+    """
+    Cancel your rm-async request.
+    """
+    print("rm async cancel")
+    print(rm_async_id)
+
+
+@click.group(context_settings=CONTEXT_SETTINGS, short_help='Remove files from DBFS asynchronously.')
+@debug_option
+@profile_option
+@eat_exceptions
+def rm_async_group():
+    """
+    Remove files from dbfs asynchronously.
+    """
+    pass
+
+
+rm_async_group.add_command(rm_async_start_cli, name="start")
+rm_async_group.add_command(rm_async_status_cli, name="status")
+rm_async_group.add_command(rm_async_cancel_cli, name="cancel")
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
@@ -162,6 +254,7 @@ dbfs_group.add_command(configure_cli, name='configure')
 dbfs_group.add_command(ls_cli, name='ls')
 dbfs_group.add_command(mkdirs_cli, name='mkdirs')
 dbfs_group.add_command(rm_cli, name='rm')
+dbfs_group.add_command(rm_async_group, name='rm-async')
 dbfs_group.add_command(cp_cli, name='cp')
 dbfs_group.add_command(mv_cli, name='mv')
 dbfs_group.add_command(cat_cli, name='cat')
