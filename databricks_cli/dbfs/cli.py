@@ -24,8 +24,10 @@
 from __future__ import print_function
 
 import click
+from click import UsageError
 import json
 import time
+from datetime import datetime, timedelta
 from tabulate import tabulate
 
 from databricks_cli.utils import eat_exceptions, error_and_quit, CONTEXT_SETTINGS
@@ -78,25 +80,42 @@ def mkdirs_cli(api_client, dbfs_path):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
-@click.option('--recursive', '-r', is_flag=True, default=False)
 @click.argument('dbfs_path', type=DbfsPathClickType())
+@click.option('--recursive', '-r', is_flag=True, default=False)
+@click.option('--as-job', is_flag=True, default=False)
+@click.option('--async', is_flag=True, default=False)
+@click.option('--cluster-id', required=False)
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def rm_cli(api_client, recursive, dbfs_path):
+def rm_cli(api_client, dbfs_path, recursive, as_job, async, cluster_id):
     """
     Remove files from dbfs.
 
     To remove a directory you must provide the --recursive flag.
     """
-    DbfsApi(api_client).delete(dbfs_path, recursive)
+    if async or (cluster_id is not None):
+        as_job = True
+
+    if as_job:
+        id = async_rm_start_impl(api_client, dbfs_path, recursive, cluster_id)
+        if async:
+            click.echo(async_rm_status_impl(api_client, id))
+        else:
+            async_rm_wait_impl(api_client, id)
+    else:
+        DbfsApi(api_client).delete(dbfs_path, recursive)
 
 
 
 
 
 
+
+def async_rm_start_impl(api_client, dbfs_path, recursive, cluster_id):
+    delete_job_id = DbfsApi(api_client).async_delete_start(dbfs_path, recursive, cluster_id)
+    return delete_job_id['delete_job_id']
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
@@ -107,16 +126,14 @@ def rm_cli(api_client, recursive, dbfs_path):
 @profile_option
 @eat_exceptions
 @provide_api_client
-def rm_async_start_cli(api_client, dbfs_path, recursive, cluster_id):
+def async_rm_start_cli(api_client, dbfs_path, recursive, cluster_id):
     """
     Start a rm-async request.
 
     To remove a directory you must provide the --recursive flag.
     """
-    delete_job_id = DbfsApi(api_client).delete_async_start(dbfs_path, recursive, cluster_id)
-    # rm_async_id = json.dumps({'rm_async_id': delete_job_id['delete_job_id']})
-    rm_async_id = delete_job_id['delete_job_id']
-    click.echo(_rm_async_status(api_client, rm_async_id))
+    id = async_rm_start_impl(api_client, dbfs_path, recursive, cluster_id)
+    click.echo(async_rm_status_impl(api_client, id))
 
 
 def truncate_string(s, length=100):
@@ -124,96 +141,127 @@ def truncate_string(s, length=100):
         return s
     return s[:length] + '...'
 
+def parse_timestamp(ts):
+    t = int(ts) / 1000
+    return datetime.utcfromtimestamp(t).strftime('%Y-%m-%d %H:%M:%S')
 
-def _rm_async_status_to_row(run_json):
+
+def async_rm_status_to_row(run_json):
     r = json.loads(run_json)
     params = r['task']['notebook_task']['base_parameters']
     state = r['state']
+    if 'result_state' in state:
+        result = state['result_state']
+        duration_ms = r['setup_duration'] + r['execution_duration'] + r['cleanup_duration']
+        duration = timedelta(milliseconds=duration_ms)
+    else:
+        result = ""
+        duration = ""
+
+    cluster_type = 'new' if 'new_cluster' in r['cluster_spec'] else "existing"
+    cluster_id = r['cluster_instance']['cluster_id'] if 'cluster_instance' in r else ""
     return (
-        r['run_id'],
-        params['path'], params['recursive'],
-        state['life_cycle_state'], state.get('result_state'),
-        r['run_page_url']
+        r['run_id'], params['path'], params['recursive'],
+        r['run_page_url'], cluster_type, cluster_id,
+        parse_timestamp(r['start_time']), state['life_cycle_state'], result, duration
     )
 
 
-def _rm_async_status_to_table(rm_async_id, runs_json):
+def async_rm_status_to_table(id, runs_json):
     ret = []
-    if rm_async_id is not None:
+    if id is not None:
         r = runs_json['delete_job_run']
-        ret.append(_rm_async_status_to_row(r))
+        ret.append(async_rm_status_to_row(r))
     else:
         for r in runs_json['delete_job_runs']:
-            ret.append(_rm_async_status_to_row(r))
+            ret.append(async_rm_status_to_row(r))
     return ret
 
 
-def _rm_async_status(api_client, rm_async_id):
-    status = DbfsApi(api_client).delete_async_status(rm_async_id)
-    return tabulate(_rm_async_status_to_table(rm_async_id, status), tablefmt="plain")
+def async_rm_status_impl(api_client, id, limit=None):
+    status = DbfsApi(api_client).async_delete_status(id, limit)
+    if id is not None:
+        return tabulate(async_rm_status_to_table(id, status), tablefmt="plain")
+    else:
+        headers = (
+            "id", "path", "recursive",
+            "run_page_url", "cluster_type", "cluster_id",
+            "start_time", "state", "result", "duration")
+        return tabulate(async_rm_status_to_table(id, status), headers, tablefmt='simple')
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
-@click.option('--rm-async-id', required=False)
+@click.option('--id', required=False)
+@click.option('--limit', required=False)
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def rm_async_status_cli(api_client, rm_async_id):
+def async_rm_status_cli(api_client, id, limit):
     """
     Check the status of your rm-async request(s).
     """
-    click.echo(_rm_async_status(api_client, rm_async_id))
+    if id is not None and limit is not None:
+        raise UsageError("You cannot specify both --id and --limit.")
+
+    click.echo(async_rm_status_impl(api_client, id, limit))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
-@click.option('--rm-async-id', required=True)
+@click.option('--id', required=True)
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def rm_async_cancel_cli(api_client, rm_async_id):
+def async_rm_cancel_cli(api_client, id):
     """
     Cancel your rm-async request.
     """
-    DbfsApi(api_client).delete_async_cancel(rm_async_id)
+    DbfsApi(api_client).async_delete_cancel(id)
 
+
+def async_rm_wait_impl(api_client, id):
+    i = 0
+    progress_chars = ['/', '-', '\\', '|']
+    while True:
+        status = DbfsApi(api_client).async_delete_status(id)
+        click.echo("\r" + async_rm_status_impl(api_client, id), nl=False)
+        r = json.loads(status['delete_job_run'])
+        if r['state'].get('result_state') is not None:
+            click.echo("        ")
+            break
+        i = (i + 1) % len(progress_chars)
+        click.echo(" " + progress_chars[i], nl=False)
+        time.sleep(0.5)
 
 @click.command(context_settings=CONTEXT_SETTINGS)
-@click.option('--rm-async-id', required=True)
+@click.option('--id', required=True)
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def rm_async_wait_cli(api_client, rm_async_id):
+def async_rm_wait_cli(api_client, id):
     """
     Wait until your rm-async request is complete.
     """
-    while True:
-        click.echo("\r" + _rm_async_status(api_client, rm_async_id), nl=False)
-        status = DbfsApi(api_client).delete_async_status(rm_async_id)
-        r = json.loads(status['delete_job_run'])
-        if r['state'].get('result_state') is not None:
-            break
-        time.sleep(1)
-    click.echo("")
+    async_rm_wait_impl(api_client, id)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS, short_help='Remove files from DBFS asynchronously.')
 @debug_option
 @profile_option
 @eat_exceptions
-def rm_async_group():
+def async_rm_group():
     """
     Remove files from dbfs asynchronously.
     """
     pass
 
 
-rm_async_group.add_command(rm_async_start_cli, name="start")
-rm_async_group.add_command(rm_async_status_cli, name="status")
-rm_async_group.add_command(rm_async_cancel_cli, name="cancel")
-rm_async_group.add_command(rm_async_wait_cli, name="wait")
+async_rm_group.add_command(async_rm_start_cli, name="start")
+async_rm_group.add_command(async_rm_status_cli, name="status")
+async_rm_group.add_command(async_rm_cancel_cli, name="cancel")
+async_rm_group.add_command(async_rm_wait_cli, name="wait")
 
 
 
@@ -304,7 +352,7 @@ def async_group():
     pass
 
 
-async_group.add_command(rm_async_group, name='rm')
+async_group.add_command(async_rm_group, name='rm')
 
 
 dbfs_group.add_command(configure_cli, name='configure')

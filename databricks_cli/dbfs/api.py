@@ -243,14 +243,14 @@ class DbfsApi(object):
 
 
 
-    def delete_async_start(self, dbfs_path, recursive, cluster_id, headers=None):
-        return self.client.delete_async_start(dbfs_path.absolute_path, recursive, cluster_id, headers=headers)
+    def async_delete_start(self, dbfs_path, recursive, cluster_id, headers=None):
+        return self.client.async_delete_start(dbfs_path.absolute_path, recursive, cluster_id, headers=headers)
 
-    def delete_async_status(self, rm_async_id, headers=None):
-        return self.client.delete_async_status(rm_async_id, headers=headers)
+    def async_delete_status(self, async_delete_id=None, limit=None, headers=None):
+        return self.client.async_delete_status(async_delete_id, limit, headers=headers)
 
-    def delete_async_cancel(self, rm_async_id, headers=None):
-        return self.client.delete_async_cancel(rm_async_id, headers=headers)
+    def async_delete_cancel(self, async_delete_id, headers=None):
+        return self.client.async_delete_cancel(async_delete_id, headers=headers)
 
 
 class TempDir(object):

@@ -519,7 +519,7 @@ class DbfsService(object):
 
 
 
-    def delete_async_start(self, dbfs_path, recursive=None, cluster_id=None, headers=None):
+    def async_delete_start(self, dbfs_path, recursive=None, cluster_id=None, headers=None):
         _data = {}
         _data['path'] = dbfs_path
         if recursive is not None:
@@ -528,17 +528,19 @@ class DbfsService(object):
             _data['cluster_id'] = cluster_id
         return self.client.perform_query('POST', '/dbfs-async/delete/submit', data=_data, headers=headers)
 
-    def delete_async_status(self, rm_async_id=None, headers=None):
+    def async_delete_status(self, async_delete_id=None, limit=None, headers=None):
         _data = {}
-        if rm_async_id is not None:
-            _data['delete_job_id'] = rm_async_id
+        if async_delete_id is not None:
+            _data['delete_job_id'] = async_delete_id
             return self.client.perform_query('GET', '/dbfs-async/delete/get', data=_data, headers=headers)
         else:
+            if limit is not None:
+                _data['limit'] = limit
             return self.client.perform_query('GET', '/dbfs-async/delete/list', data=_data, headers=headers)
 
-    def delete_async_cancel(self, rm_async_id, headers=None):
+    def async_delete_cancel(self, async_delete_id, headers=None):
         _data = {}
-        _data['delete_job_id'] = rm_async_id
+        _data['delete_job_id'] = async_delete_id
         return self.client.perform_query('POST', '/dbfs-async/delete/cancel', data=_data, headers=headers)
 
 
