@@ -292,11 +292,26 @@ def cat_cli(api_client, src):
     DbfsApi(api_client).cat(src)
 
 
+
+@click.group(context_settings=CONTEXT_SETTINGS, short_help='Perform asynchronous DBFS operations.')
+@debug_option
+@profile_option
+@eat_exceptions
+def async_group():
+    """
+    Remove files from dbfs asynchronously.
+    """
+    pass
+
+
+async_group.add_command(rm_async_group, name='rm')
+
+
 dbfs_group.add_command(configure_cli, name='configure')
 dbfs_group.add_command(ls_cli, name='ls')
 dbfs_group.add_command(mkdirs_cli, name='mkdirs')
 dbfs_group.add_command(rm_cli, name='rm')
-dbfs_group.add_command(rm_async_group, name='rm-async')
+dbfs_group.add_command(async_group, name='async')
 dbfs_group.add_command(cp_cli, name='cp')
 dbfs_group.add_command(mv_cli, name='mv')
 dbfs_group.add_command(cat_cli, name='cat')
