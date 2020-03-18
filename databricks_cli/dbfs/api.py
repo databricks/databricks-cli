@@ -28,6 +28,7 @@ import shutil
 import tempfile
 
 import click
+import re
 
 from requests.exceptions import HTTPError
 
@@ -37,6 +38,10 @@ from databricks_cli.dbfs.dbfs_path import DbfsPath
 from databricks_cli.dbfs.exceptions import LocalFileExistsException
 
 BUFFER_SIZE_BYTES = 2**20
+
+
+class ParseException(Exception):
+    pass
 
 
 class FileInfo(object):
@@ -124,7 +129,17 @@ class DbfsApi(object):
                 offset += bytes_read
                 local_file.write(b64decode(data))
 
+    def get_num_files_deleted(self, partial_delete_error):
+        message = partial_delete_error.response.json()["message"]
+        m = re.compile(r".*operation has deleted (\d+) files.*").match(message)
+        if not m:
+            raise ParseException(
+                "Unable to retrieve the number of deleted files from the error message: {}".format(
+                    message))
+        return int(m.group(1))
+
     def delete(self, dbfs_path, recursive, headers=None):
+        num_files_deleted = 0
         while True:
             try:
                 self.client.delete(dbfs_path.absolute_path, recursive=recursive, headers=headers)
@@ -132,11 +147,19 @@ class DbfsApi(object):
                 # Handle partial delete exceptions and retry until all the files have been deleted
                 if (e.response.status_code == 503 and
                         e.response.json()['error_code'] == DbfsErrorCodes.PARTIAL_DELETE):
-                    click.echo("Partial delete. Response: {}".format(e.response.json()))
+                    try:
+                        num_files_deleted += self.get_num_files_deleted(e)
+                        click.echo(
+                            "\rDeleted {} files. Delete in progress...\033[K".format(
+                                num_files_deleted),
+                            nl=False)
+                    except ParseException:
+                        click.echo("\rDelete in progress...\033[K", nl=False)
                     continue
                 else:
                     raise e
             break
+        click.echo("\rDelete finished successfully.\033[K")
 
     def mkdirs(self, dbfs_path, headers=None):
         self.client.mkdirs(dbfs_path.absolute_path, headers=headers)
