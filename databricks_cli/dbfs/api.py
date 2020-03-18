@@ -27,8 +27,8 @@ import os
 import shutil
 import tempfile
 
-import click
 import re
+import click
 
 from requests.exceptions import HTTPError
 
