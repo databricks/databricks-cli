@@ -188,6 +188,7 @@ class TestDbfsApi(object):
                              [e_temporarily_unavailable] * api.DELETE_MAX_CONSECUTIVE_503_ERRORS + \
                              [e_partial_delete, None]
         dbfs_api.client.delete = mock.Mock(side_effect=exception_sequence)
+        dbfs_api.delete_retry_delay_millis = 1
         dbfs_api.delete(DbfsPath('dbfs:/whatever-doesnt-matter'), recursive=True)
 
     def test_partial_delete_service_unavailable(self, dbfs_api):
@@ -200,6 +201,7 @@ class TestDbfsApi(object):
             [e_temporarily_unavailable] * (api.DELETE_MAX_CONSECUTIVE_503_ERRORS + 1) + \
             [e_partial_delete, None]
         dbfs_api.client.delete = mock.Mock(side_effect=exception_sequence)
+        dbfs_api.delete_retry_delay_millis = 1
         with pytest.raises(e_temporarily_unavailable.__class__) as thrown:
             dbfs_api.delete(DbfsPath('dbfs:/whatever-doesnt-matter'), recursive=True)
         # Should raise the same e_temporarily_unavailable exception instance

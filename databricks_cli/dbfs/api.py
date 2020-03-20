@@ -28,6 +28,7 @@ import shutil
 import tempfile
 
 import re
+import time
 import click
 
 from requests.exceptions import HTTPError
@@ -39,6 +40,7 @@ from databricks_cli.dbfs.exceptions import LocalFileExistsException
 
 BUFFER_SIZE_BYTES = 2**20
 DELETE_MAX_CONSECUTIVE_503_ERRORS = 3
+DELETE_503_RETRY_DELAY_MILLIS = 30 * 1000
 
 
 class ParseException(Exception):
@@ -80,8 +82,9 @@ class DbfsErrorCodes(object):
 
 
 class DbfsApi(object):
-    def __init__(self, api_client):
+    def __init__(self, api_client, delete_retry_delay_millis=DELETE_503_RETRY_DELAY_MILLIS):
         self.client = DbfsService(api_client)
+        self.delete_retry_delay_millis = delete_retry_delay_millis
 
     def list_files(self, dbfs_path, headers=None):
         list_response = self.client.list(dbfs_path.absolute_path, headers=headers)
@@ -165,6 +168,7 @@ class DbfsApi(object):
                     # Retry at most DELETE_MAX_CONSECUTIVE_503_ERRORS times for other 503 errors
                     elif num_consecutive_503_errors < DELETE_MAX_CONSECUTIVE_503_ERRORS:
                         num_consecutive_503_errors += 1
+                        time.sleep(float(self.delete_retry_delay_millis) / 1000)
                         continue
                     else:
                         raise e
