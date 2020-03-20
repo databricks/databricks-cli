@@ -38,6 +38,7 @@ from databricks_cli.dbfs.dbfs_path import DbfsPath
 from databricks_cli.dbfs.exceptions import LocalFileExistsException
 
 BUFFER_SIZE_BYTES = 2**20
+DELETE_MAX_CONSECUTIVE_503_ERRORS = 3
 
 
 class ParseException(Exception):
@@ -74,6 +75,7 @@ class FileInfo(object):
 class DbfsErrorCodes(object):
     RESOURCE_DOES_NOT_EXIST = 'RESOURCE_DOES_NOT_EXIST'
     RESOURCE_ALREADY_EXISTS = 'RESOURCE_ALREADY_EXISTS'
+    TEMPORARILY_UNAVAILABLE = 'TEMPORARILY_UNAVAILABLE'
     PARTIAL_DELETE = 'PARTIAL_DELETE'
 
 
@@ -139,23 +141,33 @@ class DbfsApi(object):
         return int(m.group(1))
 
     def delete(self, dbfs_path, recursive, headers=None):
+        num_consecutive_503_errors = 0
         num_files_deleted = 0
         while True:
             try:
                 self.client.delete(dbfs_path.absolute_path, recursive=recursive, headers=headers)
             except HTTPError as e:
-                # Handle partial delete exceptions and retry until all the files have been deleted
-                if (e.response.status_code == 503 and
-                        e.response.json()['error_code'] == DbfsErrorCodes.PARTIAL_DELETE):
+                if e.response.status_code == 503:
                     try:
-                        num_files_deleted += self.get_num_files_deleted(e)
-                        click.echo(
-                            "\rDeleted {} files. Delete in progress...\033[K".format(
-                                num_files_deleted),
-                            nl=False)
-                    except ParseException:
-                        click.echo("\rDelete in progress...\033[K", nl=False)
-                    continue
+                        error_code = e.response.json()['error_code']
+                    except (AttributeError, KeyError):
+                        error_code = None
+                    # Handle partial delete exceptions: retry until all the files have been deleted
+                    if error_code == DbfsErrorCodes.PARTIAL_DELETE:
+                        try:
+                            num_files_deleted += self.get_num_files_deleted(e)
+                            click.echo("\rDeleted {} files. Delete in progress...\033[K".format(
+                                num_files_deleted), nl=False)
+                        except ParseException:
+                            click.echo("\rDelete in progress...\033[K", nl=False)
+                        num_consecutive_503_errors = 0
+                        continue
+                    # Retry at most DELETE_MAX_CONSECUTIVE_503_ERRORS times for other 503 errors
+                    elif num_consecutive_503_errors < DELETE_MAX_CONSECUTIVE_503_ERRORS:
+                        num_consecutive_503_errors += 1
+                        continue
+                    else:
+                        raise e
                 else:
                     raise e
             break
