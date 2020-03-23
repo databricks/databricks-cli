@@ -55,10 +55,10 @@ def get_temporarily_unavailable_exception():
     return requests.exceptions.HTTPError(response=response)
 
 
-def get_partial_delete_exception():
+def get_partial_delete_exception(message="[...] operation has deleted 10 files [...]"):
     response = requests.Response()
     response.status_code = 503
-    response._content = ('{{"error_code": "{}","message": ""}}'.format(api.DbfsErrorCodes.PARTIAL_DELETE)).encode() #  NOQA
+    response._content = ('{{"error_code": "{}","message": "{}"}}'.format(api.DbfsErrorCodes.PARTIAL_DELETE, message)).encode() #  NOQA
     return requests.exceptions.HTTPError(response=response)
 
 
@@ -184,11 +184,13 @@ class TestDbfsApi(object):
         e_partial_delete = get_partial_delete_exception()
         e_temporarily_unavailable = get_temporarily_unavailable_exception()
         # Simulate partial deletes and 503 exceptions followed by a full successful delete
-        exception_sequence = [e_temporarily_unavailable, e_partial_delete, e_partial_delete] + \
-                             [e_temporarily_unavailable] * api.DELETE_MAX_CONSECUTIVE_503_ERRORS + \
-                             [e_partial_delete, None]
+        exception_sequence = \
+            [e_temporarily_unavailable, e_partial_delete, e_partial_delete] + \
+            [e_temporarily_unavailable] * api.DELETE_MAX_CONSECUTIVE_503_RETRIES + \
+            [e_partial_delete, None]
         dbfs_api.client.delete = mock.Mock(side_effect=exception_sequence)
         dbfs_api.delete_retry_delay_millis = 1
+        # Should succeed
         dbfs_api.delete(DbfsPath('dbfs:/whatever-doesnt-matter'), recursive=True)
 
     def test_partial_delete_service_unavailable(self, dbfs_api):
@@ -198,7 +200,7 @@ class TestDbfsApi(object):
         # deletes (error_code != PARTIAL_DELETE)
         exception_sequence = \
             [e_partial_delete] + \
-            [e_temporarily_unavailable] * (api.DELETE_MAX_CONSECUTIVE_503_ERRORS + 1) + \
+            [e_temporarily_unavailable] * (api.DELETE_MAX_CONSECUTIVE_503_RETRIES + 1) + \
             [e_partial_delete, None]
         dbfs_api.client.delete = mock.Mock(side_effect=exception_sequence)
         dbfs_api.delete_retry_delay_millis = 1
@@ -206,3 +208,23 @@ class TestDbfsApi(object):
             dbfs_api.delete(DbfsPath('dbfs:/whatever-doesnt-matter'), recursive=True)
         # Should raise the same e_temporarily_unavailable exception instance
         assert thrown.value == e_temporarily_unavailable
+
+    def test_partial_delete_exception_message_parse_error(self, dbfs_api):
+        message = "unexpected partial delete exception message"
+        e_partial_delete = get_partial_delete_exception(message)
+        dbfs_api.client.delete = mock.Mock(side_effect=[e_partial_delete, None])
+        dbfs_api.delete_retry_delay_millis = 1
+        # Should succeed
+        dbfs_api.delete(DbfsPath('dbfs:/whatever-doesnt-matter'), recursive=True)
+
+    def test_get_num_files_deleted(self):
+        e_partial_delete = get_partial_delete_exception()
+        # Should succeed
+        api.DbfsApi.get_num_files_deleted(e_partial_delete)
+
+    def test_get_num_files_deleted_parse_error(self):
+        message = "unexpected partial delete exception message"
+        e_partial_delete = get_partial_delete_exception(message)
+        # Should raise api.ParseException
+        with pytest.raises(api.ParseException):
+            api.DbfsApi.get_num_files_deleted(e_partial_delete)

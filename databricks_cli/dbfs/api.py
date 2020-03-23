@@ -39,7 +39,7 @@ from databricks_cli.dbfs.dbfs_path import DbfsPath
 from databricks_cli.dbfs.exceptions import LocalFileExistsException
 
 BUFFER_SIZE_BYTES = 2**20
-DELETE_MAX_CONSECUTIVE_503_ERRORS = 3
+DELETE_MAX_CONSECUTIVE_503_RETRIES = 3
 DELETE_503_RETRY_DELAY_MILLIS = 30 * 1000
 
 
@@ -134,8 +134,12 @@ class DbfsApi(object):
                 offset += bytes_read
                 local_file.write(b64decode(data))
 
-    def get_num_files_deleted(self, partial_delete_error):
-        message = partial_delete_error.response.json()["message"]
+    @staticmethod
+    def get_num_files_deleted(partial_delete_error):
+        try:
+            message = partial_delete_error.response.json()['message']
+        except (AttributeError, KeyError):
+            raise ParseException("Unable to retrieve the number of deleted files.")
         m = re.compile(r".*operation has deleted (\d+) files.*").match(message)
         if not m:
             raise ParseException(
@@ -144,7 +148,7 @@ class DbfsApi(object):
         return int(m.group(1))
 
     def delete(self, dbfs_path, recursive, headers=None):
-        num_consecutive_503_errors = 0
+        num_consecutive_503_retries = 0
         num_files_deleted = 0
         while True:
             try:
@@ -158,16 +162,16 @@ class DbfsApi(object):
                     # Handle partial delete exceptions: retry until all the files have been deleted
                     if error_code == DbfsErrorCodes.PARTIAL_DELETE:
                         try:
-                            num_files_deleted += self.get_num_files_deleted(e)
+                            num_files_deleted += DbfsApi.get_num_files_deleted(e)
                             click.echo("\rDeleted {} files. Delete in progress...\033[K".format(
                                 num_files_deleted), nl=False)
                         except ParseException:
                             click.echo("\rDelete in progress...\033[K", nl=False)
-                        num_consecutive_503_errors = 0
+                        num_consecutive_503_retries = 0
                         continue
                     # Retry at most DELETE_MAX_CONSECUTIVE_503_ERRORS times for other 503 errors
-                    elif num_consecutive_503_errors < DELETE_MAX_CONSECUTIVE_503_ERRORS:
-                        num_consecutive_503_errors += 1
+                    elif num_consecutive_503_retries < DELETE_MAX_CONSECUTIVE_503_RETRIES:
+                        num_consecutive_503_retries += 1
                         time.sleep(float(self.delete_retry_delay_millis) / 1000)
                         continue
                     else:
