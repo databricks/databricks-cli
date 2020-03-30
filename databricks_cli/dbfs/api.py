@@ -162,10 +162,9 @@ class DbfsApi(object):
                         except ParseException:
                             click.echo("\rDelete in progress...\033[K", nl=False)
                         continue
-                    else:
-                        raise e
-                else:
-                    raise e
+                click.echo("\rDeleted at least {} files but interrupted by error.\033[K".format(
+                    num_files_deleted))
+                raise e
             break
         click.echo("\rDelete finished successfully.\033[K")
 
