@@ -28,7 +28,6 @@ import shutil
 import tempfile
 
 import re
-import time
 import click
 
 from requests.exceptions import HTTPError
@@ -39,8 +38,6 @@ from databricks_cli.dbfs.dbfs_path import DbfsPath
 from databricks_cli.dbfs.exceptions import LocalFileExistsException
 
 BUFFER_SIZE_BYTES = 2**20
-DELETE_MAX_CONSECUTIVE_503_RETRIES = 3
-DELETE_503_RETRY_DELAY_MILLIS = 30 * 1000
 
 
 class ParseException(Exception):
@@ -77,14 +74,12 @@ class FileInfo(object):
 class DbfsErrorCodes(object):
     RESOURCE_DOES_NOT_EXIST = 'RESOURCE_DOES_NOT_EXIST'
     RESOURCE_ALREADY_EXISTS = 'RESOURCE_ALREADY_EXISTS'
-    TEMPORARILY_UNAVAILABLE = 'TEMPORARILY_UNAVAILABLE'
     PARTIAL_DELETE = 'PARTIAL_DELETE'
 
 
 class DbfsApi(object):
-    def __init__(self, api_client, delete_retry_delay_millis=DELETE_503_RETRY_DELAY_MILLIS):
+    def __init__(self, api_client):
         self.client = DbfsService(api_client)
-        self.delete_retry_delay_millis = delete_retry_delay_millis
 
     def list_files(self, dbfs_path, headers=None):
         list_response = self.client.list(dbfs_path.absolute_path, headers=headers)
@@ -148,7 +143,6 @@ class DbfsApi(object):
         return int(m.group(1))
 
     def delete(self, dbfs_path, recursive, headers=None):
-        num_consecutive_503_retries = 0
         num_files_deleted = 0
         while True:
             try:
@@ -167,17 +161,10 @@ class DbfsApi(object):
                                 num_files_deleted), nl=False)
                         except ParseException:
                             click.echo("\rDelete in progress...\033[K", nl=False)
-                        num_consecutive_503_retries = 0
                         continue
-                    # Retry at most DELETE_MAX_CONSECUTIVE_503_ERRORS times for other 503 errors
-                    elif num_consecutive_503_retries < DELETE_MAX_CONSECUTIVE_503_RETRIES:
-                        num_consecutive_503_retries += 1
-                        time.sleep(float(self.delete_retry_delay_millis) / 1000)
-                        continue
-                    else:
-                        raise e
-                else:
-                    raise e
+                click.echo("\rDeleted at least {} files but interrupted by error.\033[K".format(
+                    num_files_deleted))
+                raise e
             break
         click.echo("\rDelete finished successfully.\033[K")
 
