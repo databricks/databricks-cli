@@ -90,6 +90,31 @@ class SecretPrincipalClickType(ParamType):
     help = 'The name of the principal.'
 
 
+class AccountIdClickType(ParamType):
+    name = 'ACCOUNT_ID'
+    help = 'Databricks Account Id'
+
+
+class CredentialsIdClickType(ParamType):
+    name = 'CREDENTIALS_ID'
+    help = 'Databricks Workspace Credentials Id'
+
+
+class StorageConfigIdClickType(ParamType):
+    name = 'STORAGE_CONFIG_ID'
+    help = 'Databricks Workspace Storage Configuration Id'
+
+
+class NetworkIdClickType(ParamType):
+    name = 'NETWORK_ID'
+    help = 'Databricks Workspace Network Id'
+
+
+class WorkspaceIdClickType(ParamType):
+    name = 'WORKSPACE_ID'
+    help = 'Databricks Workspace Id'
+
+
 class OneOfOption(Option):
     def __init__(self, *args, **kwargs):
         self.one_of = kwargs.pop('one_of')

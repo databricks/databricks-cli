@@ -794,3 +794,56 @@ class InstancePoolService(object):
     def list_instance_pools(self, headers=None):
         _data = {}
         return self.client.perform_query('GET', '/instance-pools/list', data=_data, headers=headers)
+
+
+class AccountsService(object):
+    def __init__(self, client):
+        self.client = client
+
+    def get_credentials(self, account_id, credentials_id, headers=None):
+        if account_id is None or credentials_id is None:
+            raise TypeError('Expected account_id and credentials_id')
+        endpoint = "/accounts/%s/credentials/%s" % (account_id, credentials_id)
+        return self.client.perform_query('REST-GET', endpoint, data={}, headers=headers)
+
+    def delete_credentials(self, account_id, credentials_id, headers=None):
+        if account_id is None or credentials_id is None:
+            raise TypeError('Expected account_id and credentials_id')
+        endpoint = "/accounts/%s/credentials/%s" % (account_id, credentials_id)
+        return self.client.perform_query('DELETE', endpoint, data={}, headers=headers)
+
+    def get_storage_config(self, account_id, storage_config_id, headers=None):
+        if account_id is None or storage_config_id is None:
+            raise TypeError('Expected account_id and storage_config_id')
+        endpoint = "/accounts/%s/storage-configurations/%s" % (account_id, storage_config_id)
+        return self.client.perform_query('REST-GET', endpoint, data={}, headers=headers)
+
+    def delete_storage_config(self, account_id, storage_config_id, headers=None):
+        if account_id is None or storage_config_id is None:
+            raise TypeError('Expected account_id and storage_config_id')
+        endpoint = "/accounts/%s/storage-configurations/%s" % (account_id, storage_config_id)
+        return self.client.perform_query('DELETE', endpoint, data={}, headers=headers)
+
+    def get_network(self, account_id, network_id, headers=None):
+        if account_id is None or network_id is None:
+            raise TypeError('Expected account_id and network_id')
+        endpoint = "/accounts/%s/networks/%s" % (account_id, network_id)
+        return self.client.perform_query('REST-GET', endpoint, data={}, headers=headers)
+        
+    def delete_network(self, account_id, network_id, headers=None):
+        if account_id is None or network_id is None:
+            raise TypeError('Expected account_id and network_id')
+        endpoint = "/accounts/%s/networks/%s" % (account_id, network_id)
+        return self.client.perform_query('DELETE', endpoint, data={}, headers=headers)
+
+    def get_workspace(self, account_id, workspace_id, headers=None):
+        if account_id is None or workspace_id is None:
+            raise TypeError('Expected account_id and workspace_id')
+        endpoint = "/accounts/%s/workspaces/%s" % (account_id, workspace_id)
+        return self.client.perform_query('REST-GET', endpoint, data={}, headers=headers)
+
+    def delete_workspace(self, account_id, workspace_id, headers=None):
+        if account_id is None or workspace_id is None:
+            raise TypeError('Expected account_id and workspace_id')
+        endpoint = "/accounts/%s/workspaces/%s" % (account_id, workspace_id)
+        return self.client.perform_query('DELETE', endpoint, data={}, headers=headers)
