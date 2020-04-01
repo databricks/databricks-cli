@@ -25,11 +25,12 @@
 
 import mock
 import pytest
-import databricks_cli.libraries.distutils as st
-
-from databricks_cli.utils import InvalidConfigurationError
 import setuptools.dist as dist
-from databricks_cli.configure.provider import DatabricksConfig, DatabricksConfigProvider, set_config_provider
+
+import databricks_cli.libraries.distutils as st
+from databricks_cli.utils import InvalidConfigurationError
+from databricks_cli.configure.provider import DatabricksConfig, \
+    DatabricksConfigProvider, set_config_provider
 
 
 @pytest.fixture()
@@ -45,10 +46,10 @@ def test_nothing():
     ilc = st.InstallLibraryCommand(d)
     ilc.initialize_options()
 
-    assert ilc.cluster_id == None
-    assert ilc.cluster_name == None
-    assert ilc.cluster_tag == None
-    assert ilc.dbfs_path == None
+    assert ilc.cluster_id is None
+    assert ilc.cluster_name is None
+    assert ilc.cluster_tag is None
+    assert ilc.dbfs_path is None
 
 
 def test_sets_name():
@@ -77,7 +78,7 @@ def test_gets_api_client():
     ilc.finalize_options()
 
     api_client = ilc._configure_api()
-    assert None != api_client
+    assert api_client is not None
 
 
 def test_gets_api_client_with_profile():
@@ -112,7 +113,7 @@ def test_upload_library():
         result = ilc._upload_library('foo/foo-0.0.1.wheel')
         assert result == 'dbfs:/FileStore/jars/foo/foo-0.0.1.wheel'
         put_file.assert_called_once()
-        assert 'foo/foo-0.0.1.wheel' == put_file.call_args[0][0]
+        assert put_file.call_args[0][0] == 'foo/foo-0.0.1.wheel'
 
 
 def test_run_stuff():
@@ -129,7 +130,7 @@ def test_run_stuff():
         return 'realpath'
 
     def _install_library(f):
-        assert 'realpath' == f
+        assert f == 'realpath'
 
     ilc._upload_library = _upload_library
     ilc._install_library = _install_library

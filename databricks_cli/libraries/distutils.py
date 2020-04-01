@@ -42,21 +42,25 @@ class InstallLibraryCommand(Command):
         ('databricks-cli-profile=', None, "Databricks CLI profile name", None),
     ]
 
-    def initialize_options(self):
-        """Abstract method that is required to be overwritten"""
+    def __init__(self, dist, **kw):
+        Command.__init__(self, dist, **kw)
         self.dbfs_path = None
         self.cluster_id = None
         self.cluster_name = None
         self.cluster_tag = None
         self.databricks_cli_profile = None
 
+    def initialize_options(self):
+        pass
+
     def finalize_options(self):
         """Abstract method that is required to be overwritten"""
         if not self.dbfs_path:
             package_name = self.distribution.get_name()
-            self.dbfs_path = f"dbfs:/FileStore/jars/{package_name}"
+            self.dbfs_path = 'dbfs:/FileStore/jars/' + package_name
         if not (self.cluster_id or self.cluster_name or self.cluster_tag):
-            raise RuntimeError('One of --cluster-id, --cluster-tag or --cluster-name should be provided')
+            msg = 'One of --cluster-id, --cluster-tag or --cluster-name should be provided'
+            raise RuntimeError(msg)
 
     def _configure_api(self):
         config = ProfileConfigProvider(
@@ -70,7 +74,7 @@ class InstallLibraryCommand(Command):
     def _upload_library(self, wheel_file):
         from os.path import basename
         dbfs = DbfsApi(self._configure_api())
-        artifact = f'{self.dbfs_path}/{basename(wheel_file)}'
+        artifact = self.dbfs_path + '/' + basename(wheel_file)
         # TODO: iterate through previous versions & re-link to *-latest.wheel
         dbfs.put_file(wheel_file, DbfsPath(artifact, validate=False), True)
         return artifact
@@ -91,7 +95,7 @@ class InstallLibraryCommand(Command):
         if not self.distribution.dist_files:
             raise RuntimeError('no dist files found')
         for cmd, _, local_file in self.distribution.dist_files:
-            if not 'bdist_wheel' == cmd:
+            if not cmd == 'bdist_wheel':
                 continue
             artifact = self._upload_library(local_file)
             self._install_library(artifact)
