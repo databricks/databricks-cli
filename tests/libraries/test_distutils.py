@@ -29,8 +29,7 @@ import databricks_cli.libraries.distutils as st
 
 from databricks_cli.utils import InvalidConfigurationError
 import setuptools.dist as dist
-from databricks_cli.configure.provider import DatabricksConfig, DatabricksConfigProvider
-
+from databricks_cli.configure.provider import DatabricksConfig, DatabricksConfigProvider, set_config_provider
 
 
 @pytest.fixture()
@@ -57,6 +56,7 @@ def test_sets_name():
 
     ilc = st.InstallLibraryCommand(d)
     ilc.initialize_options()
+    ilc.cluster_id = 'abc'
     ilc.finalize_options()
 
     assert ilc.dbfs_path == 'dbfs:/FileStore/jars/foo'
@@ -73,6 +73,7 @@ def test_gets_api_client():
 
     ilc = st.InstallLibraryCommand(d)
     ilc.initialize_options()
+    ilc.cluster_id = 'abc'
     ilc.finalize_options()
 
     api_client = ilc._configure_api()
@@ -85,6 +86,7 @@ def test_gets_api_client_with_profile():
 
     ilc = st.InstallLibraryCommand(d)
     ilc.initialize_options()
+    ilc.cluster_id = 'abc'
     ilc.databricks_cli_profile = str(time.time())
     ilc.finalize_options()
 
@@ -103,6 +105,7 @@ def test_upload_library():
 
     ilc = st.InstallLibraryCommand(d)
     ilc.initialize_options()
+    ilc.cluster_id = 'abc'
     ilc.finalize_options()
 
     with mock.patch('databricks_cli.dbfs.api.DbfsApi.put_file') as put_file:
@@ -118,6 +121,7 @@ def test_run_stuff():
 
     ilc = st.InstallLibraryCommand(d)
     ilc.initialize_options()
+    ilc.cluster_id = 'abc'
     ilc.finalize_options()
 
     def _upload_library(f):
