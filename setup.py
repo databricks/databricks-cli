@@ -44,6 +44,8 @@ setup(
         [console_scripts]
         databricks=databricks_cli.cli:cli
         dbfs=databricks_cli.dbfs.cli:dbfs_group
+        [distutils.commands]
+        databricks_install=databricks_cli.libraries.distutils:InstallLibraryCommand
     ''',
     zip_safe=False,
     author='Andrew Chen',
