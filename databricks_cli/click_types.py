@@ -110,6 +110,11 @@ class NetworkIdClickType(ParamType):
     help = 'Databricks Workspace Network Id'
 
 
+class CustomerManagedKeyIdClickType(ParamType):
+    name = 'CUSTOMER_MANAGED_KEY_ID'
+    help = 'Databricks Workspace Customer Managed Key Id'
+
+
 class WorkspaceIdClickType(ParamType):
     name = 'WORKSPACE_ID'
     help = 'Databricks Workspace Id'

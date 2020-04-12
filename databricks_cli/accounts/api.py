@@ -31,61 +31,100 @@ class AccountsApi(object):
         self.client = AccountsService(api_client)
 
     def create_credentials(self, account_id, json):
-        """Create a new credentials object with AWS IAM role reference."""
+        """Create a new credentials object for the AWS IAM role reference."""
         if account_id is None:
             raise TypeError('Expected account_id')
         endpoint = "/accounts/%s/credentials" % (account_id)
         return self.client.client.perform_query('POST', endpoint, data=json)
 
     def get_credentials(self, account_id, credentials_id):
-        """Get the credentials object with the given credentials id."""
+        """Get the credentials object for the given credentials id."""
         return self.client.get_credentials(account_id, credentials_id)
+
+    def list_credentials(self, account_id):
+        """Get all credentials objects for the given account."""
+        return self.client.list_credentials(account_id)
 
     def delete_credentials(self, account_id, credentials_id):
         """Delete the credentials object for the given credentials id."""
         return self.client.delete_credentials(account_id, credentials_id)
 
     def create_storage_config(self, account_id, json):
-        """Create a new storage config object with AWS bucket reference."""
+        """Create a new storage config object for the AWS bucket reference."""
         if account_id is None:
             raise TypeError('Expected account_id')
         endpoint = "/accounts/%s/storage-configurations" % (account_id)
         return self.client.client.perform_query('POST', endpoint, data=json)
 
     def get_storage_config(self, account_id, storage_config_id):
-        """Get the storage config object with the given storage config id."""
+        """Get the storage config object for the given storage config id."""
         return self.client.get_storage_config(account_id, storage_config_id)
+
+    def list_storage_configs(self, account_id):
+        """Get all storage config objects for the given account."""
+        return self.client.list_storage_configs(account_id)
 
     def delete_storage_config(self, account_id, storage_config_id):
         """Delete the storage config object for the given storage config id."""
         return self.client.delete_storage_config(account_id, storage_config_id)
 
     def create_network(self, account_id, json):
-        """Create a new network object with AWS network infrastructure reference."""
+        """Create a new network object for the AWS network infrastructure reference."""
         if account_id is None:
             raise TypeError('Expected account_id')
         endpoint = "/accounts/%s/networks" % (account_id)
         return self.client.client.perform_query('POST', endpoint, data=json)
 
     def get_network(self, account_id, network_id):
-        """Get the network object with the given network id."""
+        """Get the network object for the given network id."""
         return self.client.get_network(account_id, network_id)
+
+    def list_networks(self, account_id):
+        """Get all network objects for the given account."""
+        return self.client.list_networks(account_id)
 
     def delete_network(self, account_id, network_id):
         """Delete the network object for the given network id."""
         return self.client.delete_network(account_id, network_id)
 
+    def create_customer_managed_key(self, account_id, json):
+        """Create a new customer managed key object for the AWS KMS key reference."""
+        if account_id is None:
+            raise TypeError('Expected account_id')
+        endpoint = "/accounts/%s/customer-managed-keys" % (account_id)
+        return self.client.client.perform_query('POST', endpoint, data=json)
+
+    def get_customer_managed_key(self, account_id, customer_managed_key_id):
+        """Get the customer managed key object for the given customer managed key id."""
+        return self.client.get_customer_managed_key(account_id, customer_managed_key_id)
+
+    def list_customer_managed_keys(self, account_id):
+        """Get all customer managed key objects for the given account."""
+        return self.client.list_customer_managed_keys(account_id)
+
     def create_workspace(self, account_id, json):
-        """Create a new workspace with required references."""
+        """Create a new workspace with the required references."""
         if account_id is None:
             raise TypeError('Expected account_id')
         endpoint = "/accounts/%s/workspaces" % (account_id)
         return self.client.client.perform_query('POST', endpoint, data=json)
 
     def get_workspace(self, account_id, workspace_id):
-        """Get the workspace details with the given workspace id."""
+        """Get the workspace details for the given workspace id."""
         return self.client.get_workspace(account_id, workspace_id)
+
+    def list_workspaces(self, account_id):
+        """Get all workspaces for the given account."""
+        return self.client.list_workspaces(account_id)
 
     def delete_workspace(self, account_id, workspace_id):
         """Delete the workspace for the given workspace id."""
         return self.client.delete_workspace(account_id, workspace_id)
+
+    def list_customer_managed_key_hist_by_workspace(self, account_id, workspace_id):
+        """Get the history of customer managed key objects for the given workspace id."""
+        return self.client.list_customer_managed_key_hist_by_workspace(account_id, workspace_id)
+
+    def list_customer_managed_key_hist_by_account(self, account_id):
+        """Get the history of customer managed key objects for the given account."""
+        return self.client.list_customer_managed_key_hist_by_account(account_id)
