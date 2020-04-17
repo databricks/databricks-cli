@@ -135,7 +135,7 @@ TEST_STACK = {
         {
             api.RESOURCE_ID: "NoStatusResource",
             api.RESOURCE_SERVICE: api.DBFS_SERVICE,
-            "writeStatus": False,
+            api.RESOURCE_WRITE_STATUS: False,
             api.RESOURCE_PROPERTIES:  {
                 api.DBFS_RESOURCE_SOURCE_PATH: 'test.jar',
                 api.DBFS_RESOURCE_PATH: 'dbfs:/test/test-no-status.jar',
