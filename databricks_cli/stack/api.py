@@ -50,6 +50,7 @@ STACK_DEPLOYED = 'deployed_resources'  # For Stack Status
 # Resource Fields
 RESOURCE_ID = 'id'
 RESOURCE_SERVICE = 'service'
+RESOURCE_WRITE_STATUS = 'writeStatus'
 RESOURCE_PROPERTIES = 'properties'
 
 # Resource Status Fields
@@ -121,7 +122,9 @@ class StackApi(object):
                                                         resource_status,
                                                         headers=headers,
                                                         **kwargs)
-            resource_statuses.append(new_resource_status)
+
+            if resource_config.get(RESOURCE_WRITE_STATUS, True):
+                resource_statuses.append(new_resource_status)
             click.echo('#' * 80)
 
         new_stack_status = {STACK_NAME: stack_name,
