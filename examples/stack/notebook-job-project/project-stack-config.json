@@ -16,8 +16,8 @@
       "properties": {
         "name": "[Databricks] Stack CLI Example: Hello",
         "new_cluster": {
-          "spark_version": "4.0.x-scala2.11",
-          "node_type_id": "Standard_F16s",
+          "spark_version": "6.5.x-scala2.11",
+          "node_type_id": "Standard_F4s",
           "num_workers": 1
         },
         "timeout_seconds": 1200,
