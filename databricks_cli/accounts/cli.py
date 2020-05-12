@@ -24,8 +24,9 @@
 
 import click
 
-from databricks_cli.click_types import AccountIdClickType, CredentialsIdClickType, StorageConfigIdClickType, \
-    NetworkIdClickType, CustomerManagedKeyIdClickType, WorkspaceIdClickType, JsonClickType
+from databricks_cli.click_types import AccountIdClickType, CredentialsIdClickType, \
+    StorageConfigIdClickType, NetworkIdClickType, CustomerManagedKeyIdClickType, \
+    WorkspaceIdClickType, JsonClickType
 from databricks_cli.accounts.api import AccountsApi
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
@@ -33,28 +34,29 @@ from databricks_cli.version import print_version_callback, version
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help="Create a new credentials object for the AWS IAM role reference.")
+        short_help="Create a new credentials object for the AWS IAM role reference.")
 @click.option('--account-id', required=True, type=AccountIdClickType(),
-              help=AccountIdClickType.help)
+        help=AccountIdClickType.help)
 @click.option('--json-file', default=None, type=click.Path(),
-              help='File containing JSON request to POST to /api/2.0/accounts/{account_id}/credentials.')
+        help='File containing JSON request to POST to /api/2.0/accounts/{account_id}/credentials.')
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/accounts/{account_id}/credentials'))
+        help=JsonClickType.help('/api/2.0/accounts/{account_id}/credentials'))
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
 def create_credentials_cli(api_client, account_id, json_file, json):
     """Create a new credentials object for the AWS IAM role reference."""
-    json_cli_base(json_file, json, lambda json: AccountsApi(api_client).create_credentials(account_id, json))
+    json_cli_base(json_file, json, 
+        lambda json: AccountsApi(api_client).create_credentials(account_id, json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help="Get the credentials object for the given credentials id.")
+        short_help="Get the credentials object for the given credentials id.")
 @click.option('--account-id', required=True, type=AccountIdClickType(),
-              help=AccountIdClickType.help)
+        help=AccountIdClickType.help)
 @click.option("--credentials-id", required=True, type=CredentialsIdClickType(),
-              help=CredentialsIdClickType.help)
+        help=CredentialsIdClickType.help)
 @debug_option
 @profile_option
 @eat_exceptions
@@ -66,9 +68,9 @@ def get_credentials_cli(api_client, account_id, credentials_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help="Get all credentials objects for the given account.")
+        short_help="Get all credentials objects for the given account.")
 @click.option('--account-id', required=True, type=AccountIdClickType(),
-              help=AccountIdClickType.help)
+        help=AccountIdClickType.help)
 @debug_option
 @profile_option
 @eat_exceptions
@@ -80,11 +82,11 @@ def list_credentials_cli(api_client, account_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help="Delete the credentials object for the given credentials id.")
+        short_help="Delete the credentials object for the given credentials id.")
 @click.option('--account-id', required=True, type=AccountIdClickType(),
-              help=AccountIdClickType.help)
+        help=AccountIdClickType.help)
 @click.option("--credentials-id", required=True, type=CredentialsIdClickType(),
-              help=CredentialsIdClickType.help)
+        help=CredentialsIdClickType.help)
 @debug_option
 @profile_option
 @eat_exceptions
@@ -96,28 +98,30 @@ def delete_credentials_cli(api_client, account_id, credentials_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help="Create a new storage config object for the AWS bucket reference.")
+        short_help="Create a new storage config object for the AWS bucket reference.")
 @click.option('--account-id', required=True, type=AccountIdClickType(),
-              help=AccountIdClickType.help)
+        help=AccountIdClickType.help)
 @click.option('--json-file', default=None, type=click.Path(),
-              help='File containing JSON request to POST to /api/2.0/accounts/{account_id}/storage-configurations.')
+        help='File containing JSON request to POST to \
+            /api/2.0/accounts/{account_id}/storage-configurations.')
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/accounts/{account_id}/storage-configurations'))
+        help=JsonClickType.help('/api/2.0/accounts/{account_id}/storage-configurations'))
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
 def create_storage_config_cli(api_client, account_id, json_file, json):
     """Create a new storage config object for the AWS bucket reference."""
-    json_cli_base(json_file, json, lambda json: AccountsApi(api_client).create_storage_config(account_id, json))
+    json_cli_base(json_file, json, 
+        lambda json: AccountsApi(api_client).create_storage_config(account_id, json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help="Get the storage config object for the given storage config id.")
+        short_help="Get the storage config object for the given storage config id.")
 @click.option('--account-id', required=True, type=AccountIdClickType(),
-              help=AccountIdClickType.help)
+        help=AccountIdClickType.help)
 @click.option("--storage-config-id", required=True, type=StorageConfigIdClickType(),
-              help=StorageConfigIdClickType.help)
+        help=StorageConfigIdClickType.help)
 @debug_option
 @profile_option
 @eat_exceptions
@@ -129,9 +133,9 @@ def get_storage_config_cli(api_client, account_id, storage_config_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help="Get all storage config objects for the given account.")
+        short_help="Get all storage config objects for the given account.")
 @click.option('--account-id', required=True, type=AccountIdClickType(),
-              help=AccountIdClickType.help)
+        help=AccountIdClickType.help)
 @debug_option
 @profile_option
 @eat_exceptions
@@ -143,11 +147,11 @@ def list_storage_configs_cli(api_client, account_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help="Delete the storage config object for the given storage config id.")
+        short_help="Delete the storage config object for the given storage config id.")
 @click.option('--account-id', required=True, type=AccountIdClickType(),
-              help=AccountIdClickType.help)
+        help=AccountIdClickType.help)
 @click.option("--storage-config-id", required=True, type=StorageConfigIdClickType(),
-              help=StorageConfigIdClickType.help)
+        help=StorageConfigIdClickType.help)
 @debug_option
 @profile_option
 @eat_exceptions
@@ -159,28 +163,29 @@ def delete_storage_config_cli(api_client, account_id, storage_config_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help="Create a new network object for the AWS network infrastructure reference.")
+        short_help="Create a new network object for the AWS network infrastructure reference.")
 @click.option('--account-id', required=True, type=AccountIdClickType(),
-              help=AccountIdClickType.help)
+        help=AccountIdClickType.help)
 @click.option('--json-file', default=None, type=click.Path(),
-              help='File containing JSON request to POST to /api/2.0/accounts/{account_id}/networks.')
+        help='File containing JSON request to POST to /api/2.0/accounts/{account_id}/networks.')
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/accounts/{account_id}/networks'))
+        help=JsonClickType.help('/api/2.0/accounts/{account_id}/networks'))
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
 def create_network_cli(api_client, account_id, json_file, json):
     """Create a new network object for the AWS network infrastructure reference."""
-    json_cli_base(json_file, json, lambda json: AccountsApi(api_client).create_network(account_id, json))
+    json_cli_base(json_file, json, 
+        lambda json: AccountsApi(api_client).create_network(account_id, json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help="Get the network object for the given network id.")
+        short_help="Get the network object for the given network id.")
 @click.option('--account-id', required=True, type=AccountIdClickType(),
-              help=AccountIdClickType.help)
+        help=AccountIdClickType.help)
 @click.option("--network-id", required=True, type=NetworkIdClickType(),
-              help=NetworkIdClickType.help)
+        help=NetworkIdClickType.help)
 @debug_option
 @profile_option
 @eat_exceptions
@@ -192,9 +197,9 @@ def get_network_cli(api_client, account_id, network_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help="Get all network objects for the given account.")
+        short_help="Get all network objects for the given account.")
 @click.option('--account-id', required=True, type=AccountIdClickType(),
-              help=AccountIdClickType.help)
+        help=AccountIdClickType.help)
 @debug_option
 @profile_option
 @eat_exceptions
@@ -206,11 +211,11 @@ def list_networks_cli(api_client, account_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help="Delete the network object for the given network id.")
+        short_help="Delete the network object for the given network id.")
 @click.option('--account-id', required=True, type=AccountIdClickType(),
-              help=AccountIdClickType.help)
+        help=AccountIdClickType.help)
 @click.option("--network-id", required=True, type=NetworkIdClickType(),
-              help=NetworkIdClickType.help)
+        help=NetworkIdClickType.help)
 @debug_option
 @profile_option
 @eat_exceptions
@@ -222,28 +227,30 @@ def delete_network_cli(api_client, account_id, network_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help="Create a new customer managed key object for the AWS KMS key reference.")
+        short_help="Create a new customer managed key object for the AWS KMS key reference.")
 @click.option('--account-id', required=True, type=AccountIdClickType(),
-              help=AccountIdClickType.help)
+        help=AccountIdClickType.help)
 @click.option('--json-file', default=None, type=click.Path(),
-              help='File containing JSON request to POST to /api/2.0/accounts/{account_id}/customer-managed-keys.')
+        help='File containing JSON request to POST to \
+            /api/2.0/accounts/{account_id}/customer-managed-keys.')
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/accounts/{account_id}/customer-managed-keys'))
+        help=JsonClickType.help('/api/2.0/accounts/{account_id}/customer-managed-keys'))
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
 def create_customer_managed_key_cli(api_client, account_id, json_file, json):
     """Create a new customer managed key object for the AWS KMS key reference."""
-    json_cli_base(json_file, json, lambda json: AccountsApi(api_client).create_customer_managed_key(account_id, json))
+    json_cli_base(json_file, json, 
+        lambda json: AccountsApi(api_client).create_customer_managed_key(account_id, json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help="Get the customer managed key object for the given customer managed key id.")
+        short_help="Get the customer managed key object for the given customer managed key id.")
 @click.option('--account-id', required=True, type=AccountIdClickType(),
-              help=AccountIdClickType.help)
+        help=AccountIdClickType.help)
 @click.option("--customer-managed-key-id", required=True, type=CustomerManagedKeyIdClickType(),
-              help=CustomerManagedKeyIdClickType.help)
+        help=CustomerManagedKeyIdClickType.help)
 @debug_option
 @profile_option
 @eat_exceptions
@@ -255,9 +262,9 @@ def get_customer_managed_key_cli(api_client, account_id, customer_managed_key_id
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help="Get all customer managed key objects for the given account.")
+        short_help="Get all customer managed key objects for the given account.")
 @click.option('--account-id', required=True, type=AccountIdClickType(),
-              help=AccountIdClickType.help)
+        help=AccountIdClickType.help)
 @debug_option
 @profile_option
 @eat_exceptions
@@ -269,28 +276,29 @@ def list_customer_managed_keys_cli(api_client, account_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help="Create a new workspace with the required references.")
+        short_help="Create a new workspace with the required references.")
 @click.option('--account-id', required=True, type=AccountIdClickType(),
-              help=AccountIdClickType.help)
+        help=AccountIdClickType.help)
 @click.option('--json-file', default=None, type=click.Path(),
-              help='File containing JSON request to POST to /api/2.0/accounts/{account_id}/workspaces.')
+        help='File containing JSON request to POST to /api/2.0/accounts/{account_id}/workspaces.')
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/accounts/{account_id}/workspaces'))
+        help=JsonClickType.help('/api/2.0/accounts/{account_id}/workspaces'))
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
 def create_workspace_cli(api_client, account_id, json_file, json):
     """Create a new workspace with the required references."""
-    json_cli_base(json_file, json, lambda json: AccountsApi(api_client).create_workspace(account_id, json))
+    json_cli_base(json_file, json, 
+        lambda json: AccountsApi(api_client).create_workspace(account_id, json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help="Get the workspace details for the given workspace id.")
+        short_help="Get the workspace details for the given workspace id.")
 @click.option('--account-id', required=True, type=AccountIdClickType(),
-              help=AccountIdClickType.help)
+        help=AccountIdClickType.help)
 @click.option("--workspace-id", required=True, type=WorkspaceIdClickType(),
-              help=WorkspaceIdClickType.help)
+        help=WorkspaceIdClickType.help)
 @debug_option
 @profile_option
 @eat_exceptions
@@ -302,9 +310,9 @@ def get_workspace_cli(api_client, account_id, workspace_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help="Get all workspaces for the given account.")
+        short_help="Get all workspaces for the given account.")
 @click.option('--account-id', required=True, type=AccountIdClickType(),
-              help=AccountIdClickType.help)
+        help=AccountIdClickType.help)
 @debug_option
 @profile_option
 @eat_exceptions
@@ -316,11 +324,11 @@ def list_workspaces_cli(api_client, account_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help="Delete the workspace for the given workspace id.")
+        short_help="Delete the workspace for the given workspace id.")
 @click.option('--account-id', required=True, type=AccountIdClickType(),
-              help=AccountIdClickType.help)
+        help=AccountIdClickType.help)
 @click.option("--workspace-id", required=True, type=WorkspaceIdClickType(),
-              help=WorkspaceIdClickType.help)
+        help=WorkspaceIdClickType.help)
 @debug_option
 @profile_option
 @eat_exceptions
@@ -332,25 +340,26 @@ def delete_workspace_cli(api_client, account_id, workspace_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help="Get the history of customer managed key objects for the given workspace id.")
+        short_help="Get the history of customer managed key objects for the given workspace id.")
 @click.option('--account-id', required=True, type=AccountIdClickType(),
-              help=AccountIdClickType.help)
+        help=AccountIdClickType.help)
 @click.option("--workspace-id", required=True, type=WorkspaceIdClickType(),
-              help=WorkspaceIdClickType.help)
+        help=WorkspaceIdClickType.help)
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
 def list_customer_managed_key_hist_by_workspace_cli(api_client, account_id, workspace_id):
     """Get the history of customer managed key objects for the given workspace id."""
-    content = AccountsApi(api_client).list_customer_managed_key_hist_by_workspace(account_id, workspace_id)
+    content = AccountsApi(api_client). \
+                list_customer_managed_key_hist_by_workspace(account_id, workspace_id)
     click.echo(pretty_format(content))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help="Get the history of customer managed key objects for the given account.")
+        short_help="Get the history of customer managed key objects for the given account.")
 @click.option('--account-id', required=True, type=AccountIdClickType(),
-              help=AccountIdClickType.help)
+        help=AccountIdClickType.help)
 @debug_option
 @profile_option
 @eat_exceptions
@@ -362,9 +371,9 @@ def list_customer_managed_key_hist_by_account_cli(api_client, account_id):
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
-             short_help='Utility to interact with Databricks accounts.')
+        short_help='Utility to interact with Databricks accounts.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
-              expose_value=False, is_eager=True, help=version)
+        expose_value=False, is_eager=True, help=version)
 @debug_option
 @profile_option
 @eat_exceptions
@@ -393,5 +402,7 @@ accounts_group.add_command(create_workspace_cli, name="create-workspace")
 accounts_group.add_command(get_workspace_cli, name="get-workspace")
 accounts_group.add_command(list_workspaces_cli, name="list-workspace")
 accounts_group.add_command(delete_workspace_cli, name="delete-workspace")
-accounts_group.add_command(list_customer_managed_key_hist_by_workspace_cli, name="list-cust-managed-key-hist-by-ws")
-accounts_group.add_command(list_customer_managed_key_hist_by_account_cli, name="list-cust-managed-key-hist-by-acc")
+accounts_group.add_command(list_customer_managed_key_hist_by_workspace_cli, 
+                name="list-cust-managed-key-hist-by-ws")
+accounts_group.add_command(list_customer_managed_key_hist_by_account_cli, 
+                name="list-cust-managed-key-hist-by-acc")
