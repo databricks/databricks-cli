@@ -21,8 +21,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
 from json import loads as json_loads
 import os
+
+if six.PY2:
+    from urlparse import urlparse, urljoin
+elif six.PY3:
+    from urllib.parse import urlparse, urljoin
 
 import click
 
@@ -60,6 +66,11 @@ def deploy_cli(api_client, spec_arg, spec):
     src = spec_arg if bool(spec_arg) else spec
     spec_obj = _read_spec(src)
     PipelinesApi(api_client).deploy(spec_obj)
+
+    pipeline_id = spec_obj['id']
+    base_url = "{0.scheme}://{0.netloc}/".format(urlparse(api_client.url))
+    pipeline_url = urljoin(base_url, "#joblist/pipelines/{}".format(pipeline_id))
+    click.echo(pipeline_url)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
