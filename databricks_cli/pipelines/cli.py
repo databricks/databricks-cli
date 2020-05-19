@@ -22,13 +22,12 @@
 # limitations under the License.
 
 import os
-import six
 import uuid
 import json
 
-if six.PY2:
+try:
     from urlparse import urlparse, urljoin
-elif six.PY3:
+except ImportError:
     from urllib.parse import urlparse, urljoin
 
 import click
