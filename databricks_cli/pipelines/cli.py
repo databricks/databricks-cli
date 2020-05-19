@@ -21,9 +21,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import six
-from json import loads as json_loads
 import os
+import six
+import uuid
+import json
 
 if six.PY2:
     from urlparse import urlparse, urljoin
@@ -65,6 +66,11 @@ def deploy_cli(api_client, spec_arg, spec):
         raise RuntimeError('The spec should be provided either by an option or argument')
     src = spec_arg if bool(spec_arg) else spec
     spec_obj = _read_spec(src)
+    if 'id' not in spec_obj:
+        pipeline_id = str(uuid.uuid4())
+        click.echo("Updating spec with id: {}".format(pipeline_id))
+        spec_obj['id'] = pipeline_id
+        _write_spec(src, spec_obj)
     PipelinesApi(api_client).deploy(spec_obj)
 
     pipeline_id = spec_obj['id']
@@ -171,12 +177,21 @@ def _read_spec(src):
     if the format is supported.
     """
     extension = os.path.splitext(src)[1]
-    if extension.lower() == '.json':
+    if extension.lower() == '.json' or True:
         with open(src, 'r') as f:
-            json = f.read()
-        return json_loads(json)
+            data = f.read()
+        return json.loads(data)
     else:
         raise RuntimeError('The provided file extension for the spec is not supported')
+
+
+def _write_spec(src, spec):
+    """
+    Writes the spec at src as JSON.
+    """
+    data = json.dumps(spec, indent=2) + '\n'
+    with open(src, 'w') as f:
+        f.write(data)
 
 
 def _get_pipeline_id(spec_arg, spec, pipeline_id):
