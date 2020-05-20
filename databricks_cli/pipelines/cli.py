@@ -33,7 +33,7 @@ except ImportError:
 import click
 
 from databricks_cli.click_types import PipelineSpecClickType, PipelineIdClickType
-from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format
+from databricks_cli.utils import pipelines_exception_eater, CONTEXT_SETTINGS, pretty_format
 from databricks_cli.version import print_version_callback, version
 from databricks_cli.pipelines.api import PipelinesApi
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
@@ -45,7 +45,7 @@ from databricks_cli.configure.config import provide_api_client, profile_option, 
 @click.option('--spec', default=None, type=PipelineSpecClickType(), help=PipelineSpecClickType.help)
 @debug_option
 @profile_option
-@eat_exceptions
+@pipelines_exception_eater
 @provide_api_client
 def deploy_cli(api_client, spec_arg, spec):
     """
@@ -86,7 +86,7 @@ def deploy_cli(api_client, spec_arg, spec):
               help=PipelineIdClickType.help)
 @debug_option
 @profile_option
-@eat_exceptions
+@pipelines_exception_eater
 @provide_api_client
 def delete_cli(api_client, spec_arg, spec, pipeline_id):
     """
@@ -117,7 +117,7 @@ def delete_cli(api_client, spec_arg, spec, pipeline_id):
               help=PipelineIdClickType.help)
 @debug_option
 @profile_option
-@eat_exceptions
+@pipelines_exception_eater
 @provide_api_client
 def get_cli(api_client, spec_arg, spec, pipeline_id):
     """
@@ -147,7 +147,7 @@ def get_cli(api_client, spec_arg, spec, pipeline_id):
               help=PipelineIdClickType.help)
 @debug_option
 @profile_option
-@eat_exceptions
+@pipelines_exception_eater
 @provide_api_client
 def reset_cli(api_client, spec_arg, spec, pipeline_id):
     """

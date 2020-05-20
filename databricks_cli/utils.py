@@ -46,9 +46,35 @@ def eat_exceptions(function):
                                'reconfigure with ``dbfs configure``')
             else:
                 error_and_quit(exception.response.content)
-        except Exception as exception: # noqa
+        except Exception as exception:  # noqa
             if not DEBUG_MODE:
                 error_and_quit('{}: {}'.format(type(exception).__name__, str(exception)))
+
+    decorator.__doc__ = function.__doc__
+    return decorator
+
+
+def pipelines_exception_eater(function):
+    @six.wraps(function)
+    def decorator(*args, **kwargs):
+        try:
+            return function(*args, **kwargs)
+        except HTTPError as exception:  # noqa
+            if exception.response.status_code == 401:
+                error_and_quit('Your authentication information may be incorrect. Please '
+                               + 'reconfigure with ``dbfs configure``')
+
+            elif exception.response.status_code == 400:
+                exp_context = json_loads(exception.response.content.decode('utf-8'))
+                message = "Error: {}\n".format((exp_context['error_code']))
+                message += exp_context['message']
+                error_and_quit(message)
+            else:
+                error_and_quit(exception.response.content)
+        except Exception as exception:  # noqa
+            if not DEBUG_MODE:
+                error_and_quit('{}: {}'.format(type(exception).__name__, str(exception)))
+
     decorator.__doc__ = function.__doc__
     return decorator
 
