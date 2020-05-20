@@ -33,7 +33,7 @@ except ImportError:
 import click
 
 from databricks_cli.click_types import PipelineSpecClickType, PipelineIdClickType
-from databricks_cli.utils import pipelines_exception_eater, CONTEXT_SETTINGS, pretty_format
+from databricks_cli.utils import pipelines_exception_eater, CONTEXT_SETTINGS, pretty_format, error_and_quit
 from databricks_cli.version import print_version_callback, version
 from databricks_cli.pipelines.api import PipelinesApi
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
@@ -177,9 +177,12 @@ def _read_spec(src):
     """
     extension = os.path.splitext(src)[1]
     if extension.lower() == '.json' or True:
-        with open(src, 'r') as f:
-            data = f.read()
-        return json.loads(data)
+        try:
+            with open(src, 'r') as f:
+                data = f.read()
+            return json.loads(data)
+        except json.JSONDecodeError as e:
+            error_and_quit("Invalid JSON provided in spec\n{}".format(e))
     else:
         raise RuntimeError('The provided file extension for the spec is not supported')
 
