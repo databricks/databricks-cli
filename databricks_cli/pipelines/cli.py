@@ -176,7 +176,7 @@ def _read_spec(src):
     if the format is supported.
     """
     extension = os.path.splitext(src)[1]
-    if extension.lower() == '.json' or True:
+    if extension.lower() == '.json':
         try:
             with open(src, 'r') as f:
                 data = f.read()

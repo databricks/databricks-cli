@@ -55,6 +55,11 @@ def eat_exceptions(function):
 
 
 def pipelines_exception_eater(function):
+    """
+    Formats error messages from the pipelines API while keeping the existing
+    behavior of eat_exception
+    """
+
     @six.wraps(function)
     def decorator(*args, **kwargs):
         try:
@@ -66,8 +71,7 @@ def pipelines_exception_eater(function):
 
             elif exception.response.status_code == 400:
                 exp_context = json_loads(exception.response.content.decode('utf-8'))
-                message = "Error: {}\n".format((exp_context['error_code']))
-                message += exp_context['message']
+                message = exp_context['error_code'] + '\n' + exp_context['message']
                 error_and_quit(message)
             else:
                 error_and_quit(exception.response.content)
