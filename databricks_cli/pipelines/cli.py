@@ -33,10 +33,11 @@ except ImportError:
 import click
 
 from databricks_cli.click_types import PipelineSpecClickType, PipelineIdClickType
-from databricks_cli.utils import pipelines_exception_eater, CONTEXT_SETTINGS, pretty_format, error_and_quit
 from databricks_cli.version import print_version_callback, version
 from databricks_cli.pipelines.api import PipelinesApi
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
+from databricks_cli.utils import pipelines_exception_eater, CONTEXT_SETTINGS, pretty_format, \
+    error_and_quit
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
