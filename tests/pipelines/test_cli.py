@@ -257,3 +257,12 @@ def test_get_cli_no_id(pipelines_api_mock):
     result = runner.invoke(cli.get_cli, [])
     assert result.exit_code == 1
     assert pipelines_api_mock.get.call_count == 0
+
+
+def test_validate_pipeline_id():
+    unicode_string = b'pipeline_id-\xe2\x9d\x8c-123'.decode('utf-8')
+    assert cli._validate_pipeline_id(unicode_string) is False
+    assert cli._validate_pipeline_id('pipeline_id-?-123') is False
+    assert cli._validate_pipeline_id('pipeline_id-\\-\'-123') is False
+    assert cli._validate_pipeline_id('pipeline_id-/-123') is False
+    assert cli._validate_pipeline_id('pipeline_id-ac345cd1')

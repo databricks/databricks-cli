@@ -24,6 +24,7 @@
 import os
 import uuid
 import json
+import string
 
 try:
     from urlparse import urlparse, urljoin
@@ -38,6 +39,8 @@ from databricks_cli.pipelines.api import PipelinesApi
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.utils import pipelines_exception_eater, CONTEXT_SETTINGS, pretty_format, \
     error_and_quit
+
+PIPELINE_ID_PERMITTED_CHARACTERS = set(string.ascii_letters + string.digits + '-_')
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -71,6 +74,8 @@ def deploy_cli(api_client, spec_arg, spec):
         click.echo("Updating spec with id: {}".format(pipeline_id))
         spec_obj['id'] = pipeline_id
         _write_spec(src, spec_obj)
+    elif not _validate_pipeline_id(spec_obj['id']):
+        error_and_quit("Pipeline id has invalid characters")
     PipelinesApi(api_client).deploy(spec_obj)
 
     pipeline_id = spec_obj['id']
@@ -209,7 +214,16 @@ def _get_pipeline_id(spec_arg, spec, pipeline_id):
     if bool(spec_arg) or bool(spec):
         src = spec_arg if bool(spec_arg) else spec
         pipeline_id = _read_spec(src)["id"]
+    if not _validate_pipeline_id(pipeline_id):
+        error_and_quit("Pipeline id has invalid characters")
     return pipeline_id
+
+
+def _validate_pipeline_id(pipeline_id):
+    """
+    Checks if the pipeline_id only contain -, _ and alphanumeric characters
+    """
+    return set(pipeline_id) <= PIPELINE_ID_PERMITTED_CHARACTERS
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
