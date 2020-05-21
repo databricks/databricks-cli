@@ -82,6 +82,26 @@ def _overwrite_config(raw_config):
     os.chmod(config_path, 0o600)
 
 
+def get_all_profiles():
+    """
+    Returns a list of all the profiles present in the databricks config file together with
+    the hosts and usernames the profiles are configured with.
+
+    :return: list
+    """
+    config = _fetch_from_fs()
+    ret = []
+    if config[DEFAULT_SECTION]:
+        ret.append([DEFAULT_SECTION,
+                    _get_option_if_exists(config, DEFAULT_SECTION, HOST),
+                    _get_option_if_exists(config, DEFAULT_SECTION, USERNAME)])
+    for section in config.sections():
+        ret.append([section,
+                    _get_option_if_exists(config, section, HOST),
+                    _get_option_if_exists(config, section, USERNAME)])
+    return ret
+
+
 def update_and_persist_config(profile, databricks_config):
     """
     Takes a DatabricksConfig and adds the in memory contents to the persisted version of the
