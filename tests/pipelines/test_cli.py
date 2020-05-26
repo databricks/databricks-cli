@@ -125,7 +125,7 @@ def test_delete_cli_incorrect_parameters(pipelines_api_mock, tmpdir):
 
 
 @provide_conf
-def test_deploy_spec_updated_with_id_if_pipeline_id_not_in_spec(pipelines_api_mock, tmpdir):  # noqa
+def test_deploy_spec_updated_with_id_if_pipeline_id_not_in_spec(pipelines_api_mock, tmpdir):
     path = tmpdir.join('/spec.json').strpath
     spec_with_no_id = '{"name": "no id"}'
     with open(path, 'w') as f:
@@ -138,7 +138,7 @@ def test_deploy_spec_updated_with_id_if_pipeline_id_not_in_spec(pipelines_api_mo
 
 
 @provide_conf
-def test_deploy_spec_pipeline_id_is_not_changed_if_provided_in_spec(pipelines_api_mock, tmpdir):  # noqa
+def test_deploy_spec_pipeline_id_is_not_changed_if_provided_in_spec(pipelines_api_mock, tmpdir):
     path = tmpdir.join('/spec.json').strpath
     with open(path, 'w') as f:
         f.write(DEPLOY_SPEC)
