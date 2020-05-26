@@ -226,10 +226,10 @@ def _validate_pipeline_id(pipeline_id):
     Checks if the pipeline_id only contain -, _ and alphanumeric characters
     """
     if len(pipeline_id) == 0:
-        return 'Empty pipeline id provided'
+        return u'Empty pipeline id provided'
     if not set(pipeline_id) <= PIPELINE_ID_PERMITTED_CHARACTERS:
-        message = 'Pipeline id {} has invalid character(s)\n'.format(pipeline_id)
-        message += "Valid characters are: _ - a-z A-Z 0-9"
+        message = u'Pipeline id {} has invalid character(s)\n'.format(pipeline_id)
+        message += u'Valid characters are: _ - a-z A-Z 0-9'
         return message
 
 
