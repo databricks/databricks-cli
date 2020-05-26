@@ -138,6 +138,18 @@ def test_deploy_spec_updated_with_id_if_pipeline_id_not_in_spec(pipelines_api_mo
 
 
 @provide_conf
+def test_deploy_spec_pipeline_id_is_not_changed_if_provided_in_spec(pipelines_api_mock, tmpdir):  # noqa
+    path = tmpdir.join('/spec.json').strpath
+    with open(path, 'w') as f:
+        f.write(DEPLOY_SPEC)
+    runner = CliRunner()
+    runner.invoke(cli.deploy_cli, ['--spec', path])
+    with open(path, 'r') as f:
+        spec = json.loads(f.read())
+    assert spec['id'] == '123'
+
+
+@provide_conf
 def test_deploy_delete_cli_incorrect_spec_extension(pipelines_api_mock, tmpdir):
     path = tmpdir.join('/spec.wrong_ext').strpath
     with open(path, 'w') as f:
@@ -261,8 +273,10 @@ def test_get_cli_no_id(pipelines_api_mock):
 
 def test_validate_pipeline_id():
     unicode_string = b'pipeline_id-\xe2\x9d\x8c-123'.decode('utf-8')
-    assert cli._validate_pipeline_id(unicode_string) is False
-    assert cli._validate_pipeline_id('pipeline_id-?-123') is False
-    assert cli._validate_pipeline_id('pipeline_id-\\-\'-123') is False
-    assert cli._validate_pipeline_id('pipeline_id-/-123') is False
-    assert cli._validate_pipeline_id('pipeline_id-ac345cd1')
+    assert 'invalid character(s)' in cli._validate_pipeline_id(unicode_string)
+    assert 'invalid character(s)' in cli._validate_pipeline_id('pipeline_id-?-123')
+    assert 'invalid character(s)' in cli._validate_pipeline_id('pipeline_id-\\-\'-123')
+    assert 'invalid character(s)' in cli._validate_pipeline_id('pipeline_id-/-123')
+    assert 'Empty pipeline id provided' in cli._validate_pipeline_id('')
+
+    assert cli._validate_pipeline_id('pipeline_id-ac345cd1') is None

@@ -71,17 +71,18 @@ def deploy_cli(api_client, spec_arg, spec):
     spec_obj = _read_spec(src)
     if 'id' not in spec_obj:
         pipeline_id = str(uuid.uuid4())
-        click.echo("Updating spec with id: {}".format(pipeline_id))
+        click.echo("Updating spec at {} with id: {}".format(src, pipeline_id))
         spec_obj['id'] = pipeline_id
         _write_spec(src, spec_obj)
-    elif not _validate_pipeline_id(spec_obj['id']):
-        error_and_quit("Pipeline id has invalid characters")
+    msg = _validate_pipeline_id(spec_obj['id'])
+    if msg is not None:
+        error_and_quit(msg)
     PipelinesApi(api_client).deploy(spec_obj)
 
     pipeline_id = spec_obj['id']
     base_url = "{0.scheme}://{0.netloc}/".format(urlparse(api_client.url))
     pipeline_url = urljoin(base_url, "#joblist/pipelines/{}".format(pipeline_id))
-    click.echo(pipeline_url)
+    click.echo("Pipeline successfully deployed: {}".format(pipeline_url))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -214,8 +215,9 @@ def _get_pipeline_id(spec_arg, spec, pipeline_id):
     if bool(spec_arg) or bool(spec):
         src = spec_arg if bool(spec_arg) else spec
         pipeline_id = _read_spec(src)["id"]
-    if not _validate_pipeline_id(pipeline_id):
-        error_and_quit("Pipeline id has invalid characters")
+    msg = _validate_pipeline_id(pipeline_id)
+    if msg is not None:
+        error_and_quit(msg)
     return pipeline_id
 
 
@@ -223,7 +225,12 @@ def _validate_pipeline_id(pipeline_id):
     """
     Checks if the pipeline_id only contain -, _ and alphanumeric characters
     """
-    return set(pipeline_id) <= PIPELINE_ID_PERMITTED_CHARACTERS
+    if len(pipeline_id) == 0:
+        return 'Empty pipeline id provided'
+    if not set(pipeline_id) <= PIPELINE_ID_PERMITTED_CHARACTERS:
+        message = 'Pipeline id {} has invalid character(s)\n'.format(pipeline_id)
+        message += "Valid characters are: _ - a-z A-Z 0-9"
+        return message
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
