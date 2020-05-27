@@ -88,7 +88,7 @@ def error_and_quit(message):
     context_object = ctx.ensure_object(ContextObject)
     if context_object.debug_mode:
         traceback.print_exc()
-    click.echo('Error: {}'.format(message))
+    click.echo(u'Error: {}'.format(message))
     sys.exit(1)
 
 

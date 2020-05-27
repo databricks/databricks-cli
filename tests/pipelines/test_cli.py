@@ -24,8 +24,9 @@
 # pylint:disable=redefined-outer-name
 
 import json
-import mock
+
 import click
+import mock
 import pytest
 from click.testing import CliRunner
 
