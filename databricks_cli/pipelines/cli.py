@@ -74,9 +74,7 @@ def deploy_cli(api_client, spec_arg, spec):
         click.echo("Updating spec at {} with id: {}".format(src, pipeline_id))
         spec_obj['id'] = pipeline_id
         _write_spec(src, spec_obj)
-    msg = _validate_pipeline_id(spec_obj['id'])
-    if msg is not None:
-        error_and_quit(msg)
+    _validate_pipeline_id(spec_obj['id'])
     PipelinesApi(api_client).deploy(spec_obj)
 
     pipeline_id = spec_obj['id']
@@ -215,9 +213,7 @@ def _get_pipeline_id(spec_arg, spec, pipeline_id):
     if bool(spec_arg) or bool(spec):
         src = spec_arg if bool(spec_arg) else spec
         pipeline_id = _read_spec(src)["id"]
-    msg = _validate_pipeline_id(pipeline_id)
-    if msg is not None:
-        error_and_quit(msg)
+    _validate_pipeline_id(pipeline_id)
     return pipeline_id
 
 
@@ -226,11 +222,11 @@ def _validate_pipeline_id(pipeline_id):
     Checks if the pipeline_id only contain -, _ and alphanumeric characters
     """
     if len(pipeline_id) == 0:
-        return u'Empty pipeline id provided'
+        error_and_quit(u'Empty pipeline id provided')
     if not set(pipeline_id) <= PIPELINE_ID_PERMITTED_CHARACTERS:
         message = u'Pipeline id {} has invalid character(s)\n'.format(pipeline_id)
         message += u'Valid characters are: _ - a-z A-Z 0-9'
-        return message
+        error_and_quit(message)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,

@@ -25,6 +25,7 @@
 
 import json
 import mock
+import click
 import pytest
 from click.testing import CliRunner
 
@@ -41,6 +42,15 @@ def pipelines_api_mock():
         _pipelines_api_mock = mock.MagicMock()
         PipelinesApiMock.return_value = _pipelines_api_mock
         yield _pipelines_api_mock
+
+
+@pytest.fixture()
+def click_ctx():
+    """
+    A dummy Click context to allow testing of methods that raise exceptions. Fixes Click capturing
+    actual exceptions and raising its own `RuntimeError: There is no active click context`.
+    """
+    return click.Context(click.Command('cmd'))
 
 
 @provide_conf
@@ -271,12 +281,13 @@ def test_get_cli_no_id(pipelines_api_mock):
     assert pipelines_api_mock.get.call_count == 0
 
 
-def test_validate_pipeline_id():
-    unicode_string = b'pipeline_id-\xe2\x9d\x8c-123'.decode('utf-8')
-    assert 'invalid character(s)' in cli._validate_pipeline_id(unicode_string)
-    assert 'invalid character(s)' in cli._validate_pipeline_id('pipeline_id-?-123')
-    assert 'invalid character(s)' in cli._validate_pipeline_id('pipeline_id-\\-\'-123')
-    assert 'invalid character(s)' in cli._validate_pipeline_id('pipeline_id-/-123')
-    assert 'Empty pipeline id provided' in cli._validate_pipeline_id('')
-
+def test_validate_pipeline_id(click_ctx):
+    empty_pipeline_id = ''
+    pipeline_id_with_unicode = b'pipeline_id-\xe2\x9d\x8c-123'.decode('utf-8')
+    invalid_pipline_ids = ['pipeline_id-?-123', 'pipeline_id-\\-\'-123', 'pipeline_id-/-123',
+                           pipeline_id_with_unicode, empty_pipeline_id]
+    with click_ctx:
+        for pipline_id in invalid_pipline_ids:
+            with pytest.raises(SystemExit):
+                cli._validate_pipeline_id(pipline_id)
     assert cli._validate_pipeline_id('pipeline_id-ac345cd1') is None
