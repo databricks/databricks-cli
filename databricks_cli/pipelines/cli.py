@@ -40,6 +40,11 @@ from databricks_cli.configure.config import provide_api_client, profile_option, 
 from databricks_cli.utils import pipelines_exception_eater, CONTEXT_SETTINGS, pretty_format, \
     error_and_quit
 
+try:
+    json_parse_exception = json.decoder.JSONDecodeError
+except AttributeError:  # Python 2
+    json_parse_exception = ValueError
+
 PIPELINE_ID_PERMITTED_CHARACTERS = set(string.ascii_letters + string.digits + '-_')
 
 
@@ -186,7 +191,7 @@ def _read_spec(src):
             with open(src, 'r') as f:
                 data = f.read()
             return json.loads(data)
-        except json.JSONDecodeError as e:
+        except json_parse_exception as e:
             error_and_quit("Invalid JSON provided in spec\n{}".format(e))
     else:
         raise RuntimeError('The provided file extension for the spec is not supported')
