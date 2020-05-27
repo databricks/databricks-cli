@@ -68,13 +68,15 @@ def pipelines_exception_eater(function):
             if exception.response.status_code == 401:
                 error_and_quit('Your authentication information may be incorrect. Please '
                                + 'reconfigure with ``dbfs configure``')
-
-            elif exception.response.status_code == 400:
-                exp_context = json_loads(exception.response.content.decode('utf-8'))
-                message = exp_context['error_code'] + '\n' + exp_context['message']
-                error_and_quit(message)
             else:
-                error_and_quit(exception.response.content)
+                try:
+                    exp_context = json_loads(exception.response.content.decode('utf-8'))
+                    message = exception.response.content
+                    if 'error_code' in exp_context and 'message' in exp_context:
+                        message = exp_context['error_code'] + '\n' + exp_context['message']
+                    error_and_quit(message)
+                except Exception:  # noqa
+                    error_and_quit(exception.response.content)
         except Exception as exception:  # noqa
             if not DEBUG_MODE:
                 error_and_quit('{}: {}'.format(type(exception).__name__, str(exception)))
