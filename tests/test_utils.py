@@ -82,7 +82,6 @@ def test_pipelines_exception_eater_http_error_401():
 
         test_function()
         assert error_and_quit_mock.call_count == 1
-        print(error_and_quit_mock.call_args)
         assert 'Your authentication information' in error_and_quit_mock.call_args[0][0]
 
 
@@ -102,10 +101,10 @@ def test_pipelines_exception_eater_non_401_http_error():
 
         test_function(content=b'{"error_code":"TEST_ERROR_CODE","message":"test message"}')
         assert error_and_quit_mock.call_count == 1
-        assert 'TEST_ERROR_CODE\ntest message' == error_and_quit_mock.call_args[0][0]
+        assert error_and_quit_mock.call_args[0][0] == 'TEST_ERROR_CODE\ntest message'
         test_function(content=b'{"message":"test message"}')
         assert error_and_quit_mock.call_count == 2
-        assert b'{"message":"test message"}' == error_and_quit_mock.call_args[0][0]
+        assert error_and_quit_mock.call_args[0][0] == b'{"message":"test message"}'
 
 
 def test_pipelines_exception_eater_non_http_error_exceptions():
@@ -116,7 +115,7 @@ def test_pipelines_exception_eater_non_http_error_exceptions():
 
         test_function()
         assert error_and_quit_mock.call_count == 1
-        assert 'ValueError: value error test message' == error_and_quit_mock.call_args[0][0]
+        assert error_and_quit_mock.call_args[0][0] == 'ValueError: value error test message'
 
 
 def test_json_cli_base_both_args():
