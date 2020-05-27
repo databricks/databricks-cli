@@ -25,9 +25,9 @@
 
 import json
 
-import click
 import mock
 import pytest
+from click import Context, Command
 from click.testing import CliRunner
 
 import databricks_cli.pipelines.cli as cli
@@ -51,7 +51,7 @@ def click_ctx():
     A dummy Click context to allow testing of methods that raise exceptions. Fixes Click capturing
     actual exceptions and raising its own `RuntimeError: There is no active click context`.
     """
-    return click.Context(click.Command('cmd'))
+    return Context(Command('cmd'))
 
 
 @provide_conf
