@@ -117,7 +117,7 @@ def delete_cli(api_client, spec_arg, spec, pipeline_id):
     """
     pipeline_id = _get_pipeline_id(spec_arg=spec_arg, spec=spec, pipeline_id=pipeline_id)
     PipelinesApi(api_client).delete(pipeline_id)
-    click.echo("Pipeline {} successfully deleted".format(pipeline_id))
+    click.echo("Pipeline {} deleted".format(pipeline_id))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -179,7 +179,7 @@ def reset_cli(api_client, spec_arg, spec, pipeline_id):
     """
     pipeline_id = _get_pipeline_id(spec_arg=spec_arg, spec=spec, pipeline_id=pipeline_id)
     PipelinesApi(api_client).reset(pipeline_id)
-    click.echo("Pipeline {} successfully reset".format(pipeline_id))
+    click.echo("Reset triggered for pipeline {}".format(pipeline_id))
 
 
 def _read_spec(src):
