@@ -21,16 +21,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from json import loads as json_loads
 import os
+import uuid
+import json
+import string
+
+try:
+    from urlparse import urlparse, urljoin
+except ImportError:
+    from urllib.parse import urlparse, urljoin
 
 import click
 
 from databricks_cli.click_types import PipelineSpecClickType, PipelineIdClickType
-from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format
 from databricks_cli.version import print_version_callback, version
 from databricks_cli.pipelines.api import PipelinesApi
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
+from databricks_cli.utils import pipelines_exception_eater, CONTEXT_SETTINGS, pretty_format, \
+    error_and_quit
+
+try:
+    json_parse_exception = json.decoder.JSONDecodeError
+except AttributeError:  # Python 2
+    json_parse_exception = ValueError
+
+PIPELINE_ID_PERMITTED_CHARACTERS = set(string.ascii_letters + string.digits + '-_')
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -39,7 +54,7 @@ from databricks_cli.configure.config import provide_api_client, profile_option, 
 @click.option('--spec', default=None, type=PipelineSpecClickType(), help=PipelineSpecClickType.help)
 @debug_option
 @profile_option
-@eat_exceptions
+@pipelines_exception_eater
 @provide_api_client
 def deploy_cli(api_client, spec_arg, spec):
     """
@@ -59,7 +74,18 @@ def deploy_cli(api_client, spec_arg, spec):
         raise RuntimeError('The spec should be provided either by an option or argument')
     src = spec_arg if bool(spec_arg) else spec
     spec_obj = _read_spec(src)
+    if 'id' not in spec_obj:
+        pipeline_id = str(uuid.uuid4())
+        click.echo("Updating spec at {} with id: {}".format(src, pipeline_id))
+        spec_obj['id'] = pipeline_id
+        _write_spec(src, spec_obj)
+    _validate_pipeline_id(spec_obj['id'])
     PipelinesApi(api_client).deploy(spec_obj)
+
+    pipeline_id = spec_obj['id']
+    base_url = "{0.scheme}://{0.netloc}/".format(urlparse(api_client.url))
+    pipeline_url = urljoin(base_url, "#joblist/pipelines/{}".format(pipeline_id))
+    click.echo("Pipeline successfully deployed: {}".format(pipeline_url))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -70,7 +96,7 @@ def deploy_cli(api_client, spec_arg, spec):
               help=PipelineIdClickType.help)
 @debug_option
 @profile_option
-@eat_exceptions
+@pipelines_exception_eater
 @provide_api_client
 def delete_cli(api_client, spec_arg, spec, pipeline_id):
     """
@@ -91,6 +117,7 @@ def delete_cli(api_client, spec_arg, spec, pipeline_id):
     """
     pipeline_id = _get_pipeline_id(spec_arg=spec_arg, spec=spec, pipeline_id=pipeline_id)
     PipelinesApi(api_client).delete(pipeline_id)
+    click.echo("Pipeline {} deleted".format(pipeline_id))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -101,7 +128,7 @@ def delete_cli(api_client, spec_arg, spec, pipeline_id):
               help=PipelineIdClickType.help)
 @debug_option
 @profile_option
-@eat_exceptions
+@pipelines_exception_eater
 @provide_api_client
 def get_cli(api_client, spec_arg, spec, pipeline_id):
     """
@@ -131,7 +158,7 @@ def get_cli(api_client, spec_arg, spec, pipeline_id):
               help=PipelineIdClickType.help)
 @debug_option
 @profile_option
-@eat_exceptions
+@pipelines_exception_eater
 @provide_api_client
 def reset_cli(api_client, spec_arg, spec, pipeline_id):
     """
@@ -152,6 +179,7 @@ def reset_cli(api_client, spec_arg, spec, pipeline_id):
     """
     pipeline_id = _get_pipeline_id(spec_arg=spec_arg, spec=spec, pipeline_id=pipeline_id)
     PipelinesApi(api_client).reset(pipeline_id)
+    click.echo("Reset triggered for pipeline {}".format(pipeline_id))
 
 
 def _read_spec(src):
@@ -161,11 +189,23 @@ def _read_spec(src):
     """
     extension = os.path.splitext(src)[1]
     if extension.lower() == '.json':
-        with open(src, 'r') as f:
-            json = f.read()
-        return json_loads(json)
+        try:
+            with open(src, 'r') as f:
+                data = f.read()
+            return json.loads(data)
+        except json_parse_exception as e:
+            error_and_quit("Invalid JSON provided in spec\n{}".format(e))
     else:
         raise RuntimeError('The provided file extension for the spec is not supported')
+
+
+def _write_spec(src, spec):
+    """
+    Writes the spec at src as JSON.
+    """
+    data = json.dumps(spec, indent=2) + '\n'
+    with open(src, 'w') as f:
+        f.write(data)
 
 
 def _get_pipeline_id(spec_arg, spec, pipeline_id):
@@ -180,7 +220,20 @@ def _get_pipeline_id(spec_arg, spec, pipeline_id):
     if bool(spec_arg) or bool(spec):
         src = spec_arg if bool(spec_arg) else spec
         pipeline_id = _read_spec(src)["id"]
+    _validate_pipeline_id(pipeline_id)
     return pipeline_id
+
+
+def _validate_pipeline_id(pipeline_id):
+    """
+    Checks if the pipeline_id only contain -, _ and alphanumeric characters
+    """
+    if len(pipeline_id) == 0:
+        error_and_quit(u'Empty pipeline id provided')
+    if not set(pipeline_id) <= PIPELINE_ID_PERMITTED_CHARACTERS:
+        message = u'Pipeline id {} has invalid character(s)\n'.format(pipeline_id)
+        message += u'Valid characters are: _ - a-z A-Z 0-9'
+        error_and_quit(message)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
