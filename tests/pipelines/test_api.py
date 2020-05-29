@@ -23,7 +23,7 @@
 
 # pylint:disable=redefined-outer-name
 # pylint:disable=unused-argument
-#pylint: disable-msg=too-many-locals
+# pylint: disable-msg=too-many-locals
 
 
 import os
@@ -53,6 +53,7 @@ def pipelines_api():
     def server_response(*args, **kwargs):
         if args[0] == 'GET':
             return {'pipeline_id': PIPELINE_ID, 'state': 'RUNNING'}
+
     client_mock.perform_query = mock.MagicMock(side_effect=server_response)
     _pipelines_api = api.PipelinesApi(client_mock)
     yield _pipelines_api
@@ -101,6 +102,7 @@ def test_deploy(put_file_mock, dbfs_path_validate, pipelines_api, tmpdir):
     with open(wheel1, 'w') as f:
         f.write('456')
     libraries = [{'jar': 'dbfs:/pipelines/code/file.jar'},
+                 {'maven': {'coordinates': 'com.org.name:package:0.1.0'}},
                  {'jar': jar1},
                  {'jar': jar2},
                  {'jar': jar3_relpath},
@@ -111,19 +113,20 @@ def test_deploy(put_file_mock, dbfs_path_validate, pipelines_api, tmpdir):
     expected_spec = copy.deepcopy(SPEC)
     expected_spec['libraries'] = [
         {'jar': 'dbfs:/pipelines/code/file.jar'},
+        {'maven': {'coordinates': 'com.org.name:package:0.1.0'}},
         {'jar': 'dbfs:/pipelines/code/40bd001563085fc35165329ea1ff5c5ecbdbbeef.jar'},
         {'jar': 'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar'},
         {'jar': 'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar'},
         {'jar': 'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar'},
         {'whl':
-            'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18/wheel-name-conv.whl'}
+         'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18/wheel-name-conv.whl'}
     ]
 
     pipelines_api.deploy(spec)
     assert dbfs_path_validate.call_count == 5
     assert put_file_mock.call_count == 4
     assert put_file_mock.call_args_list[0][0][0] == jar2
-    assert put_file_mock.call_args_list[0][0][1].absolute_path ==\
+    assert put_file_mock.call_args_list[0][0][1].absolute_path == \
         'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar'
     assert put_file_mock.call_args_list[1][0][0] == jar3_relpath
     assert put_file_mock.call_args_list[2][0][0] == jar4
@@ -155,7 +158,7 @@ def test_get(pipelines_api):
     client_mock = pipelines_api.client.client.perform_query
     assert client_mock.call_count == 1
     client_mock.assert_called_with('GET', '/pipelines/' + PIPELINE_ID, data={}, headers=None)
-    assert(response['pipeline_id'] == PIPELINE_ID and response['state'] == 'RUNNING')
+    assert (response['pipeline_id'] == PIPELINE_ID and response['state'] == 'RUNNING')
 
 
 def test_reset(pipelines_api):
@@ -182,7 +185,8 @@ def test_partition_local_remote(pipelines_api):
         LibraryObject('jar', 'scheme:file.ext'),
         LibraryObject('jar', 'scheme:/abs/path.ext'),
         LibraryObject('jar', 'scheme://abs/path.ext'),
-        LibraryObject('egg', 'file:/abs/path.ext')
+        LibraryObject('egg', 'file:/abs/path.ext'),
+        LibraryObject('maven', {'coordinates': 'com.org.name:package:0.1.0'})
     ]
     expected_llo = [
         LibraryObject('jar', '/absolute/path/abc.ext'),
@@ -199,7 +203,8 @@ def test_partition_local_remote(pipelines_api):
         LibraryObject('jar', 'scheme:file.ext'),
         LibraryObject('jar', 'scheme:/abs/path.ext'),
         LibraryObject('jar', 'scheme://abs/path.ext'),
-        LibraryObject('egg', 'file:/abs/path.ext')
+        LibraryObject('egg', 'file:/abs/path.ext'),
+        LibraryObject('maven', {'coordinates': 'com.org.name:package:0.1.0'})
     ]
     llo, external = pipelines_api._identify_local_libraries(libraries)
     assert llo == expected_llo
@@ -215,7 +220,11 @@ def test_library_object_serialization_deserialization():
         {'egg': 'FiLe:/weird/case.ext'},
         {'whl': 'file.ext'},
         {'whl': 's3:/s3/path/file.ext'},
-        {'jar': 'dbfs:/dbfs/path/file.ext'}
+        {'jar': 'dbfs:/dbfs/path/file.ext'},
+        {'maven': {'coordinates': 'com.org.name:package:0.1.0'}},
+        {'maven': {
+            'coordinates': 'com.org.name:package:0.1.0',
+            'exclusions': ['slf4j:slf4j', '*:hadoop-client']}}
     ]
     library_objects = [
         LibraryObject('jar', '/absolute/path/abc.ext'),
@@ -225,7 +234,11 @@ def test_library_object_serialization_deserialization():
         LibraryObject('egg', 'FiLe:/weird/case.ext'),
         LibraryObject('whl', 'file.ext'),
         LibraryObject('whl', 's3:/s3/path/file.ext'),
-        LibraryObject('jar', 'dbfs:/dbfs/path/file.ext')
+        LibraryObject('jar', 'dbfs:/dbfs/path/file.ext'),
+        LibraryObject('maven', {'coordinates': 'com.org.name:package:0.1.0'}),
+        LibraryObject('maven', {
+            'coordinates': 'com.org.name:package:0.1.0',
+            'exclusions': ['slf4j:slf4j', '*:hadoop-client']})
     ]
     llo = LibraryObject.from_json(libraries)
     assert llo == library_objects

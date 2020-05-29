@@ -33,7 +33,7 @@ from databricks_cli.dbfs.dbfs_path import DbfsPath
 
 BUFFER_SIZE = 1024 * 64
 base_pipelines_dir = 'dbfs:/pipelines/code'
-supported_lib_types = {'jar', 'whl'}
+supported_lib_types = {'jar', 'whl', 'maven'}
 
 
 class PipelinesApi(object):
@@ -71,6 +71,9 @@ class PipelinesApi(object):
         """
         local_lib_objects, external_lib_objects = [], []
         for lib_object in lib_objects:
+            if lib_object.lib_type == 'maven':
+                external_lib_objects.append(lib_object)
+                continue
             parsed_uri = urllib.parse.urlparse(lib_object.path)
             if lib_object.lib_type in supported_lib_types and parsed_uri.scheme == '':
                 local_lib_objects.append(lib_object)
