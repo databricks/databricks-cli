@@ -102,7 +102,7 @@ def test_deploy(put_file_mock, dbfs_path_validate, pipelines_api, tmpdir):
     with open(wheel1, 'w') as f:
         f.write('456')
     libraries = [{'jar': 'dbfs:/pipelines/code/file.jar'},
-                 {'maven': {'coordinates': 'com.package.name'}},
+                 {'maven': {'coordinates': 'com.org.name:package:0.1.0'}},
                  {'jar': jar1},
                  {'jar': jar2},
                  {'jar': jar3_relpath},
@@ -113,7 +113,7 @@ def test_deploy(put_file_mock, dbfs_path_validate, pipelines_api, tmpdir):
     expected_spec = copy.deepcopy(SPEC)
     expected_spec['libraries'] = [
         {'jar': 'dbfs:/pipelines/code/file.jar'},
-        {'maven': {'coordinates': 'com.package.name'}},
+        {'maven': {'coordinates': 'com.org.name:package:0.1.0'}},
         {'jar': 'dbfs:/pipelines/code/40bd001563085fc35165329ea1ff5c5ecbdbbeef.jar'},
         {'jar': 'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar'},
         {'jar': 'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar'},
@@ -186,7 +186,7 @@ def test_partition_local_remote(pipelines_api):
         LibraryObject('jar', 'scheme:/abs/path.ext'),
         LibraryObject('jar', 'scheme://abs/path.ext'),
         LibraryObject('egg', 'file:/abs/path.ext'),
-        LibraryObject('maven', {'coordinates': 'com.package.name'})
+        LibraryObject('maven', {'coordinates': 'com.org.name:package:0.1.0'})
     ]
     expected_llo = [
         LibraryObject('jar', '/absolute/path/abc.ext'),
@@ -204,7 +204,7 @@ def test_partition_local_remote(pipelines_api):
         LibraryObject('jar', 'scheme:/abs/path.ext'),
         LibraryObject('jar', 'scheme://abs/path.ext'),
         LibraryObject('egg', 'file:/abs/path.ext'),
-        LibraryObject('maven', {'coordinates': 'com.package.name'})
+        LibraryObject('maven', {'coordinates': 'com.org.name:package:0.1.0'})
     ]
     llo, external = pipelines_api._identify_local_libraries(libraries)
     assert llo == expected_llo
