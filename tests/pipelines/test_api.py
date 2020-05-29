@@ -221,7 +221,10 @@ def test_library_object_serialization_deserialization():
         {'whl': 'file.ext'},
         {'whl': 's3:/s3/path/file.ext'},
         {'jar': 'dbfs:/dbfs/path/file.ext'},
-        {'maven': {'coordinates': 'com.package.name'}}
+        {'maven': {'coordinates': 'com.org.name:package:0.1.0'}},
+        {'maven': {
+            'coordinates': 'com.org.name:package:0.1.0',
+            'exclusions': ['slf4j:slf4j', '*:hadoop-client']}}
     ]
     library_objects = [
         LibraryObject('jar', '/absolute/path/abc.ext'),
@@ -232,7 +235,10 @@ def test_library_object_serialization_deserialization():
         LibraryObject('whl', 'file.ext'),
         LibraryObject('whl', 's3:/s3/path/file.ext'),
         LibraryObject('jar', 'dbfs:/dbfs/path/file.ext'),
-        LibraryObject('maven', {'coordinates': 'com.package.name'})
+        LibraryObject('maven', {'coordinates': 'com.org.name:package:0.1.0'}),
+        LibraryObject('maven', {
+            'coordinates': 'com.org.name:package:0.1.0',
+            'exclusions': ['slf4j:slf4j', '*:hadoop-client']})
     ]
     llo = LibraryObject.from_json(libraries)
     assert llo == library_objects
