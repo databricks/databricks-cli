@@ -24,8 +24,10 @@
 # pylint:disable=redefined-outer-name
 
 import json
+
 import mock
 import pytest
+from click import Context, Command
 from click.testing import CliRunner
 
 import databricks_cli.pipelines.cli as cli
@@ -41,6 +43,15 @@ def pipelines_api_mock():
         _pipelines_api_mock = mock.MagicMock()
         PipelinesApiMock.return_value = _pipelines_api_mock
         yield _pipelines_api_mock
+
+
+@pytest.fixture()
+def click_ctx():
+    """
+    A dummy Click context to allow testing of methods that raise exceptions. Fixes Click capturing
+    actual exceptions and raising its own `RuntimeError: There is no active click context`.
+    """
+    return Context(Command('cmd'))
 
 
 @provide_conf
@@ -122,6 +133,31 @@ def test_delete_cli_incorrect_parameters(pipelines_api_mock, tmpdir):
     result = runner.invoke(cli.delete_cli, [path, '--spec', path, '--pipeline-id', PIPELINE_ID])
     assert result.exit_code == 1
     assert pipelines_api_mock.delete.call_count == 0
+
+
+@provide_conf
+def test_deploy_spec_updated_with_id_if_pipeline_id_not_in_spec(tmpdir):
+    path = tmpdir.join('/spec.json').strpath
+    spec_with_no_id = '{"name": "no id"}'
+    with open(path, 'w') as f:
+        f.write(spec_with_no_id)
+    runner = CliRunner()
+    runner.invoke(cli.deploy_cli, ['--spec', path])
+    with open(path, 'r') as f:
+        updated_spec = json.loads(f.read())
+    assert 'id' in updated_spec
+
+
+@provide_conf
+def test_deploy_spec_pipeline_id_is_not_changed_if_provided_in_spec(tmpdir):
+    path = tmpdir.join('/spec.json').strpath
+    with open(path, 'w') as f:
+        f.write(DEPLOY_SPEC)
+    runner = CliRunner()
+    runner.invoke(cli.deploy_cli, ['--spec', path])
+    with open(path, 'r') as f:
+        spec = json.loads(f.read())
+    assert spec['id'] == '123'
 
 
 @provide_conf
@@ -244,3 +280,15 @@ def test_get_cli_no_id(pipelines_api_mock):
     result = runner.invoke(cli.get_cli, [])
     assert result.exit_code == 1
     assert pipelines_api_mock.get.call_count == 0
+
+
+def test_validate_pipeline_id(click_ctx):
+    empty_pipeline_id = ''
+    pipeline_id_with_unicode = b'pipeline_id-\xe2\x9d\x8c-123'.decode('utf-8')
+    invalid_pipline_ids = ['pipeline_id-?-123', 'pipeline_id-\\-\'-123', 'pipeline_id-/-123',
+                           pipeline_id_with_unicode, empty_pipeline_id]
+    with click_ctx:
+        for pipline_id in invalid_pipline_ids:
+            with pytest.raises(SystemExit):
+                cli._validate_pipeline_id(pipline_id)
+    assert cli._validate_pipeline_id('pipeline_id-ac345cd1') is None
