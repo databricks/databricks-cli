@@ -68,6 +68,12 @@ class ClusterIdClickType(ParamType):
             'https://*.cloud.databricks.com/#/setting/clusters/$CLUSTER_ID/configuration.')
 
 
+class ClusterPolicyIdClickType(ParamType):
+    name = 'POLICY_ID'
+    help = ('Can be found in the URL at '
+            'https://*.cloud.databricks.com/#/setting/clusters/cluster-policies/view/$POLICY_ID.')
+
+
 class InstancePoolIdClickType(ParamType):
     name = 'INSTANCE_POOL_ID'
     help = ('Can be found in the URL at '
