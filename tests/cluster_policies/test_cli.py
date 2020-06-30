@@ -34,8 +34,12 @@ from databricks_cli.utils import pretty_format
 from tests.utils import provide_conf
 
 CREATE_RETURN = {'policy_id': 'test'}
-CREATE_JSON = '{"name": "test_policy"}'
+CREATE_JSON = '{"name": "test_policy"}' #.decode('utf-8')
+#CREATE_JSON = str('{"name": "test_policy"}', 'utf-8')
+
 EDIT_JSON = '{"policy_id": "test"}'
+SCOPE = 'test_scope'
+
 
 
 @pytest.fixture()
@@ -48,12 +52,17 @@ def cluster_policy_api_mock():
 
 @provide_conf
 def test_create_cli_json(cluster_policy_api_mock):
-    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
-        cluster_policy_api_mock.create_cluster.return_value = CREATE_RETURN
+    #with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+        cluster_policy_api_mock.create_cluster_policy.return_value = CREATE_RETURN
         runner = CliRunner()
         runner.invoke(cli.create_cli, ['--json', CREATE_JSON])
-        assert cluster_policy_api_mock.create_cluster_policy.call_args[0][0] == json.loads(CREATE_JSON)
-        assert echo_mock.call_args[0][0] == pretty_format(CREATE_RETURN)
+
+        ret=cluster_policy_api_mock.create_cluster_policy.call_args
+        assert ret.decode() == json.loads(CREATE_JSON)
+        #assert cluster_policy_api_mock.create_cluster_policy.call_args == pretty_format(CREATE_JSON)
+        #assert cluster_policy_api_mock.create_cluster_policy.call_args == SCOPE
+
+#        assert echo_mock.call_args[0][0] == pretty_format(CREATE_RETURN)
 
 
 @provide_conf
@@ -78,15 +87,15 @@ POLICY_ID = 'test'
 @provide_conf
 def test_delete_cli(cluster_policy_api_mock):
     runner = CliRunner()
-    runner.invoke(cli.delete_cli, ['--cluster-id', POLICY_ID])
+    runner.invoke(cli.delete_cli, ['--policy-id', POLICY_ID])
     assert cluster_policy_api_mock.delete_cluster_policy.call_args[0][0] == POLICY_ID
 
 
 @provide_conf
 def test_get_cli(cluster_policy_api_mock):
-    cluster_policy_api_mock.get_cluster.return_value = '{}'
+    cluster_policy_api_mock.get_cluster_policy.return_value = '{}'
     runner = CliRunner()
-    runner.invoke(cli.get_cli, ['--cluster-id', POLICY_ID])
+    runner.invoke(cli.get_cli, ['--policy-id', POLICY_ID])
     assert cluster_policy_api_mock.get_cluster_policy.call_args[0][0] == POLICY_ID
 
 
@@ -101,7 +110,7 @@ LIST_RETURN = {
 
 @provide_conf
 def test_list_clusters_policies_output_json(cluster_policy_api_mock):
-    with mock.patch('databricks_cli.clusters.cli.click.echo') as echo_mock:
+    with mock.patch('databricks_cli.clusters_policies.cli.click.echo') as echo_mock:
         cluster_policy_api_mock.list_cluster_policies.return_value = LIST_RETURN
         runner = CliRunner()
         runner.invoke(cli.list_cli, ['--output', 'json'])
