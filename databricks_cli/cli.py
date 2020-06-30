@@ -20,217 +20,49 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import time
-from datetime import datetime
-from json import loads as json_loads
 
 import click
-from tabulate import tabulate
 
-from databricks_cli.click_types import OutputClickType, JsonClickType, ClusterPolicyIdClickType
-from databricks_cli.clusters_policies.api import ClusterPolicyApi
-from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base, \
-    truncate_string
-from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
+from databricks_cli.configure.config import profile_option, debug_option
+from databricks_cli.libraries.cli import libraries_group
 from databricks_cli.version import print_version_callback, version
+from databricks_cli.utils import CONTEXT_SETTINGS
+from databricks_cli.configure.cli import configure_cli
+from databricks_cli.dbfs.cli import dbfs_group
+from databricks_cli.workspace.cli import workspace_group
+from databricks_cli.jobs.cli import jobs_group
+from databricks_cli.clusters.cli import clusters_group
+from databricks_cli.clusters_policies.cli import clusters_policies_group
+from databricks_cli.runs.cli import runs_group
+from databricks_cli.secrets.cli import secrets_group
+from databricks_cli.stack.cli import stack_group
+from databricks_cli.groups.cli import groups_group
+from databricks_cli.instance_pools.cli import instance_pools_group
+from databricks_cli.pipelines.cli import pipelines_group
 
 
-@click.command(context_settings=CONTEXT_SETTINGS)
-@click.option('--json-file', default=None, type=click.Path(),
-              help='File containing JSON request to POST to /api/2.0/policies/clusters/create.')
-@click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/policies/clusters/create'))
-@debug_option
-@profile_option
-@eat_exceptions
-@provide_api_client
-def create_cli(api_client, json_file, json):
-    """
-    Creates a Databricks cluster Policy.
-
-    The specification for the request json can be found at
-    https://docs.databricks.com/dev-tools/api/latest/policies.html#create
-    """
-    json_cli_base(json_file, json, lambda json: ClusterPolicyApi(api_client).create_cluster_policy(json))
-
-
-@click.command(context_settings=CONTEXT_SETTINGS)
-@click.option('--json-file', default=None, type=click.Path(),
-              help='File containing JSON request to POST to /api/2.0/policies/clusters/edit.')
-@click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/policies/clusters/edit'))
-@debug_option
-@profile_option
-@eat_exceptions
-@provide_api_client
-def edit_cli(api_client, json_file, json):
-    """
-    Edits a Databricks cluster Policy.
-
-    The specification for the request json can be found at
-    https://docs.databricks.com/dev-tools/api/latest/policies.html#edit
-    """
-    if not bool(json_file) ^ bool(json):
-        raise RuntimeError('Either --json-file or --json should be provided')
-    if json_file:
-        with open(json_file, 'r') as f:
-            json = f.read()
-    deser_json = json_loads(json)
-    ClusterPolicyApi(api_client).edit_cluster_policy(deser_json)
-
-
-# @click.command(context_settings=CONTEXT_SETTINGS)
-# @click.option('--cluster-id', required=True, type=ClusterIdClickType(),
-#               help=ClusterIdClickType.help)
-# @click.option('--num-workers', required=True, type=click.INT,
-#               help='Number of workers')
-# @debug_option
-# @profile_option
-# @provide_api_client
-# @eat_exceptions
-# def resize_cli(api_client, cluster_id, num_workers):
-#     """Resizes a Databricks cluster given its ID.
-#
-#     Provide a `--num-workers` parameter to indicate the new cluster size.
-#
-#     If the cluster is not currently in a RUNNING state, this will cause an
-#     error to occur.
-#     """
-#     ClusterApi(api_client).resize_cluster(cluster_id, num_workers)
-
-
-@click.command(context_settings=CONTEXT_SETTINGS)
-@click.option('--policy-id', required=True, type=ClusterPolicyIdClickType(),
-              help=ClusterPolicyIdClickType.help)
-@debug_option
-@profile_option
-@eat_exceptions
-@provide_api_client
-def delete_cli(api_client, policy_id):
-    """
-    Removes a Databricks cluster policy given its ID.
-
-    Use ``databricks cluster_policiess get --policy-id POLICY_ID`` to check termination states.
-    """
-    ClusterPolicyApi(api_client).delete_cluster_policy(policy_id)
-
-
-@click.command(context_settings=CONTEXT_SETTINGS)
-@click.option('--policy-id', required=True, type=ClusterPolicyIdClickType(),
-              help=ClusterPolicyIdClickType.help)
-@debug_option
-@profile_option
-@eat_exceptions
-@provide_api_client
-def get_cli(api_client, policy_id):
-    """
-    Retrieves metadata about a cluster policy.
-    """
-    click.echo(pretty_format(ClusterPolicyApi(api_client).get_cluster_policy(policy_id)))
-
-
-def _clusters_policies_to_table(policies_json):
-    ret = []
-    for c in policies_json.get('policies', []):
-        ret.append((c['policy_id'], truncate_string(c['policy_name']), c['state']))
-    return ret
-
-
-@click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Lists Cluster Policiess.')
-@click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
-@debug_option
-@profile_option
-@eat_exceptions
-@provide_api_client
-def list_cli(api_client, output):
-    """
-    Lists cluster policiess.
-
-    Returns information about all currently cluster policiess.
-
-    By default the output format will be a human readable table with the following fields
-
-      - Policy ID
-
-      - Policy name
-
-      - Policy state
-    """
-    policies_json = ClusterPolicyApi(api_client).list_clusters_policies()
-    if OutputClickType.is_json(output):
-        click.echo(pretty_format(policies_json))
-    else:
-        click.echo(tabulate(_clusters_policies_to_table(policies_json), tablefmt='plain'))
-
-
-#
-# @click.command(context_settings=CONTEXT_SETTINGS)
-# @debug_option
-# @profile_option
-# @eat_exceptions
-# @provide_api_client
-# def list_zones_cli(api_client):
-#     """
-#     Lists zones where clusters can be created.
-#
-#     The output format is specified in
-#     https://docs.databricks.com/api/latest/clusters.html#list-zones
-#     """
-#     click.echo(pretty_format(ClusterApi(api_client).list_zones()))
-
-
-# @click.command(context_settings=CONTEXT_SETTINGS,
-#                short_help='Lists possible node types for a cluster.')
-# @debug_option
-# @profile_option
-# @eat_exceptions
-# @provide_api_client
-# def list_node_types_cli(api_client):
-#     """
-#     Lists possible node types for a cluster.
-#
-#     The output format is specified in
-#     https://docs.databricks.com/api/latest/clusters.html#list-node-types
-#     """
-#     click.echo(pretty_format(ClusterApi(api_client).list_node_types()))
-
-
-# @click.command(context_settings=CONTEXT_SETTINGS)
-# @debug_option
-# @profile_option
-# @eat_exceptions
-# @provide_api_client
-# def spark_versions_cli(api_client):
-#     """
-#     Lists possible Databricks Runtime versions for a cluster.
-#
-#     The output format is specified in
-#     https://docs.databricks.com/api/latest/clusters.html#spark-versions
-#     """
-#     click.echo(pretty_format(ClusterApi(api_client).spark_versions()))
-
-
-@click.group(context_settings=CONTEXT_SETTINGS,
-             short_help='Utility to interact with Databricks cluster policies.')
+@click.group(context_settings=CONTEXT_SETTINGS)
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
 @debug_option
 @profile_option
-@eat_exceptions
-def clusters_policies_group():
-    """
-    Utility to interact with Databricks cluster policies.
-    """
+def cli():
     pass
 
 
-clusters_policies_group.add_command(create_cli, name='create')
-clusters_policies_group.add_command(edit_cli, name='edit')
-# clusters_policies_group.add_command(resize_cli, name='resize')
-clusters_policies_group.add_command(delete_cli, name='delete')
-clusters_policies_group.add_command(get_cli, name='get')
-clusters_policies_group.add_command(list_cli, name='list')
-# clusters_policies_group.add_command(list_zones_cli, name='list-zones')
-# clusters_policies_group.add_command(list_node_types_cli, name='list-node-types')
-# clusters_policies_group.add_command(spark_versions_cli, name='spark-versions')
+cli.add_command(configure_cli, name='configure')
+cli.add_command(dbfs_group, name='fs')
+cli.add_command(workspace_group, name='workspace')
+cli.add_command(jobs_group, name='jobs')
+cli.add_command(clusters_group, name='clusters')
+cli.add_command(clusters_policies_group, name='clusters_policies')
+cli.add_command(runs_group, name='runs')
+cli.add_command(libraries_group, name='libraries')
+cli.add_command(secrets_group, name='secrets')
+cli.add_command(stack_group, name='stack')
+cli.add_command(groups_group, name='groups')
+cli.add_command(instance_pools_group, name="instance-pools")
+cli.add_command(pipelines_group, name='pipelines')
+
+if __name__ == "__main__":
+    cli()
