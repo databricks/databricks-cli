@@ -416,11 +416,6 @@ class ClusterPoliciesService(object):
         if definition is not None:
             _data['definition'] = definition
 
-        # if aws_attributes is not None:
-        #     _data['aws_attributes'] = aws_attributes
-        #     if not isinstance(aws_attributes, dict):
-        #         raise TypeError('Expected databricks.AwsAttributes() or dict for field aws_attributes')
-
         return self.client.perform_query('POST', '/policies/clusters/create', data=_data, headers=headers)
 
     def delete_cluster_policy(self, policy_id, headers=None):
@@ -439,11 +434,6 @@ class ClusterPoliciesService(object):
         if definition is not None:
             _data['definition'] = definition
 
-        # if aws_attributes is not None:
-        #     _data['aws_attributes'] = aws_attributes
-        #     if not isinstance(aws_attributes, dict):
-        #         raise TypeError('Expected databricks.AwsAttributes() or dict for field aws_attributes')
-
         return self.client.perform_query('POST', '/policies/clusters/edit', data=_data, headers=headers)
 
     def get_cluster_policy(self, policy_id, headers=None):
@@ -452,35 +442,6 @@ class ClusterPoliciesService(object):
             _data['policy_id'] = policy_id
         return self.client.perform_query('GET', '/policies/clusters/get', data=_data, headers=headers)
 
-
-    # def list_node_types(self, headers=None):
-    #     _data = {}
-    #
-    #     return self.client.perform_query('GET', '/clusters/list-node-types', data=_data, headers=headers)
-    #
-    # def list_available_zones(self, headers=None):
-    #     _data = {}
-    #
-    #     return self.client.perform_query('GET', '/clusters/list-zones', data=_data, headers=headers)
-
-    # def get_events(self, cluster_id, start_time=None, end_time=None, order=None, event_types=None,
-    #                offset=None, limit=None, headers=None):
-    #     _data = {}
-    #     if cluster_id is not None:
-    #         _data['cluster_id'] = cluster_id
-    #     if start_time is not None:
-    #         _data['start_time'] = start_time
-    #     if end_time is not None:
-    #         _data['end_time'] = end_time
-    #     if order is not None:
-    #         _data['order'] = order
-    #     if event_types is not None:
-    #         _data['event_types'] = event_types
-    #     if offset is not None:
-    #         _data['offset'] = offset
-    #     if limit is not None:
-    #         _data['limit'] = limit
-    #     return self.client.perform_query('POST', '/clusters/events', data=_data, headers=headers)
 
 class ManagedLibraryService(object):
     def __init__(self, client):

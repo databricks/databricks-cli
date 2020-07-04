@@ -20,8 +20,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import time
-from datetime import datetime
 from json import loads as json_loads
 
 import click
@@ -79,26 +77,6 @@ def edit_cli(api_client, json_file, json):
     ClusterPolicyApi(api_client).edit_cluster_policy(deser_json)
 
 
-# @click.command(context_settings=CONTEXT_SETTINGS)
-# @click.option('--cluster-id', required=True, type=ClusterIdClickType(),
-#               help=ClusterIdClickType.help)
-# @click.option('--num-workers', required=True, type=click.INT,
-#               help='Number of workers')
-# @debug_option
-# @profile_option
-# @provide_api_client
-# @eat_exceptions
-# def resize_cli(api_client, cluster_id, num_workers):
-#     """Resizes a Databricks cluster given its ID.
-#
-#     Provide a `--num-workers` parameter to indicate the new cluster size.
-#
-#     If the cluster is not currently in a RUNNING state, this will cause an
-#     error to occur.
-#     """
-#     ClusterApi(api_client).resize_cluster(cluster_id, num_workers)
-
-
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--policy-id', required=True, type=ClusterPolicyIdClickType(),
               help=ClusterPolicyIdClickType.help)
@@ -132,7 +110,7 @@ def get_cli(api_client, policy_id):
 def _clusters_policies_to_table(policies_json):
     ret = []
     for c in policies_json.get('policies', []):
-        ret.append((c['policy_id'], truncate_string(c['policy_name']), c['state']))
+        ret.append((c['policy_id'], truncate_string(c['policy_name']), c['definition']))
     return ret
 
 
@@ -158,57 +136,11 @@ def list_cli(api_client, output):
       - Policy state
     """
     policies_json = ClusterPolicyApi(api_client).list_clusters_policies()
+
     if OutputClickType.is_json(output):
         click.echo(pretty_format(policies_json))
     else:
         click.echo(tabulate(_clusters_policies_to_table(policies_json), tablefmt='plain'))
-
-
-#
-# @click.command(context_settings=CONTEXT_SETTINGS)
-# @debug_option
-# @profile_option
-# @eat_exceptions
-# @provide_api_client
-# def list_zones_cli(api_client):
-#     """
-#     Lists zones where clusters can be created.
-#
-#     The output format is specified in
-#     https://docs.databricks.com/api/latest/clusters.html#list-zones
-#     """
-#     click.echo(pretty_format(ClusterApi(api_client).list_zones()))
-
-
-# @click.command(context_settings=CONTEXT_SETTINGS,
-#                short_help='Lists possible node types for a cluster.')
-# @debug_option
-# @profile_option
-# @eat_exceptions
-# @provide_api_client
-# def list_node_types_cli(api_client):
-#     """
-#     Lists possible node types for a cluster.
-#
-#     The output format is specified in
-#     https://docs.databricks.com/api/latest/clusters.html#list-node-types
-#     """
-#     click.echo(pretty_format(ClusterApi(api_client).list_node_types()))
-
-
-# @click.command(context_settings=CONTEXT_SETTINGS)
-# @debug_option
-# @profile_option
-# @eat_exceptions
-# @provide_api_client
-# def spark_versions_cli(api_client):
-#     """
-#     Lists possible Databricks Runtime versions for a cluster.
-#
-#     The output format is specified in
-#     https://docs.databricks.com/api/latest/clusters.html#spark-versions
-#     """
-#     click.echo(pretty_format(ClusterApi(api_client).spark_versions()))
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
@@ -227,10 +159,6 @@ def clusters_policies_group():
 
 clusters_policies_group.add_command(create_cli, name='create')
 clusters_policies_group.add_command(edit_cli, name='edit')
-# clusters_policies_group.add_command(resize_cli, name='resize')
 clusters_policies_group.add_command(delete_cli, name='delete')
 clusters_policies_group.add_command(get_cli, name='get')
 clusters_policies_group.add_command(list_cli, name='list')
-# clusters_policies_group.add_command(list_zones_cli, name='list-zones')
-# clusters_policies_group.add_command(list_node_types_cli, name='list-node-types')
-# clusters_policies_group.add_command(spark_versions_cli, name='spark-versions')

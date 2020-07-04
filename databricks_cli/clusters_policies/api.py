@@ -39,5 +39,5 @@ class ClusterPolicyApi(object):
     def get_cluster_policy(self, policy_id):
         return self.client.get_policy(policy_id)
 
-    def list_cluster_policys(self):
-        return self.client.list_policys()
+    def list_clusters_policies(self):
+        return self.client.list_clusters_policies()
