@@ -29,7 +29,7 @@ import pytest
 from tabulate import tabulate
 from click.testing import CliRunner
 
-import databricks_cli.clusters_policies.cli as cli
+import databricks_cli.cluster_policies.cli as cli
 from databricks_cli.utils import pretty_format
 from tests.utils import provide_conf
 
@@ -40,7 +40,7 @@ EDIT_JSON = '{"policy_id": "test"}'
 
 @pytest.fixture()
 def cluster_policy_api_mock():
-    with mock.patch('databricks_cli.clusters_policies.cli.ClusterPolicyApi') as ClusterPolicyApi:
+    with mock.patch('databricks_cli.cluster_policies.cli.ClusterPolicyApi') as ClusterPolicyApi:
         _cluster_policy_api_mock = mock.MagicMock()
         ClusterPolicyApi.return_value = _cluster_policy_api_mock
         yield _cluster_policy_api_mock
@@ -90,9 +90,9 @@ LIST_RETURN = {
 
 
 @provide_conf
-def test_list_clusters_policies(cluster_policy_api_mock):
-    with mock.patch('databricks_cli.clusters_policies.cli.click.echo') as echo_mock:
-        cluster_policy_api_mock.list_clusters_policies.return_value = LIST_RETURN
+def test_list_cluster_policies(cluster_policy_api_mock):
+    with mock.patch('databricks_cli.cluster_policies.cli.click.echo') as echo_mock:
+        cluster_policy_api_mock.list_cluster_policies.return_value = LIST_RETURN
         runner = CliRunner()
         runner.invoke(cli.list_cli)
         assert echo_mock.call_args[0][0] == \
@@ -100,9 +100,9 @@ def test_list_clusters_policies(cluster_policy_api_mock):
 
 
 @provide_conf
-def test_list_clusters_policies_output_json(cluster_policy_api_mock):
-    with mock.patch('databricks_cli.clusters_policies.cli.click.echo') as echo_mock:
-        cluster_policy_api_mock.list_clusters_policies.return_value = LIST_RETURN
+def test_list_cluster_policies_output_json(cluster_policy_api_mock):
+    with mock.patch('databricks_cli.cluster_policies.cli.click.echo') as echo_mock:
+        cluster_policy_api_mock.list_cluster_policies.return_value = LIST_RETURN
         runner = CliRunner()
         runner.invoke(cli.list_cli, ['--output', 'json'])
         assert echo_mock.call_args[0][0] == pretty_format(LIST_RETURN)

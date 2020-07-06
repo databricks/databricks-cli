@@ -26,7 +26,7 @@ import click
 from tabulate import tabulate
 
 from databricks_cli.click_types import OutputClickType, JsonClickType, ClusterPolicyIdClickType
-from databricks_cli.clusters_policies.api import ClusterPolicyApi
+from databricks_cli.cluster_policies.api import ClusterPolicyApi
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base, \
     truncate_string
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
@@ -107,10 +107,10 @@ def get_cli(api_client, policy_id):
     click.echo(pretty_format(ClusterPolicyApi(api_client).get_cluster_policy(policy_id)))
 
 
-def _clusters_policies_to_table(policies_json):
+def _cluster_policies_to_table(policies_json):
     ret = []
     for c in policies_json.get('policies', []):
-        ret.append((c['policy_id'], truncate_string(c['policy_name']), c['definition']))
+        ret.append((c['policy_id'], truncate_string(c['name']), c['definition']))
     return ret
 
 
@@ -135,12 +135,12 @@ def list_cli(api_client, output):
 
       - Policy state
     """
-    policies_json = ClusterPolicyApi(api_client).list_clusters_policies()
+    policies_json = ClusterPolicyApi(api_client).list_cluster_policies()
 
     if OutputClickType.is_json(output):
         click.echo(pretty_format(policies_json))
     else:
-        click.echo(tabulate(_clusters_policies_to_table(policies_json), tablefmt='plain'))
+        click.echo(tabulate(_cluster_policies_to_table(policies_json), tablefmt='plain'))
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
@@ -150,15 +150,15 @@ def list_cli(api_client, output):
 @debug_option
 @profile_option
 @eat_exceptions
-def clusters_policies_group():
+def cluster_policies_group():
     """
     Utility to interact with Databricks cluster policies.
     """
     pass
 
 
-clusters_policies_group.add_command(create_cli, name='create')
-clusters_policies_group.add_command(edit_cli, name='edit')
-clusters_policies_group.add_command(delete_cli, name='delete')
-clusters_policies_group.add_command(get_cli, name='get')
-clusters_policies_group.add_command(list_cli, name='list')
+cluster_policies_group.add_command(create_cli, name='create')
+cluster_policies_group.add_command(edit_cli, name='edit')
+cluster_policies_group.add_command(delete_cli, name='delete')
+cluster_policies_group.add_command(get_cli, name='get')
+cluster_policies_group.add_command(list_cli, name='list')

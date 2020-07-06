@@ -404,7 +404,7 @@ class ClusterPoliciesService(object):
     def __init__(self, client):
         self.client = client
 
-    def list_clusters_policies(self, headers=None):
+    def list_cluster_policies(self, headers=None):
         _data = {}
 
         return self.client.perform_query('GET', '/policies/clusters/list', data=_data, headers=headers)

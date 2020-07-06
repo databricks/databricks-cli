@@ -16,3 +16,4 @@ venv
 .tox/
 tox.output
 .gitignore
+tox.ini

@@ -34,10 +34,10 @@ class ClusterPolicyApi(object):
         return self.client.client.perform_query('POST', '/policies/clusters/edit', data=json)
 
     def delete_cluster_policy(self, policy_id):
-        return self.client.delete_policy(policy_id)
+        return self.client.delete_cluster_policy(policy_id)
 
     def get_cluster_policy(self, policy_id):
-        return self.client.get_policy(policy_id)
+        return self.client.get_cluster_policy(policy_id)
 
-    def list_clusters_policies(self):
-        return self.client.list_clusters_policies()
+    def list_cluster_policies(self):
+        return self.client.list_cluster_policies()
