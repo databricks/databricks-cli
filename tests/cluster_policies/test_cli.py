@@ -83,7 +83,7 @@ def test_get_cli(cluster_policy_api_mock):
 LIST_RETURN = {
     'policies': [{
         'policy_id': 'test_id',
-        'policy_name': 'test_name',
+        'name': 'test_name',
         'definition': '{}'
     }]
 }
