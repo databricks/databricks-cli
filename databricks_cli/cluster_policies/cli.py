@@ -88,7 +88,7 @@ def delete_cli(api_client, policy_id):
     """
     Removes a Databricks cluster policy given its ID.
 
-    Use ``databricks cluster_policiess get --policy-id POLICY_ID`` to check termination states.
+    Use ``databricks cluster_olicies get --policy-id POLICY_ID`` to check termination states.
     """
     ClusterPolicyApi(api_client).delete_cluster_policy(policy_id)
 
@@ -115,7 +115,7 @@ def _cluster_policies_to_table(policies_json):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Lists Cluster Policiess.')
+               short_help='Lists Cluster Policies.')
 @click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
 @debug_option
 @profile_option
@@ -123,17 +123,17 @@ def _cluster_policies_to_table(policies_json):
 @provide_api_client
 def list_cli(api_client, output):
     """
-    Lists cluster policiess.
+    Lists cluster olicies.
 
-    Returns information about all currently cluster policiess.
+    Returns information about all currently cluster olicies.
 
     By default the output format will be a human readable table with the following fields
 
       - Policy ID
 
-      - Policy name
+      - Policy Name
 
-      - Policy state
+      - Policy Definition
     """
     policies_json = ClusterPolicyApi(api_client).list_cluster_policies()
 
