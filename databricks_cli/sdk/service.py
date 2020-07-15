@@ -795,3 +795,48 @@ class InstancePoolService(object):
         _data = {}
         return self.client.perform_query('GET', '/instance-pools/list', data=_data, headers=headers)
 
+
+class DeltaPipelinesService(object):
+    def __init__(self, client):
+        self.client = client
+
+    def deploy(self, pipeline_id=None, id=None, name=None, storage=None, configuration=None,
+               clusters=None, libraries=None, deprecated_transformations=None, filters=None,
+               dbr_version=None, headers=None):
+        _data = {}
+        if id is not None:
+            _data['id'] = id
+        if name is not None:
+            _data['name'] = name
+        if storage is not None:
+            _data['storage'] = storage
+        if configuration is not None:
+            _data['configuration'] = configuration
+        if clusters is not None:
+            _data['clusters'] = clusters
+        if libraries is not None:
+            _data['libraries'] = libraries
+        if deprecated_transformations is not None:
+            _data['deprecated_transformations'] = deprecated_transformations
+        if filters is not None:
+            _data['filters'] = filters
+            if not isinstance(filters, dict):
+                raise TypeError('Expected databricks.Filters() or dict for field filters')
+        if dbr_version is not None:
+            _data['dbr_version'] = dbr_version
+        return self.client.perform_query('PUT', '/pipelines/{pipeline_id}'.format(pipeline_id=pipeline_id), data=_data, headers=headers)
+
+    def delete(self, pipeline_id=None, headers=None):
+        _data = {}
+
+        return self.client.perform_query('DELETE', '/pipelines/{pipeline_id}'.format(pipeline_id=pipeline_id), data=_data, headers=headers)
+
+    def get(self, pipeline_id=None, headers=None):
+        _data = {}
+
+        return self.client.perform_query('GET', '/pipelines/{pipeline_id}'.format(pipeline_id=pipeline_id), data=_data, headers=headers)
+
+    def reset(self, pipeline_id=None, headers=None):
+        _data = {}
+
+        return self.client.perform_query('POST', '/pipelines/{pipeline_id}/reset'.format(pipeline_id=pipeline_id), data=_data, headers=headers)

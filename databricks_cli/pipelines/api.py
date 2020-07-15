@@ -52,13 +52,13 @@ class PipelinesApi(object):
         self.client.client.perform_query('PUT', '/pipelines/{}'.format(pipeline_id), data=spec, headers=headers)
 
     def delete(self, pipeline_id, headers=None):
-        self.client.client.perform_query('DELETE', '/pipelines/{}'.format(pipeline_id), data={}, headers=headers)
+        self.client.delete(pipeline_id, headers)
 
     def get(self, pipeline_id, headers=None):
-        return self.client.client.perform_query('GET', '/pipelines/{}'.format(pipeline_id), data={}, headers=headers)
+        return self.client.get(pipeline_id, headers)
 
     def reset(self, pipeline_id, headers=None):
-        self.client.client.perform_query('POST', '/pipelines/{}/reset'.format(pipeline_id), data={}, headers=headers)
+        self.client.reset(pipeline_id, headers)
 
     @staticmethod
     def _identify_local_libraries(lib_objects):
