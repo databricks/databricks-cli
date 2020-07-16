@@ -49,7 +49,8 @@ def create_cli(api_client, json_file, json):
     The specification for the request json can be found at
     https://docs.databricks.com/dev-tools/api/latest/policies.html#create
     """
-    json_cli_base(json_file, json, lambda json: ClusterPolicyApi(api_client).create_cluster_policy(json))
+    json_cli_base(json_file, json,
+                  lambda json: ClusterPolicyApi(api_client).create_cluster_policy(json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
