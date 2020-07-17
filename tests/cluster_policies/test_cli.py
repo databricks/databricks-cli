@@ -96,7 +96,7 @@ def test_list_cluster_policies(cluster_policy_api_mock):
         runner = CliRunner()
         runner.invoke(cli.list_cli)
         assert echo_mock.call_args[0][0] == \
-               tabulate([('test_id', 'test_name', '{}')], tablefmt='plain')
+            tabulate([('test_id', 'test_name', '{}')], tablefmt='plain')
 
 
 @provide_conf
