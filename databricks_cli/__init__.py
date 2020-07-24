@@ -23,7 +23,6 @@
 
 # pylint:disable=import-error
 # pylint:disable=bare-except
-# pep8: disable=bare-except
 
 
 def initialize_cli_for_databricks_notebooks():

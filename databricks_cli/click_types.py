@@ -21,8 +21,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint:disable=consider-using-set-comprehension
-
 import click
 from click import ParamType, Option, MissingParameter, UsageError
 

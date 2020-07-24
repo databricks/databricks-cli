@@ -20,6 +20,9 @@ pylint:
     - too-many-arguments
     - inconsistent-return-statements
     - import-outside-toplevel
+    - consider-using-set-comprehension
+    - useless-object-inheritance
+    - unnecessary-pass
 
 mccabe:
   disable:
