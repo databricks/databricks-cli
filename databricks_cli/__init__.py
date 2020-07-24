@@ -34,5 +34,5 @@ def initialize_cli_for_databricks_notebooks():
 try:
     # Initialize custom config provider which is available in Databricks notebooks.
     initialize_cli_for_databricks_notebooks()
-except:
+except: # noqa
     pass
