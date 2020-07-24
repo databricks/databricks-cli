@@ -44,7 +44,7 @@ from databricks_cli.workspace.types import LanguageClickType, FormatClickType, W
 @profile_option
 @eat_exceptions
 @provide_api_client
-def ls_cli(api_client, l, absolute, workspace_path):
+def ls_cli(api_client, l, absolute, workspace_path): # noqa
     """
     List objects in the Databricks Workspace.
     """
