@@ -19,6 +19,7 @@ pylint:
     - protected-access
     - too-many-arguments
     - inconsistent-return-statements
+    - import-outside-toplevel
 
 mccabe:
   disable:

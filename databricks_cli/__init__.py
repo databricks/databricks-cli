@@ -23,12 +23,14 @@
 
 # pylint:disable=import-error
 # pylint:disable=bare-except
+# pep8: disable=bare-except
 
 
 def initialize_cli_for_databricks_notebooks():
     import PythonShell
     from databricksCli import init_databricks_cli_config_provider
     init_databricks_cli_config_provider(PythonShell.IPython.get_ipython().user_ns.entry_point)
+
 
 try:
     # Initialize custom config provider which is available in Databricks notebooks.
