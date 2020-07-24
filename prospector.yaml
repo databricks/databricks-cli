@@ -27,6 +27,3 @@ pylint:
 mccabe:
   disable:
     - MC0001
-
-pyroma:
-  run: true
