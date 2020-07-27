@@ -49,7 +49,8 @@ class PipelinesApi(object):
         spec['libraries'] = LibraryObject.to_json(external_lib_objects +
                                                   self._upload_local_libraries(local_lib_objects))
         pipeline_id = spec['id']
-        self.client.deploy_spec(pipeline_id, spec, headers)
+        self.client.client.perform_query('PUT', '/pipelines/{}'.format(pipeline_id), data=spec,
+                                         headers=headers)
 
     def delete(self, pipeline_id, headers=None):
         self.client.delete(pipeline_id, headers)

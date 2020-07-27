@@ -40,9 +40,6 @@ SPEC = {
     'name': 'test_pipeline',
     'storage': 'dbfs:/path'
 }
-ID_ONLY_SPEC = {
-    'pipeline_id': PIPELINE_ID,
-}
 HEADERS = {'dummy_header': 'dummy_value'}
 
 
@@ -146,11 +143,11 @@ def test_delete(pipelines_api):
     client_mock = pipelines_api.client.client.perform_query
     assert client_mock.call_count == 1
     client_mock.assert_called_with('DELETE', '/pipelines/' + PIPELINE_ID,
-                                   data=ID_ONLY_SPEC, headers=None)
+                                   data={}, headers=None)
 
     pipelines_api.delete(PIPELINE_ID, HEADERS)
     client_mock.assert_called_with('DELETE', '/pipelines/' + PIPELINE_ID,
-                                   data=ID_ONLY_SPEC, headers=HEADERS)
+                                   data={}, headers=HEADERS)
 
 
 def test_get(pipelines_api):
@@ -166,7 +163,7 @@ def test_reset(pipelines_api):
     client_mock = pipelines_api.client.client.perform_query
     assert client_mock.call_count == 1
     client_mock.assert_called_with('POST', '/pipelines/{}/reset'.format(PIPELINE_ID),
-                                   data=ID_ONLY_SPEC, headers=None)
+                                   data={}, headers=None)
 
 
 def test_partition_local_remote(pipelines_api):
