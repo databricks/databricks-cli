@@ -22,7 +22,6 @@
 # limitations under the License.
 
 import os
-import uuid
 import json
 import string
 
@@ -70,22 +69,25 @@ def deploy_cli(api_client, spec_arg, spec):
 
     databricks pipelines deploy --spec example.json
     """
+
     if bool(spec_arg) == bool(spec):
         raise RuntimeError('The spec should be provided either by an option or argument')
     src = spec_arg if bool(spec_arg) else spec
     spec_obj = _read_spec(src)
     if 'id' not in spec_obj:
-        pipeline_id = str(uuid.uuid4())
-        click.echo("Updating spec at {} with id: {}".format(src, pipeline_id))
-        spec_obj['id'] = pipeline_id
-        _write_spec(src, spec_obj)
-    _validate_pipeline_id(spec_obj['id'])
-    PipelinesApi(api_client).deploy(spec_obj)
+        response = PipelinesApi(api_client).create(spec_obj)
+        new_pipeline_id = response['pipeline_id']
+        click.echo("Successfully deployed pipeline: {}".format(
+            _get_pipeline_url(api_client, new_pipeline_id)))
 
-    pipeline_id = spec_obj['id']
-    base_url = "{0.scheme}://{0.netloc}/".format(urlparse(api_client.url))
-    pipeline_url = urljoin(base_url, "#joblist/pipelines/{}".format(pipeline_id))
-    click.echo("Pipeline successfully deployed: {}".format(pipeline_url))
+        spec_obj['id'] = new_pipeline_id
+        _write_spec(src, spec_obj)
+        click.echo("Updated spec at {} with ID: {}".format(src, new_pipeline_id))
+    else:
+        _validate_pipeline_id(spec_obj['id'])
+        PipelinesApi(api_client).deploy(spec_obj)
+        click.echo("Successfully deployed pipeline: {}".format(
+            _get_pipeline_url(api_client, spec_obj['id'])))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -197,6 +199,11 @@ def _read_spec(src):
             error_and_quit("Invalid JSON provided in spec\n{}".format(e))
     else:
         raise RuntimeError('The provided file extension for the spec is not supported')
+
+
+def _get_pipeline_url(api_client, pipeline_id):
+    base_url = "{0.scheme}://{0.netloc}/".format(urlparse(api_client.url))
+    return urljoin(base_url, "#joblist/pipelines/{}".format(pipeline_id))
 
 
 def _write_spec(src, spec):

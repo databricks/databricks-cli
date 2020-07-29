@@ -33,6 +33,7 @@ from click.testing import CliRunner
 import databricks_cli.pipelines.cli as cli
 from tests.utils import provide_conf
 
+DEPLOY_SPEC_NO_ID = '{}'
 DEPLOY_SPEC = '{"id": "123"}'
 PIPELINE_ID = "123"
 
@@ -52,6 +53,38 @@ def click_ctx():
     actual exceptions and raising its own `RuntimeError: There is no active click context`.
     """
     return Context(Command('cmd'))
+
+
+@provide_conf
+def test_create_pipeline_spec_arg(pipelines_api_mock, tmpdir):
+    pipelines_api_mock.create = mock.Mock(return_value={"pipeline_id": PIPELINE_ID})
+
+    path = tmpdir.join('/spec.json').strpath
+    with open(path, 'w') as f:
+        f.write(DEPLOY_SPEC_NO_ID)
+
+    runner = CliRunner()
+    runner.invoke(cli.deploy_cli, [path])
+
+    with open(path, 'r') as f:
+        spec = json.loads(f.read())
+    assert spec['id'] == PIPELINE_ID
+
+
+@provide_conf
+def test_create_pipeline_spec_option(pipelines_api_mock, tmpdir):
+    pipelines_api_mock.create = mock.Mock(return_value={"pipeline_id": PIPELINE_ID})
+
+    path = tmpdir.join('/spec.json').strpath
+    with open(path, 'w') as f:
+        f.write(DEPLOY_SPEC_NO_ID)
+
+    runner = CliRunner()
+    runner.invoke(cli.deploy_cli, ['--spec', path])
+
+    with open(path, 'r') as f:
+        spec = json.loads(f.read())
+    assert spec['id'] == PIPELINE_ID
 
 
 @provide_conf
@@ -82,10 +115,10 @@ def test_deploy_cli_incorrect_parameters(pipelines_api_mock, tmpdir):
     runner = CliRunner()
     result = runner.invoke(cli.deploy_cli, [path, '--spec', path])
     assert result.exit_code == 1
-    assert pipelines_api_mock.deploy.call_count == 0
+    assert pipelines_api_mock.create.call_count == 0
     result = runner.invoke(cli.deploy_cli, ['--spec', path, path])
     assert result.exit_code == 1
-    assert pipelines_api_mock.deploy.call_count == 0
+    assert pipelines_api_mock.create.call_count == 0
 
 
 @provide_conf
@@ -136,19 +169,6 @@ def test_delete_cli_incorrect_parameters(pipelines_api_mock, tmpdir):
 
 
 @provide_conf
-def test_deploy_spec_updated_with_id_if_pipeline_id_not_in_spec(tmpdir):
-    path = tmpdir.join('/spec.json').strpath
-    spec_with_no_id = '{"name": "no id"}'
-    with open(path, 'w') as f:
-        f.write(spec_with_no_id)
-    runner = CliRunner()
-    runner.invoke(cli.deploy_cli, ['--spec', path])
-    with open(path, 'r') as f:
-        updated_spec = json.loads(f.read())
-    assert 'id' in updated_spec
-
-
-@provide_conf
 def test_deploy_spec_pipeline_id_is_not_changed_if_provided_in_spec(tmpdir):
     path = tmpdir.join('/spec.json').strpath
     with open(path, 'w') as f:
@@ -168,7 +188,7 @@ def test_deploy_delete_cli_incorrect_spec_extension(pipelines_api_mock, tmpdir):
     runner = CliRunner()
     result = runner.invoke(cli.deploy_cli, ['--spec', path])
     assert result.exit_code == 1
-    assert pipelines_api_mock.deploy.call_count == 0
+    assert pipelines_api_mock.create.call_count == 0
 
     result = runner.invoke(cli.delete_cli, ['--spec', path])
     assert result.exit_code == 1
@@ -179,7 +199,7 @@ def test_deploy_delete_cli_incorrect_spec_extension(pipelines_api_mock, tmpdir):
         f.write(DEPLOY_SPEC)
     result = runner.invoke(cli.deploy_cli, ['--spec', path_no_extension])
     assert result.exit_code == 1
-    assert pipelines_api_mock.deploy.call_count == 0
+    assert pipelines_api_mock.create.call_count == 0
 
     result = runner.invoke(cli.delete_cli, ['--spec', path_no_extension])
     assert result.exit_code == 1
@@ -187,14 +207,21 @@ def test_deploy_delete_cli_incorrect_spec_extension(pipelines_api_mock, tmpdir):
 
 
 @provide_conf
-def test_deploy_delete_cli_correct_spec_extensions(pipelines_api_mock, tmpdir):
+def test_deploy_update_delete_cli_correct_spec_extensions(pipelines_api_mock, tmpdir):
+    pipelines_api_mock.create = mock.Mock(return_value={"pipeline_id": PIPELINE_ID})
+
     runner = CliRunner()
     path_json = tmpdir.join('/spec.json').strpath
     with open(path_json, 'w') as f:
-        f.write(DEPLOY_SPEC)
+        f.write(DEPLOY_SPEC_NO_ID)
+    result = runner.invoke(cli.deploy_cli, ['--spec', path_json])
+    assert result.exit_code == 0
+    assert pipelines_api_mock.create.call_count == 1
+
     result = runner.invoke(cli.deploy_cli, ['--spec', path_json])
     assert result.exit_code == 0
     assert pipelines_api_mock.deploy.call_count == 1
+
     result = runner.invoke(cli.delete_cli, ['--spec', path_json])
     assert result.exit_code == 0
     assert pipelines_api_mock.delete.call_count == 1
@@ -202,10 +229,15 @@ def test_deploy_delete_cli_correct_spec_extensions(pipelines_api_mock, tmpdir):
 
     path_case_insensitive = tmpdir.join('/spec2.JsON').strpath
     with open(path_case_insensitive, 'w') as f:
-        f.write(DEPLOY_SPEC)
+        f.write(DEPLOY_SPEC_NO_ID)
+    result = runner.invoke(cli.deploy_cli, ['--spec', path_case_insensitive])
+    assert result.exit_code == 0
+    assert pipelines_api_mock.create.call_count == 1
+
     result = runner.invoke(cli.deploy_cli, ['--spec', path_case_insensitive])
     assert result.exit_code == 0
     assert pipelines_api_mock.deploy.call_count == 1
+
     result = runner.invoke(cli.delete_cli, ['--spec', path_case_insensitive])
     assert result.exit_code == 0
     assert pipelines_api_mock.delete.call_count == 1
