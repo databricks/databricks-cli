@@ -21,6 +21,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import copy
 import os
 import json
 import string
@@ -75,7 +76,7 @@ def deploy_cli(api_client, spec_arg, spec):
     src = spec_arg if bool(spec_arg) else spec
     spec_obj = _read_spec(src)
     if 'id' not in spec_obj:
-        response = PipelinesApi(api_client).create(spec_obj)
+        response = PipelinesApi(api_client).create(copy.deepcopy(spec_obj))
         new_pipeline_id = response['pipeline_id']
         click.echo("Successfully deployed pipeline: {}".format(
             _get_pipeline_url(api_client, new_pipeline_id)))

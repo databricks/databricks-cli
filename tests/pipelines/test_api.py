@@ -130,6 +130,7 @@ def _test_library_uploads(pipelines_api, api_method, spec, put_file_mock, dbfs_p
     expected_spec = copy.deepcopy(spec)
 
     spec['libraries'] = libraries
+
     expected_spec['libraries'] = [
         {'jar': 'dbfs:/pipelines/code/file.jar'},
         {'maven': {'coordinates': 'com.org.name:package:0.1.0'}},
