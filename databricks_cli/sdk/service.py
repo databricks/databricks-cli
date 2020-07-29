@@ -46,8 +46,7 @@ class JobsService(object):
         if email_notifications is not None:
             _data['email_notifications'] = email_notifications
             if not isinstance(email_notifications, dict):
-                raise TypeError(
-                    'Expected databricks.JobEmailNotifications() or dict for field email_notifications')
+                raise TypeError('Expected databricks.JobEmailNotifications() or dict for field email_notifications')
         if timeout_seconds is not None:
             _data['timeout_seconds'] = timeout_seconds
         if max_retries is not None:
@@ -63,23 +62,19 @@ class JobsService(object):
         if notebook_task is not None:
             _data['notebook_task'] = notebook_task
             if not isinstance(notebook_task, dict):
-                raise TypeError(
-                    'Expected databricks.NotebookTask() or dict for field notebook_task')
+                raise TypeError('Expected databricks.NotebookTask() or dict for field notebook_task')
         if spark_jar_task is not None:
             _data['spark_jar_task'] = spark_jar_task
             if not isinstance(spark_jar_task, dict):
-                raise TypeError(
-                    'Expected databricks.SparkJarTask() or dict for field spark_jar_task')
+                raise TypeError('Expected databricks.SparkJarTask() or dict for field spark_jar_task')
         if spark_python_task is not None:
             _data['spark_python_task'] = spark_python_task
             if not isinstance(spark_python_task, dict):
-                raise TypeError(
-                    'Expected databricks.SparkPythonTask() or dict for field spark_python_task')
+                raise TypeError('Expected databricks.SparkPythonTask() or dict for field spark_python_task')
         if spark_submit_task is not None:
             _data['spark_submit_task'] = spark_submit_task
             if not isinstance(spark_submit_task, dict):
-                raise TypeError(
-                    'Expected databricks.SparkSubmitTask() or dict for field spark_submit_task')
+                raise TypeError('Expected databricks.SparkSubmitTask() or dict for field spark_submit_task')
         if max_concurrent_runs is not None:
             _data['max_concurrent_runs'] = max_concurrent_runs
         return self.client.perform_query('POST', '/jobs/create', data=_data, headers=headers)
@@ -101,23 +96,19 @@ class JobsService(object):
         if notebook_task is not None:
             _data['notebook_task'] = notebook_task
             if not isinstance(notebook_task, dict):
-                raise TypeError(
-                    'Expected databricks.NotebookTask() or dict for field notebook_task')
+                raise TypeError('Expected databricks.NotebookTask() or dict for field notebook_task')
         if spark_jar_task is not None:
             _data['spark_jar_task'] = spark_jar_task
             if not isinstance(spark_jar_task, dict):
-                raise TypeError(
-                    'Expected databricks.SparkJarTask() or dict for field spark_jar_task')
+                raise TypeError('Expected databricks.SparkJarTask() or dict for field spark_jar_task')
         if spark_python_task is not None:
             _data['spark_python_task'] = spark_python_task
             if not isinstance(spark_python_task, dict):
-                raise TypeError(
-                    'Expected databricks.SparkPythonTask() or dict for field spark_python_task')
+                raise TypeError('Expected databricks.SparkPythonTask() or dict for field spark_python_task')
         if spark_submit_task is not None:
             _data['spark_submit_task'] = spark_submit_task
             if not isinstance(spark_submit_task, dict):
-                raise TypeError(
-                    'Expected databricks.SparkSubmitTask() or dict for field spark_submit_task')
+                raise TypeError('Expected databricks.SparkSubmitTask() or dict for field spark_submit_task')
         if timeout_seconds is not None:
             _data['timeout_seconds'] = timeout_seconds
         return self.client.perform_query('POST', '/jobs/runs/submit', data=_data, headers=headers)
@@ -201,8 +192,7 @@ class JobsService(object):
         _data = {}
         if run_id is not None:
             _data['run_id'] = run_id
-        return self.client.perform_query('GET', '/jobs/runs/get-output', data=_data,
-                                         headers=headers)
+        return self.client.perform_query('GET', '/jobs/runs/get-output', data=_data, headers=headers)
 
     def export_run(self, run_id, views_to_export=None, headers=None):
         _data = {}
@@ -222,8 +212,7 @@ class ClusterService(object):
 
         return self.client.perform_query('GET', '/clusters/list', data=_data, headers=headers)
 
-    def create_cluster(self, num_workers=None, autoscale=None, cluster_name=None,
-                       spark_version=None,
+    def create_cluster(self, num_workers=None, autoscale=None, cluster_name=None, spark_version=None,
                        spark_conf=None, aws_attributes=None, node_type_id=None,
                        driver_node_type_id=None, ssh_public_keys=None, custom_tags=None,
                        cluster_log_conf=None, init_scripts=None, spark_env_vars=None,
@@ -245,8 +234,7 @@ class ClusterService(object):
         if aws_attributes is not None:
             _data['aws_attributes'] = aws_attributes
             if not isinstance(aws_attributes, dict):
-                raise TypeError(
-                    'Expected databricks.AwsAttributes() or dict for field aws_attributes')
+                raise TypeError('Expected databricks.AwsAttributes() or dict for field aws_attributes')
         if node_type_id is not None:
             _data['node_type_id'] = node_type_id
         if driver_node_type_id is not None:
@@ -258,8 +246,7 @@ class ClusterService(object):
         if cluster_log_conf is not None:
             _data['cluster_log_conf'] = cluster_log_conf
             if not isinstance(cluster_log_conf, dict):
-                raise TypeError(
-                    'Expected databricks.ClusterLogConf() or dict for field cluster_log_conf')
+                raise TypeError('Expected databricks.ClusterLogConf() or dict for field cluster_log_conf')
         if init_scripts is not None:
             _data['init_scripts'] = init_scripts
         if spark_env_vars is not None:
@@ -283,8 +270,7 @@ class ClusterService(object):
     def list_spark_versions(self, headers=None):
         _data = {}
 
-        return self.client.perform_query('GET', '/clusters/spark-versions', data=_data,
-                                         headers=headers)
+        return self.client.perform_query('GET', '/clusters/spark-versions', data=_data, headers=headers)
 
     def delete_cluster(self, cluster_id, headers=None):
         _data = {}
@@ -296,8 +282,7 @@ class ClusterService(object):
         _data = {}
         if cluster_id is not None:
             _data['cluster_id'] = cluster_id
-        return self.client.perform_query('POST', '/clusters/permanent-delete', data=_data,
-                                         headers=headers)
+        return self.client.perform_query('POST', '/clusters/permanent-delete', data=_data, headers=headers)
 
     def restart_cluster(self, cluster_id, headers=None):
         _data = {}
@@ -341,8 +326,7 @@ class ClusterService(object):
         if aws_attributes is not None:
             _data['aws_attributes'] = aws_attributes
             if not isinstance(aws_attributes, dict):
-                raise TypeError(
-                    'Expected databricks.AwsAttributes() or dict for field aws_attributes')
+                raise TypeError('Expected databricks.AwsAttributes() or dict for field aws_attributes')
         if node_type_id is not None:
             _data['node_type_id'] = node_type_id
         if driver_node_type_id is not None:
@@ -354,8 +338,7 @@ class ClusterService(object):
         if cluster_log_conf is not None:
             _data['cluster_log_conf'] = cluster_log_conf
             if not isinstance(cluster_log_conf, dict):
-                raise TypeError(
-                    'Expected databricks.ClusterLogConf() or dict for field cluster_log_conf')
+                raise TypeError('Expected databricks.ClusterLogConf() or dict for field cluster_log_conf')
         if init_scripts is not None:
             _data['init_scripts'] = init_scripts
         if spark_env_vars is not None:
@@ -391,8 +374,7 @@ class ClusterService(object):
     def list_node_types(self, headers=None):
         _data = {}
 
-        return self.client.perform_query('GET', '/clusters/list-node-types', data=_data,
-                                         headers=headers)
+        return self.client.perform_query('GET', '/clusters/list-node-types', data=_data, headers=headers)
 
     def list_available_zones(self, headers=None):
         _data = {}
@@ -427,14 +409,12 @@ class ManagedLibraryService(object):
         _data = {}
         if cluster_id is not None:
             _data['cluster_id'] = cluster_id
-        return self.client.perform_query('GET', '/libraries/cluster-status', data=_data,
-                                         headers=headers)
+        return self.client.perform_query('GET', '/libraries/cluster-status', data=_data, headers=headers)
 
     def all_cluster_statuses(self, headers=None):
         _data = {}
 
-        return self.client.perform_query('GET', '/libraries/all-cluster-statuses', data=_data,
-                                         headers=headers)
+        return self.client.perform_query('GET', '/libraries/all-cluster-statuses', data=_data, headers=headers)
 
     def install_libraries(self, cluster_id, libraries=None, headers=None):
         _data = {}
@@ -450,8 +430,7 @@ class ManagedLibraryService(object):
             _data['cluster_id'] = cluster_id
         if libraries is not None:
             _data['libraries'] = libraries
-        return self.client.perform_query('POST', '/libraries/uninstall', data=_data,
-                                         headers=headers)
+        return self.client.perform_query('POST', '/libraries/uninstall', data=_data, headers=headers)
 
 
 class DbfsService(object):
@@ -552,7 +531,7 @@ class WorkspaceService(object):
         return self.client.perform_query('GET', '/workspace/list', data=_data, headers=headers)
 
     def import_workspace(self, path, format=None, language=None, content=None, overwrite=None,
-                         headers=None):
+               headers=None):
         _data = {}
         if path is not None:
             _data['path'] = path
@@ -588,8 +567,7 @@ class WorkspaceService(object):
         _data = {}
         if path is not None:
             _data['path'] = path
-        return self.client.perform_query('GET', '/workspace/get-status', data=_data,
-                                         headers=headers)
+        return self.client.perform_query('GET', '/workspace/get-status', data=_data, headers=headers)
 
 
 class SecretService(object):
@@ -605,15 +583,13 @@ class SecretService(object):
             _data['initial_manage_principal'] = initial_manage_principal
         if scope_backend_type is not None:
             _data['scope_backend_type'] = scope_backend_type
-        return self.client.perform_query('POST', '/secrets/scopes/create', data=_data,
-                                         headers=headers)
+        return self.client.perform_query('POST', '/secrets/scopes/create', data=_data, headers=headers)
 
     def delete_scope(self, scope, headers=None):
         _data = {}
         if scope is not None:
             _data['scope'] = scope
-        return self.client.perform_query('POST', '/secrets/scopes/delete', data=_data,
-                                         headers=headers)
+        return self.client.perform_query('POST', '/secrets/scopes/delete', data=_data, headers=headers)
 
     def list_scopes(self, headers=None):
         _data = {}
@@ -662,8 +638,7 @@ class SecretService(object):
             _data['scope'] = scope
         if principal is not None:
             _data['principal'] = principal
-        return self.client.perform_query('POST', '/secrets/acls/delete', data=_data,
-                                         headers=headers)
+        return self.client.perform_query('POST', '/secrets/acls/delete', data=_data, headers=headers)
 
     def list_acls(self, scope, headers=None):
         _data = {}
@@ -708,8 +683,7 @@ class GroupsService(object):
             _data['group_name'] = group_name
         if parent_name is not None:
             _data['parent_name'] = parent_name
-        return self.client.perform_query('POST', '/groups/remove-member', data=_data,
-                                         headers=headers)
+        return self.client.perform_query('POST', '/groups/remove-member', data=_data, headers=headers)
 
     def get_groups(self, headers=None):
         _data = {}
@@ -741,8 +715,7 @@ class InstancePoolService(object):
     def __init__(self, client):
         self.client = client
 
-    def create_instance_pool(self, instance_pool_name=None, min_idle_instances=None,
-                             max_capacity=None,
+    def create_instance_pool(self, instance_pool_name=None, min_idle_instances=None, max_capacity=None,
                              aws_attributes=None, node_type_id=None, custom_tags=None,
                              idle_instance_autotermination_minutes=None, enable_elastic_disk=None,
                              disk_spec=None, preloaded_spark_versions=None, headers=None):
@@ -756,8 +729,7 @@ class InstancePoolService(object):
         if aws_attributes is not None:
             _data['aws_attributes'] = aws_attributes
             if not isinstance(aws_attributes, dict):
-                raise TypeError(
-                    'Expected databricks.InstancePoolAwsAttributes() or dict for field aws_attributes')
+                raise TypeError('Expected databricks.InstancePoolAwsAttributes() or dict for field aws_attributes')
         if node_type_id is not None:
             _data['node_type_id'] = node_type_id
         if custom_tags is not None:
@@ -772,19 +744,16 @@ class InstancePoolService(object):
                 raise TypeError('Expected databricks.DiskSpec() or dict for field disk_spec')
         if preloaded_spark_versions is not None:
             _data['preloaded_spark_versions'] = preloaded_spark_versions
-        return self.client.perform_query('POST', '/instance-pools/create', data=_data,
-                                         headers=headers)
+        return self.client.perform_query('POST', '/instance-pools/create', data=_data, headers=headers)
 
     def delete_instance_pool(self, instance_pool_id=None, headers=None):
         _data = {}
         if instance_pool_id is not None:
             _data['instance_pool_id'] = instance_pool_id
-        return self.client.perform_query('POST', '/instance-pools/delete', data=_data,
-                                         headers=headers)
+        return self.client.perform_query('POST', '/instance-pools/delete', data=_data, headers=headers)
 
     def edit_instance_pool(self, instance_pool_id, instance_pool_name=None, min_idle_instances=None,
-                           max_capacity=None, aws_attributes=None, node_type_id=None,
-                           custom_tags=None,
+                           max_capacity=None, aws_attributes=None, node_type_id=None, custom_tags=None,
                            idle_instance_autotermination_minutes=None, enable_elastic_disk=None,
                            disk_spec=None, preloaded_spark_versions=None, headers=None):
         _data = {}
@@ -799,8 +768,7 @@ class InstancePoolService(object):
         if aws_attributes is not None:
             _data['aws_attributes'] = aws_attributes
             if not isinstance(aws_attributes, dict):
-                raise TypeError(
-                    'Expected databricks.InstancePoolAwsAttributes() or dict for field aws_attributes')
+                raise TypeError('Expected databricks.InstancePoolAwsAttributes() or dict for field aws_attributes')
         if node_type_id is not None:
             _data['node_type_id'] = node_type_id
         if custom_tags is not None:
@@ -815,8 +783,7 @@ class InstancePoolService(object):
                 raise TypeError('Expected databricks.DiskSpec() or dict for field disk_spec')
         if preloaded_spark_versions is not None:
             _data['preloaded_spark_versions'] = preloaded_spark_versions
-        return self.client.perform_query('POST', '/instance-pools/edit', data=_data,
-                                         headers=headers)
+        return self.client.perform_query('POST', '/instance-pools/edit', data=_data, headers=headers)
 
     def get_instance_pool(self, instance_pool_id=None, headers=None):
         _data = {}
@@ -873,26 +840,20 @@ class DeltaPipelinesService(object):
             _data['filters'] = filters
             if not isinstance(filters, dict):
                 raise TypeError('Expected databricks.Filters() or dict for field filters')
-        return self.client.perform_query('PUT',
-                                         '/pipelines/{pipeline_id}'.format(pipeline_id=pipeline_id),
-                                         data=_data, headers=headers)
+        return self.client.perform_query('PUT', '/pipelines/{pipeline_id}'.format(pipeline_id=pipeline_id), data=_data, headers=headers)
 
     def delete(self, pipeline_id=None, headers=None):
         _data = {}
 
-        return self.client.perform_query('DELETE',
-                                         '/pipelines/{pipeline_id}'.format(pipeline_id=pipeline_id),
-                                         data=_data, headers=headers)
+        return self.client.perform_query('DELETE', '/pipelines/{pipeline_id}'.format(pipeline_id=pipeline_id), data=_data, headers=headers)
 
     def get(self, pipeline_id=None, headers=None):
         _data = {}
 
-        return self.client.perform_query('GET',
-                                         '/pipelines/{pipeline_id}'.format(pipeline_id=pipeline_id),
-                                         data=_data, headers=headers)
+        return self.client.perform_query('GET', '/pipelines/{pipeline_id}'.format(pipeline_id=pipeline_id), data=_data, headers=headers)
 
     def reset(self, pipeline_id=None, headers=None):
         _data = {}
 
-        return self.client.perform_query('POST', '/pipelines/{pipeline_id}/reset'.format(
-            pipeline_id=pipeline_id), data=_data, headers=headers)
+        return self.client.perform_query('POST', '/pipelines/{pipeline_id}/reset'.format(pipeline_id=pipeline_id), data=_data, headers=headers)
+

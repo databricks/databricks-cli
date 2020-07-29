@@ -73,8 +73,7 @@ def file_exists_stub(_, dbfs_path):
 def test_create_pipeline_and_upload_libraries(put_file_mock, dbfs_path_validate, pipelines_api,
                                               tmpdir):
     _test_library_uploads(pipelines_api, pipelines_api.create, SPEC_WITHOUT_ID, put_file_mock,
-                          dbfs_path_validate,
-                          tmpdir)
+                          dbfs_path_validate, tmpdir)
 
 
 @mock.patch('databricks_cli.dbfs.api.DbfsApi.file_exists', file_exists_stub)
@@ -161,11 +160,11 @@ def test_create(pipelines_api):
     spec['libraries'] = []
 
     pipelines_api.create(spec)
-    client_mock.assert_called_with("POST", "/pipelines/", data=spec, headers=None)
+    client_mock.assert_called_with("POST", "/pipelines", data=spec, headers=None)
     assert client_mock.call_count == 1
 
     pipelines_api.create(spec, HEADERS)
-    client_mock.assert_called_with("POST", "/pipelines/", data=spec, headers=HEADERS)
+    client_mock.assert_called_with("POST", "/pipelines", data=spec, headers=HEADERS)
     assert client_mock.call_count == 2
 
 

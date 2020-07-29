@@ -43,7 +43,7 @@ class PipelinesApi(object):
 
     def create(self, spec, headers=None):
         spec = self._upload_libraries_and_update_spec(spec)
-        return self.client.client.perform_query('POST', '/pipelines/'.format(), data=spec,
+        return self.client.client.perform_query('POST', '/pipelines'.format(), data=spec,
                                                 headers=headers)
 
     def deploy(self, spec, headers=None):
@@ -64,8 +64,7 @@ class PipelinesApi(object):
     def _upload_libraries_and_update_spec(self, spec):
         spec = copy.deepcopy(spec)
         lib_objects = LibraryObject.from_json(spec.get('libraries', []))
-        local_lib_objects, external_lib_objects = \
-            self._identify_local_libraries(lib_objects)
+        local_lib_objects, external_lib_objects = self._identify_local_libraries(lib_objects)
 
         spec['libraries'] = LibraryObject.to_json(external_lib_objects +
                                                   self._upload_local_libraries(local_lib_objects))
