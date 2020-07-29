@@ -83,7 +83,7 @@ def deploy_cli(api_client, spec_arg, spec):
 
         spec_obj['id'] = new_pipeline_id
         _write_spec(src, spec_obj)
-        click.echo("Updated spec at {} with ID: {}".format(src, new_pipeline_id))
+        click.echo("Updated spec at {} with ID {}".format(src, new_pipeline_id))
     else:
         _validate_pipeline_id(spec_obj['id'])
         PipelinesApi(api_client).deploy(spec_obj)
