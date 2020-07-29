@@ -43,8 +43,7 @@ class PipelinesApi(object):
 
     def create(self, spec, headers=None):
         spec = self._upload_libraries_and_update_spec(spec)
-        return self.client.client.perform_query('POST', '/pipelines'.format(), data=spec,
-                                                headers=headers)
+        return self.client.client.perform_query('POST', '/pipelines', data=spec, headers=headers)
 
     def deploy(self, spec, headers=None):
         spec = self._upload_libraries_and_update_spec(spec)

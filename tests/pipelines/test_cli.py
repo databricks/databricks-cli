@@ -115,10 +115,10 @@ def test_deploy_cli_incorrect_parameters(pipelines_api_mock, tmpdir):
     runner = CliRunner()
     result = runner.invoke(cli.deploy_cli, [path, '--spec', path])
     assert result.exit_code == 1
-    assert pipelines_api_mock.create.call_count == 0
+    assert pipelines_api_mock.deploy.call_count == 0
     result = runner.invoke(cli.deploy_cli, ['--spec', path, path])
     assert result.exit_code == 1
-    assert pipelines_api_mock.create.call_count == 0
+    assert pipelines_api_mock.deploy.call_count == 0
 
 
 @provide_conf
@@ -188,7 +188,7 @@ def test_deploy_delete_cli_incorrect_spec_extension(pipelines_api_mock, tmpdir):
     runner = CliRunner()
     result = runner.invoke(cli.deploy_cli, ['--spec', path])
     assert result.exit_code == 1
-    assert pipelines_api_mock.create.call_count == 0
+    assert pipelines_api_mock.deploy.call_count == 0
 
     result = runner.invoke(cli.delete_cli, ['--spec', path])
     assert result.exit_code == 1
@@ -199,7 +199,7 @@ def test_deploy_delete_cli_incorrect_spec_extension(pipelines_api_mock, tmpdir):
         f.write(DEPLOY_SPEC)
     result = runner.invoke(cli.deploy_cli, ['--spec', path_no_extension])
     assert result.exit_code == 1
-    assert pipelines_api_mock.create.call_count == 0
+    assert pipelines_api_mock.deploy.call_count == 0
 
     result = runner.invoke(cli.delete_cli, ['--spec', path_no_extension])
     assert result.exit_code == 1
