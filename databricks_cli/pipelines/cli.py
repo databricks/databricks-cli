@@ -63,6 +63,9 @@ def deploy_cli(api_client, spec_arg, spec, force):
     specification that explains how to run a Delta Pipeline on Databricks. All local libraries
     referenced in the spec are uploaded to DBFS.
 
+    The deploy command creates a new pipeline and adds the ID of this pipeline to your spec if your
+    spec does not already contain an ID.
+
     Usage:
 
     databricks pipelines deploy example.json
@@ -70,6 +73,11 @@ def deploy_cli(api_client, spec_arg, spec, force):
     OR
 
     databricks pipelines deploy --spec example.json
+
+    The deploy command will not create a new pipeline if a pipeline with the same name
+    already exists. You can disable this check by using the --force option.
+
+    databricks pipelines deploy --force --spec example.json
     """
     if bool(spec_arg) == bool(spec):
         raise RuntimeError('The spec should be provided either by an option or argument')
