@@ -43,6 +43,7 @@ def pipelines_api_mock():
     with mock.patch('databricks_cli.pipelines.cli.PipelinesApi') as PipelinesApiMock:
         _pipelines_api_mock = mock.MagicMock()
         PipelinesApiMock.return_value = _pipelines_api_mock
+        _pipelines_api_mock.list = mock.Mock(return_value={"statuses": []})
         yield _pipelines_api_mock
 
 
@@ -65,7 +66,6 @@ def test_create_pipeline_spec_arg(pipelines_api_mock, tmpdir):
 
     runner = CliRunner()
     runner.invoke(cli.deploy_cli, [path])
-
     with open(path, 'r') as f:
         spec = json.loads(f.read())
     assert spec['id'] == PIPELINE_ID
@@ -324,3 +324,40 @@ def test_validate_pipeline_id(click_ctx):
             with pytest.raises(SystemExit):
                 cli._validate_pipeline_id(pipline_id)
     assert cli._validate_pipeline_id('pipeline_id-ac345cd1') is None
+
+
+@provide_conf
+def test_create_pipeline_with_duplicate_name(pipelines_api_mock, tmpdir):
+    pipelines_api_mock.create = mock.Mock(return_value={"pipeline_id": PIPELINE_ID})
+    pipelines_api_mock.list = mock.Mock(return_value={"statuses": [{"name": "Pipeline 1"}]})
+
+    path = tmpdir.join('/spec.json').strpath
+    with open(path, 'w') as f:
+        f.write('{"name": "Pipeline 1"}')
+
+    runner = CliRunner()
+    result = runner.invoke(cli.deploy_cli, [path])
+    assert pipelines_api_mock.create.call_count == 0
+    assert result.exit_code == 1
+
+    result = runner.invoke(cli.deploy_cli, [path, "--force"])
+    assert result.exit_code == 0
+    assert pipelines_api_mock.create.call_count == 1
+
+
+@provide_conf
+def test_duplicate_name_check_errors(pipelines_api_mock, tmpdir):
+    path = tmpdir.join('/spec.json').strpath
+    with open(path, 'w') as f:
+        f.write('{}')
+    runner = CliRunner()
+
+    pipelines_api_mock.list = mock.Mock(return_value={})
+    result = runner.invoke(cli.deploy_cli, [path])
+    assert result.exit_code == 1
+    assert "Unable to check" in result.stdout
+
+    pipelines_api_mock.list = mock.Mock(return_value={"statuses": [{"id": "123"}]})
+    result = runner.invoke(cli.deploy_cli, [path])
+    assert result.exit_code == 1
+    assert "Unable to check" in result.stdout

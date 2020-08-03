@@ -52,11 +52,12 @@ PIPELINE_ID_PERMITTED_CHARACTERS = set(string.ascii_letters + string.digits + '-
                short_help='Deploys a delta pipeline according to the pipeline specification')
 @click.argument('spec_arg', default=None, required=False)
 @click.option('--spec', default=None, type=PipelineSpecClickType(), help=PipelineSpecClickType.help)
+@click.option('--force', is_flag=True, help="Skip duplicate name check for pipeline.")
 @debug_option
 @profile_option
 @pipelines_exception_eater
 @provide_api_client
-def deploy_cli(api_client, spec_arg, spec):
+def deploy_cli(api_client, spec_arg, spec, force):
     """
     Deploys a delta pipeline according to the pipeline specification. The pipeline spec is a
     specification that explains how to run a Delta Pipeline on Databricks. All local libraries
@@ -70,18 +71,35 @@ def deploy_cli(api_client, spec_arg, spec):
 
     databricks pipelines deploy --spec example.json
     """
-
     if bool(spec_arg) == bool(spec):
         raise RuntimeError('The spec should be provided either by an option or argument')
     src = spec_arg if bool(spec_arg) else spec
     spec_obj = _read_spec(src)
     if 'id' not in spec_obj:
+        if not force:
+            response = PipelinesApi(api_client).list()
+            new_pipeline_name = spec_obj.get("name", "")
+            try:
+                existing_pipeline_names = [pipeline["name"] for pipeline in response["statuses"]]
+            except KeyError:
+                raise Exception(
+                    "Unable to check if pipeline with name '{}' already exists. ".format(
+                        new_pipeline_name) +
+                    "You can use the --force option to skip this check.")
+
+            if new_pipeline_name in existing_pipeline_names:
+                raise ValueError(
+                    "Pipeline with name '{}' already exists. ".format(new_pipeline_name) +
+                    "Please use the --force option if you want to deploy a new pipeline "
+                    "with the same name.")
+
         response = PipelinesApi(api_client).create(copy.deepcopy(spec_obj))
         new_pipeline_id = response['pipeline_id']
         click.echo("Successfully deployed pipeline: {}".format(
             _get_pipeline_url(api_client, new_pipeline_id)))
 
         spec_obj['id'] = new_pipeline_id
+
         _write_spec(src, spec_obj)
         click.echo("Updated spec at {} with ID {}".format(src, new_pipeline_id))
     else:

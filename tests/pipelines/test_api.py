@@ -288,3 +288,15 @@ def test_library_object_serialization_deserialization():
 
     libs = LibraryObject.to_json(library_objects)
     assert libs == libraries
+
+
+def test_list(pipelines_api):
+    client_mock = pipelines_api.client.client.perform_query
+
+    pipelines_api.list()
+    assert client_mock.call_count == 1
+    client_mock.assert_called_with('GET', '/pipelines', headers=None)
+
+    pipelines_api.list(headers=HEADERS)
+    assert client_mock.call_count == 2
+    client_mock.assert_called_with('GET', '/pipelines', headers=HEADERS)

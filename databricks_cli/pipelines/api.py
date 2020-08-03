@@ -51,6 +51,9 @@ class PipelinesApi(object):
         self.client.client.perform_query('PUT', '/pipelines/{}'.format(pipeline_id), data=spec,
                                          headers=headers)
 
+    def list(self, headers=None):
+        return self.client.client.perform_query("GET", "/pipelines", headers=headers)
+
     def delete(self, pipeline_id, headers=None):
         self.client.delete(pipeline_id, headers)
 
