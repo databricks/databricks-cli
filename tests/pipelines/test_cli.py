@@ -361,3 +361,22 @@ def test_duplicate_name_check_errors(pipelines_api_mock, tmpdir):
     result = runner.invoke(cli.deploy_cli, [path])
     assert result.exit_code == 1
     assert "Unable to check" in result.stdout
+
+
+@provide_conf
+def test_create_pipeline_no_update_spec(pipelines_api_mock, tmpdir):
+    pipelines_api_mock.create = mock.Mock(return_value={"pipeline_id": PIPELINE_ID})
+
+    path = tmpdir.join('/spec.json').strpath
+    with open(path, 'w') as f:
+        f.write(DEPLOY_SPEC_NO_ID)
+
+    runner = CliRunner()
+    result = runner.invoke(cli.deploy_cli, [path, "--no-update-spec"])
+
+    assert result.exit_code == 0
+    assert pipelines_api_mock.create.call_count == 1
+
+    with open(path, 'r') as f:
+        spec = json.loads(f.read())
+    assert 'id' not in spec

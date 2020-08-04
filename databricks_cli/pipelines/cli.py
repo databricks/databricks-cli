@@ -52,19 +52,22 @@ PIPELINE_ID_PERMITTED_CHARACTERS = set(string.ascii_letters + string.digits + '-
                short_help='Deploys a delta pipeline according to the pipeline specification')
 @click.argument('spec_arg', default=None, required=False)
 @click.option('--spec', default=None, type=PipelineSpecClickType(), help=PipelineSpecClickType.help)
-@click.option('--force', is_flag=True, help="Skip duplicate name check for pipeline.")
+@click.option('--force', is_flag=True, help="Skip duplicate name check for a new pipeline.")
+@click.option('--no-update-spec', is_flag=True,
+              help="Do not update spec with pipeline ID after creating a new pipeline.")
 @debug_option
 @profile_option
 @pipelines_exception_eater
 @provide_api_client
-def deploy_cli(api_client, spec_arg, spec, force):
+def deploy_cli(api_client, spec_arg, spec, force, no_update_spec):
     """
     Deploys a delta pipeline according to the pipeline specification. The pipeline spec is a
     specification that explains how to run a Delta Pipeline on Databricks. All local libraries
     referenced in the spec are uploaded to DBFS.
 
     The deploy command creates a new pipeline and adds the ID of this pipeline to your spec if your
-    spec does not already contain an ID.
+    spec does not already contain an ID. The spec will not be updated if the --no-update-spec
+    option is added.
 
     Usage:
 
@@ -106,10 +109,11 @@ def deploy_cli(api_client, spec_arg, spec, force):
         click.echo("Successfully deployed pipeline: {}".format(
             _get_pipeline_url(api_client, new_pipeline_id)))
 
-        spec_obj['id'] = new_pipeline_id
+        if not no_update_spec:
+            spec_obj['id'] = new_pipeline_id
 
-        _write_spec(src, spec_obj)
-        click.echo("Updated spec at {} with ID {}".format(src, new_pipeline_id))
+            _write_spec(src, spec_obj)
+            click.echo("Updated spec at {} with ID {}".format(src, new_pipeline_id))
     else:
         _validate_pipeline_id(spec_obj['id'])
         PipelinesApi(api_client).deploy(spec_obj)
