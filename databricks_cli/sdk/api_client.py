@@ -93,6 +93,10 @@ class ApiClient(object):
         self.default_headers.update(user_agent)
         self.verify = verify
 
+        """Adding for Accounts API support"""
+        self.restful_methods = ['REST-GET', 'DELETE']
+        self.accounts_url = "%s://%s/api/%s" % ("https", "accounts.cloud.databricks.com", apiVersion)
+
     def close(self):
         """Close the client"""
         pass
@@ -100,6 +104,13 @@ class ApiClient(object):
     # helper functions starting here
 
     def perform_query(self, method, path, data = {}, headers = None):
+        """Adding for Accounts API support"""
+        path_specific_url = ""
+        if path.startswith("/accounts"):
+            path_specific_url = self.accounts_url
+        else:
+            path_specific_url = self.url
+
         """set up connection and perform query"""
         if headers is None:
             headers = self.default_headers
@@ -110,12 +121,18 @@ class ApiClient(object):
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", exceptions.InsecureRequestWarning)
-            if method == 'GET':
+            if method in self.restful_methods:
+                restful_method = method
+                if method == 'REST-GET':
+                    restful_method = 'GET'
+                resp = self.session.request(restful_method, path_specific_url + path, verify = self.verify, 
+                    headers = headers)
+            elif method == 'GET':
                 translated_data = {k: _translate_boolean_to_query_param(data[k]) for k in data}
-                resp = self.session.request(method, self.url + path, params = translated_data,
+                resp = self.session.request(method, path_specific_url + path, params = translated_data,
                     verify = self.verify, headers = headers)
             else:
-                resp = self.session.request(method, self.url + path, data = json.dumps(data),
+                resp = self.session.request(method, path_specific_url + path, data = json.dumps(data),
                     verify = self.verify, headers = headers)
         try:
             resp.raise_for_status()

@@ -90,6 +90,36 @@ class SecretPrincipalClickType(ParamType):
     help = 'The name of the principal.'
 
 
+class AccountIdClickType(ParamType):
+    name = 'ACCOUNT_ID'
+    help = 'Databricks Account Id'
+
+
+class CredentialsIdClickType(ParamType):
+    name = 'CREDENTIALS_ID'
+    help = 'Databricks Workspace Credentials Id'
+
+
+class StorageConfigIdClickType(ParamType):
+    name = 'STORAGE_CONFIG_ID'
+    help = 'Databricks Workspace Storage Configuration Id'
+
+
+class NetworkIdClickType(ParamType):
+    name = 'NETWORK_ID'
+    help = 'Databricks Workspace Network Id'
+
+
+class CustomerManagedKeyIdClickType(ParamType):
+    name = 'CUSTOMER_MANAGED_KEY_ID'
+    help = 'Databricks Workspace Customer Managed Key Id'
+
+
+class WorkspaceIdClickType(ParamType):
+    name = 'WORKSPACE_ID'
+    help = 'Databricks Workspace Id'
+
+
 class PipelineSpecClickType(ParamType):
     name = 'SPEC'
     help = 'The path to the pipelines deployment spec file'
