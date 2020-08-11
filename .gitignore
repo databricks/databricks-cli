@@ -14,3 +14,6 @@ venv
 .DS_Store
 .coverage
 .tox/
+tox.output
+.gitignore
+tox.ini

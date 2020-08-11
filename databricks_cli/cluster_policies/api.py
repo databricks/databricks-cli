@@ -20,36 +20,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from databricks_cli.sdk import PolicyService
 
-"""
-Databricks Python REST Client 2.0 for interacting with various services.
 
-Currently supports services including clusters, clusters policies and jobs.
+class ClusterPolicyApi(object):
+    def __init__(self, api_client):
+        self.client = PolicyService(api_client)
 
-Requires Python 2.7.9 or above.
+    def create_cluster_policy(self, json):
+        return self.client.client.perform_query('POST', '/policies/clusters/create', data=json)
 
-To get started, below is an example usage of the Python API client.
+    def edit_cluster_policy(self, json):
+        return self.client.client.perform_query('POST', '/policies/clusters/edit', data=json)
 
-  # Import databricks package:
-  from databricks import *
+    def delete_cluster_policy(self, policy_id):
+        return self.client.delete_policy(policy_id)
 
-  # Create a client:
-  userName = "user@company.com"
-  password = "MySecretPassword"
-  client = ApiClient(userName, password, host = "https://dbc-12345678-9101.cloud.databricks.com")
+    def get_cluster_policy(self, policy_id):
+        return self.client.get_policy(policy_id)
 
-  # List jobs:
-  jobs = JobsService(client)
-  print jobs.list_jobs()
-
-  # For help:
-  help(databricks)
-
-  # To examine available services:
-  help(databricks.service)
-
-  # To examine the jobs API:
-  help(JobsService)
-"""
-from .service import *
-from .api_client import ApiClient
+    def list_cluster_policies(self):
+        return self.client.list_policies()

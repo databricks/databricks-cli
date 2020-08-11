@@ -32,6 +32,7 @@ from databricks_cli.dbfs.cli import dbfs_group
 from databricks_cli.workspace.cli import workspace_group
 from databricks_cli.jobs.cli import jobs_group
 from databricks_cli.clusters.cli import clusters_group
+from databricks_cli.cluster_policies.cli import cluster_policies_group
 from databricks_cli.runs.cli import runs_group
 from databricks_cli.secrets.cli import secrets_group
 from databricks_cli.stack.cli import stack_group
@@ -54,6 +55,7 @@ cli.add_command(dbfs_group, name='fs')
 cli.add_command(workspace_group, name='workspace')
 cli.add_command(jobs_group, name='jobs')
 cli.add_command(clusters_group, name='clusters')
+cli.add_command(cluster_policies_group, name='cluster-policies')
 cli.add_command(runs_group, name='runs')
 cli.add_command(libraries_group, name='libraries')
 cli.add_command(secrets_group, name='secrets')
