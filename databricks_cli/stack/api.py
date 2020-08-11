@@ -276,7 +276,7 @@ class StackApi(object):
         if len(jobs_same_name) > 1:
             raise StackError('Multiple jobs with the same name "{}" already exist, aborting'
                              ' stack deployment'.format(job_name))
-        elif len(jobs_same_name) == 1:
+        if len(jobs_same_name) == 1:
             existing_job = jobs_same_name[0]
             creator_name = existing_job.get('creator_user_name')
             timestamp = existing_job.get('created_time') / MS_SEC  # Convert to readable date.

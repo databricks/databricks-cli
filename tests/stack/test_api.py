@@ -166,8 +166,7 @@ class _TestJobsClient(object):
         if job_id not in self.jobs_in_databricks:
             # Job created is not found.
             raise HTTPError('Job not Found')
-        else:
-            return self.jobs_in_databricks[job_id]
+        return self.jobs_in_databricks[job_id]
 
     def reset_job(self, data, headers=None):
         if data[api.JOBS_RESOURCE_JOB_ID] not in self.jobs_in_databricks:

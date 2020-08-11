@@ -177,4 +177,4 @@ def test_cluster_events_output_table(cluster_api_mock):
     stdout_lines = stdout.split('\n')
     # Check that the timestamp 1559334105421 gets converted to the right time! It's hard to do an
     # exact match because of time zones.
-    assert any(['2019-05-31' in l for l in stdout_lines])
+    assert any(['2019-05-31' in l for l in stdout_lines]) # noqa
