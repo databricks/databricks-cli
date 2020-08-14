@@ -20,11 +20,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# pylint:disable=redefined-outer-name
+
 import pytest
 from mock import mock
 
-import databricks_cli.tokens.cli as cli
 from click.testing import CliRunner
+import databricks_cli.tokens.cli as cli
+
 
 @pytest.fixture()
 def tokens_api_mock():
@@ -33,7 +37,8 @@ def tokens_api_mock():
         TokensApi.return_value = _tokens_api_mock
         yield _tokens_api_mock
 
+
 def test_create_token_cli_defaults(tokens_api_mock):
     runner = CliRunner()
     runner.invoke(cli.create_token_cli, ['--comment', 'test'])
-    assert(tokens_api_mock.create.called_with(60 * 60 * 24 * 90, 'test'))
+    assert tokens_api_mock.create.called_with(60 * 60 * 24 * 90, 'test')
