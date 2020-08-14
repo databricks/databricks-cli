@@ -34,7 +34,7 @@ from databricks_cli.configure.config import provide_api_client, profile_option, 
 from databricks_cli.version import print_version_callback, version
 
 
-SCOPE_HEADER = ('Scope', 'Backend')
+SCOPE_HEADER = ('Scope', 'Backend', 'KeyVault URL')
 SECRET_HEADER = ('Key name', 'Last updated')
 ACL_HEADER = ('Principal', 'Permission')
 DASH_MARKER = '# ' + '-' * 70 + '\n'
@@ -64,7 +64,11 @@ def create_scope(api_client, scope, initial_manage_principal):
 def _scopes_to_table(scopes_json):
     ret = []
     for s in scopes_json.get('scopes', []):
-        ret.append((truncate_string(s['name']), s['backend_type']))
+        if "keyvault_metadata" in s:
+            url = s["keyvault_metadata"]["dns_name"]
+            ret.append((truncate_string(s['name']), s['backend_type'], url))
+        else:
+            ret.append((truncate_string(s['name']), s['backend_type'], "N/A"))
     return ret
 
 

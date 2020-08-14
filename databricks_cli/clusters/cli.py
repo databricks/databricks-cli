@@ -20,7 +20,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import time
+from datetime import datetime
 from json import loads as json_loads
 
 import click
@@ -173,6 +174,18 @@ def _clusters_to_table(clusters_json):
     return ret
 
 
+def _cluster_events_to_table(events_json):
+    ret = []
+    for event in events_json.get('events', []):
+        timestamp = event['timestamp'] / 1000
+        timezone = time.tzname[time.localtime(timestamp).tm_isdst]
+        formatted_time = "%s %s" % (
+            datetime.fromtimestamp(event['timestamp'] / 1000.).strftime('%Y-%m-%d %H:%M:%S'),
+            timezone)
+        ret.append((formatted_time, event['type'], event['details']))
+    return ret
+
+
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Lists active and recently terminated clusters.')
 @click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
@@ -265,6 +278,48 @@ def permanent_delete_cli(api_client, cluster_id):
     ClusterApi(api_client).permanent_delete(cluster_id)
 
 
+@click.command(context_settings=CONTEXT_SETTINGS)
+@click.option('--cluster-id', required=True, type=ClusterIdClickType(),
+              help=ClusterIdClickType.help)
+@click.option('--start-time', required=False, default=None,
+              help="The start time in epoch milliseconds. If unprovided, returns events starting "
+                   "from the beginning of time.")
+@click.option('--end-time', required=False, default=None,
+              help="The end time in epoch milliseconds. If unprovided, returns events up to the "
+                   "current time")
+@click.option('--order', required=False, default=None,
+              help="The order to list events in; either ASC or DESC. Defaults to DESC "
+                   "(most recent first).")
+@click.option('--event-type', required=False, default=None,
+              help="An event types to filter on (specify multiple event types by passing "
+                   "the --event-type option multiple times). If empty, all event types "
+                   "are returned.", multiple=True)
+@click.option('--offset', required=False, default=None,
+              help="The offset in the result set. Defaults to 0 (no offset). When an offset is "
+                   "specified and the results are requested in descending order, the end_time "
+                   "field is required.")
+@click.option('--limit', required=False, default=None,
+              help="The maximum number of events to include in a page of events. Defaults to 50, "
+                   "and maximum allowed value is 500.")
+@click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def cluster_events_cli(api_client, cluster_id, start_time, end_time, order, event_type, offset,
+                       limit, output):
+    """
+    Gets events for a Spark cluster.
+    """
+    events_json = ClusterApi(api_client).get_events(
+        cluster_id=cluster_id, start_time=start_time, end_time=end_time, order=order,
+        event_types=event_type, offset=offset, limit=limit)
+    if OutputClickType.is_json(output):
+        click.echo(pretty_format(events_json))
+    else:
+        click.echo(tabulate(_cluster_events_to_table(events_json), tablefmt='plain'))
+
+
 @click.group(context_settings=CONTEXT_SETTINGS,
              short_help='Utility to interact with Databricks clusters.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
@@ -291,3 +346,4 @@ clusters_group.add_command(list_zones_cli, name='list-zones')
 clusters_group.add_command(list_node_types_cli, name='list-node-types')
 clusters_group.add_command(spark_versions_cli, name='spark-versions')
 clusters_group.add_command(permanent_delete_cli, name='permanent-delete')
+clusters_group.add_command(cluster_events_cli, name='events')

@@ -68,6 +68,19 @@ class ClusterIdClickType(ParamType):
             'https://*.cloud.databricks.com/#/setting/clusters/$CLUSTER_ID/configuration.')
 
 
+class ClusterPolicyIdClickType(ParamType):
+    name = 'POLICY_ID'
+    help = ('Can be found in the URL at '
+            'https://*.cloud.databricks.com/#/setting/clusters/cluster-policies/view/$POLICY_ID.')
+
+
+class InstancePoolIdClickType(ParamType):
+    name = 'INSTANCE_POOL_ID'
+    help = ('Can be found in the URL at '
+            'https://*.cloud.databricks.com/#setting/clusters/instance-pools/view/'
+            '$INSTANCE_POOL_ID')
+
+
 class SecretScopeClickType(ParamType):
     name = 'SCOPE'
     help = 'The name of the secret scope.'
@@ -81,6 +94,16 @@ class SecretKeyClickType(ParamType):
 class SecretPrincipalClickType(ParamType):
     name = 'PRINCIPAL'
     help = 'The name of the principal.'
+
+
+class PipelineSpecClickType(ParamType):
+    name = 'SPEC'
+    help = 'The path to the pipelines deployment spec file'
+
+
+class PipelineIdClickType(ParamType):
+    name = 'PIPELINE_ID'
+    help = 'Delta Pipeline ID'
 
 
 class OneOfOption(Option):

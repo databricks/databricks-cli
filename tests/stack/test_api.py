@@ -126,11 +126,23 @@ TEST_DBFS_DIR_STATUS = {
 }
 TEST_STACK = {
     api.STACK_NAME: "test-stack",
-    api.STACK_RESOURCES: [TEST_JOB_RESOURCE,
-                          TEST_WORKSPACE_NB_RESOURCE,
-                          TEST_WORKSPACE_DIR_RESOURCE,
-                          TEST_DBFS_FILE_RESOURCE,
-                          TEST_DBFS_DIR_RESOURCE]
+    api.STACK_RESOURCES: [
+        TEST_JOB_RESOURCE,
+        TEST_WORKSPACE_NB_RESOURCE,
+        TEST_WORKSPACE_DIR_RESOURCE,
+        TEST_DBFS_FILE_RESOURCE,
+        TEST_DBFS_DIR_RESOURCE,
+        {
+            api.RESOURCE_ID: "NoStatusResource",
+            api.RESOURCE_SERVICE: api.DBFS_SERVICE,
+            api.RESOURCE_WRITE_STATUS: False,
+            api.RESOURCE_PROPERTIES:  {
+                api.DBFS_RESOURCE_SOURCE_PATH: 'test.jar',
+                api.DBFS_RESOURCE_PATH: 'dbfs:/test/test-no-status.jar',
+                api.DBFS_RESOURCE_IS_DIR: False
+            }
+        }
+    ]
 }
 TEST_STATUS = {
     api.STACK_NAME: "test-stack",
@@ -154,8 +166,7 @@ class _TestJobsClient(object):
         if job_id not in self.jobs_in_databricks:
             # Job created is not found.
             raise HTTPError('Job not Found')
-        else:
-            return self.jobs_in_databricks[job_id]
+        return self.jobs_in_databricks[job_id]
 
     def reset_job(self, data, headers=None):
         if data[api.JOBS_RESOURCE_JOB_ID] not in self.jobs_in_databricks:
@@ -300,6 +311,20 @@ class TestStackApi(object):
             test_workspace_nb_properties[api.WORKSPACE_RESOURCE_PATH]
         assert nb_databricks_id == {api.WORKSPACE_RESOURCE_PATH:
                                     test_workspace_nb_properties[api.WORKSPACE_RESOURCE_PATH]}
+
+        # Test Input of Workspace notebook with html source
+        test_workspace_nb_properties.update(
+            {api.WORKSPACE_RESOURCE_SOURCE_PATH: 'test/notebook.html'})
+        nb_databricks_id = \
+            stack_api._deploy_workspace(test_workspace_nb_properties, None, True)
+        assert stack_api.workspace_client.import_workspace.call_args[0][0] == 'test/notebook.html'
+
+        # Test Input of Workspace notebook with dbc source
+        test_workspace_nb_properties.update(
+            {api.WORKSPACE_RESOURCE_SOURCE_PATH: 'test/notebook.dbc'})
+        nb_databricks_id = \
+            stack_api._deploy_workspace(test_workspace_nb_properties, None, True)
+        assert stack_api.workspace_client.import_workspace.call_args[0][0] == 'test/notebook.dbc'
 
         # Should raise error if resource object_type doesn't match actually is in filesystem.
         test_workspace_dir_properties.update(

@@ -33,6 +33,7 @@ def test_eat_exceptions_normal_case():
     """
     If no exceptions, this wrapper should do nothing.
     """
+
     @utils.eat_exceptions
     def test_function(x):
         return x
@@ -50,9 +51,71 @@ def test_eat_exceptions_401():
             resp = Response()
             resp.status_code = 401
             raise HTTPError(response=resp)
+
         test_function()
         assert error_and_quit_mock.call_count == 1
         assert 'Your authentication information' in error_and_quit_mock.call_args[0][0]
+
+
+def test_pipelines_exception_eater_normal_case():
+    """
+    If no exceptions, this wrapper should do nothing.
+    """
+
+    @utils.pipelines_exception_eater
+    def test_function(x):
+        return x
+
+    assert test_function(1) == 1
+
+
+def test_pipelines_exception_eater_http_error_401():
+    """
+    If wrapped function returns 401 HTTPError, then print special error message.
+    """
+    with mock.patch('databricks_cli.utils.error_and_quit') as error_and_quit_mock:
+        @utils.pipelines_exception_eater
+        def test_function():
+            resp = Response()
+            resp.status_code = 401
+            raise HTTPError(response=resp)
+
+        test_function()
+        assert error_and_quit_mock.call_count == 1
+        assert 'Your authentication information' in error_and_quit_mock.call_args[0][0]
+
+
+def test_pipelines_exception_eater_non_401_http_error():
+    """
+    If wrapped function returns a non 401 HTTPError, then try to parse json response
+    to print a formatted error message.
+    """
+    with mock.patch('databricks_cli.utils.error_and_quit') as error_and_quit_mock:
+        @utils.pipelines_exception_eater
+        def test_function(content):
+            resp = Response()
+            resp.status_code = 400
+            resp._content_consumed = True
+            resp._content = content
+            raise HTTPError(response=resp)
+
+        test_function(content=b'{"error_code":"TEST_ERROR_CODE","message":"test message"}')
+        assert error_and_quit_mock.call_count == 1
+        assert error_and_quit_mock.call_args[0][0] == 'TEST_ERROR_CODE\ntest message'
+        test_function(content=b'{"message":"test message"}')
+        assert error_and_quit_mock.call_count == 2
+        assert error_and_quit_mock.call_args[0][0] == b'{"message":"test message"}'
+
+
+def test_pipelines_exception_eater_non_http_error_exceptions():
+    with mock.patch('databricks_cli.utils.error_and_quit') as error_and_quit_mock:
+        @utils.pipelines_exception_eater
+        def test_function():
+            raise ValueError('value error test message')
+
+        test_function()
+        assert error_and_quit_mock.call_count == 1
+        assert error_and_quit_mock.call_args[0][0] == 'ValueError: value error test message'
 
 
 def test_json_cli_base_both_args():

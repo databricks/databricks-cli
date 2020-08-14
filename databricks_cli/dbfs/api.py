@@ -27,6 +27,7 @@ import os
 import shutil
 import tempfile
 
+import re
 import click
 
 from requests.exceptions import HTTPError
@@ -37,6 +38,10 @@ from databricks_cli.dbfs.dbfs_path import DbfsPath
 from databricks_cli.dbfs.exceptions import LocalFileExistsException
 
 BUFFER_SIZE_BYTES = 2**20
+
+
+class ParseException(Exception):
+    pass
 
 
 class FileInfo(object):
@@ -69,6 +74,7 @@ class FileInfo(object):
 class DbfsErrorCodes(object):
     RESOURCE_DOES_NOT_EXIST = 'RESOURCE_DOES_NOT_EXIST'
     RESOURCE_ALREADY_EXISTS = 'RESOURCE_ALREADY_EXISTS'
+    PARTIAL_DELETE = 'PARTIAL_DELETE'
 
 
 class DbfsApi(object):
@@ -123,8 +129,44 @@ class DbfsApi(object):
                 offset += bytes_read
                 local_file.write(b64decode(data))
 
+    @staticmethod
+    def get_num_files_deleted(partial_delete_error):
+        try:
+            message = partial_delete_error.response.json()['message']
+        except (AttributeError, KeyError):
+            raise ParseException("Unable to retrieve the number of deleted files.")
+        m = re.compile(r".*operation has deleted (\d+) files.*").match(message)
+        if not m:
+            raise ParseException(
+                "Unable to retrieve the number of deleted files from the error message: {}".format(
+                    message))
+        return int(m.group(1))
+
     def delete(self, dbfs_path, recursive, headers=None):
-        self.client.delete(dbfs_path.absolute_path, recursive=recursive, headers=headers)
+        num_files_deleted = 0
+        while True:
+            try:
+                self.client.delete(dbfs_path.absolute_path, recursive=recursive, headers=headers)
+            except HTTPError as e:
+                if e.response.status_code == 503:
+                    try:
+                        error_code = e.response.json()['error_code']
+                    except (AttributeError, KeyError):
+                        error_code = None
+                    # Handle partial delete exceptions: retry until all the files have been deleted
+                    if error_code == DbfsErrorCodes.PARTIAL_DELETE:
+                        try:
+                            num_files_deleted += DbfsApi.get_num_files_deleted(e)
+                            click.echo("\rDeleted {} files. Delete in progress...\033[K".format(
+                                num_files_deleted), nl=False)
+                        except ParseException:
+                            click.echo("\rDelete in progress...\033[K", nl=False)
+                        continue
+                click.echo("\rDeleted at least {} files but interrupted by error.\033[K".format(
+                    num_files_deleted))
+                raise e
+            break
+        click.echo("\rDelete finished successfully.\033[K")
 
     def mkdirs(self, dbfs_path, headers=None):
         self.client.mkdirs(dbfs_path.absolute_path, headers=headers)

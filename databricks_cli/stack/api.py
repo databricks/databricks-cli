@@ -50,6 +50,7 @@ STACK_DEPLOYED = 'deployed_resources'  # For Stack Status
 # Resource Fields
 RESOURCE_ID = 'id'
 RESOURCE_SERVICE = 'service'
+RESOURCE_WRITE_STATUS = 'writeStatus'
 RESOURCE_PROPERTIES = 'properties'
 
 # Resource Status Fields
@@ -121,7 +122,9 @@ class StackApi(object):
                                                         resource_status,
                                                         headers=headers,
                                                         **kwargs)
-            resource_statuses.append(new_resource_status)
+
+            if resource_config.get(RESOURCE_WRITE_STATUS, True):
+                resource_statuses.append(new_resource_status)
             click.echo('#' * 80)
 
         new_stack_status = {STACK_NAME: stack_name,
@@ -273,7 +276,7 @@ class StackApi(object):
         if len(jobs_same_name) > 1:
             raise StackError('Multiple jobs with the same name "{}" already exist, aborting'
                              ' stack deployment'.format(job_name))
-        elif len(jobs_same_name) == 1:
+        if len(jobs_same_name) == 1:
             existing_job = jobs_same_name[0]
             creator_name = existing_job.get('creator_user_name')
             timestamp = existing_job.get('created_time') / MS_SEC  # Convert to readable date.
