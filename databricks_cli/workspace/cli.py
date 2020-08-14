@@ -55,8 +55,11 @@ def ls_cli(api_client, is_long_form, with_object_id, absolute, workspace_path): 
     else:
         workspace_path = workspace_path[0]
     objects = WorkspaceApi(api_client).list_objects(workspace_path)
-    table = tabulate([obj.to_row(is_long_form=is_long_form, is_absolute=absolute, with_object_id=with_object_id) for obj in objects],
-                     tablefmt='plain')
+    objects_table = [
+        obj.to_row(is_long_form=is_long_form, is_absolute=absolute, with_object_id=with_object_id)
+        for obj in objects
+    ]
+    table = tabulate(objects_table, tablefmt='plain')
     click.echo(table)
 
 

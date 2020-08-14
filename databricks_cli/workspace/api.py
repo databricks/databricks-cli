@@ -43,7 +43,7 @@ class WorkspaceFileInfo(object):
         self.language = language
         self.object_id = object_id
 
-    def to_row(self, is_long_form, is_absolute, with_object_id):
+    def to_row(self, is_long_form, is_absolute, with_object_id=False):
         path = self.path if is_absolute else self.basename
         if self.is_dir:
             stylized_path = click.style(path, 'cyan')
