@@ -25,9 +25,9 @@
 import click
 
 from databricks_cli.click_types import OneOfOption
+from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.groups.api import GroupsApi
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format
-from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.version import print_version_callback, version
 
 
@@ -121,6 +121,12 @@ def list_parents_cli(api_client, user_name, group_name):
 @eat_exceptions
 @provide_api_client
 def remove_member_cli(api_client, parent_name, user_name, group_name):
+    if user_name:
+        remove = user_name
+    else:
+        remove = group_name
+
+    click.echo('REMOVING "{}" from group "{}"'.format(remove, parent_name))
     GroupsApi(api_client).remove_member(parent_name=parent_name,
                                         user_name=user_name,
                                         group_name=group_name)
@@ -135,6 +141,7 @@ def remove_member_cli(api_client, parent_name, user_name, group_name):
 @provide_api_client
 def delete_cli(api_client, group_name):
     """Remove a group from this organization."""
+    click.echo('REMOVING group "{}"'.format(group_name))
     content = GroupsApi(api_client).delete(group_name)
     click.echo(pretty_format(content))
 

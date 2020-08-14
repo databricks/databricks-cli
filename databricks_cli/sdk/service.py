@@ -23,6 +23,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+from json import dumps as json_dumps
+
+
 class JobsService(object):
     def __init__(self, client):
         self.client = client
@@ -424,6 +428,24 @@ class PolicyService(object):
             _data['policy_id'] = policy_id
         return self.client.perform_query('POST', '/policies/clusters/delete', data=_data, headers=headers)
 
+    def get_clusters_by_name(self, cluster_name, headers=None):
+        data = self.list_clusters(headers)
+        if not data:
+            print ('nothing returned')
+            return None
+
+        if isinstance(cluster_name, str):
+            cluster_name = unicode(cluster_name)
+
+        # print ('clusters {}'.format(json_dumps(data, indent=4)))
+        if 'clusters' not in data:
+            print ('clusters not returned')
+            return None
+
+        return [
+            cluster for cluster in data['clusters'] if cluster.get('cluster_name') == cluster_name
+        ]
+
 
     def edit_policy(self, policy_id, policy_name, definition, headers=None):
         _data = {}
@@ -573,7 +595,7 @@ class WorkspaceService(object):
         return self.client.perform_query('GET', '/workspace/list', data=_data, headers=headers)
 
     def import_workspace(self, path, format=None, language=None, content=None, overwrite=None,
-               headers=None):
+                         headers=None):
         _data = {}
         if path is not None:
             _data['path'] = path
@@ -877,4 +899,3 @@ class DeltaPipelinesService(object):
         _data = {}
 
         return self.client.perform_query('POST', '/pipelines/{pipeline_id}/reset'.format(pipeline_id=pipeline_id), data=_data, headers=headers)
-

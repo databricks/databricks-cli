@@ -26,8 +26,8 @@
 import json
 import mock
 import pytest
-from tabulate import tabulate
 from click.testing import CliRunner
+from tabulate import tabulate
 
 import databricks_cli.clusters.cli as cli
 from databricks_cli.utils import pretty_format
@@ -43,6 +43,10 @@ def cluster_api_mock():
     with mock.patch('databricks_cli.clusters.cli.ClusterApi') as ClusterApiMock:
         _cluster_api_mock = mock.MagicMock()
         ClusterApiMock.return_value = _cluster_api_mock
+        # make sure we always get a cluster name back
+        rv = {'cluster_name': 'test_cluster'}
+        _cluster_api_mock.get_cluster = mock.MagicMock(return_value=rv)
+
         yield _cluster_api_mock
 
 

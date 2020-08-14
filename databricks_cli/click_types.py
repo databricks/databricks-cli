@@ -120,6 +120,18 @@ class OneOfOption(Option):
         return super(OneOfOption, self).handle_parse_result(ctx, opts, args)
 
 
+class OptionalOneOfOption(Option):
+    def __init__(self, *args, **kwargs):
+        self.one_of = kwargs.pop('one_of')
+        super(OptionalOneOfOption, self).__init__(*args, **kwargs)
+
+    def handle_parse_result(self, ctx, opts, args):
+        cleaned_opts = set([o.replace('_', '-') for o in opts.keys()])
+        if len(cleaned_opts.intersection(set(self.one_of))) > 1:
+            raise UsageError('Only one of {} should be provided.'.format(self.one_of))
+        return super(OptionalOneOfOption, self).handle_parse_result(ctx, opts, args)
+
+
 class ContextObject(object):
     def __init__(self):
         self._profile = None
@@ -156,3 +168,17 @@ class ContextObject(object):
 
     def get_profile(self):
         return self._profile
+
+
+class RequiredOptions(Option):
+    def __init__(self, *args, **kwargs):
+        self.one_of = kwargs.pop('one_of')
+        super(RequiredOptions, self).__init__(*args, **kwargs)
+
+    def handle_parse_result(self, ctx, opts, args):
+        cleaned_opts = set([o.replace('_', '-') for o in opts.keys()])
+        if len(cleaned_opts.intersection(set(self.one_of))) == 0:
+            raise MissingParameter('One of {} must be provided.'.format(self.one_of))
+        if len(cleaned_opts.intersection(set(self.one_of))) > 1:
+            raise UsageError('Only one of {} should be provided.'.format(self.one_of))
+        return super(RequiredOptions, self).handle_parse_result(ctx, opts, args)

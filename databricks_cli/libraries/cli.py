@@ -23,15 +23,16 @@
 
 import click
 
-from databricks_cli.click_types import ClusterIdClickType, OneOfOption
+from databricks_cli.click_types import ClusterIdClickType, OneOfOption, OptionalOneOfOption
+from databricks_cli.clusters.cli import CLUSTER_OPTIONS, get_clusters_by_name
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.libraries.api import LibrariesApi
 from databricks_cli.utils import CONTEXT_SETTINGS, eat_exceptions, pretty_format
 from databricks_cli.version import print_version_callback, version
 
 
-def _all_cluster_statuses(config):
-    click.echo(pretty_format(LibrariesApi(config).all_cluster_statuses()))
+def _all_cluster_statuses(api_client):
+    click.echo(pretty_format(LibrariesApi(api_client).all_cluster_statuses()))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -50,45 +51,61 @@ def all_cluster_statuses_cli(api_client):
     _all_cluster_statuses(api_client)
 
 
-def _cluster_status(api_client, cluster_id):
-    click.echo(pretty_format(LibrariesApi(api_client).cluster_status(cluster_id)))
+def _cluster_status(api_client, cluster_id, cluster_name):
+    libraries_api = LibrariesApi(api_client)
+
+    if cluster_id:
+        cluster_ids = [cluster_id]
+    else:
+        cluster_ids = [
+            cluster['cluster_id'] for cluster in
+            get_clusters_by_name(api_client, cluster_name) if
+            cluster and 'cluster_id' in cluster
+        ]
+
+    for cid in cluster_ids:
+        click.echo(pretty_format(libraries_api.cluster_status(cid)))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Get the status of all libraries for a specified cluster.')
-@click.option('--cluster-id', required=True, type=ClusterIdClickType(),
-              help=ClusterIdClickType.help)
+@click.option('--cluster-id', cls=OneOfOption, one_of=CLUSTER_OPTIONS,
+              type=ClusterIdClickType(), default=None, help=ClusterIdClickType.help)
+@click.option('--cluster-name', cls=OneOfOption, one_of=CLUSTER_OPTIONS,
+              type=ClusterIdClickType(), default=None, help=ClusterIdClickType.help)
 @debug_option
 @profile_option
 @eat_exceptions # noqa
 @provide_api_client
-def cluster_status_cli(api_client, cluster_id):
+def cluster_status_cli(api_client, cluster_id, cluster_name):
     """
     Get the status of all libraries for a specified cluster. A status will be available for all
     libraries installed on this cluster via the API or the libraries UI as well as libraries set to
     be installed on all clusters via the libraries UI. If a library has been set to be installed on
     all clusters, is_library_for_all_clusters will be true.
     """
-    _cluster_status(api_client, cluster_id)
+    _cluster_status(api_client, cluster_id, cluster_name)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Shortcut to `all-cluster-statuses` or `cluster-status`.')
-@click.option('--cluster-id', type=ClusterIdClickType(), default=None,
-              help=ClusterIdClickType.help)
+@click.option('--cluster-id', cls=OptionalOneOfOption, one_of=CLUSTER_OPTIONS,
+              type=ClusterIdClickType(), default=None, help=ClusterIdClickType.help)
+@click.option('--cluster-name', cls=OptionalOneOfOption, one_of=CLUSTER_OPTIONS,
+              type=ClusterIdClickType(), default=None, help=ClusterIdClickType.help)
 @debug_option
 @profile_option
 @eat_exceptions # noqa
 @provide_api_client
-def list_cli(api_client, cluster_id):
+def list_cli(api_client, cluster_id, cluster_name):
     """
-    Get the statsus of all libraries for all clusters or for a specified cluster.
+    Get the statuses of all libraries for all clusters or for a specified cluster.
     If the option --cluster-id is provided, then all libraries on that cluster will be listed,
     (cluster-status). If the option --cluster-id is omitted, then all libraries on all clusters
     will be listed (all-cluster-statuses).
     """
-    if cluster_id is not None:
-        _cluster_status(api_client, cluster_id)
+    if cluster_id is not None or cluster_name is not None:
+        _cluster_status(api_client, cluster_id, cluster_name)
     else:
         _all_cluster_statuses(api_client)
 
