@@ -1,3 +1,4 @@
+
 # Databricks CLI
 # Copyright 2017 Databricks, Inc.
 #
@@ -20,6 +21,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 
 import sys
 import traceback
@@ -85,6 +87,18 @@ def pipelines_exception_eater(function):
     return decorator
 
 
+def is_debug_mode():
+    ctx = click.get_current_context()
+    context_object = ctx.ensure_object(ContextObject)
+    return context_object.debug_mode
+
+
+def debug(name, content):
+    if is_debug_mode():
+        # pylint:disable=superfluous-parens
+        print('{}: {}'.format(name, json_dumps(content, indent=4)))
+
+
 def error_and_quit(message):
     ctx = click.get_current_context()
     context_object = ctx.ensure_object(ContextObject)
@@ -131,3 +145,12 @@ class InvalidConfigurationError(RuntimeError):
              'Please configure by entering '
              '`{argv} configure --profile {profile}`').format(
                 profile=profile, argv=sys.argv[0]))
+
+
+def is_int(s):
+    # type: (str) -> bool
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False

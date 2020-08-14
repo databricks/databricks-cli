@@ -20,9 +20,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
 
 import click
 from click import ParamType, Option, MissingParameter, UsageError
+
+logger = logging.getLogger()
 
 
 class OutputClickType(ParamType):
@@ -120,6 +123,18 @@ class OneOfOption(Option):
         return super(OneOfOption, self).handle_parse_result(ctx, opts, args)
 
 
+class OptionalOneOfOption(Option):
+    def __init__(self, *args, **kwargs):
+        self.one_of = kwargs.pop('one_of')
+        super(OptionalOneOfOption, self).__init__(*args, **kwargs)
+
+    def handle_parse_result(self, ctx, opts, args):
+        cleaned_opts = set([o.replace('_', '-') for o in opts.keys()])
+        if len(cleaned_opts.intersection(set(self.one_of))) > 1:
+            raise UsageError('Only one of {} should be provided.'.format(self.one_of))
+        return super(OptionalOneOfOption, self).handle_parse_result(ctx, opts, args)
+
+
 class ContextObject(object):
     def __init__(self):
         self._profile = None
@@ -127,6 +142,30 @@ class ContextObject(object):
 
     def set_debug(self, debug=False):
         self._debug = debug
+        if debug:
+            self.enable_debug_logging()
+
+    def enable_debug_logging(self):
+        # These two lines enable debugging at httplib level (requests->urllib3->http.client)
+        # You will see the REQUEST, including HEADERS and DATA, and
+        # RESPONSE with HEADERS but without DATA.
+        # The only thing missing will be the response.body which is not logged.
+        try:
+            import http.client as http_client
+        except ImportError:
+            # Python 2
+            import httplib as http_client
+
+        # pylint:disable=superfluous-parens
+        print("HTTP debugging enabled")
+        http_client.HTTPConnection.debuglevel = 1
+
+        # You must initialize logging, otherwise you'll not see debug output.
+        logging.basicConfig()
+        logging.getLogger().setLevel(logging.DEBUG)
+        requests_log = logging.getLogger("requests.packages.urllib3")
+        requests_log.setLevel(logging.DEBUG)
+        requests_log.propagate = True
 
         if not self._debug:
             return
@@ -156,3 +195,17 @@ class ContextObject(object):
 
     def get_profile(self):
         return self._profile
+
+
+class RequiredOptions(Option):
+    def __init__(self, *args, **kwargs):
+        self.one_of = kwargs.pop('one_of')
+        super(RequiredOptions, self).__init__(*args, **kwargs)
+
+    def handle_parse_result(self, ctx, opts, args):
+        cleaned_opts = set([o.replace('_', '-') for o in opts.keys()])
+        if len(cleaned_opts.intersection(set(self.one_of))) == 0:
+            raise MissingParameter('One of {} must be provided.'.format(self.one_of))
+        if len(cleaned_opts.intersection(set(self.one_of))) > 1:
+            raise UsageError('Only one of {} should be provided.'.format(self.one_of))
+        return super(RequiredOptions, self).handle_parse_result(ctx, opts, args)

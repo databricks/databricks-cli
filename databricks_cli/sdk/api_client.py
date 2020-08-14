@@ -30,6 +30,7 @@ A common class to be used by client of different APIs
 
 import base64
 import json
+import logging
 import warnings
 import requests
 import ssl
@@ -127,6 +128,11 @@ class ApiClient(object):
             except ValueError:
                 pass
             raise requests.exceptions.HTTPError(message, response=e.response)
+
+        # delete returns nothing.
+        if method.lower() == 'delete':
+            return {}
+
         return resp.json()
 
 
