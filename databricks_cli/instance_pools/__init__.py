@@ -20,36 +20,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-"""
-Databricks Python REST Client 2.0 for interacting with various services.
-
-Currently supports services including clusters, clusters policies and jobs.
-
-Requires Python 2.7.9 or above.
-
-To get started, below is an example usage of the Python API client.
-
-  # Import databricks package:
-  from databricks import *
-
-  # Create a client:
-  userName = "user@company.com"
-  password = "MySecretPassword"
-  client = ApiClient(userName, password, host = "https://dbc-12345678-9101.cloud.databricks.com")
-
-  # List jobs:
-  jobs = JobsService(client)
-  print jobs.list_jobs()
-
-  # For help:
-  help(databricks)
-
-  # To examine available services:
-  help(databricks.service)
-
-  # To examine the jobs API:
-  help(JobsService)
-"""
-from .service import *
-from .api_client import ApiClient

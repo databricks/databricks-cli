@@ -62,7 +62,14 @@ def test_delete_scope(secrets_api_mock):
 LIST_SCOPES_RETURN = {
     "scopes": [{
         "name": "my-scope",
-        "backend_type": "databricks"
+        "backend_type": "DATABRICKS"
+    }, {
+        "name": "akv-scope",
+        "backend_type": "AZURE_KEYVAULT",
+        "keyvault_metadata": {
+            "resource_id": "/subscriptions/.../resource_id",
+            "dns_name": "https://akvscope.vault.azure.net/"
+        }
     }]
 }
 
@@ -74,7 +81,10 @@ def test_list_scope(secrets_api_mock):
         runner = CliRunner()
         runner.invoke(cli.list_scopes)
         assert echo_mock.call_args[0][0] == \
-            tabulate([('my-scope', 'databricks')], headers=SCOPE_HEADER)
+            tabulate([
+                ('my-scope', 'DATABRICKS', 'N/A'),
+                ('akv-scope', 'AZURE_KEYVAULT', 'https://akvscope.vault.azure.net/')],
+                headers=SCOPE_HEADER)
 
 
 KEY = 'test_key'

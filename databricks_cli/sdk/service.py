@@ -215,9 +215,9 @@ class ClusterService(object):
     def create_cluster(self, num_workers=None, autoscale=None, cluster_name=None, spark_version=None,
                        spark_conf=None, aws_attributes=None, node_type_id=None,
                        driver_node_type_id=None, ssh_public_keys=None, custom_tags=None,
-                       cluster_log_conf=None, spark_env_vars=None, autotermination_minutes=None,
-                       enable_elastic_disk=None, cluster_source=None, instance_pool_id=None,
-                       headers=None):
+                       cluster_log_conf=None, init_scripts=None, spark_env_vars=None,
+                       autotermination_minutes=None, enable_elastic_disk=None, cluster_source=None,
+                       instance_pool_id=None, headers=None):
         _data = {}
         if num_workers is not None:
             _data['num_workers'] = num_workers
@@ -247,6 +247,8 @@ class ClusterService(object):
             _data['cluster_log_conf'] = cluster_log_conf
             if not isinstance(cluster_log_conf, dict):
                 raise TypeError('Expected databricks.ClusterLogConf() or dict for field cluster_log_conf')
+        if init_scripts is not None:
+            _data['init_scripts'] = init_scripts
         if spark_env_vars is not None:
             _data['spark_env_vars'] = spark_env_vars
         if autotermination_minutes is not None:
@@ -303,9 +305,9 @@ class ClusterService(object):
     def edit_cluster(self, cluster_id, num_workers=None, autoscale=None, cluster_name=None,
                      spark_version=None, spark_conf=None, aws_attributes=None, node_type_id=None,
                      driver_node_type_id=None, ssh_public_keys=None, custom_tags=None,
-                     cluster_log_conf=None, spark_env_vars=None, autotermination_minutes=None,
-                     enable_elastic_disk=None, cluster_source=None, instance_pool_id=None,
-                     headers=None):
+                     cluster_log_conf=None, init_scripts=None, spark_env_vars=None,
+                     autotermination_minutes=None, enable_elastic_disk=None, cluster_source=None,
+                     instance_pool_id=None, headers=None):
         _data = {}
         if cluster_id is not None:
             _data['cluster_id'] = cluster_id
@@ -337,6 +339,8 @@ class ClusterService(object):
             _data['cluster_log_conf'] = cluster_log_conf
             if not isinstance(cluster_log_conf, dict):
                 raise TypeError('Expected databricks.ClusterLogConf() or dict for field cluster_log_conf')
+        if init_scripts is not None:
+            _data['init_scripts'] = init_scripts
         if spark_env_vars is not None:
             _data['spark_env_vars'] = spark_env_vars
         if autotermination_minutes is not None:
@@ -395,8 +399,51 @@ class ClusterService(object):
         if limit is not None:
             _data['limit'] = limit
         return self.client.perform_query('POST', '/clusters/events', data=_data, headers=headers)
-     
 
+
+class PolicyService(object):
+    def __init__(self, client):
+        self.client = client
+
+    def list_policies(self, headers=None):
+        _data = {}
+
+        return self.client.perform_query('GET', '/policies/clusters/list', data=_data, headers=headers)
+
+    def create_policy(self, policy_name, definition, headers=None):
+        _data = {}
+        if policy_name is not None:
+            _data['policy_name'] = policy_name
+        if definition is not None:
+            _data['definition'] = definition
+
+        return self.client.perform_query('POST', '/policies/clusters/create', data=_data, headers=headers)
+
+    def delete_policy(self, policy_id, headers=None):
+        _data = {}
+        if policy_id is not None:
+            _data['policy_id'] = policy_id
+        return self.client.perform_query('POST', '/policies/clusters/delete', data=_data, headers=headers)
+
+
+    def edit_policy(self, policy_id, policy_name, definition, headers=None):
+        _data = {}
+        if policy_id is not None:
+            _data['policy_id'] = policy_id
+        if policy_name is not None:
+            _data['policy_name'] = policy_name
+        if definition is not None:
+            _data['definition'] = definition
+
+        return self.client.perform_query('POST', '/policies/clusters/edit', data=_data, headers=headers)
+
+    def get_policy(self, policy_id, headers=None):
+        _data = {}
+        if policy_id is not None:
+            _data['policy_id'] = policy_id
+        return self.client.perform_query('GET', '/policies/clusters/get', data=_data, headers=headers)
+
+      
 class ManagedLibraryService(object):
     def __init__(self, client):
         self.client = client
@@ -729,4 +776,129 @@ class TokenService(object):
         if token_id is not None:
             _data['token_id'] = token_id
         return self.client.perform_query('POST', '/token/delete', data=_data, headers=headers)
-     
+
+      
+class InstancePoolService(object):
+    def __init__(self, client):
+        self.client = client
+
+    def create_instance_pool(self, instance_pool_name=None, min_idle_instances=None, max_capacity=None,
+                             aws_attributes=None, node_type_id=None, custom_tags=None,
+                             idle_instance_autotermination_minutes=None, enable_elastic_disk=None,
+                             disk_spec=None, preloaded_spark_versions=None, headers=None):
+        _data = {}
+        if instance_pool_name is not None:
+            _data['instance_pool_name'] = instance_pool_name
+        if min_idle_instances is not None:
+            _data['min_idle_instances'] = min_idle_instances
+        if max_capacity is not None:
+            _data['max_capacity'] = max_capacity
+        if aws_attributes is not None:
+            _data['aws_attributes'] = aws_attributes
+            if not isinstance(aws_attributes, dict):
+                raise TypeError('Expected databricks.InstancePoolAwsAttributes() or dict for field aws_attributes')
+        if node_type_id is not None:
+            _data['node_type_id'] = node_type_id
+        if custom_tags is not None:
+            _data['custom_tags'] = custom_tags
+        if idle_instance_autotermination_minutes is not None:
+            _data['idle_instance_autotermination_minutes'] = idle_instance_autotermination_minutes
+        if enable_elastic_disk is not None:
+            _data['enable_elastic_disk'] = enable_elastic_disk
+        if disk_spec is not None:
+            _data['disk_spec'] = disk_spec
+            if not isinstance(disk_spec, dict):
+                raise TypeError('Expected databricks.DiskSpec() or dict for field disk_spec')
+        if preloaded_spark_versions is not None:
+            _data['preloaded_spark_versions'] = preloaded_spark_versions
+        return self.client.perform_query('POST', '/instance-pools/create', data=_data, headers=headers)
+
+    def delete_instance_pool(self, instance_pool_id=None, headers=None):
+        _data = {}
+        if instance_pool_id is not None:
+            _data['instance_pool_id'] = instance_pool_id
+        return self.client.perform_query('POST', '/instance-pools/delete', data=_data, headers=headers)
+
+    def edit_instance_pool(self, instance_pool_id, instance_pool_name=None, min_idle_instances=None,
+                           max_capacity=None, aws_attributes=None, node_type_id=None, custom_tags=None,
+                           idle_instance_autotermination_minutes=None, enable_elastic_disk=None,
+                           disk_spec=None, preloaded_spark_versions=None, headers=None):
+        _data = {}
+        if instance_pool_id is not None:
+            _data['instance_pool_id'] = instance_pool_id
+        if instance_pool_name is not None:
+            _data['instance_pool_name'] = instance_pool_name
+        if min_idle_instances is not None:
+            _data['min_idle_instances'] = min_idle_instances
+        if max_capacity is not None:
+            _data['max_capacity'] = max_capacity
+        if aws_attributes is not None:
+            _data['aws_attributes'] = aws_attributes
+            if not isinstance(aws_attributes, dict):
+                raise TypeError('Expected databricks.InstancePoolAwsAttributes() or dict for field aws_attributes')
+        if node_type_id is not None:
+            _data['node_type_id'] = node_type_id
+        if custom_tags is not None:
+            _data['custom_tags'] = custom_tags
+        if idle_instance_autotermination_minutes is not None:
+            _data['idle_instance_autotermination_minutes'] = idle_instance_autotermination_minutes
+        if enable_elastic_disk is not None:
+            _data['enable_elastic_disk'] = enable_elastic_disk
+        if disk_spec is not None:
+            _data['disk_spec'] = disk_spec
+            if not isinstance(disk_spec, dict):
+                raise TypeError('Expected databricks.DiskSpec() or dict for field disk_spec')
+        if preloaded_spark_versions is not None:
+            _data['preloaded_spark_versions'] = preloaded_spark_versions
+        return self.client.perform_query('POST', '/instance-pools/edit', data=_data, headers=headers)
+
+    def get_instance_pool(self, instance_pool_id=None, headers=None):
+        _data = {}
+        if instance_pool_id is not None:
+            _data['instance_pool_id'] = instance_pool_id
+        return self.client.perform_query('GET', '/instance-pools/get', data=_data, headers=headers)
+
+    def list_instance_pools(self, headers=None):
+        _data = {}
+        return self.client.perform_query('GET', '/instance-pools/list', data=_data, headers=headers)
+
+
+class DeltaPipelinesService(object):
+    def __init__(self, client):
+        self.client = client
+
+    def deploy(self, pipeline_id=None, id=None, name=None, storage=None, configuration=None,
+               clusters=None, libraries=None, filters=None, headers=None):
+        _data = {}
+        if id is not None:
+            _data['id'] = id
+        if name is not None:
+            _data['name'] = name
+        if storage is not None:
+            _data['storage'] = storage
+        if configuration is not None:
+            _data['configuration'] = configuration
+        if clusters is not None:
+            _data['clusters'] = clusters
+        if libraries is not None:
+            _data['libraries'] = libraries
+        if filters is not None:
+            _data['filters'] = filters
+            if not isinstance(filters, dict):
+                raise TypeError('Expected databricks.Filters() or dict for field filters')
+        return self.client.perform_query('PUT', '/pipelines/{pipeline_id}'.format(pipeline_id=pipeline_id), data=_data, headers=headers)
+
+    def delete(self, pipeline_id=None, headers=None):
+        _data = {}
+
+        return self.client.perform_query('DELETE', '/pipelines/{pipeline_id}'.format(pipeline_id=pipeline_id), data=_data, headers=headers)
+
+    def get(self, pipeline_id=None, headers=None):
+        _data = {}
+
+        return self.client.perform_query('GET', '/pipelines/{pipeline_id}'.format(pipeline_id=pipeline_id), data=_data, headers=headers)
+
+    def reset(self, pipeline_id=None, headers=None):
+        _data = {}
+
+        return self.client.perform_query('POST', '/pipelines/{pipeline_id}/reset'.format(pipeline_id=pipeline_id), data=_data, headers=headers)
