@@ -29,12 +29,13 @@ import mock
 import pytest
 from click import Context, Command
 from click.testing import CliRunner
+import requests
 
 import databricks_cli.pipelines.cli as cli
 from tests.utils import provide_conf
 
-DEPLOY_SPEC_NO_ID = '{}'
-DEPLOY_SPEC = '{"id": "123"}'
+DEPLOY_SPEC_NO_ID = '{"name": "asdf"}'
+DEPLOY_SPEC = '{"id": "123", "name": "asdf"}'
 PIPELINE_ID = "123"
 
 
@@ -43,7 +44,6 @@ def pipelines_api_mock():
     with mock.patch('databricks_cli.pipelines.cli.PipelinesApi') as PipelinesApiMock:
         _pipelines_api_mock = mock.MagicMock()
         PipelinesApiMock.return_value = _pipelines_api_mock
-        _pipelines_api_mock.list = mock.Mock(return_value={"statuses": []})
         yield _pipelines_api_mock
 
 
@@ -327,40 +327,52 @@ def test_validate_pipeline_id(click_ctx):
 
 
 @provide_conf
-def test_create_pipeline_with_duplicate_name(pipelines_api_mock, tmpdir):
-    pipelines_api_mock.create = mock.Mock(return_value={"pipeline_id": PIPELINE_ID})
-    pipelines_api_mock.list = mock.Mock(return_value={"statuses": [{"name": "Pipeline 1"}]})
+def test_duplicate_name_check_error(pipelines_api_mock, tmpdir):
+    mock_response = mock.MagicMock()
+    mock_response.text = '{"error_code": "RESOURCE_CONFLICT"}'
+    pipelines_api_mock.create = mock.Mock(
+        side_effect=requests.exceptions.HTTPError(response=mock_response))
+    pipelines_api_mock.deploy = mock.Mock(
+        side_effect=requests.exceptions.HTTPError(response=mock_response))
 
     path = tmpdir.join('/spec.json').strpath
     with open(path, 'w') as f:
-        f.write('{"name": "Pipeline 1"}')
+        f.write(DEPLOY_SPEC_NO_ID)
 
     runner = CliRunner()
     result = runner.invoke(cli.deploy_cli, [path])
-    assert pipelines_api_mock.create.call_count == 0
-    assert result.exit_code == 1
-
-    result = runner.invoke(cli.deploy_cli, [path, "--force"])
-    assert result.exit_code == 0
     assert pipelines_api_mock.create.call_count == 1
+    assert result.exit_code == 1
+    assert "already exists" in result.stdout
+
+    with open(path, 'w') as f:
+        f.write(DEPLOY_SPEC)
+    result = runner.invoke(cli.deploy_cli, [path])
+    assert result.exit_code == 1
+    assert pipelines_api_mock.deploy.call_count == 1
+    assert "already exists" in result.stdout
 
 
 @provide_conf
-def test_duplicate_name_check_errors(pipelines_api_mock, tmpdir):
+def test_allow_duplicate_names_flag(pipelines_api_mock, tmpdir):
     path = tmpdir.join('/spec.json').strpath
     with open(path, 'w') as f:
-        f.write('{}')
+        f.write(DEPLOY_SPEC_NO_ID)
     runner = CliRunner()
+    runner.invoke(cli.deploy_cli, [path])
+    assert pipelines_api_mock.create.call_args_list[0][0][1] is False
 
-    pipelines_api_mock.list = mock.Mock(return_value={})
-    result = runner.invoke(cli.deploy_cli, [path])
-    assert result.exit_code == 1
-    assert "Unable to check" in result.stdout
+    runner.invoke(cli.deploy_cli, [path, "--allow-duplicate-names"])
+    assert pipelines_api_mock.create.call_args_list[1][0][1] is True
 
-    pipelines_api_mock.list = mock.Mock(return_value={"statuses": [{"id": "123"}]})
-    result = runner.invoke(cli.deploy_cli, [path])
-    assert result.exit_code == 1
-    assert "Unable to check" in result.stdout
+    with open(path, 'w') as f:
+        f.write(DEPLOY_SPEC)
+
+    runner.invoke(cli.deploy_cli, [path])
+    assert pipelines_api_mock.deploy.call_args_list[0][0][1] is False
+
+    runner.invoke(cli.deploy_cli, [path, "--allow-duplicate-names"])
+    assert pipelines_api_mock.deploy.call_args_list[1][0][1] is True
 
 
 @provide_conf

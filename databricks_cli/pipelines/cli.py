@@ -25,6 +25,7 @@ import copy
 import os
 import json
 import string
+import requests
 
 try:
     from urlparse import urlparse, urljoin
@@ -52,14 +53,15 @@ PIPELINE_ID_PERMITTED_CHARACTERS = set(string.ascii_letters + string.digits + '-
                short_help='Deploys a delta pipeline according to the pipeline specification')
 @click.argument('spec_arg', default=None, required=False)
 @click.option('--spec', default=None, type=PipelineSpecClickType(), help=PipelineSpecClickType.help)
-@click.option('--force', is_flag=True, help="Skip duplicate name check for a new pipeline.")
+@click.option('--allow-duplicate-names', is_flag=True,
+              help="Skip duplicate name check while deploying pipeline")
 @click.option('--no-update-spec', is_flag=True,
               help="Do not update spec with pipeline ID after creating a new pipeline.")
 @debug_option
 @profile_option
 @pipelines_exception_eater
 @provide_api_client
-def deploy_cli(api_client, spec_arg, spec, force, no_update_spec):
+def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, no_update_spec):
     """
     Deploys a delta pipeline according to the pipeline specification. The pipeline spec is a
     specification that explains how to run a Delta Pipeline on Databricks. All local libraries
@@ -78,45 +80,36 @@ def deploy_cli(api_client, spec_arg, spec, force, no_update_spec):
     databricks pipelines deploy --spec example.json
 
     The deploy command will not create a new pipeline if a pipeline with the same name
-    already exists. You can disable this check by using the --force option.
+    already exists. You can disable this check by using the --allow-duplicate-names option.
 
-    databricks pipelines deploy --force --spec example.json
+    databricks pipelines deploy --allow-duplicate-names --spec example.json
     """
     if bool(spec_arg) == bool(spec):
         raise RuntimeError('The spec should be provided either by an option or argument')
     src = spec_arg if bool(spec_arg) else spec
     spec_obj = _read_spec(src)
     if 'id' not in spec_obj:
-        if not force:
-            response = PipelinesApi(api_client).list()
-            new_pipeline_name = spec_obj.get("name", "")
-            try:
-                existing_pipeline_names = [pipeline["name"] for pipeline in response["statuses"]]
-            except KeyError:
-                raise Exception(
-                    "Unable to check if pipeline with name '{}' already exists. ".format(
-                        new_pipeline_name) +
-                    "You can use the --force option to skip this check.")
+        try:
+            response = PipelinesApi(api_client).create(spec_obj, allow_duplicate_names)
+        except requests.exceptions.HTTPError as e:
+            _handle_duplicate_name_exception(spec_obj, e)
 
-            if new_pipeline_name in existing_pipeline_names:
-                raise ValueError(
-                    "Pipeline with name '{}' already exists. ".format(new_pipeline_name) +
-                    "Please use the --force option if you want to deploy a new pipeline "
-                    "with the same name.")
-
-        response = PipelinesApi(api_client).create(copy.deepcopy(spec_obj))
         new_pipeline_id = response['pipeline_id']
-        click.echo("Successfully deployed pipeline: {}".format(
+        click.echo("Successfully created pipeline: {}".format(
             _get_pipeline_url(api_client, new_pipeline_id)))
 
         if not no_update_spec:
             spec_obj['id'] = new_pipeline_id
-
             _write_spec(src, spec_obj)
             click.echo("Updated spec at {} with ID {}".format(src, new_pipeline_id))
+        else:
+            click.echo("Pipeline has been assigned ID {}".format(new_pipeline_id))
     else:
         _validate_pipeline_id(spec_obj['id'])
-        PipelinesApi(api_client).deploy(spec_obj)
+        try:
+            PipelinesApi(api_client).deploy(spec_obj, allow_duplicate_names)
+        except requests.exceptions.HTTPError as e:
+            _handle_duplicate_name_exception(spec_obj, e)
         click.echo("Successfully deployed pipeline: {}".format(
             _get_pipeline_url(api_client, spec_obj['id'])))
 
@@ -272,6 +265,13 @@ def _validate_pipeline_id(pipeline_id):
         message = u'Pipeline id {} has invalid character(s)\n'.format(pipeline_id)
         message += u'Valid characters are: _ - a-z A-Z 0-9'
         error_and_quit(message)
+
+
+def _handle_duplicate_name_exception(spec, exception):
+    if json.loads(exception.response.text).get('error_code', "") == 'RESOURCE_CONFLICT':
+        raise ValueError("Pipeline with name '{}' already exists. ".format(spec['name']) +
+                         "You can use the --allow-duplicate-names option to skip this check.")
+    raise exception
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,

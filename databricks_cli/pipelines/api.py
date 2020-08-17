@@ -41,18 +41,18 @@ class PipelinesApi(object):
         self.client = DeltaPipelinesService(api_client)
         self.dbfs_client = DbfsApi(api_client)
 
-    def create(self, spec, headers=None):
-        spec = self._upload_libraries_and_update_spec(spec)
-        return self.client.client.perform_query('POST', '/pipelines', data=spec, headers=headers)
+    def create(self, spec, allow_duplicate_names, headers=None):
+        data = self._upload_libraries_and_update_spec(spec)
+        data['allow_duplicate_names'] = allow_duplicate_names
+        return self.client.client.perform_query('POST', '/pipelines', data=data,
+                                                headers=headers)
 
-    def deploy(self, spec, headers=None):
-        spec = self._upload_libraries_and_update_spec(spec)
-        pipeline_id = spec['id']
-        self.client.client.perform_query('PUT', '/pipelines/{}'.format(pipeline_id), data=spec,
+    def deploy(self, spec, allow_duplicate_names, headers=None):
+        data = self._upload_libraries_and_update_spec(spec)
+        data['allow_duplicate_names'] = allow_duplicate_names
+        pipeline_id = data['id']
+        self.client.client.perform_query('PUT', '/pipelines/{}'.format(pipeline_id), data=data,
                                          headers=headers)
-
-    def list(self, headers=None):
-        return self.client.client.perform_query("GET", "/pipelines", headers=headers)
 
     def delete(self, pipeline_id, headers=None):
         self.client.delete(pipeline_id, headers)
