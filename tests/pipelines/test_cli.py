@@ -29,11 +29,13 @@ import mock
 import pytest
 from click import Context, Command
 from click.testing import CliRunner
+import requests
 
 import databricks_cli.pipelines.cli as cli
 from tests.utils import provide_conf
 
-DEPLOY_SPEC = '{"id": "123"}'
+DEPLOY_SPEC_NO_ID = '{"name": "asdf"}'
+DEPLOY_SPEC = '{"id": "123", "name": "asdf"}'
 PIPELINE_ID = "123"
 
 
@@ -52,6 +54,37 @@ def click_ctx():
     actual exceptions and raising its own `RuntimeError: There is no active click context`.
     """
     return Context(Command('cmd'))
+
+
+@provide_conf
+def test_create_pipeline_spec_arg(pipelines_api_mock, tmpdir):
+    pipelines_api_mock.create = mock.Mock(return_value={"pipeline_id": PIPELINE_ID})
+
+    path = tmpdir.join('/spec.json').strpath
+    with open(path, 'w') as f:
+        f.write(DEPLOY_SPEC_NO_ID)
+
+    runner = CliRunner()
+    runner.invoke(cli.deploy_cli, [path])
+    with open(path, 'r') as f:
+        spec = json.loads(f.read())
+    assert spec['id'] == PIPELINE_ID
+
+
+@provide_conf
+def test_create_pipeline_spec_option(pipelines_api_mock, tmpdir):
+    pipelines_api_mock.create = mock.Mock(return_value={"pipeline_id": PIPELINE_ID})
+
+    path = tmpdir.join('/spec.json').strpath
+    with open(path, 'w') as f:
+        f.write(DEPLOY_SPEC_NO_ID)
+
+    runner = CliRunner()
+    runner.invoke(cli.deploy_cli, ['--spec', path])
+
+    with open(path, 'r') as f:
+        spec = json.loads(f.read())
+    assert spec['id'] == PIPELINE_ID
 
 
 @provide_conf
@@ -136,19 +169,6 @@ def test_delete_cli_incorrect_parameters(pipelines_api_mock, tmpdir):
 
 
 @provide_conf
-def test_deploy_spec_updated_with_id_if_pipeline_id_not_in_spec(tmpdir):
-    path = tmpdir.join('/spec.json').strpath
-    spec_with_no_id = '{"name": "no id"}'
-    with open(path, 'w') as f:
-        f.write(spec_with_no_id)
-    runner = CliRunner()
-    runner.invoke(cli.deploy_cli, ['--spec', path])
-    with open(path, 'r') as f:
-        updated_spec = json.loads(f.read())
-    assert 'id' in updated_spec
-
-
-@provide_conf
 def test_deploy_spec_pipeline_id_is_not_changed_if_provided_in_spec(tmpdir):
     path = tmpdir.join('/spec.json').strpath
     with open(path, 'w') as f:
@@ -187,14 +207,21 @@ def test_deploy_delete_cli_incorrect_spec_extension(pipelines_api_mock, tmpdir):
 
 
 @provide_conf
-def test_deploy_delete_cli_correct_spec_extensions(pipelines_api_mock, tmpdir):
+def test_deploy_update_delete_cli_correct_spec_extensions(pipelines_api_mock, tmpdir):
+    pipelines_api_mock.create = mock.Mock(return_value={"pipeline_id": PIPELINE_ID})
+
     runner = CliRunner()
     path_json = tmpdir.join('/spec.json').strpath
     with open(path_json, 'w') as f:
-        f.write(DEPLOY_SPEC)
+        f.write(DEPLOY_SPEC_NO_ID)
+    result = runner.invoke(cli.deploy_cli, ['--spec', path_json])
+    assert result.exit_code == 0
+    assert pipelines_api_mock.create.call_count == 1
+
     result = runner.invoke(cli.deploy_cli, ['--spec', path_json])
     assert result.exit_code == 0
     assert pipelines_api_mock.deploy.call_count == 1
+
     result = runner.invoke(cli.delete_cli, ['--spec', path_json])
     assert result.exit_code == 0
     assert pipelines_api_mock.delete.call_count == 1
@@ -202,10 +229,15 @@ def test_deploy_delete_cli_correct_spec_extensions(pipelines_api_mock, tmpdir):
 
     path_case_insensitive = tmpdir.join('/spec2.JsON').strpath
     with open(path_case_insensitive, 'w') as f:
-        f.write(DEPLOY_SPEC)
+        f.write(DEPLOY_SPEC_NO_ID)
+    result = runner.invoke(cli.deploy_cli, ['--spec', path_case_insensitive])
+    assert result.exit_code == 0
+    assert pipelines_api_mock.create.call_count == 1
+
     result = runner.invoke(cli.deploy_cli, ['--spec', path_case_insensitive])
     assert result.exit_code == 0
     assert pipelines_api_mock.deploy.call_count == 1
+
     result = runner.invoke(cli.delete_cli, ['--spec', path_case_insensitive])
     assert result.exit_code == 0
     assert pipelines_api_mock.delete.call_count == 1
@@ -292,3 +324,71 @@ def test_validate_pipeline_id(click_ctx):
             with pytest.raises(SystemExit):
                 cli._validate_pipeline_id(pipline_id)
     assert cli._validate_pipeline_id('pipeline_id-ac345cd1') is None
+
+
+@provide_conf
+def test_duplicate_name_check_error(pipelines_api_mock, tmpdir):
+    mock_response = mock.MagicMock()
+    mock_response.text = '{"error_code": "RESOURCE_CONFLICT"}'
+    pipelines_api_mock.create = mock.Mock(
+        side_effect=requests.exceptions.HTTPError(response=mock_response))
+    pipelines_api_mock.deploy = mock.Mock(
+        side_effect=requests.exceptions.HTTPError(response=mock_response))
+
+    path = tmpdir.join('/spec.json').strpath
+    with open(path, 'w') as f:
+        f.write(DEPLOY_SPEC_NO_ID)
+
+    runner = CliRunner()
+    result = runner.invoke(cli.deploy_cli, [path])
+    assert pipelines_api_mock.create.call_count == 1
+    assert result.exit_code == 1
+    assert "already exists" in result.stdout
+
+    with open(path, 'w') as f:
+        f.write(DEPLOY_SPEC)
+    result = runner.invoke(cli.deploy_cli, [path])
+    assert result.exit_code == 1
+    assert pipelines_api_mock.deploy.call_count == 1
+    assert "already exists" in result.stdout
+
+
+@provide_conf
+def test_allow_duplicate_names_flag(pipelines_api_mock, tmpdir):
+    path = tmpdir.join('/spec.json').strpath
+    with open(path, 'w') as f:
+        f.write(DEPLOY_SPEC_NO_ID)
+    runner = CliRunner()
+    runner.invoke(cli.deploy_cli, [path])
+    assert pipelines_api_mock.create.call_args_list[0][0][1] is False
+
+    runner.invoke(cli.deploy_cli, [path, "--allow-duplicate-names"])
+    assert pipelines_api_mock.create.call_args_list[1][0][1] is True
+
+    with open(path, 'w') as f:
+        f.write(DEPLOY_SPEC)
+
+    runner.invoke(cli.deploy_cli, [path])
+    assert pipelines_api_mock.deploy.call_args_list[0][0][1] is False
+
+    runner.invoke(cli.deploy_cli, [path, "--allow-duplicate-names"])
+    assert pipelines_api_mock.deploy.call_args_list[1][0][1] is True
+
+
+@provide_conf
+def test_create_pipeline_no_update_spec(pipelines_api_mock, tmpdir):
+    pipelines_api_mock.create = mock.Mock(return_value={"pipeline_id": PIPELINE_ID})
+
+    path = tmpdir.join('/spec.json').strpath
+    with open(path, 'w') as f:
+        f.write(DEPLOY_SPEC_NO_ID)
+
+    runner = CliRunner()
+    result = runner.invoke(cli.deploy_cli, [path, "--no-update-spec"])
+
+    assert result.exit_code == 0
+    assert pipelines_api_mock.create.call_count == 1
+
+    with open(path, 'r') as f:
+        spec = json.loads(f.read())
+    assert 'id' not in spec
