@@ -161,13 +161,13 @@ def test_create(pipelines_api):
     spec = copy.deepcopy(SPEC_WITHOUT_ID)
     spec['libraries'] = []
 
-    pipelines_api.create(spec, False)
+    pipelines_api.create(spec, allow_duplicate_names=False)
     data = copy.deepcopy(spec)
     data['allow_duplicate_names'] = False
     client_mock.assert_called_with("POST", "/pipelines", data=data, headers=None)
     assert client_mock.call_count == 1
 
-    pipelines_api.create(spec, True, HEADERS)
+    pipelines_api.create(spec, allow_duplicate_names=True, headers=HEADERS)
     data = copy.deepcopy(spec)
     data['allow_duplicate_names'] = True
     client_mock.assert_called_with("POST", "/pipelines", data=data, headers=HEADERS)
@@ -180,13 +180,13 @@ def test_deploy(pipelines_api):
     spec = copy.deepcopy(SPEC)
     spec['libraries'] = []
 
-    pipelines_api.deploy(spec, False)
+    pipelines_api.deploy(spec, allow_duplicate_names=False)
     data = copy.deepcopy(spec)
     data['allow_duplicate_names'] = False
     client_mock.assert_called_with("PUT", "/pipelines/" + PIPELINE_ID, data=data, headers=None)
     assert client_mock.call_count == 1
 
-    pipelines_api.deploy(spec, True, HEADERS)
+    pipelines_api.deploy(spec, allow_duplicate_names=True, headers=HEADERS)
     data = copy.deepcopy(spec)
     data['allow_duplicate_names'] = True
     client_mock.assert_called_with("PUT", "/pipelines/" + PIPELINE_ID, data=data, headers=HEADERS)

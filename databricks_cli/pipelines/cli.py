@@ -55,7 +55,7 @@ PIPELINE_ID_PERMITTED_CHARACTERS = set(string.ascii_letters + string.digits + '-
 @click.option('--allow-duplicate-names', is_flag=True,
               help="Skip duplicate name check while deploying pipeline")
 @click.option('--no-update-spec', is_flag=True,
-              help="Do not update spec with pipeline ID after creating a new pipeline.")
+              help="Do not update spec file with pipeline ID after creating a new pipeline.")
 @debug_option
 @profile_option
 @pipelines_exception_eater
@@ -66,9 +66,12 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, no_update_spec
     specification that explains how to run a Delta Pipeline on Databricks. All local libraries
     referenced in the spec are uploaded to DBFS.
 
-    The deploy command creates a new pipeline and adds the ID of this pipeline to your spec if your
-    spec does not already contain an ID. The spec will not be updated if the --no-update-spec
-    option is added.
+    If the pipeline spec contains an "id" field, attempts to update an existing pipeline with
+    that ID. If it does not, creates a new pipeline and edits the spec file to add the ID of the
+    created pipeline. The spec file will not be updated if the --no-update-spec option is added.
+
+    The deploy command will not create a new pipeline if a pipeline with the same name already
+    exists. This check can be disabled by adding the --allow-duplicate-names option.
 
     Usage:
 
@@ -77,11 +80,6 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, no_update_spec
     OR
 
     databricks pipelines deploy --spec example.json
-
-    The deploy command will not create a new pipeline if a pipeline with the same name
-    already exists. You can disable this check by using the --allow-duplicate-names option.
-
-    databricks pipelines deploy --allow-duplicate-names --spec example.json
     """
     if bool(spec_arg) == bool(spec):
         raise RuntimeError('The spec should be provided either by an option or argument')
@@ -267,7 +265,13 @@ def _validate_pipeline_id(pipeline_id):
 
 
 def _handle_duplicate_name_exception(spec, exception):
-    if json.loads(exception.response.text).get('error_code', "") == 'RESOURCE_CONFLICT':
+    error_code = None
+    try:
+        error_code = json.loads(exception.response.text).get('error_code')
+    except ValueError:
+        pass
+
+    if error_code == 'RESOURCE_CONFLICT':
         raise ValueError("Pipeline with name '{}' already exists. ".format(spec['name']) +
                          "You can use the --allow-duplicate-names option to skip this check.")
     raise exception
