@@ -22,9 +22,9 @@
 # limitations under the License.
 
 import os
-import uuid
 import json
 import string
+import requests
 
 try:
     from urlparse import urlparse, urljoin
@@ -52,15 +52,26 @@ PIPELINE_ID_PERMITTED_CHARACTERS = set(string.ascii_letters + string.digits + '-
                short_help='Deploys a delta pipeline according to the pipeline specification')
 @click.argument('spec_arg', default=None, required=False)
 @click.option('--spec', default=None, type=PipelineSpecClickType(), help=PipelineSpecClickType.help)
+@click.option('--allow-duplicate-names', is_flag=True,
+              help="Skip duplicate name check while deploying pipeline")
+@click.option('--no-update-spec', is_flag=True,
+              help="Do not update spec file with pipeline ID after creating a new pipeline.")
 @debug_option
 @profile_option
 @pipelines_exception_eater
 @provide_api_client
-def deploy_cli(api_client, spec_arg, spec):
+def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, no_update_spec):
     """
     Deploys a delta pipeline according to the pipeline specification. The pipeline spec is a
     specification that explains how to run a Delta Pipeline on Databricks. All local libraries
     referenced in the spec are uploaded to DBFS.
+
+    If the pipeline spec contains an "id" field, attempts to update an existing pipeline with
+    that ID. If it does not, creates a new pipeline and edits the spec file to add the ID of the
+    created pipeline. The spec file will not be updated if the --no-update-spec option is added.
+
+    The deploy command will not create a new pipeline if a pipeline with the same name already
+    exists. This check can be disabled by adding the --allow-duplicate-names option.
 
     Usage:
 
@@ -75,17 +86,29 @@ def deploy_cli(api_client, spec_arg, spec):
     src = spec_arg if bool(spec_arg) else spec
     spec_obj = _read_spec(src)
     if 'id' not in spec_obj:
-        pipeline_id = str(uuid.uuid4())
-        click.echo("Updating spec at {} with id: {}".format(src, pipeline_id))
-        spec_obj['id'] = pipeline_id
-        _write_spec(src, spec_obj)
-    _validate_pipeline_id(spec_obj['id'])
-    PipelinesApi(api_client).deploy(spec_obj)
+        try:
+            response = PipelinesApi(api_client).create(spec_obj, allow_duplicate_names)
+        except requests.exceptions.HTTPError as e:
+            _handle_duplicate_name_exception(spec_obj, e)
 
-    pipeline_id = spec_obj['id']
-    base_url = "{0.scheme}://{0.netloc}/".format(urlparse(api_client.url))
-    pipeline_url = urljoin(base_url, "#joblist/pipelines/{}".format(pipeline_id))
-    click.echo("Pipeline successfully deployed: {}".format(pipeline_url))
+        new_pipeline_id = response['pipeline_id']
+        click.echo("Successfully created pipeline: {}".format(
+            _get_pipeline_url(api_client, new_pipeline_id)))
+
+        if not no_update_spec:
+            spec_obj['id'] = new_pipeline_id
+            _write_spec(src, spec_obj)
+            click.echo("Updated spec at {} with ID {}".format(src, new_pipeline_id))
+        else:
+            click.echo("Pipeline has been assigned ID {}".format(new_pipeline_id))
+    else:
+        _validate_pipeline_id(spec_obj['id'])
+        try:
+            PipelinesApi(api_client).deploy(spec_obj, allow_duplicate_names)
+        except requests.exceptions.HTTPError as e:
+            _handle_duplicate_name_exception(spec_obj, e)
+        click.echo("Successfully deployed pipeline: {}".format(
+            _get_pipeline_url(api_client, spec_obj['id'])))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -199,6 +222,11 @@ def _read_spec(src):
         raise RuntimeError('The provided file extension for the spec is not supported')
 
 
+def _get_pipeline_url(api_client, pipeline_id):
+    base_url = "{0.scheme}://{0.netloc}/".format(urlparse(api_client.url))
+    return urljoin(base_url, "#joblist/pipelines/{}".format(pipeline_id))
+
+
 def _write_spec(src, spec):
     """
     Writes the spec at src as JSON.
@@ -234,6 +262,19 @@ def _validate_pipeline_id(pipeline_id):
         message = u'Pipeline id {} has invalid character(s)\n'.format(pipeline_id)
         message += u'Valid characters are: _ - a-z A-Z 0-9'
         error_and_quit(message)
+
+
+def _handle_duplicate_name_exception(spec, exception):
+    error_code = None
+    try:
+        error_code = json.loads(exception.response.text).get('error_code')
+    except ValueError:
+        pass
+
+    if error_code == 'RESOURCE_CONFLICT':
+        raise ValueError("Pipeline with name '{}' already exists. ".format(spec['name']) +
+                         "You can use the --allow-duplicate-names option to skip this check.")
+    raise exception
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
