@@ -404,6 +404,21 @@ class ClusterService(object):
             _data['limit'] = limit
         return self.client.perform_query('POST', '/clusters/events', data=_data, headers=headers)
 
+    def get_clusters_by_name(self, cluster_name, headers=None):
+        data = self.list_clusters(headers)
+        if not data:
+            print('nothing returned')
+            return None
+
+        if 'clusters' not in data:
+            print('clusters not returned')
+            return None
+
+        return [
+            cluster for cluster in data['clusters'] if cluster.get('cluster_name') == cluster_name
+        ]
+
+
 class PolicyService(object):
     def __init__(self, client):
         self.client = client
@@ -427,25 +442,6 @@ class PolicyService(object):
         if policy_id is not None:
             _data['policy_id'] = policy_id
         return self.client.perform_query('POST', '/policies/clusters/delete', data=_data, headers=headers)
-
-    def get_clusters_by_name(self, cluster_name, headers=None):
-        data = self.list_clusters(headers)
-        if not data:
-            print ('nothing returned')
-            return None
-
-        if isinstance(cluster_name, str):
-            cluster_name = unicode(cluster_name)
-
-        # print ('clusters {}'.format(json_dumps(data, indent=4)))
-        if 'clusters' not in data:
-            print ('clusters not returned')
-            return None
-
-        return [
-            cluster for cluster in data['clusters'] if cluster.get('cluster_name') == cluster_name
-        ]
-
 
     def edit_policy(self, policy_id, policy_name, definition, headers=None):
         _data = {}
