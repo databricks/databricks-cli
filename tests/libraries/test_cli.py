@@ -454,14 +454,7 @@ def test_list_cli_with_cluster_name(libraries_api_mock):
                 "init_scripts_safe_mode": False
             }
         ]
-        # print(libraries_cli_mock)
-        print(get_clusters_by_name_mock())
         runner = CliRunner()
-        print ('#1'*22)
         res = runner.invoke(cli.list_cli, ['--cluster-name', TEST_CLUSTER_NAME])
-        print (res.output)
-        print ('#1'*22)
-        # libraries_api_mock.cluster_status.assert_called()
-        get_clusters_by_name_mock.assert_called()
+        get_clusters_by_name_mock.assert_called_with(TEST_CLUSTER_NAME)
         libraries_api_mock.cluster_status.assert_called_with(TEST_CLUSTER_ID)
-        # assert_cli_output(res.output, pretty_format(CLUSTER_STATUS_RETURN))
