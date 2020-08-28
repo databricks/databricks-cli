@@ -32,6 +32,7 @@ import databricks_cli.libraries.cli as cli
 from databricks_cli.utils import pretty_format
 from tests.utils import provide_conf, assert_cli_output
 
+TEST_CLUSTER_NAME = 'databricks-cluster-1'
 TEST_CLUSTER_ID = '0213-212348-veeps379'
 ALL_CLUSTER_STATUSES_RETURN = {
     'statuses': [{
@@ -383,3 +384,84 @@ def test_uninstall_cli_cran(libraries_api_mock):
             'repo': test_cran_repo
         }
     }])
+
+
+@provide_conf
+def test_list_cli_with_cluster_name(libraries_api_mock):
+    with mock.patch('databricks_cli.libraries.cli.get_clusters_by_name') as get_clusters_by_name_mock:
+        libraries_api_mock.cluster_status.return_value = CLUSTER_STATUS_RETURN
+        get_clusters_by_name_mock.return_value = [
+            {
+                "cluster_id": "0213-212348-veeps379",
+                "driver": {
+                    "public_dns": "",
+                    "node_id": "123456",
+                    "node_aws_attributes": {
+                        "is_spot": False
+                    },
+                    "instance_id": "i-0abcddef",
+                    "start_timestamp": 1598550048136,
+                    "host_private_ip": "127.0.0.1",
+                    "private_ip": "127.0.0.1"
+                },
+                "executors": [
+                    {
+                        "public_dns": "",
+                        "node_id": "1234567",
+                        "node_aws_attributes": {
+                            "is_spot": True
+                        },
+                        "instance_id": "i-0abcddeff",
+                        "start_timestamp": 1598567503039,
+                        "host_private_ip": "127.0.0.1",
+                        "private_ip": "127.0.0.1"
+                    },
+                ],
+                "spark_context_id": 1,
+                "jdbc_port": 10000,
+                "cluster_name": "databricks-cluster-1",
+                "spark_version": "6.5.x-scala2.11",
+                "spark_conf": {
+                },
+                "node_type_id": "i3.4xlarge",
+                "driver_node_type_id": "i3.4xlarge",
+                "autotermination_minutes": 0,
+                "enable_elastic_disk": True,
+                "cluster_source": "UI",
+                "init_scripts": [
+                ],
+                "enable_local_disk_encryption": False,
+                "state": "RUNNING",
+                "state_message": "",
+                "start_time": 1598550047769,
+                "terminated_time": 0,
+                "last_state_loss_time": 1598550119064,
+                "last_activity_time": 1598550164268,
+                "autoscale": {
+                    "min_workers": 1,
+                    "max_workers": 1
+                },
+                "cluster_memory_mb": 4,
+                "cluster_cores": 1.0,
+                "default_tags": {
+                    "Vendor": "Databricks",
+                    "Creator": "someone@databricks.com",
+                    "ClusterName": "databricks-cluster-1",
+                    "ClusterId": "0213-212348-veeps379"
+                },
+                "creator_user_name": "someone@databricks.com",
+                "pinned_by_user_name": "100001",
+                "init_scripts_safe_mode": False
+            }
+        ]
+        # print(libraries_cli_mock)
+        print(get_clusters_by_name_mock())
+        runner = CliRunner()
+        print ('#1'*22)
+        res = runner.invoke(cli.list_cli, ['--cluster-name', TEST_CLUSTER_NAME])
+        print (res.output)
+        print ('#1'*22)
+        # libraries_api_mock.cluster_status.assert_called()
+        get_clusters_by_name_mock.assert_called()
+        libraries_api_mock.cluster_status.assert_called_with(TEST_CLUSTER_ID)
+        # assert_cli_output(res.output, pretty_format(CLUSTER_STATUS_RETURN))

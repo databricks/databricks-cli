@@ -39,7 +39,7 @@ def _all_cluster_statuses(api_client):
                short_help='Get the status of all libraries.')
 @debug_option
 @profile_option
-@eat_exceptions # noqa
+@eat_exceptions  # noqa
 @provide_api_client
 def all_cluster_statuses_cli(api_client):
     """
@@ -54,17 +54,23 @@ def all_cluster_statuses_cli(api_client):
 def _cluster_status(api_client, cluster_id, cluster_name):
     libraries_api = LibrariesApi(api_client)
 
-    if cluster_id:
-        cluster_ids = [cluster_id]
-    else:
+    if not cluster_id:
         cluster_ids = [
             cluster['cluster_id'] for cluster in
             get_clusters_by_name(api_client, cluster_name) if
             cluster and 'cluster_id' in cluster
         ]
 
-    for cid in cluster_ids:
-        click.echo(pretty_format(libraries_api.cluster_status(cid)))
+        if len(cluster_ids) == 0:
+            raise RuntimeError('No clusters with name {} were found'.format(cluster_name))
+
+        if len(cluster_ids) > 1:
+            raise RuntimeError('More than 1 cluster was named {}, please use --cluster-id.' +
+                               'Cluster ids found: {}'.format(','.join(cluster_ids))
+                               )
+        cluster_id = cluster_ids[0]
+
+    click.echo(pretty_format(libraries_api.cluster_status(cluster_id)))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
