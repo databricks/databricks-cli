@@ -33,10 +33,8 @@ from databricks_cli.click_types import OutputClickType, JsonClickType, ClusterId
 from databricks_cli.clusters.api import ClusterApi
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base, \
-    truncate_string
+    truncate_string, CLUSTER_OPTIONS
 from databricks_cli.version import print_version_callback, version
-
-CLUSTER_OPTIONS = ['cluster-id', 'cluster-name']
 
 
 def get_cluster_name(cluster_api, cluster_id):
@@ -47,11 +45,6 @@ def get_cluster_name(cluster_api, cluster_id):
         return None
 
     return data.get('cluster_name')
-
-
-def get_clusters_by_name(api_client, cluster_name):
-    # type: (ClusterApi, str) -> str
-    return ClusterApi(api_client).get_clusters_by_name(cluster_name)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
@@ -188,7 +181,8 @@ def get_cli(api_client, cluster_id, cluster_name):
     if cluster_id is not None:
         click.echo(pretty_format(ClusterApi(api_client).get_cluster(cluster_id)))
     else:
-        click.echo(pretty_format(get_clusters_by_name(api_client, cluster_name)))
+        clusters_by_name = ClusterApi(api_client).get_clusters_by_name(cluster_name)
+        click.echo(pretty_format(clusters_by_name))
 
 
 def _clusters_to_table(clusters_json):
