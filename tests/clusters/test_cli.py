@@ -31,8 +31,10 @@ from tabulate import tabulate
 
 import databricks_cli.clusters.cli as cli
 from databricks_cli.utils import pretty_format
+from tests.test_data import TEST_CLUSTER_ID, TEST_CLUSTER_NAME, \
+    CLUSTERS_BY_NAME_SINGLE_CLUSTER_RV, CLUSTERS_BY_NAME_MULTIPLE_CLUSTER_RV, \
+    MULTIPLE_CLUSTERS_FAILURE_OUTPUT
 from tests.utils import provide_conf, assert_cli_output
-from tests.test_data import *
 
 CLUSTER_ID = TEST_CLUSTER_ID
 CLUSTER_NAME = TEST_CLUSTER_NAME

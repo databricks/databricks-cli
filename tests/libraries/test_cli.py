@@ -29,7 +29,9 @@ from click.testing import CliRunner
 
 import databricks_cli.libraries.cli as cli
 from databricks_cli.utils import pretty_format
-from tests.test_data import *
+from tests.test_data import TEST_CLUSTER_NAME, ALL_CLUSTER_STATUSES_RETURN, \
+    TEST_CLUSTER_ID, CLUSTERS_BY_NAME_MULTIPLE_CLUSTER_RV, MULTIPLE_CLUSTERS_FAILURE_OUTPUT, \
+    CLUSTERS_BY_NAME_SINGLE_CLUSTER_RV
 from tests.utils import provide_conf, assert_cli_output
 
 
