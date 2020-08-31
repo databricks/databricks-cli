@@ -227,3 +227,79 @@ def test_cluster_events_output_table(cluster_api_mock):
     # Check that the timestamp 1559334105421 gets converted to the right time! It's hard to do an
     # exact match because of time zones.
     assert any(['2019-05-31' in l for l in stdout_lines])  # noqa
+
+
+def help_test(cli_function, service_function, rv):
+    """
+    This function makes testing the cli functions that just pass data through simpler
+    """
+
+    with mock.patch('databricks_cli.clusters.cli.click.echo') as echo_mock:
+        service_function.return_value = rv
+        runner = CliRunner()
+        runner.invoke(cli_function, [])
+        assert echo_mock.call_args[0][0] == pretty_format(rv)
+
+
+@provide_conf
+def test_list_zones(cluster_sdk_mock):
+    zones_rv = {
+        'zones': [
+            'us-west-2a',
+            'us-west-2b',
+            'us-west-2c',
+            'us-west-2d'
+        ],
+        'default_zone': 'us-west-2a'
+    }
+
+    help_test(cli.list_zones_cli, cluster_sdk_mock.list_available_zones, zones_rv)
+
+
+@provide_conf
+def test_list_node_types(cluster_sdk_mock):
+    rv = {
+        "node_types": [
+            {
+                "node_type_id": "r3.xlarge",
+                "memory_mb": 31232,
+                "num_cores": 4.0,
+                "description": "r3.xlarge (deprecated)",
+                "instance_type_id": "r3.xlarge",
+                "is_deprecated": False,
+                "category": "Memory Optimized",
+                "support_ebs_volumes": True,
+                "support_cluster_tags": True,
+                "num_gpus": 0,
+                "node_instance_type": {
+                    "instance_type_id": "r3.xlarge",
+                    "local_disks": 1,
+                    "local_disk_size_gb": 80
+                },
+                "is_hidden": False,
+                "support_port_forwarding": True,
+                "display_order": 1,
+                "is_io_cache_enabled": False
+            }
+        ]
+    }
+
+    help_test(cli.list_node_types_cli, cluster_sdk_mock.list_node_types, rv)
+
+
+@provide_conf
+def test_spark_versions(cluster_sdk_mock):
+    rv = {
+        "versions": [
+            {
+                "key": "7.1.x-scala2.12",
+                "name": "7.1 (includes Apache Spark 3.0.0, Scala 2.12)"
+            },
+            {
+                "key": "6.5.x-scala2.11",
+                "name": "6.5 (includes Apache Spark 2.4.5, Scala 2.11)"
+            }
+        ]
+    }
+
+    help_test(cli.spark_versions_cli, cluster_sdk_mock.list_spark_versions, rv)
