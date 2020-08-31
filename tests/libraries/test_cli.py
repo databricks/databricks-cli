@@ -22,7 +22,6 @@
 # limitations under the License.
 
 # pylint:disable=redefined-outer-name
-import copy
 import itertools
 import mock
 import pytest
@@ -30,99 +29,8 @@ from click.testing import CliRunner
 
 import databricks_cli.libraries.cli as cli
 from databricks_cli.utils import pretty_format
+from tests.test_data import *
 from tests.utils import provide_conf, assert_cli_output
-
-TEST_CLUSTER_NAME = 'databricks-cluster-1'
-TEST_CLUSTER_ID = '0213-212348-veeps379'
-TEST_CLUSTER_ID_2 = '0315-6787348-blah280'
-ALL_CLUSTER_STATUSES_RETURN = {
-    'statuses': [{
-        'library_statuses': [{
-            'status': 'INSTALLED',
-            'is_library_for_all_clusters': False,
-            'library': {
-                'jar': 'dbfs:/test.jar'
-            }
-        }],
-        'cluster_id': TEST_CLUSTER_ID
-    }]
-}
-
-CLUSTER_1_RV = {
-    "cluster_id": TEST_CLUSTER_ID,
-    "driver": {
-        "public_dns": "",
-        "node_id": "123456",
-        "node_aws_attributes": {
-            "is_spot": False
-        },
-        "instance_id": "i-0abcddef",
-        "start_timestamp": 1598550048136,
-        "host_private_ip": "127.0.0.1",
-        "private_ip": "127.0.0.1"
-    },
-    "executors": [
-        {
-            "public_dns": "",
-            "node_id": "1234567",
-            "node_aws_attributes": {
-                "is_spot": True
-            },
-            "instance_id": "i-0abcddeff",
-            "start_timestamp": 1598567503039,
-            "host_private_ip": "127.0.0.1",
-            "private_ip": "127.0.0.1"
-        },
-    ],
-    "spark_context_id": 1,
-    "jdbc_port": 10000,
-    "cluster_name": TEST_CLUSTER_NAME,
-    "spark_version": "6.5.x-scala2.11",
-    "spark_conf": {
-    },
-    "node_type_id": "i3.4xlarge",
-    "driver_node_type_id": "i3.4xlarge",
-    "autotermination_minutes": 0,
-    "enable_elastic_disk": True,
-    "cluster_source": "UI",
-    "init_scripts": [
-    ],
-    "enable_local_disk_encryption": False,
-    "state": "RUNNING",
-    "state_message": "",
-    "start_time": 1598550047769,
-    "terminated_time": 0,
-    "last_state_loss_time": 1598550119064,
-    "last_activity_time": 1598550164268,
-    "autoscale": {
-        "min_workers": 1,
-        "max_workers": 1
-    },
-    "cluster_memory_mb": 4,
-    "cluster_cores": 1.0,
-    "default_tags": {
-        "Vendor": "Databricks",
-        "Creator": "someone@databricks.com",
-        "ClusterName": TEST_CLUSTER_NAME,
-        "ClusterId": TEST_CLUSTER_ID
-    },
-    "creator_user_name": "someone@databricks.com",
-    "pinned_by_user_name": "100001",
-    "init_scripts_safe_mode": False
-}
-
-CLUSTERS_BY_NAME_SINGLE_CLUSTER_RV = [
-    CLUSTER_1_RV
-]
-
-CLUSTER_2_RV = copy.deepcopy(CLUSTER_1_RV)
-# fix the cluster ids for the second cluster
-CLUSTER_2_RV['cluster_id'] = TEST_CLUSTER_ID_2
-CLUSTER_2_RV['default_tags']['ClusterId'] = TEST_CLUSTER_ID_2
-CLUSTERS_BY_NAME_MULTIPLE_CLUSTER_RV = [
-    CLUSTER_1_RV,
-    CLUSTER_2_RV
-]
 
 
 @pytest.fixture()
@@ -494,13 +402,6 @@ def test_list_cli_with_cluster_name(libraries_sdk_mock, cluster_sdk_mock):
     runner = CliRunner()
     runner.invoke(cli.list_cli, ['--cluster-name', TEST_CLUSTER_NAME])
     libraries_sdk_mock.cluster_status.assert_called_with(TEST_CLUSTER_ID)
-
-
-MULTIPLE_CLUSTERS_FAILURE_OUTPUT = 'Error: RuntimeError: ' + \
-                                   'More than 1 cluster was named {},'.format(
-                                       (TEST_CLUSTER_NAME)) \
-                                   + ' please use --cluster-id.\n' \
-                                   + 'Cluster ids found: 0213-212348-veeps379, 0315-6787348-blah280'
 
 
 @provide_conf

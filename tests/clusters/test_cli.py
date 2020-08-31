@@ -32,10 +32,14 @@ from tabulate import tabulate
 import databricks_cli.clusters.cli as cli
 from databricks_cli.utils import pretty_format
 from tests.utils import provide_conf, assert_cli_output
+from tests.test_data import *
 
-CREATE_RETURN = {'cluster_id': 'test'}
-CREATE_JSON = '{"name": "test_cluster"}'
-EDIT_JSON = '{"cluster_id": "test"}'
+CLUSTER_ID = TEST_CLUSTER_ID
+CLUSTER_NAME = TEST_CLUSTER_NAME
+
+CREATE_RETURN = {'cluster_id': TEST_CLUSTER_ID}
+CREATE_JSON = '{{"name": "{}"}}'.format(TEST_CLUSTER_NAME)
+EDIT_JSON = '{{"cluster_id": "{}"}}'.format(TEST_CLUSTER_ID)
 
 
 @pytest.fixture()
@@ -44,7 +48,7 @@ def cluster_api_mock():
         _cluster_api_mock = mock.MagicMock()
         ClusterApiMock.return_value = _cluster_api_mock
         # make sure we always get a cluster name back
-        rv = {'cluster_name': 'test_cluster'}
+        rv = {'cluster_name': TEST_CLUSTER_NAME}
         _cluster_api_mock.get_cluster = mock.MagicMock(return_value=rv)
 
         yield _cluster_api_mock
@@ -68,13 +72,18 @@ def test_edit_cli_json(cluster_api_mock):
 
 
 @provide_conf
-def test_edit_cli_no_args(cluster_api_mock):
+def test_edit_cli_json_file(cluster_api_mock):
+    runner = CliRunner()
+    runner.invoke(cli.edit_cli, ['--json-file', 'tests/resources/clusters/edit_cli_input.json'])
+    assert cluster_api_mock.edit_cluster.call_args[0][0] == json.loads(EDIT_JSON)
+
+
+@provide_conf
+def test_edit_cli_no_args():
     runner = CliRunner()
     res = runner.invoke(cli.edit_cli, [])
-    assert_cli_output(res.output, 'Error: RuntimeError: Either --json-file or --json should be provided')
-
-
-CLUSTER_ID = 'test'
+    assert_cli_output(res.output,
+                      'Error: RuntimeError: Either --json-file or --json should be provided')
 
 
 @provide_conf
@@ -121,10 +130,37 @@ def test_get_cli(cluster_api_mock):
     assert cluster_api_mock.get_cluster.call_args[0][0] == CLUSTER_ID
 
 
+@pytest.fixture()
+def cluster_sdk_mock():
+    with mock.patch('databricks_cli.clusters.api.ClusterService') as ClusterSdkMock:
+        _cluster_sdk_mock = mock.MagicMock()
+        ClusterSdkMock.return_value = _cluster_sdk_mock
+        rv = {'cluster_name': TEST_CLUSTER_NAME}
+        _cluster_sdk_mock.get_cluster = mock.MagicMock(return_value=rv)
+
+        yield _cluster_sdk_mock
+
+
+@provide_conf
+def test_get_cli_cluster_name(cluster_sdk_mock):
+    cluster_sdk_mock.get_clusters_by_name.return_value = CLUSTERS_BY_NAME_SINGLE_CLUSTER_RV
+    runner = CliRunner()
+    res = runner.invoke(cli.get_cli, ['--cluster-name', CLUSTER_NAME])
+    assert_cli_output(res.stdout, '"{}"'.format(TEST_CLUSTER_ID))
+
+
+@provide_conf
+def test_get_cli_cluster_name_multiple(cluster_sdk_mock):
+    cluster_sdk_mock.get_clusters_by_name.return_value = CLUSTERS_BY_NAME_MULTIPLE_CLUSTER_RV
+    runner = CliRunner()
+    res = runner.invoke(cli.get_cli, ['--cluster-name', CLUSTER_NAME])
+    assert_cli_output(res.stdout, MULTIPLE_CLUSTERS_FAILURE_OUTPUT)
+
+
 LIST_RETURN = {
     'clusters': [{
-        'cluster_id': 'test_id',
-        'cluster_name': 'test_name',
+        'cluster_id': TEST_CLUSTER_ID,
+        'cluster_name': TEST_CLUSTER_NAME,
         'state': 'PENDING'
     }]
 }
@@ -132,7 +168,7 @@ LIST_RETURN = {
 EVENTS_RETURN = {
     "events": [
         {
-            "cluster_id": "0524-220842-flub264",
+            "cluster_id": TEST_CLUSTER_ID,
             "timestamp": 1559334105421,
             "type": "AUTOSCALING_STATS_REPORT",
             "details": {
@@ -144,7 +180,7 @@ EVENTS_RETURN = {
         },
     ],
     "next_page": {
-        "cluster_id": "0524-220842-flub264",
+        "cluster_id": TEST_CLUSTER_ID,
         "end_time": 1562624262942,
         "offset": 50
     },
@@ -157,9 +193,9 @@ def test_list_jobs(cluster_api_mock):
     with mock.patch('databricks_cli.clusters.cli.click.echo') as echo_mock:
         cluster_api_mock.list_clusters.return_value = LIST_RETURN
         runner = CliRunner()
-        runner.invoke(cli.list_cli)
+        res = runner.invoke(cli.list_cli)
         assert echo_mock.call_args[0][0] == \
-               tabulate([('test_id', 'test_name', 'PENDING')], tablefmt='plain')
+               tabulate([(TEST_CLUSTER_ID, TEST_CLUSTER_NAME, 'PENDING')], tablefmt='plain')
 
 
 @provide_conf
