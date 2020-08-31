@@ -335,7 +335,7 @@ def cluster_events_cli(api_client, cluster_id, start_time, end_time, order, even
 @debug_option
 @profile_option
 @eat_exceptions
-def clusters_group():
+def clusters_group():  # pragma: no cover
     """
     Utility to interact with Databricks clusters.
     """
