@@ -195,7 +195,7 @@ def test_list_jobs(cluster_api_mock):
     with mock.patch('databricks_cli.clusters.cli.click.echo') as echo_mock:
         cluster_api_mock.list_clusters.return_value = LIST_RETURN
         runner = CliRunner()
-        res = runner.invoke(cli.list_cli)
+        runner.invoke(cli.list_cli)
         assert echo_mock.call_args[0][0] == \
                tabulate([(TEST_CLUSTER_ID, TEST_CLUSTER_NAME, 'PENDING')], tablefmt='plain')
 
