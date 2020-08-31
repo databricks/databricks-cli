@@ -55,21 +55,7 @@ def _cluster_status(api_client, cluster_id, cluster_name):
     libraries_api = LibrariesApi(api_client)
 
     if not cluster_id:
-
-        clusters_by_name = ClusterApi(api_client).get_clusters_by_name(cluster_name)
-        cluster_ids = [
-            cluster['cluster_id'] for cluster in clusters_by_name if
-            cluster and 'cluster_id' in cluster
-        ]
-
-        if len(cluster_ids) == 0:
-            raise RuntimeError('No clusters with name {} were found'.format(cluster_name))
-
-        if len(cluster_ids) > 1:
-            raise RuntimeError('More than 1 cluster was named {}, please use --cluster-id.' +
-                               'Cluster ids found: {}'.format(','.join(cluster_ids))
-                               )
-        cluster_id = cluster_ids[0]
+        cluster_id = ClusterApi(api_client).get_cluster_id_for_name(cluster_name)
 
     click.echo(pretty_format(libraries_api.cluster_status(cluster_id)))
 

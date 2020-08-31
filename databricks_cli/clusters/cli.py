@@ -181,7 +181,7 @@ def get_cli(api_client, cluster_id, cluster_name):
     if cluster_id is not None:
         click.echo(pretty_format(ClusterApi(api_client).get_cluster(cluster_id)))
     else:
-        clusters_by_name = ClusterApi(api_client).get_clusters_by_name(cluster_name)
+        clusters_by_name = ClusterApi(api_client).get_cluster_id_for_name(cluster_name)
         click.echo(pretty_format(clusters_by_name))
 
 
