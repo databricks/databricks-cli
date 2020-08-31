@@ -197,7 +197,7 @@ def test_list_jobs(cluster_api_mock):
         runner = CliRunner()
         runner.invoke(cli.list_cli)
         assert echo_mock.call_args[0][0] == \
-               tabulate([(TEST_CLUSTER_ID, TEST_CLUSTER_NAME, 'PENDING')], tablefmt='plain')
+            tabulate([(TEST_CLUSTER_ID, TEST_CLUSTER_NAME, 'PENDING')], tablefmt='plain')
 
 
 @provide_conf
