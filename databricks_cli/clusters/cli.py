@@ -37,16 +37,6 @@ from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format
 from databricks_cli.version import print_version_callback, version
 
 
-def get_cluster_name(cluster_api, cluster_id):
-    # type: (ClusterApi, str) -> str
-    data = cluster_api.get_cluster(cluster_id)
-    if not data or 'cluster_name' not in data:
-        click.echo('No cluster_id {} found'.format(cluster_id))
-        return None
-
-    return data.get('cluster_name')
-
-
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--json-file', default=None, type=click.Path(),
               help='File containing JSON request to POST to /api/2.0/clusters/create.')

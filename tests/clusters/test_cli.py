@@ -31,7 +31,7 @@ from tabulate import tabulate
 
 import databricks_cli.clusters.cli as cli
 from databricks_cli.utils import pretty_format
-from tests.utils import provide_conf
+from tests.utils import provide_conf, assert_cli_output
 
 CREATE_RETURN = {'cluster_id': 'test'}
 CREATE_JSON = '{"name": "test_cluster"}'
@@ -65,6 +65,13 @@ def test_edit_cli_json(cluster_api_mock):
     runner = CliRunner()
     runner.invoke(cli.edit_cli, ['--json', EDIT_JSON])
     assert cluster_api_mock.edit_cluster.call_args[0][0] == json.loads(EDIT_JSON)
+
+
+@provide_conf
+def test_edit_cli_no_args(cluster_api_mock):
+    runner = CliRunner()
+    res = runner.invoke(cli.edit_cli, [])
+    assert_cli_output(res.output, 'Error: RuntimeError: Either --json-file or --json should be provided')
 
 
 CLUSTER_ID = 'test'
@@ -152,7 +159,7 @@ def test_list_jobs(cluster_api_mock):
         runner = CliRunner()
         runner.invoke(cli.list_cli)
         assert echo_mock.call_args[0][0] == \
-            tabulate([('test_id', 'test_name', 'PENDING')], tablefmt='plain')
+               tabulate([('test_id', 'test_name', 'PENDING')], tablefmt='plain')
 
 
 @provide_conf
@@ -181,4 +188,4 @@ def test_cluster_events_output_table(cluster_api_mock):
     stdout_lines = stdout.split('\n')
     # Check that the timestamp 1559334105421 gets converted to the right time! It's hard to do an
     # exact match because of time zones.
-    assert any(['2019-05-31' in l for l in stdout_lines]) # noqa
+    assert any(['2019-05-31' in l for l in stdout_lines])  # noqa
