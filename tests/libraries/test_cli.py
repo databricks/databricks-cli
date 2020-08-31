@@ -495,7 +495,9 @@ def test_list_cli_with_cluster_name(libraries_api_mock, cluster_sdk_mock):
     libraries_api_mock.cluster_status.assert_called_with(TEST_CLUSTER_ID)
 
 
-MULTIPLE_CLUSTERS_FAILURE_OUTPUT = 'Error: RuntimeError: More than 1 cluster was named databricks-cluster-1,' \
+MULTIPLE_CLUSTERS_FAILURE_OUTPUT = 'Error: RuntimeError: ' + \
+                                   'More than 1 cluster was named {},'.format(
+                                       (TEST_CLUSTER_NAME)) \
                                    + ' please use --cluster-id.\n' \
                                    + 'Cluster ids found: 0213-212348-veeps379, 0315-6787348-blah280'
 

@@ -82,7 +82,8 @@ class ClusterApi(object):
             raise RuntimeError('No clusters with name {} were found'.format(cluster_name))
 
         if len(cluster_ids) > 1:
-            raise RuntimeError('More than 1 cluster was named {}, please use --cluster-id.\n'.format(cluster_name) +
+            raise RuntimeError('More than 1 cluster was named {}, '.format(cluster_name) +
+                               'please use --cluster-id.\n' +
                                'Cluster ids found: {}'.format(', '.join(cluster_ids))
                                )
         return cluster_ids[0]

@@ -163,7 +163,7 @@ def _get_library_from_options(jar, egg, whl, maven_coordinates, maven_repo, mave
         if cran_repo is not None:
             cran_library['cran']['repo'] = cran_repo
         return cran_library
-    raise AssertionError('Code not reached.')
+    raise AssertionError('Code not reached.')  # pragma: no cover
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -268,7 +268,7 @@ def uninstall_cli(api_client, cluster_id, all, jar, egg, whl, maven_coordinates,
 @debug_option
 @profile_option
 @eat_exceptions
-def libraries_group():
+def libraries_group():  # pragma: no cover
     """
     Utility to interact with libraries.
 
