@@ -388,6 +388,7 @@ def test_create_pipeline_no_update_spec(pipelines_api_mock, tmpdir):
         spec = json.loads(f.read())
     assert 'id' not in spec
 
+
 @provide_conf
 def test_deploy_pipeline_conflicting_ids(pipelines_api_mock, tmpdir):
     pipelines_api_mock.deploy = mock.Mock()
