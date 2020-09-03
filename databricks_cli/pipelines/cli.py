@@ -54,13 +54,13 @@ PIPELINE_ID_PERMITTED_CHARACTERS = set(string.ascii_letters + string.digits + '-
 @click.option('--spec', default=None, type=PipelineSpecClickType(), help=PipelineSpecClickType.help)
 @click.option('--allow-duplicate-names', is_flag=True,
               help="Skip duplicate name check while deploying pipeline")
-@click.option('--no-update-spec', is_flag=True,
-              help="Do not update spec file with pipeline ID after creating a new pipeline.")
+@click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
+              help=PipelineIdClickType.help)
 @debug_option
 @profile_option
 @pipelines_exception_eater
 @provide_api_client
-def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, no_update_spec):
+def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
     """
     Deploys a delta pipeline according to the pipeline specification. The pipeline spec is a
     specification that explains how to run a Delta Pipeline on Databricks. All local libraries
@@ -85,7 +85,7 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, no_update_spec
         raise RuntimeError('The spec should be provided either by an option or argument')
     src = spec_arg if bool(spec_arg) else spec
     spec_obj = _read_spec(src)
-    if 'id' not in spec_obj:
+    if not pipeline_id and 'id' not in spec_obj:
         try:
             response = PipelinesApi(api_client).create(spec_obj, allow_duplicate_names)
         except requests.exceptions.HTTPError as e:
@@ -95,14 +95,17 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, no_update_spec
         click.echo("Successfully created pipeline: {}".format(
             _get_pipeline_url(api_client, new_pipeline_id)))
 
-        if not no_update_spec:
-            spec_obj['id'] = new_pipeline_id
-            _write_spec(src, spec_obj)
-            click.echo("Updated spec at {} with ID {}".format(src, new_pipeline_id))
-        else:
-            click.echo("Pipeline has been assigned ID {}".format(new_pipeline_id))
+        click.echo("Pipeline has been assigned ID {}".format(new_pipeline_id))
+        click.echo(new_pipeline_id, err=True)
     else:
+        if (pipeline_id and 'id' in spec_obj) and pipeline_id != spec_obj["id"]:
+            raise ValueError(
+                "The ID provided from --pipeline_id '{}' is different than the id provided the spec '{}'. Please "
+                "resolve the conflict and try the command again.")
+
+        spec_obj['id'] = pipeline_id or spec_obj.get('id', None)
         _validate_pipeline_id(spec_obj['id'])
+
         try:
             PipelinesApi(api_client).deploy(spec_obj, allow_duplicate_names)
         except requests.exceptions.HTTPError as e:
