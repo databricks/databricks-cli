@@ -69,6 +69,7 @@ def test_create_pipeline_spec_arg(pipelines_api_mock, tmpdir):
 
     assert PIPELINE_ID in result.stdout
 
+
 @provide_conf
 def test_create_pipeline_spec_option(pipelines_api_mock, tmpdir):
     pipelines_api_mock.create = mock.Mock(return_value={"pipeline_id": PIPELINE_ID})
@@ -229,7 +230,10 @@ def test_deploy_update_delete_cli_correct_spec_extensions(pipelines_api_mock, tm
     assert result.exit_code == 0
     assert pipelines_api_mock.create.call_count == 1
 
-    result = runner.invoke(cli.deploy_cli, ['--spec', path_case_insensitive, '--pipeline-id', PIPELINE_ID])
+    result = runner.invoke(cli.deploy_cli, [
+        '--spec', path_case_insensitive,
+        '--pipeline-id', PIPELINE_ID
+    ])
     assert result.exit_code == 0
     assert pipelines_api_mock.deploy.call_count == 1
 

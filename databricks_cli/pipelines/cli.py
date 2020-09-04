@@ -100,8 +100,10 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
     else:
         if (pipeline_id and 'id' in spec_obj) and pipeline_id != spec_obj["id"]:
             raise ValueError(
-                "The ID provided in --pipeline_id '{}' is different from the id provided the spec '{}'. Please "
-                "resolve the conflict and try the command again.".format(pipeline_id, spec["id"]))
+                "The ID provided in --pipeline_id '{}' is different from the id provided the "
+                "spec '{}'. Please resolve the conflict and try the command again."
+                .format(pipeline_id, spec["id"])
+            )
 
         spec_obj['id'] = pipeline_id or spec_obj.get('id', None)
         _validate_pipeline_id(spec_obj['id'])
