@@ -21,9 +21,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from hashlib import sha1
 import os
+import copy
 
 from six.moves import urllib
 
@@ -41,15 +41,17 @@ class PipelinesApi(object):
         self.client = DeltaPipelinesService(api_client)
         self.dbfs_client = DbfsApi(api_client)
 
-    def deploy(self, spec, headers=None):
-        lib_objects = LibraryObject.from_json(spec.get('libraries', []))
-        local_lib_objects, external_lib_objects = \
-            self._identify_local_libraries(lib_objects)
+    def create(self, spec, allow_duplicate_names, headers=None):
+        data = self._upload_libraries_and_update_spec(spec)
+        data['allow_duplicate_names'] = allow_duplicate_names
+        return self.client.client.perform_query('POST', '/pipelines', data=data,
+                                                headers=headers)
 
-        spec['libraries'] = LibraryObject.to_json(external_lib_objects +
-                                                  self._upload_local_libraries(local_lib_objects))
-        pipeline_id = spec['id']
-        self.client.client.perform_query('PUT', '/pipelines/{}'.format(pipeline_id), data=spec,
+    def deploy(self, spec, allow_duplicate_names, headers=None):
+        data = self._upload_libraries_and_update_spec(spec)
+        data['allow_duplicate_names'] = allow_duplicate_names
+        pipeline_id = data['id']
+        self.client.client.perform_query('PUT', '/pipelines/{}'.format(pipeline_id), data=data,
                                          headers=headers)
 
     def delete(self, pipeline_id, headers=None):
@@ -60,6 +62,15 @@ class PipelinesApi(object):
 
     def reset(self, pipeline_id, headers=None):
         self.client.reset(pipeline_id, headers)
+
+    def _upload_libraries_and_update_spec(self, spec):
+        spec = copy.deepcopy(spec)
+        lib_objects = LibraryObject.from_json(spec.get('libraries', []))
+        local_lib_objects, external_lib_objects = self._identify_local_libraries(lib_objects)
+
+        spec['libraries'] = LibraryObject.to_json(external_lib_objects +
+                                                  self._upload_local_libraries(local_lib_objects))
+        return spec
 
     @staticmethod
     def _identify_local_libraries(lib_objects):
