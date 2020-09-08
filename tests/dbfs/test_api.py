@@ -54,6 +54,7 @@ def get_partial_delete_exception(message="[...] operation has deleted 10 files [
     response._content = ('{{"error_code": "{}","message": "{}"}}'.format(api.DbfsErrorCodes.PARTIAL_DELETE, message)).encode() #  NOQA
     return requests.exceptions.HTTPError(response=response)
 
+
 def get_rate_limit_exception():
     response = requests.Response()
     response.status_code = 429
@@ -111,8 +112,8 @@ class TestDbfsApi(object):
 
     def test_list_files_rate_limited(self, dbfs_api):
         rate_limit_exception = get_rate_limit_exception()
-        # Simulate 3 rate limit exceptions followed by a full successful list operation
-        exception_sequence = [rate_limit_exception, rate_limit_exception, rate_limit_exception, None]
+        # Simulate 2 rate limit exceptions followed by a full successful list operation
+        exception_sequence = [rate_limit_exception, rate_limit_exception, None]
         dbfs_api.client.list_files = mock.Mock(side_effect=exception_sequence)
         # Should succeed
         files = dbfs_api.list_files(TEST_DBFS_PATH)
@@ -121,7 +122,7 @@ class TestDbfsApi(object):
 
     def test_mkdirs_rate_limited(self, dbfs_api):
         rate_limit_exception = get_rate_limit_exception()
-        # Simulate 3 rate limit exceptions followed by a full successful list operation
+        # Simulate 2 rate limit exceptions followed by a full successful list operation
         exception_sequence = [rate_limit_exception, rate_limit_exception, None]
         dbfs_api.client.mkdirs = mock.Mock(side_effect=exception_sequence)
         # Should succeed
@@ -156,7 +157,7 @@ class TestDbfsApi(object):
             'is_dir': False,
             'file_size': 1
         }])
-        assert(dbfs_api.get_status(TEST_DBFS_PATH))
+        assert dbfs_api.get_status(TEST_DBFS_PATH)
 
     def test_put_file(self, dbfs_api, tmpdir):
         test_file_path = os.path.join(tmpdir.strpath, 'test')
@@ -173,7 +174,7 @@ class TestDbfsApi(object):
         assert b64encode(b'test').decode() == api_mock.add_block.call_args[0][1]
         assert api_mock.close.call_count == 1
         assert test_handle == api_mock.close.call_args[0][0]
-    
+
     def test_put_file_rate_limited(self, dbfs_api, tmpdir):
         test_file_path = os.path.join(tmpdir.strpath, 'test')
         with open(test_file_path, 'wt') as f:
@@ -246,7 +247,7 @@ class TestDbfsApi(object):
 
     def test_cat_rate_limited(self, dbfs_api):
         rate_limit_exception = get_rate_limit_exception()
-        # Simulate 3 rate limit exceptions followed by a full successful list operation
+        # Simulate 2 rate limit exceptions followed by a full successful list operation
         get_status_exception_sequence = [rate_limit_exception, rate_limit_exception, {
             'path': '/test',
             'is_dir': False,
@@ -276,8 +277,12 @@ class TestDbfsApi(object):
     def test_partial_delete_with_rate_limit(self, dbfs_api):
         rate_limit_exception = get_rate_limit_exception()
         e_partial_delete = get_partial_delete_exception()
-        exception_sequence = [e_partial_delete, rate_limit_exception, e_partial_delete, e_partial_delete,  None]
-        # Simulate 3 partial deletes followed by a full successful delete
+        # Simulate 3 partial deletes interspersed with rate limiting exceptions 
+        # followed by a full successful delete
+        exception_sequence = [e_partial_delete, rate_limit_exception, 
+                              e_partial_delete, rate_limit_exception,
+                              e_partial_delete, None]
+
         dbfs_api.client.delete = mock.Mock(side_effect=exception_sequence)
         dbfs_api.delete_retry_delay_millis = 1
         # Should succeed
@@ -285,7 +290,7 @@ class TestDbfsApi(object):
 
     def test_delete_with_rate_limit(self, dbfs_api):
         rate_limit_exception = get_rate_limit_exception()
-        # Simulate 3 partial deletes followed by a full successful delete
+        # Simulate a rate limit exception followed by a full successful delete
         exception_sequence = [rate_limit_exception, None]
         dbfs_api.client.delete = mock.Mock(side_effect=exception_sequence)
         dbfs_api.delete_retry_delay_millis = 1
