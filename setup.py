@@ -39,6 +39,7 @@ setup(
         'tabulate>=0.7.7',
         'six>=1.10.0',
         'configparser>=0.3.5;python_version < "3.6"',
+        'tenacity>=6.2.0'
     ],
     entry_points='''
         [console_scripts]
