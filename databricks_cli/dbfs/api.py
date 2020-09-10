@@ -30,7 +30,7 @@ import tempfile
 import re
 import click
 
-from tenacity import retry, wait_random_exponential, retry_if_exception_type
+from tenacity import retry, wait_random_exponential, retry_if_exception_type, stop_after_attempt
 
 from requests.exceptions import HTTPError
 
@@ -40,6 +40,9 @@ from databricks_cli.dbfs.dbfs_path import DbfsPath
 from databricks_cli.dbfs.exceptions import LocalFileExistsException, RateLimitException
 
 BUFFER_SIZE_BYTES = 2**20
+EXPONENTIAL_BACKOFF_MULTIPLIER = 1
+MAX_SECONDS_WAIT = 60
+MAX_RETRY_ATTEMPTS = 7
 
 
 class ParseException(Exception):
@@ -84,19 +87,24 @@ class DbfsApi(object):
     def __init__(self, api_client):
         self.client = DbfsService(api_client)
 
-    @retry(wait=wait_random_exponential(multiplier=1, max=30), 
-           retry=retry_if_exception_type(RateLimitException))
-    def list_files(self, dbfs_path, headers=None):
+    @retry(wait=wait_random_exponential(multiplier=EXPONENTIAL_BACKOFF_MULTIPLIER, 
+           max=MAX_SECONDS_WAIT), retry=retry_if_exception_type(RateLimitException), 
+           stop=stop_after_attempt(MAX_RETRY_ATTEMPTS))
+    def list_files_with_retries(self, dbfs_path, headers=None):
         try:
-            list_response = self.client.list(dbfs_path.absolute_path, headers=headers)
-            if 'files' in list_response:
-                return [FileInfo.from_json(f) for f in list_response['files']]
-            else:
-                return []
+            return self.client.list(dbfs_path, headers=headers)
         except HTTPError as e:
             if e.response.status_code == 429:
-                click.echo("\rRate Limit Exceeded. Trying again.")
+                click.echo("Rate Limit Exceeded. Trying again.")
                 raise RateLimitException
+            raise e
+
+    def list_files(self, dbfs_path, headers=None):
+        list_response = self.list_files_with_retries(dbfs_path.absolute_path, headers=headers)
+        if 'files' in list_response:
+            return [FileInfo.from_json(f) for f in list_response['files']]
+        else:
+            return []
 
     def file_exists(self, dbfs_path, headers=None):
         try:
@@ -107,54 +115,60 @@ class DbfsApi(object):
             raise e
         return True
 
-    @retry(wait=wait_random_exponential(multiplier=1, max=30), 
-           retry=retry_if_exception_type(RateLimitException))
-    def get_status(self, dbfs_path, headers=None):
+    @retry(wait=wait_random_exponential(multiplier=EXPONENTIAL_BACKOFF_MULTIPLIER, 
+           max=MAX_SECONDS_WAIT), retry=retry_if_exception_type(RateLimitException), 
+           stop=stop_after_attempt(MAX_RETRY_ATTEMPTS))
+    def get_status_with_retries(self, dbfs_path, headers=None):
         try:
-            json = self.client.get_status(dbfs_path.absolute_path, headers=headers)
-            return FileInfo.from_json(json)
+            return self.client.get_status(dbfs_path, headers=headers)
         except HTTPError as e:
             if e.response.status_code == 429:
-                click.echo("\rRate Limit Exceeded. Trying again.")
+                click.echo("Rate Limit Exceeded. Trying again.")
                 raise RateLimitException
             raise e
 
-    @retry(wait=wait_random_exponential(multiplier=1, max=30), 
-           retry=retry_if_exception_type(RateLimitException))
+    def get_status(self, dbfs_path, headers=None):
+        json = self.get_status_with_retries(dbfs_path.absolute_path, headers=headers)
+        return FileInfo.from_json(json)
+
+    @retry(wait=wait_random_exponential(multiplier=EXPONENTIAL_BACKOFF_MULTIPLIER, 
+           max=MAX_SECONDS_WAIT), retry=retry_if_exception_type(RateLimitException), 
+           stop=stop_after_attempt(MAX_RETRY_ATTEMPTS))
     def create_with_retries(self, dbfs_path, overwrite, headers):
         try:
             return self.client.create(dbfs_path, overwrite, headers=headers)
         except HTTPError as e:
             if e.response.status_code == 429:
-                click.echo("\rRate Limit Exceeded. Trying again.")
+                click.echo("Rate Limit Exceeded. Trying again.")
                 raise RateLimitException
+            raise e
 
-    @retry(wait=wait_random_exponential(multiplier=1, max=30), 
-           retry=retry_if_exception_type(RateLimitException))
+    @retry(wait=wait_random_exponential(multiplier=EXPONENTIAL_BACKOFF_MULTIPLIER, 
+           max=MAX_SECONDS_WAIT), retry=retry_if_exception_type(RateLimitException), 
+           stop=stop_after_attempt(MAX_RETRY_ATTEMPTS))
     def add_block_with_retries(self, handle, contents, headers):
         try:
             self.client.add_block(handle, b64encode(contents).decode(), headers=headers)
         except HTTPError as e:
             if e.response.status_code == 429:
-                click.echo("\rRate Limit Exceeded. Trying again.")
+                click.echo("Rate Limit Exceeded. Trying again.")
                 raise RateLimitException
+            raise e
 
-    @retry(wait=wait_random_exponential(multiplier=1, max=30), 
-           retry=retry_if_exception_type(RateLimitException))
+    @retry(wait=wait_random_exponential(multiplier=EXPONENTIAL_BACKOFF_MULTIPLIER, 
+           max=MAX_SECONDS_WAIT), retry=retry_if_exception_type(RateLimitException), 
+           stop=stop_after_attempt(MAX_RETRY_ATTEMPTS))
     def close_with_retries(self, handle, headers):
         try:
             self.client.close(handle, headers=headers)
         except HTTPError as e:
             if e.response.status_code == 429:
-                click.echo("\rRate Limit Exceeded. Trying again.")
+                click.echo("Rate Limit Exceeded. Trying again.")
                 raise RateLimitException
+            raise e
 
     def put_file(self, src_path, dbfs_path, overwrite, headers=None):
-        try:
-            handle = self.create_with_retries(dbfs_path, overwrite, headers=headers)['handle']
-        except HTTPError as e:
-            if e.response.json()['error_code'] == DbfsErrorCodes.RESOURCE_ALREADY_EXISTS:
-                pass
+        handle = self.create_with_retries(dbfs_path, overwrite, headers=headers)['handle']
         with open(src_path, 'rb') as local_file:
             while True:
                 contents = local_file.read(BUFFER_SIZE_BYTES)
@@ -164,15 +178,17 @@ class DbfsApi(object):
                 self.add_block_with_retries(handle, contents, headers=headers)
             self.close_with_retries(handle, headers=headers)
 
-    @retry(wait=wait_random_exponential(multiplier=1, max=30), 
-           retry=retry_if_exception_type(RateLimitException))
+    @retry(wait=wait_random_exponential(multiplier=EXPONENTIAL_BACKOFF_MULTIPLIER, 
+           max=MAX_SECONDS_WAIT), retry=retry_if_exception_type(RateLimitException), 
+           stop=stop_after_attempt(MAX_RETRY_ATTEMPTS))
     def read_with_retries(self, dbfs_path, offset, headers):
         try:
             return self.client.read(dbfs_path, offset, BUFFER_SIZE_BYTES, headers=headers)        
         except HTTPError as e:
             if e.response.status_code == 429:
-                click.echo("\rRate Limit Exceeded. Trying again.")
+                click.echo("Rate Limit Exceeded. Trying again.")
                 raise RateLimitException
+            raise e
 
     def get_file(self, dbfs_path, dst_path, overwrite, headers=None):
         if os.path.exists(dst_path) and not overwrite:
@@ -203,14 +219,15 @@ class DbfsApi(object):
                     message))
         return int(m.group(1))
 
-    @retry(wait=wait_random_exponential(multiplier=1, max=30), 
-           retry=retry_if_exception_type(RateLimitException))
+    @retry(wait=wait_random_exponential(multiplier=EXPONENTIAL_BACKOFF_MULTIPLIER, 
+           max=MAX_SECONDS_WAIT), retry=retry_if_exception_type(RateLimitException), 
+           stop=stop_after_attempt(MAX_RETRY_ATTEMPTS))
     def delete_with_retries(self, dbfs_path, recursive, headers):
         try:
             self.client.delete(dbfs_path, recursive=recursive, headers=headers)
         except HTTPError as e:
             if e.response.status_code == 429:
-                click.echo("\rRate Limit Exceeded. Trying again.")
+                click.echo("Rate Limit Exceeded. Trying again.")
                 raise RateLimitException
             raise e
 
@@ -241,23 +258,32 @@ class DbfsApi(object):
             break
         click.echo("\rDelete finished successfully.\033[K")
 
-    @retry(wait=wait_random_exponential(multiplier=1, max=30), 
-           retry=retry_if_exception_type(RateLimitException))
-    def mkdirs(self, dbfs_path, headers=None):
+    @retry(wait=wait_random_exponential(multiplier=EXPONENTIAL_BACKOFF_MULTIPLIER, 
+           max=MAX_SECONDS_WAIT), retry=retry_if_exception_type(RateLimitException), 
+           stop=stop_after_attempt(MAX_RETRY_ATTEMPTS))
+    def mkdirs_with_retries(self, dbfs_path, headers=None):
         try:
-            self.client.mkdirs(dbfs_path.absolute_path, headers=headers)
-        except HTTPError:
-            click.echo("\rRate Limit Exceeded. Trying again.")
-            raise RateLimitException
+            self.client.mkdirs(dbfs_path, headers=headers)
+        except HTTPError as e:
+            if e.response.status_code == 429:
+                click.echo("Rate Limit Exceeded. Trying again.")
+                raise RateLimitException
+            raise e
 
-    @retry(wait=wait_random_exponential(multiplier=1, max=30), 
-           retry=retry_if_exception_type(RateLimitException))
+    def mkdirs(self, dbfs_path, headers=None):
+        self.mkdirs_with_retries(dbfs_path.absolute_path, headers=headers)
+
+    @retry(wait=wait_random_exponential(multiplier=EXPONENTIAL_BACKOFF_MULTIPLIER, 
+           max=MAX_SECONDS_WAIT), retry=retry_if_exception_type(RateLimitException), 
+           stop=stop_after_attempt(MAX_RETRY_ATTEMPTS))
     def move(self, dbfs_src, dbfs_dst, headers=None):
         try:
             self.client.move(dbfs_src.absolute_path, dbfs_dst.absolute_path, headers=headers)
-        except HTTPError:
-            click.echo("\rRate Limit Exceeded. Trying again.")
-            raise RateLimitException
+        except HTTPError as e:
+            if e.response.status_code == 429:
+                click.echo("Rate Limit Exceeded. Trying again.")
+                raise RateLimitException
+            raise e
 
     def _copy_to_dbfs_non_recursive(self, src, dbfs_path_dst, overwrite, headers=None):
         # Munge dst path in case dbfs_path_dst is a dir
