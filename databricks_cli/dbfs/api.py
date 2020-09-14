@@ -92,8 +92,12 @@ class DbfsApi(object):
         try:
             self.get_status(dbfs_path, headers=headers)
         except HTTPError as e:
-            if e.response.json()['error_code'] == DbfsErrorCodes.RESOURCE_DOES_NOT_EXIST:
-                return False
+            try:
+                if e.response.json()['error_code'] == DbfsErrorCodes.RESOURCE_DOES_NOT_EXIST:
+                    return False
+            except ValueError:
+                pass
+
             raise e
         return True
 
