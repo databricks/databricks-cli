@@ -126,11 +126,11 @@ class DbfsApi(object):
 
     @retry_429
     def create(self, dbfs_path, overwrite, headers):
-        return self.client.create(dbfs_path, overwrite, headers=headers)
+        return self.client.create(dbfs_path.absolute_path, overwrite, headers=headers)
 
     @retry_429
     def add_block(self, handle, contents, headers):
-        self.client.add_block(handle, b64encode(contents).decode(), headers=headers)
+        self.client.add_block(handle, contents, headers=headers)
 
     @retry_429
     def close(self, handle, headers):
@@ -144,7 +144,7 @@ class DbfsApi(object):
                 if len(contents) == 0:
                     break
                 # add_block should not take a bytes object.
-                self.add_block(handle, contents, headers=headers)
+                self.add_block(handle, b64encode(contents).decode(), headers=headers)
             self.close(handle, headers=headers)
 
     @retry_429
@@ -181,15 +181,12 @@ class DbfsApi(object):
         return int(m.group(1))
 
     @retry_429
-    def delete_with_retries(self, dbfs_path, recursive, headers):
-        self.client.delete(dbfs_path, recursive=recursive, headers=headers)
-
     def delete(self, dbfs_path, recursive, headers=None):
         num_files_deleted = 0
         while True:
             try:
-                self.delete_with_retries(dbfs_path.absolute_path, 
-                                         recursive=recursive, headers=headers)
+                self.client.delete(dbfs_path.absolute_path, 
+                                   recursive=recursive, headers=headers)
             except HTTPError as e:
                 if e.response.status_code == 503:
                     try:

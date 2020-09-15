@@ -28,11 +28,11 @@ import os
 import requests
 import mock
 import pytest
+from tenacity import RetryError
 
 import databricks_cli.dbfs.api as api
 from databricks_cli.dbfs.dbfs_path import DbfsPath
 from databricks_cli.dbfs.exceptions import LocalFileExistsException
-from tenacity import RetryError
 
 TEST_DBFS_PATH = DbfsPath('dbfs:/test')
 TEST_FILE_JSON = {
@@ -139,11 +139,9 @@ class TestDbfsApi(object):
                               rate_limit_exception, rate_limit_exception, rate_limit_exception, 
                               rate_limit_exception, rate_limit_exception, rate_limit_exception]
         dbfs_api.client.mkdirs = mock.Mock(side_effect=exception_sequence)
-        try: 
+        with pytest.raises(RetryError):
             dbfs_api.mkdirs(DbfsPath('dbfs:/test/mkdir'))
-        except Exception as e:
-            assert e.__class__ == RetryError
-            assert dbfs_api.client.mkdirs.call_count == 7
+        assert dbfs_api.client.mkdirs.call_count == 7
 
     def test_file_exists_true(self, dbfs_api):
         dbfs_api.client.get_status.return_value = TEST_FILE_JSON
