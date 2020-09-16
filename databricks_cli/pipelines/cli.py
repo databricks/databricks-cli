@@ -96,17 +96,15 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
             _handle_duplicate_name_exception(spec_obj, e)
 
         new_pipeline_id = response['pipeline_id']
+        click.echo("Pipeline has been assigned ID {}".format(new_pipeline_id))
         click.echo("Successfully created pipeline: {}".format(
             _get_pipeline_url(api_client, new_pipeline_id)))
-
-        click.echo("Pipeline has been assigned ID {}".format(new_pipeline_id))
         click.echo(new_pipeline_id, err=True)
     else:
         if (pipeline_id and 'id' in spec_obj) and pipeline_id != spec_obj["id"]:
             raise ValueError(
-                "The ID provided in --pipeline_id '{}' is different from the id provided the "
-                "spec '{}'. Please resolve the conflict and try the command again."
-                .format(pipeline_id, spec["id"])
+                "Because pipeline IDs are no longer persisted after being deleted, we recommend removing the ID field "
+                "from your spec."
             )
 
         spec_obj['id'] = pipeline_id or spec_obj.get('id', None)
