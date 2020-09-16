@@ -80,6 +80,10 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
     OR
 
     databricks pipelines deploy --spec example.json
+
+    OR
+
+    databricks pipelines deploy --pipeline-id 1234 --spec example.json
     """
     if bool(spec_arg) == bool(spec):
         raise RuntimeError('The spec should be provided either by an option or argument')
@@ -118,94 +122,64 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Stops a delta pipeline and deletes its associated Databricks resources')
-@click.argument('spec_arg', default=None, required=False)
-@click.option('--spec', default=None, type=PipelineSpecClickType(), help=PipelineSpecClickType.help)
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
 @profile_option
 @pipelines_exception_eater
 @provide_api_client
-def delete_cli(api_client, spec_arg, spec, pipeline_id):
+def delete_cli(api_client, pipeline_id):
     """
     Stops a delta pipeline and deletes its associated Databricks resources. The pipeline can be
     resumed by deploying it again.
 
     Usage:
 
-    databricks pipelines delete example.json
-
-    OR
-
-    databricks pipelines delete --spec example.json
-
-    OR
-
     databricks pipelines delete --pipeline-id 1234
     """
-    pipeline_id = _get_pipeline_id(spec_arg=spec_arg, spec=spec, pipeline_id=pipeline_id)
+    _validate_pipeline_id(pipeline_id)
     PipelinesApi(api_client).delete(pipeline_id)
     click.echo("Pipeline {} deleted".format(pipeline_id))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Gets a delta pipeline\'s current spec and status')
-@click.argument('spec_arg', default=None, required=False)
-@click.option('--spec', default=None, type=PipelineSpecClickType(), help=PipelineSpecClickType.help)
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
 @profile_option
 @pipelines_exception_eater
 @provide_api_client
-def get_cli(api_client, spec_arg, spec, pipeline_id):
+def get_cli(api_client, pipeline_id):
     """
     Gets a delta pipeline's current spec and status.
 
     Usage:
 
-    databricks pipelines get example.json
-
-    OR
-
-    databricks pipelines get --spec example.json
-
-    OR
-
     databricks pipelines get --pipeline-id 1234
     """
-    pipeline_id = _get_pipeline_id(spec_arg=spec_arg, spec=spec, pipeline_id=pipeline_id)
+    _validate_pipeline_id(pipeline_id)
     click.echo(pretty_format(PipelinesApi(api_client).get(pipeline_id)))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Resets a delta pipeline so data can be reprocessed from scratch')
-@click.argument('spec_arg', default=None, required=False)
-@click.option('--spec', default=None, type=PipelineSpecClickType(), help=PipelineSpecClickType.help)
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
 @profile_option
 @pipelines_exception_eater
 @provide_api_client
-def reset_cli(api_client, spec_arg, spec, pipeline_id):
+def reset_cli(api_client, pipeline_id):
     """
     Resets a delta pipeline by truncating tables and creating new checkpoint folders so data is
     reprocessed from scratch.
 
     Usage:
 
-    databricks pipelines reset example.json
-
-    OR
-
-    databricks pipelines reset --spec example.json
-
-    OR
-
     databricks pipelines reset --pipeline-id 1234
     """
-    pipeline_id = _get_pipeline_id(spec_arg=spec_arg, spec=spec, pipeline_id=pipeline_id)
+    _validate_pipeline_id(pipeline_id)
     PipelinesApi(api_client).reset(pipeline_id)
     click.echo("Reset triggered for pipeline {}".format(pipeline_id))
 
