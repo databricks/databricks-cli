@@ -66,9 +66,11 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
     specification that explains how to run a Delta Pipeline on Databricks. All local libraries
     referenced in the spec are uploaded to DBFS.
 
-    If the pipeline spec contains an "id" field, attempts to update an existing pipeline with
-    that ID. If it does not, creates a new pipeline and edits the spec file to add the ID of the
-    created pipeline. The spec file will not be updated if the --no-update-spec option is added.
+    If the pipeline spec contains an "id" field, or if a pipeline id is specified directly
+    (using the  --pipeline-id argument), attempts to update an existing pipeline
+    with that ID. If it does not, creates a new pipeline and logs the id of the new pipeline
+    to STDOUT. Note that if an id is both specified in the spec and passed via --pipeline-id,
+    the two ids must be the same, or the command will fail.
 
     The deploy command will not create a new pipeline if a pipeline with the same name already
     exists. This check can be disabled by adding the --allow-duplicate-names option.
@@ -103,8 +105,11 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
     else:
         if (pipeline_id and 'id' in spec_obj) and pipeline_id != spec_obj["id"]:
             raise ValueError(
-                "Because pipeline IDs are no longer persisted after being deleted, we recommend removing the ID field "
-                "from your spec."
+                "The ID provided in --pipeline_id '{}' is different from the id provided "
+                "the spec '{}'. Please resolve the conflict and try the command again. "
+                "Because pipeline IDs are no longer persisted after being deleted, we "
+                "recommend removing the ID field from your spec."
+                .format(pipeline_id, spec["id"])
             )
 
         spec_obj['id'] = pipeline_id or spec_obj.get('id', None)
