@@ -64,7 +64,8 @@ class ClusterApi(object):
         return self.client.permanent_delete_cluster(cluster_id)
 
     def get_cluster_ids_by_name(self, cluster_name):
-        return self.client.get_clusters_by_name(cluster_name)
+        data = self.client.list_clusters()
+        return [c for c in data.get('clusters', []) if c.get('cluster_name') == cluster_name]
 
     def get_cluster_id_for_name(self, cluster_name):
         """

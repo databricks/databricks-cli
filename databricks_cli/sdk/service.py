@@ -23,10 +23,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-from json import dumps as json_dumps
-
-
 class JobsService(object):
     def __init__(self, client):
         self.client = client
@@ -403,21 +399,6 @@ class ClusterService(object):
         if limit is not None:
             _data['limit'] = limit
         return self.client.perform_query('POST', '/clusters/events', data=_data, headers=headers)
-
-    def get_clusters_by_name(self, cluster_name, headers=None):
-        data = self.list_clusters(headers)
-        if not data:
-            print('nothing returned')
-            return None
-
-        if 'clusters' not in data:
-            print('clusters not returned')
-            return None
-
-        return [
-            cluster for cluster in data['clusters'] if cluster.get('cluster_name') == cluster_name
-        ]
-
 
 class PolicyService(object):
     def __init__(self, client):
