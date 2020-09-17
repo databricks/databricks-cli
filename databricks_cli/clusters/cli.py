@@ -168,10 +168,12 @@ def get_cli(api_client, cluster_id, cluster_name):
     """
     Retrieves metadata about a cluster.
     """
-    if cluster_id is not None:
+    if cluster_id:
         cluster = ClusterApi(api_client).get_cluster(cluster_id)
-    else:
+    elif cluster_name:
         cluster = ClusterApi(api_client).get_cluster_by_name(cluster_name)
+    else:
+        raise RuntimeError('cluster_name and cluster_id were empty?')
 
     click.echo(pretty_format(cluster))
 

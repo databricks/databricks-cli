@@ -31,7 +31,7 @@ from tabulate import tabulate
 
 import databricks_cli.clusters.cli as cli
 from databricks_cli.utils import pretty_format
-from tests.test_data import TEST_CLUSTER_ID, TEST_CLUSTER_NAME
+from tests.test_data import TEST_CLUSTER_ID, TEST_CLUSTER_NAME, CLUSTER_1_RV
 from tests.utils import provide_conf, assert_cli_output
 
 CLUSTER_ID = TEST_CLUSTER_ID
@@ -141,14 +141,6 @@ def cluster_sdk_mock():
         yield _cluster_sdk_mock
 
 
-@provide_conf
-def test_get_cli_cluster_name(cluster_api_mock):
-    cluster_api_mock.get_cluster_id_for_name.return_value = TEST_CLUSTER_ID
-    runner = CliRunner()
-    res = runner.invoke(cli.get_cli, ['--cluster-name', CLUSTER_NAME])
-    assert_cli_output(res.stdout, '"{}"'.format(TEST_CLUSTER_ID))
-
-
 LIST_RETURN = {
     'clusters': [{
         'cluster_id': TEST_CLUSTER_ID,
@@ -178,6 +170,22 @@ EVENTS_RETURN = {
     },
     "total_count": 87
 }
+
+
+@provide_conf
+def test_get_cli_cluster_name(cluster_sdk_mock):
+    cluster_sdk_mock.list_clusters.return_value = LIST_RETURN
+    cluster_sdk_mock.get_cluster.return_value = CLUSTER_1_RV
+    help_test(cli.get_cli, cluster_sdk_mock.get_cluster, CLUSTER_1_RV,
+              ['--cluster-name', CLUSTER_NAME])
+
+
+@provide_conf
+def test_get_cli_cluster_id(cluster_sdk_mock):
+    cluster_sdk_mock.list_clusters.return_value = LIST_RETURN
+    cluster_sdk_mock.get_cluster.return_value = CLUSTER_1_RV
+    help_test(cli.get_cli, cluster_sdk_mock.get_cluster, CLUSTER_1_RV,
+              ['--cluster-id', TEST_CLUSTER_ID])
 
 
 @provide_conf
@@ -219,15 +227,18 @@ def test_cluster_events_output_table(cluster_api_mock):
     assert any(['2019-05-31' in l for l in stdout_lines])  # noqa
 
 
-def help_test(cli_function, service_function, rv):
+def help_test(cli_function, service_function, rv, args=None):
     """
     This function makes testing the cli functions that just pass data through simpler
     """
 
+    if args is None:
+        args = []
+
     with mock.patch('databricks_cli.clusters.cli.click.echo') as echo_mock:
         service_function.return_value = rv
         runner = CliRunner()
-        runner.invoke(cli_function, [])
+        runner.invoke(cli_function, args)
         assert echo_mock.call_args[0][0] == pretty_format(rv)
 
 

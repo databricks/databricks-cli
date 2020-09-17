@@ -21,36 +21,42 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
 import mock
+import pytest
 
 import databricks_cli.clusters.api as api
 from tests.test_data import CLUSTER_1_RV, TEST_CLUSTER_NAME, TEST_CLUSTER_ID
+from tests.utils import provide_conf
 
 
-@pytest.fixture()
-def client_mock():
+@pytest.fixture(name='cluster_api_mock')
+def fixture_cluster_api_mock():
     with mock.patch('databricks_cli.clusters.api.ClusterService') as ClusterServiceMock:
         _cluster_service_mock = mock.MagicMock()
         ClusterServiceMock.return_value = _cluster_service_mock
         yield _cluster_service_mock
 
 
-def test_get_cluster_id_for_name(client_mock):
-    client_mock.list_clusters.return_value = { 'clusters': [CLUSTER_1_RV] }
+@provide_conf
+def test_get_cluster_id_for_name(cluster_api_mock):
+    cluster_api_mock.list_clusters.return_value = {'clusters': [CLUSTER_1_RV]}
     cluster_api = api.ClusterApi(None)
     assert TEST_CLUSTER_ID == cluster_api.get_cluster_id_for_name(TEST_CLUSTER_NAME)
 
 
-def test_get_cluster_id_for_name_multiple_same_name(client_mock):
-    client_mock.list_clusters.return_value = { 'clusters': [CLUSTER_1_RV, CLUSTER_1_RV] }
+@provide_conf
+def test_get_cluster_id_for_name_multiple_same_name(cluster_api_mock):
+    cluster_api_mock.list_clusters.return_value = {'clusters': [CLUSTER_1_RV, CLUSTER_1_RV]}
     cluster_api = api.ClusterApi(None)
-    with pytest.raises(RuntimeError, match='More than 1 cluster was named {}'.format(TEST_CLUSTER_NAME)):
+    with pytest.raises(RuntimeError,
+                       match='More than 1 cluster was named {}'.format(TEST_CLUSTER_NAME)):
         cluster_api.get_cluster_id_for_name(TEST_CLUSTER_NAME)
 
 
-def test_get_cluster_id_for_name_none_found(client_mock):
-    client_mock.list_clusters.return_value = { 'clusters': [] }
+@provide_conf
+def test_get_cluster_id_for_name_none_found(cluster_api_mock):
+    cluster_api_mock.list_clusters.return_value = {'clusters': []}
     cluster_api = api.ClusterApi(None)
-    with pytest.raises(RuntimeError, match='No clusters with name {} were found'.format(TEST_CLUSTER_NAME)):
+    with pytest.raises(RuntimeError,
+                       match='No clusters with name {} were found'.format(TEST_CLUSTER_NAME)):
         cluster_api.get_cluster_id_for_name(TEST_CLUSTER_NAME)
