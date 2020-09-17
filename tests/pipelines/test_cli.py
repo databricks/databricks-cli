@@ -186,18 +186,20 @@ def test_deploy_update_delete_cli_correct_spec_extensions(pipelines_api_mock, tm
 
 
 @provide_conf
-def test_reset_cli_id(pipelines_api_mock):
-    runner = CliRunner()
-    runner.invoke(cli.reset_cli, ['--pipeline-id', PIPELINE_ID])
-    assert pipelines_api_mock.reset.call_args[0][0] == PIPELINE_ID
+def test_cli_id(pipelines_api_mock):
+    for command in [cli.reset_cli, cli.stop_cli, cli.run_cli]:
+        runner = CliRunner()
+        runner.invoke(command, ['--pipeline-id', PIPELINE_ID])
+        assert pipelines_api_mock.reset.call_args[0][0] == PIPELINE_ID
 
 
 @provide_conf
-def test_reset_cli_no_id(pipelines_api_mock):
-    runner = CliRunner()
-    result = runner.invoke(cli.reset_cli, [])
-    assert result.exit_code == 1
-    assert pipelines_api_mock.reset.call_count == 0
+def test_cli_no_id(pipelines_api_mock):
+    for command in [cli.reset_cli, cli.stop_cli, cli.run_cli]:
+        runner = CliRunner()
+        result = runner.invoke(command, [])
+        assert result.exit_code == 1
+        assert pipelines_api_mock.reset.call_count == 0
 
 
 @provide_conf

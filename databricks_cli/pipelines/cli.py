@@ -187,6 +187,49 @@ def reset_cli(api_client, pipeline_id):
     click.echo("Reset triggered for pipeline {}".format(pipeline_id))
 
 
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Starts the execution of a delta pipeline run')
+@click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
+              help=PipelineIdClickType.help)
+@debug_option
+@profile_option
+@pipelines_exception_eater
+@provide_api_client
+def run_cli(api_client, pipeline_id):
+    """
+    Starts the execution of a delta pipelines run by starting the cluster and processing data.
+
+    Usage:
+
+    databricks pipelines run --pipeline-id 1234
+    """
+    _validate_pipeline_id(pipeline_id)
+    PipelinesApi(api_client).run(pipeline_id)
+    click.echo("Run triggered for pipeline {}".format(pipeline_id))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Stops the execution of a delta pipeline run')
+@click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
+              help=PipelineIdClickType.help)
+@debug_option
+@profile_option
+@pipelines_exception_eater
+@provide_api_client
+def stop_cli(api_client, pipeline_id):
+    """
+    Stops the execution of a delta pipelines run by terminating the cluster. Processing of data can
+    be resumed by calling `run`.
+
+    Usage:
+
+    databricks pipelines stop --pipeline-id 1234
+    """
+    _validate_pipeline_id(pipeline_id)
+    PipelinesApi(api_client).stop(pipeline_id)
+    click.echo("Stopped pipeline {}".format(pipeline_id))
+
+
 def _read_spec(src):
     """
     Reads the spec at src as a JSON if no file extension is provided, or if in the extension format
@@ -276,3 +319,5 @@ pipelines_group.add_command(deploy_cli, name='deploy')
 pipelines_group.add_command(delete_cli, name='delete')
 pipelines_group.add_command(get_cli, name='get')
 pipelines_group.add_command(reset_cli, name='reset')
+pipelines_group.add_command(run_cli, name='run')
+pipelines_group.add_command(stop_cli, name='stop')

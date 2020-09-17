@@ -63,6 +63,12 @@ class PipelinesApi(object):
     def reset(self, pipeline_id, headers=None):
         self.client.reset(pipeline_id, headers)
 
+    def run(self, pipeline_id, headers=None):
+        self.client.run(pipeline_id, headers)
+
+    def stop(self, pipeline_id, headers=None):
+        self.client.stop(pipeline_id, headers)
+
     def _upload_libraries_and_update_spec(self, spec):
         spec = copy.deepcopy(spec)
         lib_objects = LibraryObject.from_json(spec.get('libraries', []))
