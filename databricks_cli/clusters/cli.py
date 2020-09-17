@@ -169,10 +169,11 @@ def get_cli(api_client, cluster_id, cluster_name):
     Retrieves metadata about a cluster.
     """
     if cluster_id is not None:
-        click.echo(pretty_format(ClusterApi(api_client).get_cluster(cluster_id)))
+        cluster = ClusterApi(api_client).get_cluster(cluster_id)
     else:
-        clusters_by_name = ClusterApi(api_client).get_cluster_id_for_name(cluster_name)
-        click.echo(pretty_format(clusters_by_name))
+        cluster = ClusterApi(api_client).get_cluster_by_name(cluster_name)
+
+    click.echo(pretty_format(cluster))
 
 
 def _clusters_to_table(clusters_json):

@@ -89,6 +89,15 @@ class ClusterApi(object):
                                )
         return cluster_ids[0]
 
+    def get_cluster_by_name(self, cluster_name):
+        """
+        Given a cluster name, this will return the cluster config for that cluster.
+        If there are multiple clusters with the same name it will raise a RuntimeError.
+        If there are no clusters with the name it will raise a RuntimeError.
+        """
+        cluster_id = self.get_cluster_id_for_name(cluster_name)
+        return self.get_cluster(cluster_id)
+
     def get_events(self, cluster_id, start_time, end_time, order, event_types, offset, limit):
         return self.client.get_events(cluster_id, start_time, end_time, order, event_types,
                                       offset, limit)
