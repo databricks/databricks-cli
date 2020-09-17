@@ -225,7 +225,7 @@ def test_run(pipelines_api):
     pipelines_api.reset(PIPELINE_ID)
     client_mock = pipelines_api.client.client.perform_query
     assert client_mock.call_count == 1
-    client_mock.assert_called_with('POST', '/pipelines/{}/run'.format(PIPELINE_ID)),
+    client_mock.assert_called_with('POST', '/pipelines/{}/run'.format(PIPELINE_ID),
                                    data={}, headers=None)
 
 
@@ -233,7 +233,7 @@ def test_stop(pipelines_api):
     pipelines_api.stop(PIPELINE_ID)
     client_mock = pipelines_api.client.client.perform_query
     assert client_mock.call_count == 1
-    client_mock.assert_called_with('POST', '/pipelines/{}/stop'.format(PIPELINE_ID)),
+    client_mock.assert_called_with('POST', '/pipelines/{}/stop'.format(PIPELINE_ID),
                                    data={}, headers=None)
 
 
