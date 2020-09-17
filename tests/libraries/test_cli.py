@@ -30,8 +30,7 @@ from click.testing import CliRunner
 import databricks_cli.libraries.cli as cli
 from databricks_cli.utils import pretty_format
 from tests.test_data import TEST_CLUSTER_NAME, ALL_CLUSTER_STATUSES_RETURN, \
-    TEST_CLUSTER_ID, CLUSTERS_BY_NAME_MULTIPLE_CLUSTER_RV, MULTIPLE_CLUSTERS_FAILURE_OUTPUT, \
-    CLUSTERS_BY_NAME_SINGLE_CLUSTER_RV
+    TEST_CLUSTER_ID 
 from tests.utils import provide_conf, assert_cli_output
 
 
@@ -398,22 +397,9 @@ def test_uninstall_cli_cran(libraries_sdk_mock):
 
 
 @provide_conf
-def test_list_cli_with_cluster_name(libraries_sdk_mock, cluster_sdk_mock):
+def test_list_cli_with_cluster_name(libraries_sdk_mock, cluster_api_mock):
     libraries_sdk_mock.cluster_status.return_value = CLUSTER_STATUS_RETURN
-    cluster_sdk_mock.get_clusters_by_name.return_value = CLUSTERS_BY_NAME_SINGLE_CLUSTER_RV
+    cluster_api_mock.get_cluster_id_for_name.return_value = TEST_CLUSTER_ID
     runner = CliRunner()
     runner.invoke(cli.list_cli, ['--cluster-name', TEST_CLUSTER_NAME])
     libraries_sdk_mock.cluster_status.assert_called_with(TEST_CLUSTER_ID)
-
-
-@provide_conf
-def test_list_cli_with_multiple_clusters_for_name(libraries_sdk_mock, cluster_sdk_mock):
-    """
-    If there are multiple clusters with the same name, an exception should be raised.
-    """
-    libraries_sdk_mock.cluster_status.return_value = CLUSTER_STATUS_RETURN
-    cluster_sdk_mock.get_clusters_by_name.return_value = CLUSTERS_BY_NAME_MULTIPLE_CLUSTER_RV
-    runner = CliRunner()
-    res = runner.invoke(cli.list_cli, ['--cluster-name', TEST_CLUSTER_NAME], catch_exceptions=False)
-    assert_cli_output(res.stdout, MULTIPLE_CLUSTERS_FAILURE_OUTPUT)
-    libraries_sdk_mock.cluster_status.assert_not_called()

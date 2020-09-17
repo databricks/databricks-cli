@@ -105,21 +105,7 @@ CLUSTER_1_RV = {
     "init_scripts_safe_mode": False
 }
 
-CLUSTERS_BY_NAME_SINGLE_CLUSTER_RV = [
-    CLUSTER_1_RV
-]
-
 CLUSTER_2_RV = deepcopy(CLUSTER_1_RV)
 # fix the cluster ids for the second cluster
 CLUSTER_2_RV['cluster_id'] = TEST_CLUSTER_ID_2
 CLUSTER_2_RV['default_tags']['ClusterId'] = TEST_CLUSTER_ID_2
-CLUSTERS_BY_NAME_MULTIPLE_CLUSTER_RV = [
-    CLUSTER_1_RV,
-    CLUSTER_2_RV
-]
-
-MULTIPLE_CLUSTERS_FAILURE_OUTPUT = 'Error: RuntimeError: ' + \
-                                   'More than 1 cluster was named {},'.format(
-                                       TEST_CLUSTER_NAME) \
-                                   + ' please use --cluster-id.\n' \
-                                   + 'Cluster ids found: 0213-212348-veeps379, 0315-6787348-blah280'

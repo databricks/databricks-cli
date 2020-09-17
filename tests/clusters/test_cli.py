@@ -31,9 +31,7 @@ from tabulate import tabulate
 
 import databricks_cli.clusters.cli as cli
 from databricks_cli.utils import pretty_format
-from tests.test_data import TEST_CLUSTER_ID, TEST_CLUSTER_NAME, \
-    CLUSTERS_BY_NAME_SINGLE_CLUSTER_RV, CLUSTERS_BY_NAME_MULTIPLE_CLUSTER_RV, \
-    MULTIPLE_CLUSTERS_FAILURE_OUTPUT
+from tests.test_data import TEST_CLUSTER_ID, TEST_CLUSTER_NAME
 from tests.utils import provide_conf, assert_cli_output
 
 CLUSTER_ID = TEST_CLUSTER_ID
@@ -144,19 +142,11 @@ def cluster_sdk_mock():
 
 
 @provide_conf
-def test_get_cli_cluster_name(cluster_sdk_mock):
-    cluster_sdk_mock.get_clusters_by_name.return_value = CLUSTERS_BY_NAME_SINGLE_CLUSTER_RV
+def test_get_cli_cluster_name(cluster_api_mock):
+    cluster_api_mock.get_cluster_id_for_name.return_value = TEST_CLUSTER_ID
     runner = CliRunner()
     res = runner.invoke(cli.get_cli, ['--cluster-name', CLUSTER_NAME])
     assert_cli_output(res.stdout, '"{}"'.format(TEST_CLUSTER_ID))
-
-
-@provide_conf
-def test_get_cli_cluster_name_multiple(cluster_sdk_mock):
-    cluster_sdk_mock.get_clusters_by_name.return_value = CLUSTERS_BY_NAME_MULTIPLE_CLUSTER_RV
-    runner = CliRunner()
-    res = runner.invoke(cli.get_cli, ['--cluster-name', CLUSTER_NAME])
-    assert_cli_output(res.stdout, MULTIPLE_CLUSTERS_FAILURE_OUTPUT)
 
 
 LIST_RETURN = {
