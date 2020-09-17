@@ -204,6 +204,7 @@ def run_cli(api_client, pipeline_id):
     databricks pipelines run --pipeline-id 1234
     """
     _validate_pipeline_id(pipeline_id)
+        PipelinesApi(api_client).run(pipeline_id)
     click.echo("Run triggered for pipeline {}".format(pipeline_id))
 
 
