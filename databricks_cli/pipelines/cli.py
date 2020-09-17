@@ -218,8 +218,8 @@ def run_cli(api_client, pipeline_id):
 @provide_api_client
 def stop_cli(api_client, pipeline_id):
     """
-    Stops the execution of a delta pipelines run by terminating the cluster. Processing of data can be resumed by
-    calling `run`.
+    Stops the execution of a delta pipelines run by terminating the cluster. Processing of data can
+    be resumed by calling `run`.
 
     Usage:
 
