@@ -155,7 +155,7 @@ def cancel_cli(api_client, run_id):
 @debug_option
 @profile_option
 @eat_exceptions
-def runs_group():
+def runs_group():  # pragma: no cover
     """
     Utility to interact with jobs runs.
     """

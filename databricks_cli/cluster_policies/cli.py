@@ -151,7 +151,7 @@ def list_cli(api_client, output):
 @debug_option
 @profile_option
 @eat_exceptions
-def cluster_policies_group():
+def cluster_policies_group():  # pragma: no cover
     """
     Utility to interact with Databricks cluster policies.
     """

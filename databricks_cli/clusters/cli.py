@@ -20,6 +20,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import time
 from datetime import datetime
 from json import loads as json_loads
@@ -27,11 +28,12 @@ from json import loads as json_loads
 import click
 from tabulate import tabulate
 
-from databricks_cli.click_types import OutputClickType, JsonClickType, ClusterIdClickType
+from databricks_cli.click_types import OutputClickType, JsonClickType, ClusterIdClickType, \
+    OneOfOption
 from databricks_cli.clusters.api import ClusterApi
-from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base, \
-    truncate_string
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
+from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base, \
+    truncate_string, CLUSTER_OPTIONS
 from databricks_cli.version import print_version_callback, version
 
 
@@ -154,17 +156,26 @@ def delete_cli(api_client, cluster_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
-@click.option('--cluster-id', required=True, type=ClusterIdClickType(),
-              help=ClusterIdClickType.help)
+@click.option('--cluster-id', cls=OneOfOption, one_of=CLUSTER_OPTIONS,
+              type=ClusterIdClickType(), default=None, help=ClusterIdClickType.help)
+@click.option('--cluster-name', cls=OneOfOption, one_of=CLUSTER_OPTIONS,
+              type=ClusterIdClickType(), default=None, help=ClusterIdClickType.help)
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def get_cli(api_client, cluster_id):
+def get_cli(api_client, cluster_id, cluster_name):
     """
     Retrieves metadata about a cluster.
     """
-    click.echo(pretty_format(ClusterApi(api_client).get_cluster(cluster_id)))
+    if cluster_id:
+        cluster = ClusterApi(api_client).get_cluster(cluster_id)
+    elif cluster_name:
+        cluster = ClusterApi(api_client).get_cluster_by_name(cluster_name)
+    else:
+        raise RuntimeError('cluster_name and cluster_id were empty?')
+
+    click.echo(pretty_format(cluster))
 
 
 def _clusters_to_table(clusters_json):
@@ -327,7 +338,7 @@ def cluster_events_cli(api_client, cluster_id, start_time, end_time, order, even
 @debug_option
 @profile_option
 @eat_exceptions
-def clusters_group():
+def clusters_group():  # pragma: no cover
     """
     Utility to interact with Databricks clusters.
     """

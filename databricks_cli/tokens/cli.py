@@ -89,7 +89,7 @@ def revoke_cli(api_client, token_id):
 @debug_option
 @profile_option
 @eat_exceptions
-def tokens_group():
+def tokens_group():  # pragma: no cover
     """Utility to interact with Databricks tokens."""
     pass
 

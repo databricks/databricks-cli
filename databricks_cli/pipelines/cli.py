@@ -265,7 +265,7 @@ def _handle_duplicate_name_exception(spec, exception):
               expose_value=False, is_eager=True, help=version)
 @debug_option
 @profile_option
-def pipelines_group():
+def pipelines_group():  # pragma: no cover
     """
     Utility to interact with the Databricks pipelines.
     """
