@@ -236,7 +236,7 @@ class DbfsApi(object):
                     self.get_file(cur_dbfs_src, cur_dst, overwrite, headers=headers)
                     click.echo('{} -> {}'.format(cur_dbfs_src, cur_dst))
                 except LocalFileExistsException:
-                    click.echo(('{} already exists locally as {}. Skip. To overwrite, you' +
+                    click.echo(('{} already exists locally as {}. Skip. To overwrite, you ' +
                                 'should provide the --overwrite flag.').format(cur_dbfs_src,
                                                                                cur_dst))
 
