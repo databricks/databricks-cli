@@ -221,7 +221,7 @@ def test_reset(pipelines_api):
                                    data={}, headers=None)
 
 
-def test_run(pipelines_api)
+def test_run(pipelines_api):
     pipelines_api.reset(PIPELINE_ID)
     client_mock = pipelines_api.client.client.perform_query
     assert client_mock.call_count == 1
@@ -229,7 +229,7 @@ def test_run(pipelines_api)
                                    data={}, headers=None)
 
 
-def test_stop(pipelines_api)
+def test_stop(pipelines_api):
     pipelines_api.stop(PIPELINE_ID)
     client_mock = pipelines_api.client.client.perform_query
     assert client_mock.call_count == 1
