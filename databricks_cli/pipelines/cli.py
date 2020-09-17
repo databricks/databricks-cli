@@ -204,7 +204,7 @@ def run_cli(api_client, pipeline_id):
     databricks pipelines run --pipeline-id 1234
     """
     _validate_pipeline_id(pipeline_id)
-        PipelinesApi(api_client).run(pipeline_id)
+    PipelinesApi(api_client).run(pipeline_id)
     click.echo("Run triggered for pipeline {}".format(pipeline_id))
 
 
@@ -227,7 +227,7 @@ def stop_cli(api_client, pipeline_id):
     """
     _validate_pipeline_id(pipeline_id)
     PipelinesApi(api_client).stop(pipeline_id)
-    click.echo("Stop triggered for pipeline {}".format(pipeline_id))
+    click.echo("Stopped pipeline {}".format(pipeline_id))
 
 
 def _read_spec(src):

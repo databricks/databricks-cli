@@ -939,12 +939,12 @@ class DeltaPipelinesService(object):
 
         return self.client.perform_query('POST', '/pipelines/{pipeline_id}/reset'.format(pipeline_id=pipeline_id), data=_data, headers=headers)
 
-    def stop(self, pipeline_id=None, headers=None):
-        _data = {}
-
-        return self.client.perform_query('POST', '/pipelines/{pipeline_id}/stop'.format(pipeline_id=pipeline_id), data=_data, headers=headers)
-
     def run(self, pipeline_id=None, headers=None):
         _data = {}
 
         return self.client.perform_query('POST', '/pipelines/{pipeline_id}/run'.format(pipeline_id=pipeline_id), data=_data, headers=headers)
+
+    def stop(self, pipeline_id=None, headers=None):
+        _data = {}
+
+        return self.client.perform_query('POST', '/pipelines/{pipeline_id}/stop'.format(pipeline_id=pipeline_id), data=_data, headers=headers)
