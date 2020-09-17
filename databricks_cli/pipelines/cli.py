@@ -54,21 +54,23 @@ PIPELINE_ID_PERMITTED_CHARACTERS = set(string.ascii_letters + string.digits + '-
 @click.option('--spec', default=None, type=PipelineSpecClickType(), help=PipelineSpecClickType.help)
 @click.option('--allow-duplicate-names', is_flag=True,
               help="Skip duplicate name check while deploying pipeline")
-@click.option('--no-update-spec', is_flag=True,
-              help="Do not update spec file with pipeline ID after creating a new pipeline.")
+@click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
+              help=PipelineIdClickType.help)
 @debug_option
 @profile_option
 @pipelines_exception_eater
 @provide_api_client
-def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, no_update_spec):
+def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
     """
     Deploys a delta pipeline according to the pipeline specification. The pipeline spec is a
     specification that explains how to run a Delta Pipeline on Databricks. All local libraries
     referenced in the spec are uploaded to DBFS.
 
-    If the pipeline spec contains an "id" field, attempts to update an existing pipeline with
-    that ID. If it does not, creates a new pipeline and edits the spec file to add the ID of the
-    created pipeline. The spec file will not be updated if the --no-update-spec option is added.
+    If the pipeline spec contains an "id" field, or if a pipeline id is specified directly
+    (using the  --pipeline-id argument), attempts to update an existing pipeline
+    with that ID. If it does not, creates a new pipeline and logs the id of the new pipeline
+    to STDOUT. Note that if an id is both specified in the spec and passed via --pipeline-id,
+    the two ids must be the same, or the command will fail.
 
     The deploy command will not create a new pipeline if a pipeline with the same name already
     exists. This check can be disabled by adding the --allow-duplicate-names option.
@@ -80,29 +82,39 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, no_update_spec
     OR
 
     databricks pipelines deploy --spec example.json
+
+    OR
+
+    databricks pipelines deploy --pipeline-id 1234 --spec example.json
     """
     if bool(spec_arg) == bool(spec):
         raise RuntimeError('The spec should be provided either by an option or argument')
     src = spec_arg if bool(spec_arg) else spec
     spec_obj = _read_spec(src)
-    if 'id' not in spec_obj:
+    if not pipeline_id and 'id' not in spec_obj:
         try:
             response = PipelinesApi(api_client).create(spec_obj, allow_duplicate_names)
         except requests.exceptions.HTTPError as e:
             _handle_duplicate_name_exception(spec_obj, e)
 
         new_pipeline_id = response['pipeline_id']
+        click.echo("Pipeline has been assigned ID {}".format(new_pipeline_id))
         click.echo("Successfully created pipeline: {}".format(
             _get_pipeline_url(api_client, new_pipeline_id)))
-
-        if not no_update_spec:
-            spec_obj['id'] = new_pipeline_id
-            _write_spec(src, spec_obj)
-            click.echo("Updated spec at {} with ID {}".format(src, new_pipeline_id))
-        else:
-            click.echo("Pipeline has been assigned ID {}".format(new_pipeline_id))
+        click.echo(new_pipeline_id, err=True)
     else:
+        if (pipeline_id and 'id' in spec_obj) and pipeline_id != spec_obj["id"]:
+            raise ValueError(
+                "The ID provided in --pipeline_id '{}' is different from the id provided "
+                "the spec '{}'. Please resolve the conflict and try the command again. "
+                "Because pipeline IDs are no longer persisted after being deleted, we "
+                "recommend removing the ID field from your spec."
+                .format(pipeline_id, spec["id"])
+            )
+
+        spec_obj['id'] = pipeline_id or spec_obj.get('id', None)
         _validate_pipeline_id(spec_obj['id'])
+
         try:
             PipelinesApi(api_client).deploy(spec_obj, allow_duplicate_names)
         except requests.exceptions.HTTPError as e:
@@ -113,94 +125,64 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, no_update_spec
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Stops a delta pipeline and deletes its associated Databricks resources')
-@click.argument('spec_arg', default=None, required=False)
-@click.option('--spec', default=None, type=PipelineSpecClickType(), help=PipelineSpecClickType.help)
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
 @profile_option
 @pipelines_exception_eater
 @provide_api_client
-def delete_cli(api_client, spec_arg, spec, pipeline_id):
+def delete_cli(api_client, pipeline_id):
     """
     Stops a delta pipeline and deletes its associated Databricks resources. The pipeline can be
     resumed by deploying it again.
 
     Usage:
 
-    databricks pipelines delete example.json
-
-    OR
-
-    databricks pipelines delete --spec example.json
-
-    OR
-
     databricks pipelines delete --pipeline-id 1234
     """
-    pipeline_id = _get_pipeline_id(spec_arg=spec_arg, spec=spec, pipeline_id=pipeline_id)
+    _validate_pipeline_id(pipeline_id)
     PipelinesApi(api_client).delete(pipeline_id)
     click.echo("Pipeline {} deleted".format(pipeline_id))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Gets a delta pipeline\'s current spec and status')
-@click.argument('spec_arg', default=None, required=False)
-@click.option('--spec', default=None, type=PipelineSpecClickType(), help=PipelineSpecClickType.help)
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
 @profile_option
 @pipelines_exception_eater
 @provide_api_client
-def get_cli(api_client, spec_arg, spec, pipeline_id):
+def get_cli(api_client, pipeline_id):
     """
     Gets a delta pipeline's current spec and status.
 
     Usage:
 
-    databricks pipelines get example.json
-
-    OR
-
-    databricks pipelines get --spec example.json
-
-    OR
-
     databricks pipelines get --pipeline-id 1234
     """
-    pipeline_id = _get_pipeline_id(spec_arg=spec_arg, spec=spec, pipeline_id=pipeline_id)
+    _validate_pipeline_id(pipeline_id)
     click.echo(pretty_format(PipelinesApi(api_client).get(pipeline_id)))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Resets a delta pipeline so data can be reprocessed from scratch')
-@click.argument('spec_arg', default=None, required=False)
-@click.option('--spec', default=None, type=PipelineSpecClickType(), help=PipelineSpecClickType.help)
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
 @profile_option
 @pipelines_exception_eater
 @provide_api_client
-def reset_cli(api_client, spec_arg, spec, pipeline_id):
+def reset_cli(api_client, pipeline_id):
     """
     Resets a delta pipeline by truncating tables and creating new checkpoint folders so data is
     reprocessed from scratch.
 
     Usage:
 
-    databricks pipelines reset example.json
-
-    OR
-
-    databricks pipelines reset --spec example.json
-
-    OR
-
     databricks pipelines reset --pipeline-id 1234
     """
-    pipeline_id = _get_pipeline_id(spec_arg=spec_arg, spec=spec, pipeline_id=pipeline_id)
+    _validate_pipeline_id(pipeline_id)
     PipelinesApi(api_client).reset(pipeline_id)
     click.echo("Reset triggered for pipeline {}".format(pipeline_id))
 
