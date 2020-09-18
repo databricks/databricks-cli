@@ -168,6 +168,7 @@ class PermissionsObject(object):
         }
 
 
+# FIXME: add set/update permissions, right now this is read only.
 class PermissionsApi(object):
     def __init__(self, api_client):
         self.api_client = api_client
@@ -204,21 +205,3 @@ class PermissionsApi(object):
 
         return self.client.add_permissions(object_type=PermissionTargets[object_type].value,
                                            object_id=object_id, data=permissions.to_dict())
-
-    def get_id_for_directory(self, path):
-        # type: (str) -> list[str]
-        """
-        Given a path, use the workspaces API to look up the object id.
-        :param path: path to a directory
-        :return: object id, [] if not found
-        """
-
-        if not path:
-            return []
-
-        objects = WorkspaceApi(self.api_client).list_directory_info(path)
-        if not objects:
-            return []
-
-        # ls -d already filtered for us
-        return [workspace_object.object_id for workspace_object in objects]
