@@ -30,6 +30,7 @@ from databricks_cli.permissions.api import PermissionsApi, PermissionTargets, Pe
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS
 from databricks_cli.utils import pretty_format
 from databricks_cli.version import print_version_callback, version
+from databricks_cli.workspace.api import WorkspaceApi
 
 FILTERS_HELP = 'Filters for filtering the list of users: ' + \
                'https://docs.databricks.com/api/latest/scim.html#filters'
@@ -150,8 +151,10 @@ def list_permissions_level_cli():
 @provide_api_client
 def directory_cli(api_client, path):
     perms_api = PermissionsApi(api_client)
+    workspace_api = WorkspaceApi(api_client)
+
     object_type = 'directories'
-    object_ids = perms_api.get_id_for_directory(path)
+    object_ids = workspace_api.get_id_for_directory(path)
 
     if not object_ids:
         click.echo('Failed to find id for {}'.format(path))
