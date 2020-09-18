@@ -99,7 +99,7 @@ def add_cli(api_client, object_type, object_id, user_name, group_name, service_n
     if not permission_level:
         click.echo('Need permission-level: {}'.format([e.value for e in PermissionLevel]))
 
-    # Determine the type of permissions we're adding.   
+    # Determine the type of permissions we're adding.
     if user_name:
         perm_type = PermissionType.user
         value = user_name

@@ -25,7 +25,6 @@ from enum import Enum
 from databricks_cli.sdk.permissions_service import PermissionsService
 
 from .exceptions import PermissionsError
-from ..workspace.api import WorkspaceApi
 
 
 class PermissionTargets(Enum):
