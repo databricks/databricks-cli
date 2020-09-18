@@ -99,9 +99,7 @@ def add_cli(api_client, object_type, object_id, user_name, group_name, service_n
     if not permission_level:
         click.echo('Need permission-level: {}'.format([e.value for e in PermissionLevel]))
 
-    # build the json for the use
-    perm_type = None
-    value = None
+    # Determine the type of permissions we're adding.   
     if user_name:
         perm_type = PermissionType.user
         value = user_name
@@ -113,7 +111,7 @@ def add_cli(api_client, object_type, object_id, user_name, group_name, service_n
         value = service_name
     else:
         click.echo(
-            'Invalid permission-level must be one of {}'.format([e.value for e in PermissionLevel]))
+            'Invalid permission-type must be one of {}'.format([e.value for e in PermissionType]))
         return
 
     permission = Permission(perm_type, value, Lookups.from_name(permission_level.upper()))
