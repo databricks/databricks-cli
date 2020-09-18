@@ -38,7 +38,7 @@ LIBRARY = 'LIBRARY'
 
 
 class WorkspaceFileInfo(object):
-    def __init__(self, path, object_type, object_id=None, language=None, **kwargs): # noqa
+    def __init__(self, path, object_type, language=None, object_id=None, **kwargs): # noqa
         self.path = path
         self.object_type = object_type
         self.language = language
