@@ -753,6 +753,30 @@ class GroupsService(object):
         return self.client.perform_query('GET', '/groups/list-parents', data=_data, headers=headers)
 
 
+class TokenService(object):
+    def __init__(self, client):
+        self.client = client
+
+    def create_token(self, lifetime_seconds=None, comment=None, headers=None):
+        _data = {}
+        if lifetime_seconds is not None:
+            _data['lifetime_seconds'] = lifetime_seconds
+        if comment is not None:
+            _data['comment'] = comment
+        return self.client.perform_query('POST', '/token/create', data=_data, headers=headers)
+
+    def list_tokens(self, headers=None):
+        _data = {}
+
+        return self.client.perform_query('GET', '/token/list', data=_data, headers=headers)
+
+    def revoke_token(self, token_id, headers=None):
+        _data = {}
+        if token_id is not None:
+            _data['token_id'] = token_id
+        return self.client.perform_query('POST', '/token/delete', data=_data, headers=headers)
+
+
 class InstancePoolService(object):
     def __init__(self, client):
         self.client = client
@@ -842,8 +866,9 @@ class DeltaPipelinesService(object):
     def __init__(self, client):
         self.client = client
 
-    def deploy(self, pipeline_id=None, id=None, name=None, storage=None, configuration=None,
-               clusters=None, libraries=None, filters=None, headers=None):
+    def create(self, id=None, name=None, storage=None, configuration=None, clusters=None,
+               libraries=None, trigger=None, filters=None, allow_duplicate_names=None,
+               headers=None):
         _data = {}
         if id is not None:
             _data['id'] = id
@@ -857,11 +882,47 @@ class DeltaPipelinesService(object):
             _data['clusters'] = clusters
         if libraries is not None:
             _data['libraries'] = libraries
+        if trigger is not None:
+            _data['trigger'] = trigger
+            if not isinstance(trigger, dict):
+                raise TypeError('Expected databricks.PipelineTrigger() or dict for field trigger')
         if filters is not None:
             _data['filters'] = filters
             if not isinstance(filters, dict):
                 raise TypeError('Expected databricks.Filters() or dict for field filters')
-        return self.client.perform_query('PUT', '/pipelines/{pipeline_id}'.format(pipeline_id=pipeline_id), data=_data, headers=headers)
+        if allow_duplicate_names is not None:
+            _data['allow_duplicate_names'] = allow_duplicate_names
+        return self.client.perform_query('POST', '/pipelines', data=_data, headers=headers)
+
+    def deploy(self, pipeline_id=None, id=None, name=None, storage=None, configuration=None,
+               clusters=None, libraries=None, trigger=None, filters=None,
+               allow_duplicate_names=None, headers=None):
+        _data = {}
+        if id is not None:
+            _data['id'] = id
+        if name is not None:
+            _data['name'] = name
+        if storage is not None:
+            _data['storage'] = storage
+        if configuration is not None:
+            _data['configuration'] = configuration
+        if clusters is not None:
+            _data['clusters'] = clusters
+        if libraries is not None:
+            _data['libraries'] = libraries
+        if trigger is not None:
+            _data['trigger'] = trigger
+            if not isinstance(trigger, dict):
+                raise TypeError('Expected databricks.PipelineTrigger() or dict for field trigger')
+        if filters is not None:
+            _data['filters'] = filters
+            if not isinstance(filters, dict):
+                raise TypeError('Expected databricks.Filters() or dict for field filters')
+        if allow_duplicate_names is not None:
+            _data['allow_duplicate_names'] = allow_duplicate_names
+        return self.client.perform_query('PUT',
+                                         '/pipelines/{pipeline_id}'.format(pipeline_id=pipeline_id),
+                                         data=_data, headers=headers)
 
     def delete(self, pipeline_id=None, headers=None):
         _data = {}
@@ -878,3 +939,12 @@ class DeltaPipelinesService(object):
 
         return self.client.perform_query('POST', '/pipelines/{pipeline_id}/reset'.format(pipeline_id=pipeline_id), data=_data, headers=headers)
 
+    def run(self, pipeline_id=None, headers=None):
+        _data = {}
+
+        return self.client.perform_query('POST', '/pipelines/{pipeline_id}/run'.format(pipeline_id=pipeline_id), data=_data, headers=headers)
+
+    def stop(self, pipeline_id=None, headers=None):
+        _data = {}
+
+        return self.client.perform_query('POST', '/pipelines/{pipeline_id}/stop'.format(pipeline_id=pipeline_id), data=_data, headers=headers)

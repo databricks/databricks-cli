@@ -192,7 +192,7 @@ def import_dir_cli(api_client, source_path, target_path, overwrite, exclude_hidd
               expose_value=False, is_eager=True, help=version)
 @debug_option
 @profile_option
-def workspace_group():
+def workspace_group():  # pragma: no cover
     """
     Utility to interact with the Databricks workspace.
     Workspace paths must be absolute and be prefixed with `/`.

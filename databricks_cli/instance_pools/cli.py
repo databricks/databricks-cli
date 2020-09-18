@@ -150,7 +150,7 @@ def list_cli(api_client, output):
 @debug_option
 @profile_option
 @eat_exceptions
-def instance_pools_group():
+def instance_pools_group():  # pragma: no cover
     """
     Utility to interact with Databricks instance pools.
     """
