@@ -28,7 +28,10 @@ import shutil
 import tempfile
 
 import re
+import logging
+import sys
 import click
+
 
 from tenacity import retry, wait_random_exponential, retry_if_exception_type, stop_after_attempt
 
@@ -43,6 +46,11 @@ BUFFER_SIZE_BYTES = 2**20
 EXPONENTIAL_BACKOFF_MULTIPLIER = 1
 MAX_SECONDS_WAIT = 60
 MAX_RETRY_ATTEMPTS = 7
+
+
+logging.basicConfig(stream=sys.stderr, level=logging.WARNING)
+
+logger = logging.getLogger(__name__)
 
 
 class ParseException(Exception):
@@ -83,10 +91,21 @@ class DbfsErrorCodes(object):
     TOO_MANY_REQUESTS = 'TOO_MANY_REQUESTS'
 
 
+def my_before_sleep(retry_state):
+    if retry_state.attempt_number < 1:
+        loglevel = logging.INFO
+    else:
+        loglevel = logging.WARNING
+    logger.log(
+        loglevel, ' Received 429 REQUEST_LIMIT_EXCEEDED for attempt %s. Retrying in %s seconds.',
+        retry_state.attempt_number, retry_state.idle_for)
+
+
 def retry_429(func):
     @retry(wait=wait_random_exponential(multiplier=EXPONENTIAL_BACKOFF_MULTIPLIER, 
            max=MAX_SECONDS_WAIT), retry=retry_if_exception_type(RateLimitException), 
-           stop=stop_after_attempt(MAX_RETRY_ATTEMPTS))
+           stop=stop_after_attempt(MAX_RETRY_ATTEMPTS), reraise=True, 
+           before_sleep=my_before_sleep)
     def wrapped_function(*args, **kwargs):
         try:
             return func(*args, **kwargs)
