@@ -91,7 +91,7 @@ class DbfsErrorCodes(object):
     TOO_MANY_REQUESTS = 'TOO_MANY_REQUESTS'
 
 
-def my_before_sleep(retry_state):
+def before_sleep_on_429(retry_state):
     if retry_state.attempt_number < 1:
         loglevel = logging.INFO
     else:
@@ -105,7 +105,7 @@ def retry_429(func):
     @retry(wait=wait_random_exponential(multiplier=EXPONENTIAL_BACKOFF_MULTIPLIER, 
            max=MAX_SECONDS_WAIT), retry=retry_if_exception_type(RateLimitException), 
            stop=stop_after_attempt(MAX_RETRY_ATTEMPTS), reraise=True, 
-           before_sleep=my_before_sleep)
+           before_sleep=before_sleep_on_429)
     def wrapped_function(*args, **kwargs):
         try:
             return func(*args, **kwargs)
