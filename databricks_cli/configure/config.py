@@ -83,7 +83,10 @@ def profile_option(f):
 
 def _get_api_client(config, command_name=""):
     verify = config.insecure is None
-    if config.is_valid_with_token:
+    if config.is_valid_with_az_token:
+        return ApiClient(host=config.host, token=config.token, az_token=config.az_token,
+                         resource_id=config.resource_id, verify=verify, command_name=command_name)
+    elif config.is_valid_with_token:
         return ApiClient(host=config.host, token=config.token, verify=verify,
                          command_name=command_name)
     return ApiClient(user=config.username, password=config.password,

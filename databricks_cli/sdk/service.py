@@ -616,7 +616,7 @@ class SecretService(object):
     def __init__(self, client):
         self.client = client
 
-    def create_scope(self, scope, initial_manage_principal=None, scope_backend_type=None,
+    def create_scope(self, scope, initial_manage_principal=None, scope_backend_type=None, azure_keyvault=None,
                      headers=None):
         _data = {}
         if scope is not None:
@@ -624,7 +624,14 @@ class SecretService(object):
         if initial_manage_principal is not None:
             _data['initial_manage_principal'] = initial_manage_principal
         if scope_backend_type is not None:
-            _data['scope_backend_type'] = scope_backend_type
+            if scope_backend_type == 'databricks':
+                _data['scope_backend_type_str'] = 1
+            elif azure_keyvault is not None and scope_backend_type == 'azure_keyvault':
+                _data['scope_backend_type'] = 2
+                _data['backend_azure_keyvault'] = {
+                    'resource_id': str(azure_keyvault['resource_id']),
+                    'dns_name': str(azure_keyvault['dns_name']),
+                }
         return self.client.perform_query('POST', '/secrets/scopes/create', data=_data, headers=headers)
 
     def delete_scope(self, scope, headers=None):
