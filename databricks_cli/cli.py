@@ -32,11 +32,14 @@ from databricks_cli.dbfs.cli import dbfs_group
 from databricks_cli.workspace.cli import workspace_group
 from databricks_cli.jobs.cli import jobs_group
 from databricks_cli.clusters.cli import clusters_group
+from databricks_cli.cluster_policies.cli import cluster_policies_group
 from databricks_cli.runs.cli import runs_group
 from databricks_cli.secrets.cli import secrets_group
 from databricks_cli.stack.cli import stack_group
 from databricks_cli.groups.cli import groups_group
+from databricks_cli.tokens.cli import tokens_group
 from databricks_cli.instance_pools.cli import instance_pools_group
+from databricks_cli.pipelines.cli import pipelines_group
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
@@ -53,12 +56,15 @@ cli.add_command(dbfs_group, name='fs')
 cli.add_command(workspace_group, name='workspace')
 cli.add_command(jobs_group, name='jobs')
 cli.add_command(clusters_group, name='clusters')
+cli.add_command(cluster_policies_group, name='cluster-policies')
 cli.add_command(runs_group, name='runs')
 cli.add_command(libraries_group, name='libraries')
 cli.add_command(secrets_group, name='secrets')
 cli.add_command(stack_group, name='stack')
 cli.add_command(groups_group, name='groups')
+cli.add_command(tokens_group, name='tokens')
 cli.add_command(instance_pools_group, name="instance-pools")
+cli.add_command(pipelines_group, name='pipelines')
 
 if __name__ == "__main__":
     cli()

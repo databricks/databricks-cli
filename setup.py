@@ -38,7 +38,7 @@ setup(
         'requests>=2.17.3',
         'tabulate>=0.7.7',
         'six>=1.10.0',
-        'configparser >= 0.3.5',
+        'configparser>=0.3.5;python_version < "3.6"',
     ],
     entry_points='''
         [console_scripts]
@@ -56,6 +56,7 @@ setup(
         'Intended Audience :: System Administrators',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.6',
+        'License :: OSI Approved :: Apache Software License',
     ],
     keywords='databricks cli',
     url='https://github.com/databricks/databricks-cli'

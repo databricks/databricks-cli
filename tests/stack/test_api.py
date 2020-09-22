@@ -126,11 +126,23 @@ TEST_DBFS_DIR_STATUS = {
 }
 TEST_STACK = {
     api.STACK_NAME: "test-stack",
-    api.STACK_RESOURCES: [TEST_JOB_RESOURCE,
-                          TEST_WORKSPACE_NB_RESOURCE,
-                          TEST_WORKSPACE_DIR_RESOURCE,
-                          TEST_DBFS_FILE_RESOURCE,
-                          TEST_DBFS_DIR_RESOURCE]
+    api.STACK_RESOURCES: [
+        TEST_JOB_RESOURCE,
+        TEST_WORKSPACE_NB_RESOURCE,
+        TEST_WORKSPACE_DIR_RESOURCE,
+        TEST_DBFS_FILE_RESOURCE,
+        TEST_DBFS_DIR_RESOURCE,
+        {
+            api.RESOURCE_ID: "NoStatusResource",
+            api.RESOURCE_SERVICE: api.DBFS_SERVICE,
+            api.RESOURCE_WRITE_STATUS: False,
+            api.RESOURCE_PROPERTIES:  {
+                api.DBFS_RESOURCE_SOURCE_PATH: 'test.jar',
+                api.DBFS_RESOURCE_PATH: 'dbfs:/test/test-no-status.jar',
+                api.DBFS_RESOURCE_IS_DIR: False
+            }
+        }
+    ]
 }
 TEST_STATUS = {
     api.STACK_NAME: "test-stack",
@@ -154,8 +166,7 @@ class _TestJobsClient(object):
         if job_id not in self.jobs_in_databricks:
             # Job created is not found.
             raise HTTPError('Job not Found')
-        else:
-            return self.jobs_in_databricks[job_id]
+        return self.jobs_in_databricks[job_id]
 
     def reset_job(self, data, headers=None):
         if data[api.JOBS_RESOURCE_JOB_ID] not in self.jobs_in_databricks:

@@ -21,35 +21,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Databricks Python REST Client 2.0 for interacting with various services.
+# pylint:disable=redefined-outer-name
 
-Currently supports services including clusters, clusters policies and jobs.
+import pytest
+from mock import mock
 
-Requires Python 2.7.9 or above.
+from click.testing import CliRunner
+import databricks_cli.tokens.cli as cli
 
-To get started, below is an example usage of the Python API client.
 
-  # Import databricks package:
-  from databricks import *
+@pytest.fixture()
+def tokens_api_mock():
+    with mock.patch('databricks_cli.tokens.cli.TokensApi') as TokensApi:
+        _tokens_api_mock = mock.MagicMock()
+        TokensApi.return_value = _tokens_api_mock
+        yield _tokens_api_mock
 
-  # Create a client:
-  userName = "user@company.com"
-  password = "MySecretPassword"
-  client = ApiClient(userName, password, host = "https://dbc-12345678-9101.cloud.databricks.com")
 
-  # List jobs:
-  jobs = JobsService(client)
-  print jobs.list_jobs()
-
-  # For help:
-  help(databricks)
-
-  # To examine available services:
-  help(databricks.service)
-
-  # To examine the jobs API:
-  help(JobsService)
-"""
-from .service import *
-from .api_client import ApiClient
+def test_create_token_cli_defaults(tokens_api_mock):
+    runner = CliRunner()
+    runner.invoke(cli.create_token_cli, ['--comment', 'test'])
+    assert tokens_api_mock.create.called_with(60 * 60 * 24 * 90, 'test')

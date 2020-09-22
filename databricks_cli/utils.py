@@ -32,6 +32,7 @@ from requests.exceptions import HTTPError
 from databricks_cli.click_types import ContextObject
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+CLUSTER_OPTIONS = ['cluster-id', 'cluster-name']
 DEBUG_MODE = False
 
 
@@ -46,9 +47,41 @@ def eat_exceptions(function):
                                'reconfigure with ``dbfs configure``')
             else:
                 error_and_quit(exception.response.content)
-        except Exception as exception: # noqa
+        except Exception as exception:  # noqa
             if not DEBUG_MODE:
                 error_and_quit('{}: {}'.format(type(exception).__name__, str(exception)))
+
+    decorator.__doc__ = function.__doc__
+    return decorator
+
+
+def pipelines_exception_eater(function):
+    """
+    Formats error messages from the pipelines API while keeping the existing
+    behavior of eat_exception
+    """
+
+    @six.wraps(function)
+    def decorator(*args, **kwargs):
+        try:
+            return function(*args, **kwargs)
+        except HTTPError as exception:  # noqa
+            if exception.response.status_code == 401:
+                error_and_quit('Your authentication information may be incorrect. Please '
+                               + 'reconfigure with ``dbfs configure``')
+            else:
+                try:
+                    exp_context = json_loads(exception.response.content.decode('utf-8'))
+                    message = exception.response.content
+                    if 'error_code' in exp_context and 'message' in exp_context:
+                        message = exp_context['error_code'] + '\n' + exp_context['message']
+                    error_and_quit(message)
+                except Exception:  # noqa
+                    error_and_quit(exception.response.content)
+        except Exception as exception:  # noqa
+            if not DEBUG_MODE:
+                error_and_quit('{}: {}'.format(type(exception).__name__, str(exception)))
+
     decorator.__doc__ = function.__doc__
     return decorator
 
@@ -58,7 +91,7 @@ def error_and_quit(message):
     context_object = ctx.ensure_object(ContextObject)
     if context_object.debug_mode:
         traceback.print_exc()
-    click.echo('Error: {}'.format(message))
+    click.echo(u'Error: {}'.format(message))
     sys.exit(1)
 
 

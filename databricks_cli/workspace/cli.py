@@ -44,7 +44,7 @@ from databricks_cli.workspace.types import LanguageClickType, FormatClickType, W
 @profile_option
 @eat_exceptions
 @provide_api_client
-def ls_cli(api_client, l, absolute, workspace_path):
+def ls_cli(api_client, l, absolute, workspace_path): # noqa
     """
     List objects in the Databricks Workspace.
     """
@@ -192,12 +192,13 @@ def import_dir_cli(api_client, source_path, target_path, overwrite, exclude_hidd
               expose_value=False, is_eager=True, help=version)
 @debug_option
 @profile_option
-def workspace_group():
+def workspace_group():  # pragma: no cover
     """
     Utility to interact with the Databricks workspace.
     Workspace paths must be absolute and be prefixed with `/`.
     """
     pass
+
 
 workspace_group.add_command(ls_cli, name='ls')
 workspace_group.add_command(ls_cli, name='list')

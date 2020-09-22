@@ -316,7 +316,7 @@ def get_acl(api_client, scope, principal, output):
 @debug_option
 @profile_option
 @eat_exceptions
-def secrets_group():
+def secrets_group():  # pragma: no cover
     """
     Utility to interact with secret API.
     """

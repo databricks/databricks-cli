@@ -146,7 +146,7 @@ def delete_cli(api_client, group_name):
 @debug_option
 @profile_option
 @eat_exceptions
-def groups_group():
+def groups_group():  # pragma: no cover
     """Provide utility to interact with Databricks groups."""
     pass
 
