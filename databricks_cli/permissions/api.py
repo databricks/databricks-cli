@@ -68,6 +68,14 @@ class PermissionLevel(Enum):
     def to_name(self):
         return self[self.value]
 
+    @classmethod
+    def values(cls):
+        return [e.value for e in PermissionLevel]
+
+    @classmethod
+    def help_values(cls):
+        return ', '.join([e.value for e in PermissionLevel])
+
 
 class PermissionType(Enum):
     user = 'user_name'
@@ -76,6 +84,14 @@ class PermissionType(Enum):
 
     def to_name(self):
         return self[self.value]
+
+    @classmethod
+    def values(cls):
+        return [e.value for e in PermissionType]
+
+    @classmethod
+    def help_values(cls):
+        return ', '.join([e.value for e in PermissionType])
 
 
 class Lookups(object):

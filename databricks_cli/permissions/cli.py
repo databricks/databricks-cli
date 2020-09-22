@@ -40,14 +40,17 @@ CREATE_USER_OPTIONS = JSON_FILE_OPTIONS + ['user-name']
 
 PERMISSIONS_OPTION = ['group-name', 'user-name', 'service-name']
 
+POSSIBLE_OBJECT_TYPES = 'Possible object types are: \n\t{}\n'.format(
+    PermissionTargets.help_values())
+
+POSSIBLE_PERMISSION_LEVELS = 'Possible permission levels are: \n\t{}\n'.format(
+    PermissionLevel.help_values())
+
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Get permissions for an item.  ' +
-                          'Possible object types are: \n\t{}\n'
-               .format(PermissionTargets.help_values())
-               )
-@click.argument('object-type')
-@click.argument('object-id', required=False)
+               short_help='Get permissions for an item.  ' + POSSIBLE_OBJECT_TYPES)
+@click.option('--object_type', help='Possible object types are: {}'.format(PermissionTargets))
+@click.option('--object-id', required=False)
 @debug_option
 @profile_option
 @eat_exceptions
@@ -61,21 +64,23 @@ def get_cli(api_client, object_type, object_id):
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='List permission types')
-@click.argument('object_type')
-@click.argument('object_id')
+@click.option('--object_type', help=POSSIBLE_OBJECT_TYPES)
+@click.option('--object_id')
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
 def list_permissions_types_cli(api_client, object_type, object_id):
     perms_api = PermissionsApi(api_client)
+    if not object_type:
+        click.echo('Possible object types are: {}'.format(PermissionTargets))
     click.echo(pretty_format(perms_api.get_possible_permissions(object_type, object_id)))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Add or modify permission types')
-@click.argument('object_type')
-@click.argument('object_id')
+@click.option('--object_type', help=POSSIBLE_OBJECT_TYPES)
+@click.option('--object_id')
 @click.option('--group-name', metavar='<string>', cls=OneOfOption, default=None,
               one_of=PERMISSIONS_OPTION)
 @click.option('--user-name', metavar='<string>', cls=OneOfOption, default=None,
@@ -96,6 +101,9 @@ def add_cli(api_client, object_type, object_id, user_name, group_name, service_n
     if not user_name and not group_name and not service_name:
         click.echo('Need --user-name, --service-name or --group-name')
         return
+
+    if not object_type:
+        click.echo('Possible object types are: {}'.format(PermissionTargets))
 
     if not permission_level:
         click.echo('Need permission-level: {}'.format([e.value for e in PermissionLevel]))
@@ -131,7 +139,7 @@ def add_cli(api_client, object_type, object_id, user_name, group_name, service_n
 @profile_option
 @eat_exceptions
 def list_permissions_targets_cli():
-    click.echo('Possible object types are: {}'.format([e.value for e in PermissionTargets]))
+    click.echo(POSSIBLE_OBJECT_TYPES)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
@@ -139,7 +147,7 @@ def list_permissions_targets_cli():
 @profile_option
 @eat_exceptions
 def list_permissions_level_cli():
-    click.echo('Possible permission levels are: {}'.format([e.value for e in PermissionLevel]))
+    click.echo(POSSIBLE_PERMISSION_LEVELS)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
