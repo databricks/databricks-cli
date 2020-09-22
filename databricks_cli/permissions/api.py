@@ -23,7 +23,6 @@
 from enum import Enum
 
 from databricks_cli.sdk.permissions_service import PermissionsService
-
 from .exceptions import PermissionsError
 
 
@@ -204,3 +203,13 @@ class PermissionsApi(object):
 
         return self.client.add_permissions(object_type=PermissionTargets[object_type].value,
                                            object_id=object_id, data=permissions.to_dict())
+
+    def update_permissions(self, object_type, object_id, permissions):
+        # type: (str, str, PermissionsObject) -> dict
+        if not object_type:
+            raise PermissionsError('object_type is invalid')
+        if not object_id:
+            raise PermissionsError('object_id is invalid')
+
+        return self.client.update_permissions(object_type=PermissionTargets[object_type].value,
+                                              object_id=object_id, data=permissions.to_dict())
