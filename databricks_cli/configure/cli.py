@@ -37,6 +37,11 @@ PROMPT_AZ_TOKEN = 'Azure Token'
 PROMPT_USERNAME = 'Username'
 PROMPT_PASSWORD = 'Password' #  NOQA
 PROMPT_TOKEN = 'Token' #  NOQA
+ENV_TOKEN = 'DATABRICKS_TOKEN'
+ENV_AZ_TOKEN = 'DATABRICKS_AZ_TOKEN'
+PROMPT_ENV_TOKEN = 'Have you correctly set the environment variable (\'DATABRICKS_TOKEN\') for the Bearer Token? (y/n)'
+PROMPT_ENV_AZ_TOKEN = 'Have you correctly set the environment variable (\'DATABRICKS_AZ_TOKEN\') ' \
+                      'for the Azure Token? (y/n)'
 
 
 def _configure_cli_token(profile, insecure):
@@ -50,8 +55,19 @@ def _configure_cli_token(profile, insecure):
 def _configure_cli_aad_token(profile, insecure):
     config = ProfileConfigProvider(profile).get_config() or DatabricksConfig.empty()
     host = click.prompt(PROMPT_HOST, default=config.host, type=_DbfsHost())
-    token = os.environ.get('DATABRICKS_TOKEN')
-    az_token = os.environ.get('DATABRICKS_AZ_TOKEN')
+
+    is_token_env_set = click.prompt(PROMPT_ENV_TOKEN, type=bool)
+    if not is_token_env_set or not ENV_TOKEN in os.environ:
+        print('Set Environment Variable \'DATABRICKS_TOKEN\' with your Bearer Token and run again.')
+        return
+    token = os.environ.get(ENV_TOKEN)
+
+    is_az_token_env_set = click.prompt(PROMPT_ENV_AZ_TOKEN, type=bool)
+    if not is_az_token_env_set or not ENV_AZ_TOKEN in os.environ:
+        print('Set Environment Variable \'DATABRICKS_AZ_TOKEN\' with your Azure Token and run again.')
+        return
+    az_token = os.environ.get(ENV_AZ_TOKEN)
+
     resource_id = click.prompt(PROMPT_RESOURCE_ID, default=config.resource_id)
     new_config = DatabricksConfig.from_aad_token(host, token, az_token, resource_id, insecure)
     update_and_persist_config(profile, new_config)
@@ -80,7 +96,7 @@ def _configure_cli_password(profile, insecure):
 @click.option('--insecure', show_default=True, is_flag=True, default=None)
 @debug_option
 @profile_option
-def configure_cli(token, aad_token, insecure):
+def configure_cli(token, az_token, insecure):
     """
     Configures host and authentication info for the CLI.
     """
@@ -88,7 +104,7 @@ def configure_cli(token, aad_token, insecure):
     insecure_str = str(insecure) if insecure is not None else None
     if token:
         _configure_cli_token(profile, insecure_str)
-    elif aad_token:
+    elif az_token:
         _configure_cli_aad_token(profile, insecure_str)
     else:
         _configure_cli_password(profile, insecure_str)
