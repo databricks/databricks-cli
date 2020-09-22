@@ -30,6 +30,7 @@ import pytest
 from click.testing import CliRunner
 
 import databricks_cli.permissions.cli as cli
+from databricks_cli.permissions.api import PermissionTargets
 from databricks_cli.utils import pretty_format
 from tests.test_data import TEST_CLUSTER_ID
 from tests.utils import provide_conf
@@ -62,8 +63,97 @@ PERMISSIONS_RETURNS = {
                 ]
             }
         }
+    },
+    'list-permissions': {
+        'clusters': {
+            'permission_levels': [
+                {
+                    'permission_level': 'CAN_MANAGE',
+                    'description': 'Can Manage permission on cluster'
+                },
+                {
+                    'permission_level': 'CAN_RESTART',
+                    'description': 'Can Restart permission on cluster'
+                },
+                {
+                    'permission_level': 'CAN_ATTACH_TO',
+                    'description': 'Can Attach To permission on cluster'
+                }
+            ]
+        },
+
+        'directories':
+            {
+                'permission_levels': [
+                    {
+                        'permission_level': 'CAN_READ',
+                        'description': 'Can view and comment on notebooks in the directory'
+                    },
+                    {
+                        'permission_level': 'CAN_RUN',
+                        'description': 'Can view, comment, attach/detach, and run commands in notebooks in the directory'
+                    },
+                    {
+                        'permission_level': 'CAN_EDIT',
+                        'description': 'Can view, comment, attach/detach, run commands, and edit notebooks in the directory'
+                    },
+                    {
+                        'permission_level': 'CAN_MANAGE',
+                        'description': 'Can view, comment, attach/detach, run commands, and edit notebooks in the folder, and can create, delete, and change permissions of items in the directory'
+                    }
+                ]
+            },
+        'jobs':
+            {
+                'permission_levels': [
+                    {
+                        'permission_level': 'IS_OWNER',
+                        'description': 'Is Owner permission on a job'
+                    },
+                    {
+                        'permission_level': 'CAN_MANAGE_RUN',
+                        'description': 'Can Manage Run permission to trigger or cancel job runs'
+                    },
+                    {
+                        'permission_level': 'CAN_VIEW',
+                        'description': 'Can View permission to view job run results'
+                    }
+                ]
+            },
+        'notebooks':
+            {
+                'permission_levels': [
+                    {
+                        'permission_level': 'CAN_READ',
+                        'description': 'Can view and comment on the notebook'
+                    },
+                    {
+                        'permission_level': 'CAN_RUN',
+                        'description': 'Can view, comment, attach/detach, and run commands in the notebook'
+                    },
+                    {
+                        'permission_level': 'CAN_EDIT',
+                        'description': 'Can view, comment, attach/detach, run commands, and edit the notebook'
+                    },
+                    {
+                        'permission_level': 'CAN_MANAGE',
+                        'description': 'Can view, comment, attach/detach, run commands, edit, and change permissions of the notebook'
+                    }
+                ]
+            }
+
     }
 }
+
+
+@pytest.fixture()
+def permissions_sdk_mock():
+    with mock.patch('databricks_cli.permissions.api.PermissionsService') as SdkMock:
+        _permissions_sdk_mock = mock.MagicMock()
+        SdkMock.return_value = _permissions_sdk_mock
+        # _permissions_sdk_mock.get_cluster = mock.MagicMock(return_value={})
+
+        yield _permissions_sdk_mock
 
 
 def help_test(cli_function, service_function=None, rv=None, args=None):
@@ -78,7 +168,8 @@ def help_test(cli_function, service_function=None, rv=None, args=None):
         if service_function:
             service_function.return_value = rv
         runner = CliRunner()
-        runner.invoke(cli_function, args)
+        output = runner.invoke(cli_function, args)
+        print(output)
         assert echo_mock.call_args[0][0] == pretty_format(rv)
 
 
@@ -103,3 +194,22 @@ def test_get_cli(perms_api_mock):
 
     assert perms_api_mock.get_permissions.call_args[0][0] == 'clusters'
     assert perms_api_mock.get_permissions.call_args[0][1] == '1234-567890-kens4'
+
+
+def filtered_perm_types():
+    # FIXME: I do not have test data for instance-pools or registered data
+    return [e for e in PermissionTargets.values() if
+            e != 'instance-pools' and e != 'registered-models']
+
+
+@provide_conf
+def test_list_permissions_types_cli(permissions_sdk_mock):
+    for perm_type in filtered_perm_types():
+        return_value = PERMISSIONS_RETURNS['list-permissions'][perm_type]
+        permissions_sdk_mock.get_possible_permissions.return_value = return_value
+        help_test(cli.list_permissions_types_cli, args=[
+            '--object-type',
+            perm_type,
+            '--object-id',
+            '1234-567890-kens4'
+        ], rv=return_value)

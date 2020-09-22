@@ -20,6 +20,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import json
 
 import click
 
@@ -49,38 +50,34 @@ POSSIBLE_PERMISSION_LEVELS = 'Possible permission levels are: \n\t{}\n'.format(
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Get permissions for an item.  ' + POSSIBLE_OBJECT_TYPES)
-@click.option('--object-type', help='Possible object types are: {}'.format(PermissionTargets))
-@click.option('--object-id', required=False)
+@click.option('--object-type', required=True, help=POSSIBLE_OBJECT_TYPES)
+@click.option('--object-id', required=True, help='object id to require permission about')
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
 def get_cli(api_client, object_type, object_id):
     perms_api = PermissionsApi(api_client)
-    if not object_type:
-        click.echo('Possible object types are: {}'.format(PermissionTargets))
     click.echo(pretty_format(perms_api.get_permissions(object_type, object_id)))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='List permission types')
-@click.option('--object-type', help=POSSIBLE_OBJECT_TYPES)
-@click.option('--object-id')
+@click.option('--object-type', required=True, help=POSSIBLE_OBJECT_TYPES)
+@click.option('--object-id', required=True, help='object id to require permission about')
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
 def list_permissions_types_cli(api_client, object_type, object_id):
     perms_api = PermissionsApi(api_client)
-    if not object_type:
-        click.echo('Possible object types are: {}'.format(PermissionTargets))
     click.echo(pretty_format(perms_api.get_possible_permissions(object_type, object_id)))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Add or modify permission types')
-@click.option('--object-type', help=POSSIBLE_OBJECT_TYPES)
-@click.option('--object-id')
+@click.option('--object-type', required=True, help=POSSIBLE_OBJECT_TYPES)
+@click.option('--object-id', required=True, help='object id to require permission about')
 @click.option('--group-name', metavar='<string>', cls=OneOfOption, default=None,
               one_of=PERMISSIONS_OPTION)
 @click.option('--user-name', metavar='<string>', cls=OneOfOption, default=None,
@@ -103,10 +100,10 @@ def add_cli(api_client, object_type, object_id, user_name, group_name, service_n
         return
 
     if not object_type:
-        click.echo('Possible object types are: {}'.format(PermissionTargets))
+        click.echo(POSSIBLE_OBJECT_TYPES)
 
     if not permission_level:
-        click.echo('Need permission-level: {}'.format([e.value for e in PermissionLevel]))
+        click.echo(POSSIBLE_PERMISSION_LEVELS)
 
     # Determine the type of permissions we're adding.
     if user_name:
@@ -119,8 +116,7 @@ def add_cli(api_client, object_type, object_id, user_name, group_name, service_n
         perm_type = PermissionType.service
         value = service_name
     else:
-        click.echo(
-            'Invalid permission-type must be one of {}'.format([e.value for e in PermissionType]))
+        click.echo(POSSIBLE_PERMISSION_LEVELS)
         return
 
     permission = Permission(perm_type, value, Lookups.from_name(permission_level.upper()))
@@ -152,7 +148,7 @@ def list_permissions_level_cli():
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Get permissions for a directory')
-@click.argument('path')
+@click.option('--path')
 @debug_option
 @profile_option
 @eat_exceptions
@@ -176,15 +172,17 @@ def directory_cli(api_client, path):
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
-             short_help='xUtility to interact with Databricks permissions api.\n' +
-                        'Possible object types are: {}\n'.format(PermissionTargets))
+             help='Utility to interact with Databricks permissions api.\n\n' +
+                  'Valid object types for --object-type are:\n\n\t' +
+                  json.dumps(PermissionTargets.values())
+             )
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
 @debug_option
 @profile_option
 @eat_exceptions
 def permissions_group():
-    """Provide utility to interact with Databricks permissions api."""
+    # A python doc comment here will override the hand coded help above.
     pass
 
 

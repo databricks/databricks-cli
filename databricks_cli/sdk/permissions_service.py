@@ -10,8 +10,9 @@ class PermissionsService(PreviewService):
 
     def create_url(self, object_type, object_id, suffix=''):
         # type: (str, str, str) -> str
-
-        return '{}/{}/{}{}'.format(self.url_base, object_type, object_id, suffix)
+        return '{base}/{object_type}/{object_id}{suffix}'.format(base=self.url_base,
+                                                                 object_type=object_type,
+                                                                 object_id=object_id, suffix=suffix)
 
     def get_permissions(self, object_type, object_id, headers=None):
         # type: (str, str, Optional[dict]) -> dict
@@ -28,7 +29,8 @@ class PermissionsService(PreviewService):
         https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/get-registered-model-permissions
         """
 
-        return self.client.perform_query('GET', self.create_url(object_type, object_id),
+        return self.client.perform_query('GET', self.create_url(object_type=object_type,
+                                                                object_id=object_id),
                                          headers=headers)
 
     def get_possible_permissions(self, object_type, object_id, headers=None):
@@ -46,8 +48,9 @@ class PermissionsService(PreviewService):
         https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/get-registered-models-permission-levels
         """
 
-        return self.client.perform_query('GET', self.create_url(object_type, object_id,
-                                                                '/permissionLevels'),
+        return self.client.perform_query('GET', self.create_url(object_type=object_type,
+                                                                object_id=object_id,
+                                                                suffix='/permissionLevels'),
                                          headers=headers)
 
     def add_permissions(self, object_type, object_id, data, headers=None):
