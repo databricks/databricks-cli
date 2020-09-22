@@ -46,7 +46,7 @@ BUFFER_SIZE_BYTES = 2**20
 EXPONENTIAL_BACKOFF_MULTIPLIER = 1
 MAX_SECONDS_WAIT = 60
 MAX_RETRY_ATTEMPTS = 7
-
+time_for_last_retry = 0
 
 logging.basicConfig(stream=sys.stderr, level=logging.WARNING)
 
@@ -92,13 +92,15 @@ class DbfsErrorCodes(object):
 
 
 def before_sleep_on_429(retry_state):
+    global time_for_last_retry
     if retry_state.attempt_number < 1:
         loglevel = logging.INFO
     else:
-        loglevel = logging.WARNING
+        loglevel = logging.WARNING   
     logger.log(
         loglevel, ' Received 429 REQUEST_LIMIT_EXCEEDED for attempt %s. Retrying in %s seconds.',
-        retry_state.attempt_number, retry_state.idle_for)
+        retry_state.attempt_number, retry_state.idle_for - time_for_last_retry)
+    time_for_last_retry = retry_state.idle_for
 
 
 def retry_429(func):
@@ -112,7 +114,7 @@ def retry_429(func):
         except HTTPError as e:
             if e.response.status_code == 429:
                 click.echo("Rate limit exceeded. Retrying with exponential backoff.")
-                raise RateLimitException
+                raise RateLimitException("429 Too Many Requests")
             raise e
     return wrapped_function
 
