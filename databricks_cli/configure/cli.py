@@ -50,8 +50,6 @@ def _configure_cli_token(profile, insecure):
 def _configure_cli_aad_token(profile, insecure):
     config = ProfileConfigProvider(profile).get_config() or DatabricksConfig.empty()
     host = click.prompt(PROMPT_HOST, default=config.host, type=_DbfsHost())
-    #token = click.prompt(PROMPT_TOKEN, default=config.token)
-    #az_token = click.prompt(PROMPT_AZ_TOKEN, default=config.az_token)
     token = os.environ.get('DATABRICKS_TOKEN')
     az_token = os.environ.get('DATABRICKS_AZ_TOKEN')
     resource_id = click.prompt(PROMPT_RESOURCE_ID, default=config.resource_id)
@@ -78,7 +76,7 @@ def _configure_cli_password(profile, insecure):
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Configures host and authentication info for the CLI.')
 @click.option('--token', show_default=True, is_flag=True, default=False)
-@click.option('--aad-token', show_default=True, is_flag=True, default=False)
+@click.option('--az-token', show_default=True, is_flag=True, default=False)
 @click.option('--insecure', show_default=True, is_flag=True, default=None)
 @debug_option
 @profile_option

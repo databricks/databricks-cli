@@ -44,7 +44,7 @@ DASH_MARKER = '# ' + '-' * 70 + '\n'
                short_help="Creates a secret scope.")
 @click.option('--scope', required=True, type=SecretScopeClickType(), help=SecretScopeClickType.help)
 @click.option('--initial-manage-principal',
-              help='Sushi The initial principal that can manage the created secret scope.'
+              help='The initial principal that can manage the created secret scope.'
               ' If specified, the initial ACL with MANAGE permission applied to the scope is'
               ' assigned to the supplied principal (user or group). Currently, the only supported'
               ' principal for this option is the group "users", which contains all users in the'
@@ -52,7 +52,8 @@ DASH_MARKER = '# ' + '-' * 70 + '\n'
               ' scope is assigned to the request issuer\'s user identity.')
 @click.option('--scope-backend-type', type=click.Choice(['azure_keyvault', 'databricks'], case_sensitive=True),
               default='databricks', help='The backend that will be used for this secret scope. '
-                                         'Options are: 1) \'azure_keyvault\' and 2) \'databricks\' (default option)')
+                                         'Options are (case-sensitive): 1) \'azure_keyvault\' and 2) \'databricks\' '
+                                         '(default option)')
 @click.option('--subscription-id', default=None, type=click.STRING,
               help='The subscription ID associated with the azure keyvault to be used as the backend'
                    ' for the secret scope. NOTE: Only use with azure-keyvault as backend')
