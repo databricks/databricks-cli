@@ -78,7 +78,7 @@ def help_test(cli_function, service_function=None, rv=None, args=None):
         if service_function:
             service_function.return_value = rv
         runner = CliRunner()
-        result = runner.invoke(cli_function, args)
+        runner.invoke(cli_function, args)
         assert echo_mock.call_args[0][0] == pretty_format(rv)
 
 

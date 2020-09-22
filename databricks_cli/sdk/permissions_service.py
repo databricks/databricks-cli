@@ -10,9 +10,11 @@ class PermissionsService(PreviewService):
 
     def create_url(self, object_type, object_id, suffix=''):
         # type: (str, str, str) -> str
+
         return '{}/{}/{}{}'.format(self.url_base, object_type, object_id, suffix)
 
     def get_permissions(self, object_type, object_id, headers=None):
+        # type: (str, str, Optional[dict]) -> dict
         """
         Get the permissions for an object type and id
 
@@ -25,11 +27,12 @@ class PermissionsService(PreviewService):
         https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/get-directory-permissions
         https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/get-registered-model-permissions
         """
-        # type: (str, str, Optional[dict]) -> dict
+
         return self.client.perform_query('GET', self.create_url(object_type, object_id),
                                          headers=headers)
 
     def get_possible_permissions(self, object_type, object_id, headers=None):
+        # type: (str, str, Optional[dict]) -> dict
         """
         Get the permission levels for an object type.
 
@@ -42,12 +45,13 @@ class PermissionsService(PreviewService):
         https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/get-directories-permission-levels
         https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/get-registered-models-permission-levels
         """
-        # type: (str, str, Optional[dict]) -> dict
+
         return self.client.perform_query('GET', self.create_url(object_type, object_id,
                                                                 '/permissionLevels'),
                                          headers=headers)
 
     def add_permissions(self, object_type, object_id, data, headers=None):
+        # type: (str, str, dict, Optional[dict]) -> dict
         """
         Add permissions, this does not REMOVE.
         A remove requires an update_permissions call to complete replacement.
@@ -61,7 +65,7 @@ class PermissionsService(PreviewService):
         https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/set-directory-permissions
         https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/set-registered-model-permissions
         """
-        # type: (str, str, dict, Optional[dict]) -> dict
+
         return self.client.perform_query('PATCH', self.create_url(object_type, object_id),
                                          data=data,
                                          headers=headers)
