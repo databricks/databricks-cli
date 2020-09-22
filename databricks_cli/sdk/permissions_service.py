@@ -13,17 +13,54 @@ class PermissionsService(PreviewService):
         return '{}/{}/{}{}'.format(self.url_base, object_type, object_id, suffix)
 
     def get_permissions(self, object_type, object_id, headers=None):
+        """
+        Get the permissions for an object type and id
+
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/get-tokens-permissions
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/get-passwords-permissions
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/get-cluster-permissions
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/get-instance-pool-permissions
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/get-job-permissions
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/get-notebook-permissions
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/get-directory-permissions
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/get-registered-model-permissions
+        """
         # type: (str, str, Optional[dict]) -> dict
         return self.client.perform_query('GET', self.create_url(object_type, object_id),
                                          headers=headers)
 
     def get_possible_permissions(self, object_type, object_id, headers=None):
+        """
+        Get the permission levels for an object type.
+
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/get-tokens-permission-levels
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/get-password-permission-levels
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/get-clusters-permission-levels
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/get-instance-pools-permission-levels
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/get-jobs-permission-levels
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/get-notebooks-permission-levels
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/get-directories-permission-levels
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/get-registered-models-permission-levels
+        """
         # type: (str, str, Optional[dict]) -> dict
         return self.client.perform_query('GET', self.create_url(object_type, object_id,
                                                                 '/permissionLevels'),
                                          headers=headers)
 
     def add_permissions(self, object_type, object_id, data, headers=None):
+        """
+        Add permissions, this does not REMOVE.
+        A remove requires an update_permissions call to complete replacement.
+
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/set-tokens-permissions
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/set-password-permissions
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/set-cluster-permissions
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/set-instance-pool-permissions
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/set-job-permissions
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/set-notebook-permissions
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/set-directory-permissions
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/set-registered-model-permissions
+        """
         # type: (str, str, dict, Optional[dict]) -> dict
         return self.client.perform_query('PATCH', self.create_url(object_type, object_id),
                                          data=data,
@@ -31,6 +68,21 @@ class PermissionsService(PreviewService):
 
     def update_permissions(self, object_type, object_id, data, headers=None):
         # type: (str, str, dict, Optional[dict]) -> dict
+        """
+        Update/Overwrite all permissions
+        This overwrites all of the permissions for an object.
+        This is how you remove permissions, you call update with a complete set of permissions.
+
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/update-tokens-permissions
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/update-all-password-permissions
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/update-all-cluster-permissions
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/update-all-instance-pool-permissions
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/update-all-job-permissions
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/update-all-notebook-permissions
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/update-all-directory-permissions
+        https://docs.databricks.com/dev-tools/api/latest/permissions.html#operation/update-registered-model-permissions
+        """
+
         return self.client.perform_query('PUT', self.create_url(object_type, object_id),
                                          data=data,
                                          headers=headers)
