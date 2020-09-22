@@ -24,13 +24,15 @@
 # pylint:disable=redefined-outer-name
 
 import re
+
 import mock
 import pytest
 from click.testing import CliRunner
-from tests.utils import provide_conf
 
 import databricks_cli.permissions.cli as cli
 from databricks_cli.utils import pretty_format
+from tests.test_data import TEST_CLUSTER_ID
+from tests.utils import provide_conf
 
 
 def strip_margin(text):
@@ -41,8 +43,8 @@ def strip_margin(text):
 PERMISSIONS_RETURNS = {
     'get': {
         'clusters': {
-            '1234-567890-kens4': {
-                'object_id': '/clusters/1234-567890-kens4',
+            TEST_CLUSTER_ID: {
+                'object_id': '/clusters/{}'.format(TEST_CLUSTER_ID),
                 'object_type': 'cluster',
                 'access_control_list': [
                     {
@@ -64,6 +66,22 @@ PERMISSIONS_RETURNS = {
 }
 
 
+def help_test(cli_function, service_function=None, rv=None, args=None):
+    """
+    This function makes testing the cli functions that just pass data through simpler
+    """
+
+    if args is None:
+        args = []
+
+    with mock.patch('databricks_cli.permissions.cli.click.echo') as echo_mock:
+        if service_function:
+            service_function.return_value = rv
+        runner = CliRunner()
+        result = runner.invoke(cli_function, args)
+        assert echo_mock.call_args[0][0] == pretty_format(rv)
+
+
 @pytest.fixture()
 def perms_api_mock():
     with mock.patch('databricks_cli.permissions.cli.PermissionsApi') as PermissionsApiMock:
@@ -74,11 +92,14 @@ def perms_api_mock():
 
 @provide_conf
 def test_get_cli(perms_api_mock):
-    with mock.patch('databricks_cli.permissions.cli.click.echo') as echo_mock:
-        return_value = PERMISSIONS_RETURNS['get']['clusters']
-        perms_api_mock.get_permissions.return_value = return_value
-        runner = CliRunner()
-        runner.invoke(cli.get_cli, ['clusters', '1234-567890-kens4'])
-        assert perms_api_mock.get_permissions.call_args[0][0] == 'clusters'
-        assert perms_api_mock.get_permissions.call_args[0][1] == '1234-567890-kens4'
-        assert echo_mock.call_args[0][0] == pretty_format(return_value)
+    return_value = PERMISSIONS_RETURNS['get']['clusters']
+    perms_api_mock.get_permissions.return_value = return_value
+    help_test(cli.get_cli, args=[
+        '--object-type',
+        'clusters',
+        '--object-id',
+        '1234-567890-kens4'
+    ], rv=return_value)
+
+    assert perms_api_mock.get_permissions.call_args[0][0] == 'clusters'
+    assert perms_api_mock.get_permissions.call_args[0][1] == '1234-567890-kens4'

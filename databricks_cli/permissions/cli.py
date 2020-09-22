@@ -49,7 +49,7 @@ POSSIBLE_PERMISSION_LEVELS = 'Possible permission levels are: \n\t{}\n'.format(
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Get permissions for an item.  ' + POSSIBLE_OBJECT_TYPES)
-@click.option('--object_type', help='Possible object types are: {}'.format(PermissionTargets))
+@click.option('--object-type', help='Possible object types are: {}'.format(PermissionTargets))
 @click.option('--object-id', required=False)
 @debug_option
 @profile_option
@@ -64,8 +64,8 @@ def get_cli(api_client, object_type, object_id):
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='List permission types')
-@click.option('--object_type', help=POSSIBLE_OBJECT_TYPES)
-@click.option('--object_id')
+@click.option('--object-type', help=POSSIBLE_OBJECT_TYPES)
+@click.option('--object-id')
 @debug_option
 @profile_option
 @eat_exceptions
@@ -79,8 +79,8 @@ def list_permissions_types_cli(api_client, object_type, object_id):
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Add or modify permission types')
-@click.option('--object_type', help=POSSIBLE_OBJECT_TYPES)
-@click.option('--object_id')
+@click.option('--object-type', help=POSSIBLE_OBJECT_TYPES)
+@click.option('--object-id')
 @click.option('--group-name', metavar='<string>', cls=OneOfOption, default=None,
               one_of=PERMISSIONS_OPTION)
 @click.option('--user-name', metavar='<string>', cls=OneOfOption, default=None,
