@@ -88,16 +88,19 @@ def before_sleep_on_429(retry_state):
     if retry_state.attempt_number < 1:
         click.echo("Warning: Unexpected retry_state.attempt_number={}.".format(
             retry_state.attempt_number))
-    elif retry_state.attempt_number == 1:
-        # Initializing time_for_last_retry on the first attempt.
-        time_for_last_retry = 0
-    # Note: Here idle_for represents the total time spent sleeping in all retries so far + the time
-    # that we will sleep until the next retry. We determined this empirically, as it is not clearly
-    # stated in the Tenacity docs.
-    time_until_next_retry = retry_state.idle_for - time_for_last_retry
-    click.echo("Received 429 REQUEST_LIMIT_EXCEEDED for attempt {}. Retrying in {} seconds.".format(
-        retry_state.attempt_number, time_until_next_retry))
-    time_for_last_retry = retry_state.idle_for
+        click.echo("Received 429 REQUEST_LIMIT_EXCEEDED. Retrying with exponential backoff.")
+    else:
+        # Initialize time_for_last_retry on the first attempt.
+        if retry_state.attempt_number == 1:
+            time_for_last_retry = 0
+        # Note: Here idle_for represents the total time spent sleeping in all retries so far +
+        # the time that we will sleep until the next retry. We determined this empirically,
+        # as it is not clearly stated in the Tenacity docs.
+        time_until_next_retry = retry_state.idle_for - time_for_last_retry
+        click.echo(("Received 429 REQUEST_LIMIT_EXCEEDED for attempt {}. "
+                    "Retrying in {:.2f} seconds.").format(retry_state.attempt_number,
+                                                          time_until_next_retry))
+        time_for_last_retry = retry_state.idle_for
 
 
 def retry_429(func):
