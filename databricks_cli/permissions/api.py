@@ -53,6 +53,12 @@ class PermissionTargets(Enum):
     def help_values(cls):
         return ', '.join([e.value for e in PermissionTargets])
 
+    @classmethod
+    def get(cls, item):
+        if '-' in item:
+            item = item.replace('-', '_')
+        return PermissionTargets[item]
+
 
 class PermissionLevel(Enum):
     manage = 'CAN_MANAGE'
@@ -196,7 +202,7 @@ class PermissionsApi(object):
             object_id = ''
             # raise PermissionsError('object_id is invalid')
 
-        return self.client.get_permissions(object_type=PermissionTargets[object_type].value,
+        return self.client.get_permissions(object_type=PermissionTargets.get(object_type).value,
                                            object_id=object_id)
 
     def get_possible_permissions(self, object_type, object_id):
@@ -207,7 +213,7 @@ class PermissionsApi(object):
             raise PermissionsError('object_id is invalid')
 
         return self.client.get_possible_permissions(
-            object_type=PermissionTargets[object_type].value,
+            object_type=PermissionTargets.get(object_type).value,
             object_id=object_id)
 
     def add_permissions(self, object_type, object_id, permissions):
@@ -217,7 +223,7 @@ class PermissionsApi(object):
         if not object_id:
             raise PermissionsError('object_id is invalid')
 
-        return self.client.add_permissions(object_type=PermissionTargets[object_type].value,
+        return self.client.add_permissions(object_type=PermissionTargets.get(object_type).value,
                                            object_id=object_id, data=permissions.to_dict())
 
     def update_permissions(self, object_type, object_id, permissions):
@@ -227,5 +233,5 @@ class PermissionsApi(object):
         if not object_id:
             raise PermissionsError('object_id is invalid')
 
-        return self.client.update_permissions(object_type=PermissionTargets[object_type].value,
+        return self.client.update_permissions(object_type=PermissionTargets.get(object_type).value,
                                               object_id=object_id, data=permissions.to_dict())

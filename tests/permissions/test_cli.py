@@ -21,7 +21,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint:disable=redefined-outer-name
+# pylint: disable=redefined-outer-name
 
 import re
 
@@ -81,67 +81,113 @@ PERMISSIONS_RETURNS = {
                 }
             ]
         },
-
-        'directories':
-            {
-                'permission_levels': [
-                    {
-                        'permission_level': 'CAN_READ',
-                        'description': 'Can view and comment on notebooks in the directory'
-                    },
-                    {
-                        'permission_level': 'CAN_RUN',
-                        'description': 'Can view, comment, attach/detach, and run commands in notebooks in the directory'
-                    },
-                    {
-                        'permission_level': 'CAN_EDIT',
-                        'description': 'Can view, comment, attach/detach, run commands, and edit notebooks in the directory'
-                    },
-                    {
-                        'permission_level': 'CAN_MANAGE',
-                        'description': 'Can view, comment, attach/detach, run commands, and edit notebooks in the folder, and can create, delete, and change permissions of items in the directory'
-                    }
-                ]
-            },
-        'jobs':
-            {
-                'permission_levels': [
-                    {
-                        'permission_level': 'IS_OWNER',
-                        'description': 'Is Owner permission on a job'
-                    },
-                    {
-                        'permission_level': 'CAN_MANAGE_RUN',
-                        'description': 'Can Manage Run permission to trigger or cancel job runs'
-                    },
-                    {
-                        'permission_level': 'CAN_VIEW',
-                        'description': 'Can View permission to view job run results'
-                    }
-                ]
-            },
-        'notebooks':
-            {
-                'permission_levels': [
-                    {
-                        'permission_level': 'CAN_READ',
-                        'description': 'Can view and comment on the notebook'
-                    },
-                    {
-                        'permission_level': 'CAN_RUN',
-                        'description': 'Can view, comment, attach/detach, and run commands in the notebook'
-                    },
-                    {
-                        'permission_level': 'CAN_EDIT',
-                        'description': 'Can view, comment, attach/detach, run commands, and edit the notebook'
-                    },
-                    {
-                        'permission_level': 'CAN_MANAGE',
-                        'description': 'Can view, comment, attach/detach, run commands, edit, and change permissions of the notebook'
-                    }
-                ]
-            }
-
+        'directories': {
+            'permission_levels': [
+                {
+                    'permission_level': 'CAN_READ',
+                    'description': 'Can view and comment on notebooks in the directory'
+                },
+                {
+                    'permission_level': 'CAN_RUN',
+                    'description': 'Can view, comment, attach/detach, and run commands in ' +
+                                   'notebooks in the directory'
+                },
+                {
+                    'permission_level': 'CAN_EDIT',
+                    'description': 'Can view, comment, attach/detach, run commands, and edit ' +
+                                   'notebooks in the directory'
+                },
+                {
+                    'permission_level': 'CAN_MANAGE',
+                    'description': 'Can view, comment, attach/detach, run commands, and edit ' +
+                                   'notebooks in the folder, and can create, delete, and change ' +
+                                   'permissions of items in the directory'
+                }
+            ]
+        },
+        'instance-pools': {
+            'permission_levels': [
+                {
+                    "permission_level": "CAN_MANAGE",
+                    "description": "Can Manage permission on a pool"
+                },
+                {
+                    "permission_level": "CAN_ATTACH_TO",
+                    "description": "Can Attach To permission on a pool"
+                }
+            ]
+        },
+        'jobs': {
+            'permission_levels': [
+                {
+                    'permission_level': 'IS_OWNER',
+                    'description': 'Is Owner permission on a job'
+                },
+                {
+                    'permission_level': 'CAN_MANAGE_RUN',
+                    'description': 'Can Manage Run permission to trigger or cancel job runs'
+                },
+                {
+                    'permission_level': 'CAN_VIEW',
+                    'description': 'Can View permission to view job run results'
+                }
+            ]
+        },
+        'notebooks': {
+            'permission_levels': [
+                {
+                    'permission_level': 'CAN_READ',
+                    'description': 'Can view and comment on the notebook'
+                },
+                {
+                    'permission_level': 'CAN_RUN',
+                    'description': 'Can view, comment, attach/detach, and run commands in the' +
+                                   'notebook'
+                },
+                {
+                    'permission_level': 'CAN_EDIT',
+                    'description': 'Can view, comment, attach/detach, run commands, and edit ' +
+                                   'the notebook'
+                },
+                {
+                    'permission_level': 'CAN_MANAGE',
+                    'description': 'Can view, comment, attach/detach, run commands, edit, and ' +
+                                   'change permissions of the notebook'
+                }
+            ]
+        },
+        'registered-models': {
+            'permission_levels': [
+                {
+                    'permission_level': 'CAN_READ',
+                    'description': 'Can view the details of the registered model and its model ' +
+                                   'versions, and use the model versions.'
+                },
+                {
+                    'permission_level': 'CAN_EDIT',
+                    'description': 'Can view and edit the details of a registered model and ' +
+                                   'its model versions (except stage changes), and add ' +
+                                   'new model versions.'
+                },
+                {
+                    'permission_level': 'CAN_MANAGE_STAGING_VERSIONS',
+                    'description': 'Can view and edit the details of a registered model and its ' +
+                                   'model versions, add new model versions, and manage stage ' +
+                                   'transitions between non-Production stages.'
+                },
+                {
+                    'permission_level': 'CAN_MANAGE_PRODUCTION_VERSIONS',
+                    'description': 'Can view and edit the details of a registered model and its ' +
+                                   'model versions, add new model versions, and manage stage ' +
+                                   'transitions between any stages.'
+                },
+                {
+                    'permission_level': 'CAN_MANAGE',
+                    'description': 'Can manage permissions on, view all details of, and perform ' +
+                                   'all actions on the registered model and its model versions.'
+                }
+            ]
+        }
     }
 }
 
@@ -168,8 +214,7 @@ def help_test(cli_function, service_function=None, rv=None, args=None):
         if service_function:
             service_function.return_value = rv
         runner = CliRunner()
-        output = runner.invoke(cli_function, args)
-        print(output)
+        runner.invoke(cli_function, args)
         assert echo_mock.call_args[0][0] == pretty_format(rv)
 
 
@@ -196,15 +241,9 @@ def test_get_cli(perms_api_mock):
     assert perms_api_mock.get_permissions.call_args[0][1] == '1234-567890-kens4'
 
 
-def filtered_perm_types():
-    # FIXME: I do not have test data for instance-pools or registered data
-    return [e for e in PermissionTargets.values() if
-            e != 'instance-pools' and e != 'registered-models']
-
-
 @provide_conf
 def test_list_permissions_types_cli(permissions_sdk_mock):
-    for perm_type in filtered_perm_types():
+    for perm_type in PermissionTargets.values():
         return_value = PERMISSIONS_RETURNS['list-permissions'][perm_type]
         permissions_sdk_mock.get_possible_permissions.return_value = return_value
         help_test(cli.list_permissions_types_cli, args=[
