@@ -260,7 +260,7 @@ def permissions_sdk_mock():
         yield _permissions_sdk_mock
 
 
-def help_test(cli_function, service_function=None, rv=None, args=None, format=True):
+def help_test(cli_function, service_function=None, rv=None, args=None, format_result=True):
     """
     This function makes testing the cli functions that just pass data through simpler
     """
@@ -275,7 +275,7 @@ def help_test(cli_function, service_function=None, rv=None, args=None, format=Tr
         result = runner.invoke(cli_function, args)
         if result.exit_code != 0:
             print(result.output)
-        if format:
+        if format_result:
             expected = pretty_format(rv)
         else:
             expected = rv
@@ -340,10 +340,10 @@ def test_add_cluster_manage(permissions_sdk_mock):
 @provide_conf
 def test_list_permissions_targets_cli():
     help_test(cli.list_permissions_targets_cli, args=None, rv=cli.POSSIBLE_OBJECT_TYPES,
-              format=False)
+              format_result=False)
 
 
 @provide_conf
 def test_list_permissions_level_cli():
     help_test(cli.list_permissions_level_cli, args=None, rv=cli.POSSIBLE_PERMISSION_LEVELS,
-              format=False)
+              format_result=False)

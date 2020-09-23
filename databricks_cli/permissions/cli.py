@@ -28,7 +28,7 @@ from click import UsageError
 from databricks_cli.click_types import OneOfOption
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.permissions.api import PermissionsApi, PermissionTargets, PermissionLevel, \
-    PermissionType, Permission, PermissionsObject, PermissionsLookup
+    PermissionType, Permission, PermissionsObject
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS
 from databricks_cli.utils import pretty_format
 from databricks_cli.version import print_version_callback, version
