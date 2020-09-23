@@ -75,6 +75,10 @@ class PermissionLevel(Enum):
         return self[self.value]
 
     @classmethod
+    def names(cls):
+        return [e.name for e in PermissionLevel]
+
+    @classmethod
     def values(cls):
         return [e.value for e in PermissionLevel]
 
@@ -129,7 +133,6 @@ class PermissionsLookup(object):
         'registered_models': PermissionTargets.registered_model,
         'model': PermissionTargets.model,
         'models': PermissionTargets.models,
-
     }
 
     @classmethod

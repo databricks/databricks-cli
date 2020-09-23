@@ -84,8 +84,8 @@ def list_permissions_types_cli(api_client, object_type, object_id):
 @click.option('--user-name', metavar='<string>', cls=OneOfOption, one_of=GROUP_USER_SERVICE_OPTIONS)
 @click.option('--service-name', metavar='<string>', cls=OneOfOption,
               one_of=GROUP_USER_SERVICE_OPTIONS)
-@click.option('--permission-level', metavar='<string>', cls=OneOfOption,
-              one_of=PERMISSION_LEVEL_OPTIONS, required=True, help=POSSIBLE_PERMISSION_LEVELS)
+@click.option('--permission-level', metavar='<string>', type=click.Choice(PermissionLevel.names()),
+              required=True, help=POSSIBLE_PERMISSION_LEVELS)
 @debug_option
 @profile_option
 @eat_exceptions
@@ -109,7 +109,7 @@ def add_cli(api_client, object_type, object_id, user_name, group_name, service_n
         # this else/raise is for readability when doing a review.
         raise UsageError('Invalid argument')
 
-    permission = Permission(perm_type, value, PermissionsLookup.from_name(permission_level.upper()))
+    permission = Permission(perm_type, value, PermissionLevel[permission_level])
     all_permissions = PermissionsObject()
     all_permissions.add(permission)
 

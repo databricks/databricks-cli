@@ -188,6 +188,37 @@ PERMISSIONS_RETURNS = {
                 }
             ]
         }
+    },
+    'add': {
+        'clusters': {
+            'add-manage': {
+                'object_id': TEST_CLUSTER_ID,
+                'object_type': 'cluster',
+                'access_control_list': [
+                    {
+                        'group_name': 'admins',
+                        'all_permissions': [
+                            {
+                                'permission_level': 'CAN_MANAGE',
+                                'inherited': True,
+                                'inherited_from_object': [
+                                    '/clusters/'
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        'group_name': 'foo',
+                        'all_permissions': [
+                            {
+                                'permission_level': 'CAN_MANAGE',
+                                'inherited': False
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
     }
 }
 
@@ -214,7 +245,9 @@ def help_test(cli_function, service_function=None, rv=None, args=None):
         if service_function:
             service_function.return_value = rv
         runner = CliRunner()
-        runner.invoke(cli_function, args)
+        result = runner.invoke(cli_function, args)
+        if result.exit_code != 0:
+            print(result.output)
         assert echo_mock.call_args[0][0] == pretty_format(rv)
 
 
@@ -234,11 +267,11 @@ def test_get_cli(perms_api_mock):
         '--object-type',
         'clusters',
         '--object-id',
-        '1234-567890-kens4'
+        TEST_CLUSTER_ID
     ], rv=return_value)
 
     assert perms_api_mock.get_permissions.call_args[0][0] == 'clusters'
-    assert perms_api_mock.get_permissions.call_args[0][1] == '1234-567890-kens4'
+    assert perms_api_mock.get_permissions.call_args[0][1] == TEST_CLUSTER_ID
 
 
 @provide_conf
@@ -250,5 +283,22 @@ def test_list_permissions_types_cli(permissions_sdk_mock):
             '--object-type',
             perm_type,
             '--object-id',
-            '1234-567890-kens4'
+            TEST_CLUSTER_ID
         ], rv=return_value)
+
+
+@provide_conf
+def test_add_cluster_manage(permissions_sdk_mock):
+    perm_type = 'clusters'
+    return_value = PERMISSIONS_RETURNS['add'][perm_type]['add-manage']
+    permissions_sdk_mock.add_permissions.return_value = return_value
+    help_test(cli.add_cli, args=[
+        '--object-type',
+        perm_type,
+        '--object-id',
+        TEST_CLUSTER_ID,
+        '--group-name',
+        'foo',
+        '--permission-level',
+        'manage'
+    ], rv=return_value)
