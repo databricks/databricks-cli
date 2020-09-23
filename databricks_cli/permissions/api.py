@@ -23,6 +23,7 @@
 from enum import Enum
 
 from databricks_cli.sdk.permissions_service import PermissionsService
+
 from .exceptions import PermissionsError
 
 
@@ -165,8 +166,10 @@ class Permission(object):
 
 
 class PermissionsObject(object):
-    def __init__(self):
-        self.permissions = []
+    def __init__(self, permissions=None):
+        if not permissions:
+            permissions = []
+        self.permissions = permissions
 
     def add(self, permission):
         # type: (Permission) -> None

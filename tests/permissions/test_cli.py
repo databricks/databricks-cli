@@ -25,11 +25,10 @@
 
 import re
 
+import databricks_cli.permissions.cli as cli
 import mock
 import pytest
 from click.testing import CliRunner
-
-import databricks_cli.permissions.cli as cli
 from databricks_cli.permissions.api import PermissionTargets
 from databricks_cli.utils import pretty_format
 from tests.test_data import TEST_CLUSTER_ID
@@ -346,4 +345,24 @@ def test_list_permissions_targets_cli():
 @provide_conf
 def test_list_permissions_level_cli():
     help_test(cli.list_permissions_level_cli, args=None, rv=cli.POSSIBLE_PERMISSION_LEVELS,
+              format_result=False)
+
+
+@pytest.fixture()
+def workspace_api_mock():
+    with mock.patch('databricks_cli.permissions.cli.WorkspaceApi') as WorkspaceApiMock:
+        workspace_api_mock = mock.MagicMock()
+        WorkspaceApiMock.return_value = workspace_api_mock
+        yield workspace_api_mock
+
+
+@provide_conf
+def test_directory_cli_missing_path(permissions_sdk_mock, workspace_api_mock):
+    workspace_api_mock.get_id_for_directory.return_value = None
+    help_test(cli.directory_cli,
+              args=[
+                  '--path',
+                  '/workspace/missing.txt'
+              ],
+              rv='Failed to find id for /workspace/missing.txt',
               format_result=False)

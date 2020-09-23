@@ -110,12 +110,7 @@ def add_cli(api_client, object_type, object_id, user_name, group_name, service_n
         raise UsageError('Invalid argument')
 
     permission = Permission(perm_type, value, PermissionLevel[permission_level])
-    all_permissions = PermissionsObject()
-    all_permissions.add(permission)
-
-    if not all_permissions.to_dict():
-        raise UsageError(
-            'Unable to parse permissions from permission level: {}'.format(permission_level))
+    all_permissions = PermissionsObject([permission])
 
     click.echo(pretty_format(perms_api.add_permissions(object_type, object_id, all_permissions)))
 
@@ -138,7 +133,7 @@ def list_permissions_level_cli():
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Get permissions for a directory')
-@click.option('--path')
+@click.option('--path', required=True, help='Path in the workspace for to get permissions for.')
 @debug_option
 @profile_option
 @eat_exceptions
