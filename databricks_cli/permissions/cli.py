@@ -78,19 +78,14 @@ def list_permissions_types_cli(api_client, object_type, object_id):
                short_help='Add or modify permission types')
 @click.option('--object-type', required=True, help=POSSIBLE_OBJECT_TYPES)
 @click.option('--object-id', required=True, help='object id to require permission about')
-@click.option('--group-name', metavar='<string>', cls=OneOfOption, default=None,
-              one_of=PERMISSIONS_OPTION)
-@click.option('--user-name', metavar='<string>', cls=OneOfOption, default=None,
-              one_of=PERMISSIONS_OPTION)
-@click.option('--service-name', metavar='<string>', cls=OneOfOption, default=None,
-              one_of=PERMISSIONS_OPTION)
-@click.option('--permission-level', metavar='<string>', default=None,
-              required=True)
+@click.option('--group-name', metavar='<string>', cls=OneOfOption, one_of=PERMISSIONS_OPTION)
+@click.option('--user-name', metavar='<string>', cls=OneOfOption, one_of=PERMISSIONS_OPTION)
+@click.option('--service-name', metavar='<string>', cls=OneOfOption, one_of=PERMISSIONS_OPTION)
+@click.option('--permission-level', metavar='<string>', required=True)
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-# pylint:disable=unused-argument
 def add_cli(api_client, object_type, object_id, user_name, group_name, service_name,
             permission_level):
     perms_api = PermissionsApi(api_client)
@@ -98,12 +93,6 @@ def add_cli(api_client, object_type, object_id, user_name, group_name, service_n
     if not user_name and not group_name and not service_name:
         click.echo('Need --user-name, --service-name or --group-name')
         return
-
-    if not object_type:
-        click.echo(POSSIBLE_OBJECT_TYPES)
-
-    if not permission_level:
-        click.echo(POSSIBLE_PERMISSION_LEVELS)
 
     # Determine the type of permissions we're adding.
     if user_name:
@@ -164,9 +153,6 @@ def directory_cli(api_client, path):
         click.echo('Failed to find id for {}'.format(path))
         return
 
-    # if len(object_ids) > 1:
-    #     click.echo('Too many objects ({}) returned for {}'.format(len(object_ids), path))
-
     for object_id in object_ids:
         click.echo(pretty_format(perms_api.get_permissions(object_type, object_id)))
 
@@ -186,10 +172,9 @@ def permissions_group():
     pass
 
 
-permissions_group.add_command(list_permissions_types_cli, name='list-types')
-permissions_group.add_command(get_cli, name='get')
 permissions_group.add_command(add_cli, name='add')
-permissions_group.add_command(list_permissions_targets_cli, name='targets')
-permissions_group.add_command(list_permissions_level_cli, name='levels')
-
 permissions_group.add_command(directory_cli, name='ls')
+permissions_group.add_command(get_cli, name='get')
+permissions_group.add_command(list_permissions_level_cli, name='levels')
+permissions_group.add_command(list_permissions_targets_cli, name='targets')
+permissions_group.add_command(list_permissions_types_cli, name='list-types')
