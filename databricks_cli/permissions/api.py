@@ -100,7 +100,7 @@ class PermissionType(Enum):
         return ', '.join([e.value for e in PermissionType])
 
 
-class Lookups(object):
+class PermissionsLookup(object):
     items = {
         'CAN_MANAGE': PermissionLevel.manage,
         'CAN_RESTART': PermissionLevel.restart,
@@ -134,7 +134,10 @@ class Lookups(object):
 
     @classmethod
     def from_name(cls, name):
-        return cls.items[name]
+        rv = cls.items.get(name)
+        if not rv:
+            raise PermissionsError('Unable to find value for name {}'.format(name))
+        return rv
 
 
 class Permission(object):

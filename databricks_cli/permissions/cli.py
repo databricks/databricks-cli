@@ -23,11 +23,12 @@
 import json
 
 import click
+from click import UsageError
 
 from databricks_cli.click_types import OneOfOption
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.permissions.api import PermissionsApi, PermissionTargets, PermissionLevel, \
-    PermissionType, Permission, PermissionsObject, Lookups
+    PermissionType, Permission, PermissionsObject, PermissionsLookup
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS
 from databricks_cli.utils import pretty_format
 from databricks_cli.version import print_version_callback, version
@@ -39,8 +40,8 @@ USER_OPTIONS = ['user-id', 'user-name']
 JSON_FILE_OPTIONS = ['json-file', 'json']
 CREATE_USER_OPTIONS = JSON_FILE_OPTIONS + ['user-name']
 
-PERMISSIONS_OPTION = ['group-name', 'user-name', 'service-name']
-
+GROUP_USER_SERVICE_OPTIONS = ['group-name', 'user-name', 'service-name']
+PERMISSION_LEVEL_OPTIONS = [e.name for e in PermissionLevel]
 POSSIBLE_OBJECT_TYPES = 'Possible object types are: \n\t{}\n'.format(
     PermissionTargets.help_values())
 
@@ -78,10 +79,13 @@ def list_permissions_types_cli(api_client, object_type, object_id):
                short_help='Add or modify permission types')
 @click.option('--object-type', required=True, help=POSSIBLE_OBJECT_TYPES)
 @click.option('--object-id', required=True, help='object id to require permission about')
-@click.option('--group-name', metavar='<string>', cls=OneOfOption, one_of=PERMISSIONS_OPTION)
-@click.option('--user-name', metavar='<string>', cls=OneOfOption, one_of=PERMISSIONS_OPTION)
-@click.option('--service-name', metavar='<string>', cls=OneOfOption, one_of=PERMISSIONS_OPTION)
-@click.option('--permission-level', metavar='<string>', required=True)
+@click.option('--group-name', metavar='<string>', cls=OneOfOption,
+              one_of=GROUP_USER_SERVICE_OPTIONS)
+@click.option('--user-name', metavar='<string>', cls=OneOfOption, one_of=GROUP_USER_SERVICE_OPTIONS)
+@click.option('--service-name', metavar='<string>', cls=OneOfOption,
+              one_of=GROUP_USER_SERVICE_OPTIONS)
+@click.option('--permission-level', metavar='<string>', cls=OneOfOption,
+              one_of=PERMISSION_LEVEL_OPTIONS, required=True, help=POSSIBLE_PERMISSION_LEVELS)
 @debug_option
 @profile_option
 @eat_exceptions
@@ -89,10 +93,6 @@ def list_permissions_types_cli(api_client, object_type, object_id):
 def add_cli(api_client, object_type, object_id, user_name, group_name, service_name,
             permission_level):
     perms_api = PermissionsApi(api_client)
-
-    if not user_name and not group_name and not service_name:
-        click.echo('Need --user-name, --service-name or --group-name')
-        return
 
     # Determine the type of permissions we're adding.
     if user_name:
@@ -105,16 +105,17 @@ def add_cli(api_client, object_type, object_id, user_name, group_name, service_n
         perm_type = PermissionType.service
         value = service_name
     else:
-        click.echo(POSSIBLE_PERMISSION_LEVELS)
-        return
+        # hanging if.  This shouldn't be hit, because OneOfOption should prevent it.
+        # this else/raise is for readability when doing a review.
+        raise UsageError('Invalid argument')
 
-    permission = Permission(perm_type, value, Lookups.from_name(permission_level.upper()))
+    permission = Permission(perm_type, value, PermissionsLookup.from_name(permission_level.upper()))
     all_permissions = PermissionsObject()
     all_permissions.add(permission)
 
     if not all_permissions.to_dict():
-        click.echo('invalid permissions')
-        return
+        raise UsageError(
+            'Unable to parse permissions from permission level: {}'.format(permission_level))
 
     click.echo(pretty_format(perms_api.add_permissions(object_type, object_id, all_permissions)))
 
