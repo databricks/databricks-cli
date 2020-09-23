@@ -21,7 +21,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-version = '0.12.0' #  NOQA
+version = '0.12.1.dev0' #  NOQA
 
 
 def print_version_callback(ctx, param, value): #  NOQA
