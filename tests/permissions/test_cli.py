@@ -191,7 +191,7 @@ PERMISSIONS_RETURNS = {
     },
     'add': {
         'clusters': {
-            'add-manage': {
+            'add-manage-group-name': {
                 'object_id': TEST_CLUSTER_ID,
                 'object_type': 'cluster',
                 'access_control_list': [
@@ -208,7 +208,34 @@ PERMISSIONS_RETURNS = {
                         ]
                     },
                     {
-                        'group_name': 'foo',
+                        'group_name': 'sam',
+                        'all_permissions': [
+                            {
+                                'permission_level': 'CAN_MANAGE',
+                                'inherited': False
+                            }
+                        ]
+                    }
+                ]
+            },
+            'add-manage-user-name': {
+                'object_id': TEST_CLUSTER_ID,
+                'object_type': 'cluster',
+                'access_control_list': [
+                    {
+                        'group_name': 'admins',
+                        'all_permissions': [
+                            {
+                                'permission_level': 'CAN_MANAGE',
+                                'inherited': True,
+                                'inherited_from_object': [
+                                    '/clusters/'
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        'user_name': 'sam',
                         'all_permissions': [
                             {
                                 'permission_level': 'CAN_MANAGE',
@@ -233,7 +260,7 @@ def permissions_sdk_mock():
         yield _permissions_sdk_mock
 
 
-def help_test(cli_function, service_function=None, rv=None, args=None):
+def help_test(cli_function, service_function=None, rv=None, args=None, format=True):
     """
     This function makes testing the cli functions that just pass data through simpler
     """
@@ -248,7 +275,11 @@ def help_test(cli_function, service_function=None, rv=None, args=None):
         result = runner.invoke(cli_function, args)
         if result.exit_code != 0:
             print(result.output)
-        assert echo_mock.call_args[0][0] == pretty_format(rv)
+        if format:
+            expected = pretty_format(rv)
+        else:
+            expected = rv
+        assert echo_mock.call_args[0][0] == expected
 
 
 @pytest.fixture()
@@ -290,15 +321,29 @@ def test_list_permissions_types_cli(permissions_sdk_mock):
 @provide_conf
 def test_add_cluster_manage(permissions_sdk_mock):
     perm_type = 'clusters'
-    return_value = PERMISSIONS_RETURNS['add'][perm_type]['add-manage']
-    permissions_sdk_mock.add_permissions.return_value = return_value
-    help_test(cli.add_cli, args=[
-        '--object-type',
-        perm_type,
-        '--object-id',
-        TEST_CLUSTER_ID,
-        '--group-name',
-        'foo',
-        '--permission-level',
-        'manage'
-    ], rv=return_value)
+
+    for add_type in ['user-name', 'group-name']:
+        return_value = PERMISSIONS_RETURNS['add'][perm_type]['add-manage-{}'.format(add_type)]
+        permissions_sdk_mock.add_permissions.return_value = return_value
+        help_test(cli.add_cli, args=[
+            '--object-type',
+            perm_type,
+            '--object-id',
+            TEST_CLUSTER_ID,
+            '--{}'.format(add_type),
+            'sam',
+            '--permission-level',
+            'manage'
+        ], rv=return_value)
+
+
+@provide_conf
+def test_list_permissions_targets_cli():
+    help_test(cli.list_permissions_targets_cli, args=None, rv=cli.POSSIBLE_OBJECT_TYPES,
+              format=False)
+
+
+@provide_conf
+def test_list_permissions_level_cli():
+    help_test(cli.list_permissions_level_cli, args=None, rv=cli.POSSIBLE_PERMISSION_LEVELS,
+              format=False)
