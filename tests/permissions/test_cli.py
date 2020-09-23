@@ -25,10 +25,11 @@
 
 import re
 
-import databricks_cli.permissions.cli as cli
 import mock
 import pytest
 from click.testing import CliRunner
+
+import databricks_cli.permissions.cli as cli
 from databricks_cli.permissions.api import PermissionTargets
 from databricks_cli.utils import pretty_format
 from tests.test_data import TEST_CLUSTER_ID
@@ -245,6 +246,26 @@ PERMISSIONS_RETURNS = {
                 ]
             }
         }
+    },
+    'ls': {
+        '/': {
+            "object_id": "/directories/1",
+            "object_type": "directory",
+            "access_control_list": [
+                {
+                    "group_name": "admins",
+                    "all_permissions": [
+                        {
+                            "permission_level": "CAN_MANAGE",
+                            "inherited": True,
+                            "inherited_from_object": [
+                                "/directories/"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
     }
 }
 
@@ -366,3 +387,33 @@ def test_directory_cli_missing_path(permissions_sdk_mock, workspace_api_mock):
               ],
               rv='Failed to find id for /workspace/missing.txt',
               format_result=False)
+
+
+@provide_conf
+def test_directory_cli(permissions_sdk_mock, workspace_api_mock):
+    workspace_api_mock.get_id_for_directory.return_value = ['1']
+    permissions_sdk_mock.get_permissions.return_value = {
+        'object_id': '/directories/1',
+        'object_type': 'directory',
+        'access_control_list': [
+            {
+                'group_name': 'admins',
+                'all_permissions': [
+                    {
+                        'permission_level': 'CAN_MANAGE',
+                        'inherited': True,
+                        'inherited_from_object': [
+                            '/directories/'
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+
+    help_test(cli.directory_cli,
+              args=[
+                  '--path',
+                  '/'
+              ],
+              rv=PERMISSIONS_RETURNS['ls']['/'])

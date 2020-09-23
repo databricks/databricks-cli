@@ -107,6 +107,7 @@ class WorkspaceApi(object):
         if 'objects' not in response:
             return []
         objects = response['objects']
+
         return [WorkspaceFileInfo.from_json(f) for f in objects]
 
     def mkdirs(self, workspace_path, headers=None):

@@ -41,7 +41,7 @@ JSON_FILE_OPTIONS = ['json-file', 'json']
 CREATE_USER_OPTIONS = JSON_FILE_OPTIONS + ['user-name']
 
 GROUP_USER_SERVICE_OPTIONS = ['group-name', 'user-name', 'service-name']
-PERMISSION_LEVEL_OPTIONS = [e.name for e in PermissionLevel]
+PERMISSION_LEVEL_OPTIONS = PermissionLevel.names()
 POSSIBLE_OBJECT_TYPES = 'Possible object types are: \n\t{}\n'.format(
     PermissionTargets.help_values())
 
@@ -163,7 +163,7 @@ def directory_cli(api_client, path):
 @debug_option
 @profile_option
 @eat_exceptions
-def permissions_group():
+def permissions_group():  # NOQA
     # A python doc comment here will override the hand coded help above.
     pass
 

@@ -23,7 +23,6 @@
 from enum import Enum
 
 from databricks_cli.sdk.permissions_service import PermissionsService
-
 from .exceptions import PermissionsError
 
 
@@ -42,9 +41,6 @@ class PermissionTargets(Enum):
     registered_model = registered_models
     model = registered_models
     models = registered_models
-
-    def to_name(self):
-        return self[self.value]
 
     @classmethod
     def values(cls):
@@ -72,9 +68,6 @@ class PermissionLevel(Enum):
     run = 'CAN_RUN'
     edit = 'CAN_EDIT'
 
-    def to_name(self):
-        return self[self.value]
-
     @classmethod
     def names(cls):
         return [e.name for e in PermissionLevel]
@@ -93,16 +86,9 @@ class PermissionType(Enum):
     group = 'group_name'
     service = 'service_principal_name'
 
-    def to_name(self):
-        return self[self.value]
-
     @classmethod
     def values(cls):
         return [e.value for e in PermissionType]
-
-    @classmethod
-    def help_values(cls):
-        return ', '.join([e.value for e in PermissionType])
 
 
 class PermissionsLookup(object):
@@ -135,13 +121,6 @@ class PermissionsLookup(object):
         'model': PermissionTargets.model,
         'models': PermissionTargets.models,
     }
-
-    @classmethod
-    def from_name(cls, name):
-        rv = cls.items.get(name)
-        if not rv:
-            raise PermissionsError('Unable to find value for name {}'.format(name))
-        return rv
 
 
 class Permission(object):
@@ -207,6 +186,7 @@ class PermissionsApi(object):
         # type: (str, str) -> dict
         if not object_type:
             raise PermissionsError('object_type is invalid')
+
         if not object_id:
             object_id = ''
             # raise PermissionsError('object_id is invalid')
@@ -218,6 +198,7 @@ class PermissionsApi(object):
         # type: (str, str) -> dict
         if not object_type:
             raise PermissionsError('object_type is invalid')
+
         if not object_id:
             raise PermissionsError('object_id is invalid')
 
@@ -229,6 +210,7 @@ class PermissionsApi(object):
         # type: (str, str, PermissionsObject) -> dict
         if not object_type:
             raise PermissionsError('object_type is invalid')
+
         if not object_id:
             raise PermissionsError('object_id is invalid')
 
@@ -239,6 +221,7 @@ class PermissionsApi(object):
         # type: (str, str, PermissionsObject) -> dict
         if not object_type:
             raise PermissionsError('object_type is invalid')
+
         if not object_id:
             raise PermissionsError('object_id is invalid')
 
