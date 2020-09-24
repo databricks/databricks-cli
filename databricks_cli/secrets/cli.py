@@ -53,7 +53,9 @@ DASH_MARKER = '# ' + '-' * 70 + '\n'
 @click.option('--scope-backend-type', type=click.Choice(['AZURE_KEYVAULT', 'DATABRICKS'], case_sensitive=True),
               default='DATABRICKS', help='The backend that will be used for this secret scope. '
                                          'Options are (case-sensitive): 1) \'azure_keyvault\' and 2) \'databricks\' '
-                                         '(default option)')
+                                         '(default option)'
+                                         '\nNote: To create an Azure Keyvault, be sure to configure an AAD Token using'
+                                         '\'databricks-cli configure --aad-token\'')
 @click.option('--resource-id', default=None, type=click.STRING,
               help='The resource ID associated with the azure keyvault to be used as the backend'
                    ' for the secret scope. NOTE: Only use with azure-keyvault as backend')
