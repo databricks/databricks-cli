@@ -50,12 +50,12 @@ DASH_MARKER = '# ' + '-' * 70 + '\n'
               ' principal for this option is the group "users", which contains all users in the'
               ' workspace. If not specified, the initial ACL with MANAGE permission applied to the'
               ' scope is assigned to the request issuer\'s user identity.')
-@click.option('--scope-backend-type', type=click.Choice(['azure_keyvault', 'databricks'], case_sensitive=True),
-              default='databricks', help='The backend that will be used for this secret scope. '
+@click.option('--scope-backend-type', type=click.Choice(['AZURE_KEYVAULT', 'DATABRICKS'], case_sensitive=True),
+              default='DATABRICKS', help='The backend that will be used for this secret scope. '
                                          'Options are (case-sensitive): 1) \'azure_keyvault\' and 2) \'databricks\' '
                                          '(default option)')
-@click.option('--subscription-id', default=None, type=click.STRING,
-              help='The subscription ID associated with the azure keyvault to be used as the backend'
+@click.option('--resource-id', default=None, type=click.STRING,
+              help='The resource ID associated with the azure keyvault to be used as the backend'
                    ' for the secret scope. NOTE: Only use with azure-keyvault as backend')
 @click.option('--dns-name', default=None, type=click.STRING,
               help='The dns name associated with the azure keyvault to be used as the backed for the'
@@ -64,15 +64,15 @@ DASH_MARKER = '# ' + '-' * 70 + '\n'
 @profile_option
 @eat_exceptions
 @provide_api_client
-def create_scope(api_client, scope, initial_manage_principal, scope_backend_type, subscription_id, dns_name):
+def create_scope(api_client, scope, initial_manage_principal, scope_backend_type, resource_id, dns_name):
     """
     Creates a new secret scope with given name.
     """
-    azure_keyvault_info = {
-        'resource_id': subscription_id,
+    backend_azure_keyvault = {
+        'resource_id': resource_id,
         'dns_name': dns_name
     }
-    SecretApi(api_client).create_scope(scope, initial_manage_principal, scope_backend_type, azure_keyvault_info)
+    SecretApi(api_client).create_scope(scope, initial_manage_principal, scope_backend_type, backend_azure_keyvault)
 
 
 def _scopes_to_table(scopes_json):

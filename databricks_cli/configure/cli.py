@@ -33,15 +33,10 @@ from databricks_cli.configure.config import profile_option, get_profile_from_con
 
 PROMPT_HOST = 'Databricks Host (should begin with https://)'
 PROMPT_RESOURCE_ID = 'Resource/Workspace ID'
-PROMPT_AZ_TOKEN = 'Azure Token'
 PROMPT_USERNAME = 'Username'
 PROMPT_PASSWORD = 'Password' #  NOQA
 PROMPT_TOKEN = 'Token' #  NOQA
-ENV_TOKEN = 'DATABRICKS_TOKEN'
-ENV_AZ_TOKEN = 'DATABRICKS_AZ_TOKEN'
-PROMPT_ENV_TOKEN = 'Have you correctly set the environment variable (\'DATABRICKS_TOKEN\') for the Bearer Token? (y/n)'
-PROMPT_ENV_AZ_TOKEN = 'Have you correctly set the environment variable (\'DATABRICKS_AZ_TOKEN\') ' \
-                      'for the Azure Token? (y/n)'
+ENV_AAD_TOKEN = 'DATABRICKS_TOKEN'
 
 
 def _configure_cli_token(profile, insecure):
@@ -52,31 +47,21 @@ def _configure_cli_token(profile, insecure):
     update_and_persist_config(profile, new_config)
 
 
-def _configure_cli_az_token(profile, insecure):
+def _configure_cli_aad_token(profile, insecure):
     config = ProfileConfigProvider(profile).get_config() or DatabricksConfig.empty()
 
-    if ENV_TOKEN not in os.environ:
-        print('[ERROR] Set Environment Variable \'DATABRICKS_TOKEN\' with your Bearer Token and run again.\n')
-        print('Commands to run to get your Bearer token:\n'
+    if ENV_AAD_TOKEN not in os.environ:
+        print('[ERROR] Set Environment Variable \'%s\' with your AAD Token and run again.\n' % ENV_AAD_TOKEN)
+        print('Commands to run to get your AAD token:\n'
               '\t az login\n'
               '\t token_response=$(az account get-access-token --resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d)\n'
-              '\t export DATABRICKS_TOKEN=$(jq .accessToken -r <<< "$token_response")\n'
-              )
-        return
-    if ENV_AZ_TOKEN not in os.environ:
-        print('[ERROR] Set Environment Variable \'DATABRICKS_AZ_TOKEN\' with your Azure Token and run again.\n')
-        print('Commands to run to get your Azure token:\n'
-              '\t az login\n'
-              '\t token_response=$(az account get-access-token --resource https://management.core.windows.net/)\n'
-              '\t export DATABRICKS_AZ_TOKEN=$(jq .accessToken -r <<< "$token_response")\n'
+              '\t export %s=$(jq .accessToken -r <<< "$token_response")\n' % ENV_AAD_TOKEN
               )
         return
 
     host = click.prompt(PROMPT_HOST, default=config.host, type=_DbfsHost())
-    token = os.environ.get(ENV_TOKEN)
-    az_token = os.environ.get(ENV_AZ_TOKEN)
-    resource_id = click.prompt(PROMPT_RESOURCE_ID, default=config.resource_id)
-    new_config = DatabricksConfig.from_aad_token(host, token, az_token, resource_id, insecure)
+    aad_token = os.environ.get(ENV_AAD_TOKEN)
+    new_config = DatabricksConfig.from_token(host, aad_token, insecure)
     update_and_persist_config(profile, new_config)
 
 
@@ -99,11 +84,11 @@ def _configure_cli_password(profile, insecure):
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Configures host and authentication info for the CLI.')
 @click.option('--token', show_default=True, is_flag=True, default=False)
-@click.option('--az-token', show_default=True, is_flag=True, default=False)
+@click.option('--aad-token', show_default=True, is_flag=True, default=False)
 @click.option('--insecure', show_default=True, is_flag=True, default=None)
 @debug_option
 @profile_option
-def configure_cli(token, az_token, insecure):
+def configure_cli(token, aad_token, insecure):
     """
     Configures host and authentication info for the CLI.
     """
@@ -111,8 +96,8 @@ def configure_cli(token, az_token, insecure):
     insecure_str = str(insecure) if insecure is not None else None
     if token:
         _configure_cli_token(profile, insecure_str)
-    elif az_token:
-        _configure_cli_az_token(profile, insecure_str)
+    elif aad_token:
+        _configure_cli_aad_token(profile, insecure_str)
     else:
         _configure_cli_password(profile, insecure_str)
 
