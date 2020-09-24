@@ -109,8 +109,10 @@ def add_cli(api_client, object_type, object_id, user_name, group_name, service_n
         # this else/raise is for readability when doing a review.
         raise UsageError('Invalid argument')
 
-    permission = Permission(perm_type, value, PermissionLevel[permission_level])
+    permission = Permission(object_type, perm_type, permission_level, value)
     all_permissions = PermissionsObject([permission])
+
+    all_permissions.check_if_valid_for(object_type)
 
     click.echo(pretty_format(perms_api.add_permissions(object_type, object_id, all_permissions)))
 
