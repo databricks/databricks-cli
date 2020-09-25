@@ -32,7 +32,6 @@ from databricks_cli.utils import CONTEXT_SETTINGS
 from databricks_cli.configure.config import profile_option, get_profile_from_context, debug_option
 
 PROMPT_HOST = 'Databricks Host (should begin with https://)'
-PROMPT_RESOURCE_ID = 'Resource/Workspace ID'
 PROMPT_USERNAME = 'Username'
 PROMPT_PASSWORD = 'Password' #  NOQA
 PROMPT_TOKEN = 'Token' #  NOQA

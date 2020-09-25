@@ -24,7 +24,7 @@
 """
 Databricks Python REST Client 2.0 for interacting with various services.
 
-Currently supports services including clusters and jobs.
+Currently supports services including clusters, clusters policies and jobs.
 
 Requires Python 2.7.9 or above.
 
