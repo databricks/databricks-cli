@@ -35,7 +35,7 @@ PROMPT_HOST = 'Databricks Host (should begin with https://)'
 PROMPT_USERNAME = 'Username'
 PROMPT_PASSWORD = 'Password' #  NOQA
 PROMPT_TOKEN = 'Token' #  NOQA
-ENV_AAD_TOKEN = 'DATABRICKS_TOKEN'
+ENV_DATABRICKS_TOKEN = 'DATABRICKS_TOKEN'
 
 
 def _configure_cli_token(profile, insecure):
@@ -49,17 +49,17 @@ def _configure_cli_token(profile, insecure):
 def _configure_cli_aad_token(profile, insecure):
     config = ProfileConfigProvider(profile).get_config() or DatabricksConfig.empty()
 
-    if ENV_AAD_TOKEN not in os.environ:
-        print('[ERROR] Set Environment Variable \'%s\' with your AAD Token and run again.\n' % ENV_AAD_TOKEN)
+    if ENV_DATABRICKS_TOKEN not in os.environ:
+        print('[ERROR] Set Environment Variable \'%s\' with your AAD Token and run again.\n' % ENV_DATABRICKS_TOKEN)
         print('Commands to run to get your AAD token:\n'
               '\t az login\n'
               '\t token_response=$(az account get-access-token --resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d)\n'
-              '\t export %s=$(jq .accessToken -r <<< "$token_response")\n' % ENV_AAD_TOKEN
+              '\t export %s=$(jq .accessToken -r <<< "$token_response")\n' % ENV_DATABRICKS_TOKEN
               )
         return
 
     host = click.prompt(PROMPT_HOST, default=config.host, type=_DbfsHost())
-    aad_token = os.environ.get(ENV_AAD_TOKEN)
+    aad_token = os.environ.get(ENV_DATABRICKS_TOKEN)
     new_config = DatabricksConfig.from_token(host, aad_token, insecure)
     update_and_persist_config(profile, new_config)
 
