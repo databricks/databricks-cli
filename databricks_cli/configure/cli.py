@@ -21,8 +21,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import click
 import os
+import click
 
 from click import ParamType
 
@@ -50,10 +50,12 @@ def _configure_cli_aad_token(profile, insecure):
     config = ProfileConfigProvider(profile).get_config() or DatabricksConfig.empty()
 
     if ENV_AAD_TOKEN not in os.environ:
-        print('[ERROR] Set Environment Variable \'%s\' with your AAD Token and run again.\n' % ENV_AAD_TOKEN)
+        print('[ERROR] Set Environment Variable \'%s\' with your '
+              'AAD Token and run again.\n' % ENV_AAD_TOKEN)
         print('Commands to run to get your AAD token:\n'
               '\t az login\n'
-              '\t token_response=$(az account get-access-token --resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d)\n'
+              '\t token_response=$(az account get-access-token '
+              '--resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d)\n'
               '\t export %s=$(jq .accessToken -r <<< "$token_response")\n' % ENV_AAD_TOKEN
               )
         return
