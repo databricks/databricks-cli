@@ -50,15 +50,35 @@ DASH_MARKER = '# ' + '-' * 70 + '\n'
               ' principal for this option is the group "users", which contains all users in the'
               ' workspace. If not specified, the initial ACL with MANAGE permission applied to the'
               ' scope is assigned to the request issuer\'s user identity.')
+@click.option('--scope-backend-type',
+              type=click.Choice(['AZURE_KEYVAULT', 'DATABRICKS'], case_sensitive=True),
+              default='DATABRICKS', help='The backend that will be used for this secret scope. '
+                                         'Options are (case-sensitive): 1) \'AZURE_KEYVAULT\' and '
+                                         '2) \'DATABRICKS\' (default option)'
+                                         '\nNote: To create an Azure Keyvault, be sure '
+                                         'to configure an AAD Token using '
+                                         '\'databricks-cli configure --aad-token\'')
+@click.option('--resource-id', default=None, type=click.STRING,
+              help='The resource ID associated with the azure keyvault to be used as the backend'
+                   ' for the secret scope. NOTE: Only use with azure-keyvault as backend')
+@click.option('--dns-name', default=None, type=click.STRING,
+              help='The dns name associated with the azure keyvault to be used as the'
+                   ' backed for the secret scope. NOTE: Only use with azure-keyvault as backend')
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def create_scope(api_client, scope, initial_manage_principal):
+def create_scope(api_client, scope, initial_manage_principal,
+                 scope_backend_type, resource_id, dns_name):
     """
     Creates a new secret scope with given name.
     """
-    SecretApi(api_client).create_scope(scope, initial_manage_principal)
+    backend_azure_keyvault = {
+        'resource_id': resource_id,
+        'dns_name': dns_name
+    }
+    SecretApi(api_client).create_scope(scope, initial_manage_principal,
+                                       scope_backend_type, backend_azure_keyvault)
 
 
 def _scopes_to_table(scopes_json):

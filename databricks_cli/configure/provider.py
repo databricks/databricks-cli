@@ -263,7 +263,7 @@ class ProfileConfigProvider(DatabricksConfigProvider):
 
 
 class DatabricksConfig(object):
-    def __init__(self, host, username, password, token, insecure): # noqa
+    def __init__(self, host, username, password, token, insecure):  # noqa
         self.host = host
         self.username = username
         self.password = password

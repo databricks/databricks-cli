@@ -23,6 +23,7 @@
 import io
 from os import path
 
+import os
 import click
 from click import ParamType
 
@@ -33,8 +34,9 @@ from databricks_cli.utils import CONTEXT_SETTINGS
 
 PROMPT_HOST = 'Databricks Host (should begin with https://)'
 PROMPT_USERNAME = 'Username'
-PROMPT_PASSWORD = 'Password'  # NOQA
-PROMPT_TOKEN = 'Token'  # NOQA
+PROMPT_PASSWORD = 'Password' #  NOQA
+PROMPT_TOKEN = 'Token' #  NOQA
+ENV_AAD_TOKEN = 'DATABRICKS_AAD_TOKEN'
 
 
 def _configure_cli_token_file(profile, token_file, host, insecure):
@@ -60,6 +62,28 @@ def _configure_cli_token(profile, insecure, host=None):
 
     token = click.prompt(PROMPT_TOKEN, default=config.token, hide_input=True)
     new_config = DatabricksConfig.from_token(host, token, insecure)
+    update_and_persist_config(profile, new_config)
+
+
+def _configure_cli_aad_token(profile, insecure):
+    config = ProfileConfigProvider(profile).get_config() or DatabricksConfig.empty()
+
+    if ENV_AAD_TOKEN not in os.environ:
+        click.echo('[ERROR] Set Environment Variable \'%s\' with your '
+              'AAD Token and run again.\n' % ENV_AAD_TOKEN)
+        click.echo('Commands to run to get your AAD token:\n'
+              '\t az login\n'
+              '\t token_response=$(az account get-access-token '
+              '--resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d)\n'
+              '\t export %s=$(jq .accessToken -r <<< "$token_response")\n' % ENV_AAD_TOKEN
+              )
+        return
+
+    if not host:
+        host = click.prompt(PROMPT_HOST, default=config.host, type=_DbfsHost())
+
+    aad_token = os.environ.get(ENV_AAD_TOKEN)
+    new_config = DatabricksConfig.from_token(host, aad_token, insecure)
     update_and_persist_config(profile, new_config)
 
 
@@ -90,11 +114,12 @@ def _configure_cli_password(profile, insecure, host):
                    'read the token from a file provided by a secret store.')
 @click.option('--host', show_default=True, default=None,
               help='Host to connect to.')
+@click.option('--aad-token', show_default=True, is_flag=True, default=False)
 @click.option('--insecure', show_default=True, is_flag=True, default=None,
               help='DO NOT verify SSL Certificates')
 @debug_option
 @profile_option
-def configure_cli(token, insecure, host, token_file):
+def configure_cli(token, aad_token, insecure, host, token_file):
     """
     Configures host and authentication info for the CLI.
     """
@@ -106,6 +131,9 @@ def configure_cli(token, insecure, host, token_file):
     elif token_file:
         _configure_cli_token_file(profile=profile, insecure=insecure_str, host=host,
                                   token_file=token_file)
+        _configure_cli_token(profile=profile, insecure=insecure_str, host=host)
+    elif aad_token:
+        _configure_cli_aad_token(profile=profile, insecure=insecure_str, host=host)
     else:
         _configure_cli_password(profile=profile, insecure=insecure_str, host=host)
 
