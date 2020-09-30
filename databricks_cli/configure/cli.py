@@ -21,9 +21,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import io
+import os
 from os import path
 
-import os
 import click
 from click import ParamType
 
@@ -34,8 +34,8 @@ from databricks_cli.utils import CONTEXT_SETTINGS
 
 PROMPT_HOST = 'Databricks Host (should begin with https://)'
 PROMPT_USERNAME = 'Username'
-PROMPT_PASSWORD = 'Password' #  NOQA
-PROMPT_TOKEN = 'Token' #  NOQA
+PROMPT_PASSWORD = 'Password'  # NOQA
+PROMPT_TOKEN = 'Token'  # NOQA
 ENV_AAD_TOKEN = 'DATABRICKS_AAD_TOKEN'
 
 
@@ -65,18 +65,18 @@ def _configure_cli_token(profile, insecure, host=None):
     update_and_persist_config(profile, new_config)
 
 
-def _configure_cli_aad_token(profile, insecure):
+def _configure_cli_aad_token(profile, insecure, host=None):
     config = ProfileConfigProvider(profile).get_config() or DatabricksConfig.empty()
 
     if ENV_AAD_TOKEN not in os.environ:
         click.echo('[ERROR] Set Environment Variable \'%s\' with your '
-              'AAD Token and run again.\n' % ENV_AAD_TOKEN)
+                   'AAD Token and run again.\n' % ENV_AAD_TOKEN)
         click.echo('Commands to run to get your AAD token:\n'
-              '\t az login\n'
-              '\t token_response=$(az account get-access-token '
-              '--resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d)\n'
-              '\t export %s=$(jq .accessToken -r <<< "$token_response")\n' % ENV_AAD_TOKEN
-              )
+                   '\t az login\n'
+                   '\t token_response=$(az account get-access-token '
+                   '--resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d)\n'
+                   '\t export %s=$(jq .accessToken -r <<< "$token_response")\n' % ENV_AAD_TOKEN
+                   )
         return
 
     if not host:
