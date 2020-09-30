@@ -37,6 +37,7 @@ from databricks_cli.runs.cli import runs_group
 from databricks_cli.secrets.cli import secrets_group
 from databricks_cli.stack.cli import stack_group
 from databricks_cli.groups.cli import groups_group
+from databricks_cli.tokens.cli import tokens_group
 from databricks_cli.instance_pools.cli import instance_pools_group
 from databricks_cli.pipelines.cli import pipelines_group
 
@@ -61,6 +62,7 @@ cli.add_command(libraries_group, name='libraries')
 cli.add_command(secrets_group, name='secrets')
 cli.add_command(stack_group, name='stack')
 cli.add_command(groups_group, name='groups')
+cli.add_command(tokens_group, name='tokens')
 cli.add_command(instance_pools_group, name="instance-pools")
 cli.add_command(pipelines_group, name='pipelines')
 

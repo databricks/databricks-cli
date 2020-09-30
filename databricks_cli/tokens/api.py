@@ -20,13 +20,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from databricks_cli.sdk import TokenService
 
-version = '0.12.1.dev0' #  NOQA
 
+class TokensApi(object):
+    def __init__(self, api_client):
+        self.client = TokenService(api_client)
 
-def print_version_callback(ctx, param, value): #  NOQA
-    import click
-    if not value or ctx.resilient_parsing:
-        return
-    click.echo('Version {}'.format(version))
-    ctx.exit()
+    def create(self, lifetime_seconds, comment):
+        return self.client.create_token(lifetime_seconds, comment)
+
+    def list(self):
+        return self.client.list_tokens()
+
+    def revoke(self, token_id):
+        return self.client.revoke_token(token_id)

@@ -136,7 +136,7 @@ def mv_cli(api_client, src, dst):
               expose_value=False, is_eager=True, help=version)
 @debug_option
 @profile_option
-def dbfs_group():
+def dbfs_group():  # pragma: no cover
     """
     Utility to interact with DBFS.
 

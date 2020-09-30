@@ -147,7 +147,7 @@ def download(api_client, config_path, **kwargs):
               expose_value=False, is_eager=True, help=version)
 @debug_option
 @profile_option
-def stack_group():
+def stack_group():  # pragma: no cover
     """
     [Beta] Utility to deploy and download Databricks resource stacks.
     """

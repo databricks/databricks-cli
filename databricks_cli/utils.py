@@ -32,6 +32,7 @@ from requests.exceptions import HTTPError
 from databricks_cli.click_types import ContextObject
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+CLUSTER_OPTIONS = ['cluster-id', 'cluster-name']
 DEBUG_MODE = False
 
 

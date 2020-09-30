@@ -20,13 +20,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-version = '0.12.1.dev0' #  NOQA
-
-
-def print_version_callback(ctx, param, value): #  NOQA
-    import click
-    if not value or ctx.resilient_parsing:
-        return
-    click.echo('Version {}'.format(version))
-    ctx.exit()

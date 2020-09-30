@@ -21,12 +21,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-version = '0.12.1.dev0' #  NOQA
+# pylint:disable=redefined-outer-name
+
+import pytest
+from mock import mock
+
+from click.testing import CliRunner
+import databricks_cli.tokens.cli as cli
 
 
-def print_version_callback(ctx, param, value): #  NOQA
-    import click
-    if not value or ctx.resilient_parsing:
-        return
-    click.echo('Version {}'.format(version))
-    ctx.exit()
+@pytest.fixture()
+def tokens_api_mock():
+    with mock.patch('databricks_cli.tokens.cli.TokensApi') as TokensApi:
+        _tokens_api_mock = mock.MagicMock()
+        TokensApi.return_value = _tokens_api_mock
+        yield _tokens_api_mock
+
+
+def test_create_token_cli_defaults(tokens_api_mock):
+    runner = CliRunner()
+    runner.invoke(cli.create_token_cli, ['--comment', 'test'])
+    assert tokens_api_mock.create.called_with(60 * 60 * 24 * 90, 'test')
