@@ -63,6 +63,41 @@ class ClusterApi(object):
     def permanent_delete(self, cluster_id):
         return self.client.permanent_delete_cluster(cluster_id)
 
+    def get_cluster_ids_by_name(self, cluster_name):
+        data = self.client.list_clusters()
+        return [c for c in data.get('clusters', []) if c.get('cluster_name') == cluster_name]
+
+    def get_cluster_id_for_name(self, cluster_name):
+        """
+        Given a cluster name, this will return a single cluster id for that name.
+        If there are multiple clusters with the same name it will raise a RuntimeError.
+        If there are no clusters with the name it will raise a RuntimeError.
+        """
+        clusters_by_name = self.get_cluster_ids_by_name(cluster_name)
+        cluster_ids = [
+            cluster['cluster_id'] for cluster in clusters_by_name if
+            cluster and 'cluster_id' in cluster
+        ]
+
+        if len(cluster_ids) == 0:
+            raise RuntimeError('No clusters with name {} were found'.format(cluster_name))
+
+        if len(cluster_ids) > 1:
+            raise RuntimeError('More than 1 cluster was named {}, '.format(cluster_name) +
+                               'please use --cluster-id.\n' +
+                               'Cluster ids found: {}'.format(', '.join(cluster_ids))
+                               )
+        return cluster_ids[0]
+
+    def get_cluster_by_name(self, cluster_name):
+        """
+        Given a cluster name, this will return the cluster config for that cluster.
+        If there are multiple clusters with the same name it will raise a RuntimeError.
+        If there are no clusters with the name it will raise a RuntimeError.
+        """
+        cluster_id = self.get_cluster_id_for_name(cluster_name)
+        return self.get_cluster(cluster_id)
+
     def get_events(self, cluster_id, start_time, end_time, order, event_types, offset, limit):
         return self.client.get_events(cluster_id, start_time, end_time, order, event_types,
                                       offset, limit)

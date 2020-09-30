@@ -188,7 +188,7 @@ def run_now_cli(api_client, job_id, jar_params, notebook_params, python_params,
 @debug_option
 @profile_option
 @eat_exceptions
-def jobs_group():
+def jobs_group():  # pragma: no cover
     """
     Utility to interact with jobs.
 
