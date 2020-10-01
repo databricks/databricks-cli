@@ -131,7 +131,6 @@ def configure_cli(token, aad_token, insecure, host, token_file):
     elif token_file:
         _configure_cli_token_file(profile=profile, insecure=insecure_str, host=host,
                                   token_file=token_file)
-        _configure_cli_token(profile=profile, insecure=insecure_str, host=host)
     elif aad_token:
         _configure_cli_aad_token(profile=profile, insecure=insecure_str, host=host)
     else:
