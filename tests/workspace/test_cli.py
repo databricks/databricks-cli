@@ -44,7 +44,7 @@ def workspace_api_mock():
 def test_export_workspace_cli(workspace_api_mock, tmpdir):
     path = tmpdir.strpath
     workspace_api_mock.get_status.return_value = \
-        WorkspaceFileInfo('/notebook-name', NOTEBOOK, WorkspaceLanguage.SCALA)
+        WorkspaceFileInfo('/notebook-name', NOTEBOOK, '22', WorkspaceLanguage.SCALA)
     runner = CliRunner()
     runner.invoke(cli.export_workspace_cli, ['--format', 'SOURCE', '/notebook-name', path])
     assert workspace_api_mock.export_workspace.call_args[0][1] == os.path.join(
