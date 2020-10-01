@@ -37,12 +37,13 @@ LIBRARY = 'LIBRARY'
 
 
 class WorkspaceFileInfo(object):
-    def __init__(self, path, object_type, language=None, **kwargs): # noqa
+    def __init__(self, path, object_type, object_id, language=None, **kwargs): # noqa
         self.path = path
         self.object_type = object_type
         self.language = language
+        self.object_id = object_id
 
-    def to_row(self, is_long_form, is_absolute):
+    def to_row(self, is_long_form, is_absolute, with_object_id=False):
         path = self.path if is_absolute else self.basename
         if self.is_dir:
             stylized_path = click.style(path, 'cyan')
@@ -50,10 +51,16 @@ class WorkspaceFileInfo(object):
             stylized_path = click.style(path, 'green')
         else:
             stylized_path = path
+
+        result = [stylized_path]
+
         if is_long_form:
-            return [self.object_type, stylized_path, self.language]
-        else:
-            return [stylized_path]
+            result = [self.object_type, stylized_path, self.language]
+
+        if with_object_id:
+            result.append(self.object_id)
+
+        return result
 
     @property
     def is_dir(self):
