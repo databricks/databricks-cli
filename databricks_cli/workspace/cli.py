@@ -37,14 +37,16 @@ from databricks_cli.workspace.types import LanguageClickType, FormatClickType, W
                short_help='List objects in the Databricks Workspace. ls and list are synonyms.')
 @click.option('--absolute', is_flag=True, default=False,
               help='Displays absolute paths.')
-@click.option('-l', is_flag=True, default=False,
+@click.option('-l', '--long', 'is_long_form', is_flag=True, default=False,
               help='Displays full information including ObjectType, Path, Language')
+@click.option('-i', '--id', 'with_object_id', is_flag=True, default=False,
+              help='Displays ObjectId')
 @click.argument('workspace_path', type=str, nargs=-1)
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def ls_cli(api_client, l, absolute, workspace_path): # noqa
+def ls_cli(api_client, is_long_form, with_object_id, absolute, workspace_path): # noqa
     """
     List objects in the Databricks Workspace.
     """
@@ -53,8 +55,11 @@ def ls_cli(api_client, l, absolute, workspace_path): # noqa
     else:
         workspace_path = workspace_path[0]
     objects = WorkspaceApi(api_client).list_objects(workspace_path)
-    table = tabulate([obj.to_row(is_long_form=l, is_absolute=absolute) for obj in objects],
-                     tablefmt='plain')
+    objects_table = [
+        obj.to_row(is_long_form=is_long_form, is_absolute=absolute, with_object_id=with_object_id)
+        for obj in objects
+    ]
+    table = tabulate(objects_table, tablefmt='plain')
     click.echo(table)
 
 

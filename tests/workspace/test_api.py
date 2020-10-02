@@ -1,3 +1,4 @@
+
 # Databricks CLI
 # Copyright 2017 Databricks, Inc.
 #
@@ -31,10 +32,12 @@ from databricks_cli.workspace.api import WorkspaceFileInfo
 from databricks_cli.workspace.types import WorkspaceLanguage
 
 TEST_WORKSPACE_PATH = '/test/workspace/path'
+TEST_WORKSPACE_OBJECT_ID = '22'
 TEST_JSON_RESPONSE = {
     'path': TEST_WORKSPACE_PATH,
     'object_type': api.DIRECTORY,
-    'created_at': 124
+    'created_at': 124,
+    'object_id': TEST_WORKSPACE_OBJECT_ID,
 }
 TEST_LANGUAGE = 'PYTHON'
 TEST_FMT = 'SOURCE'
@@ -42,19 +45,22 @@ TEST_FMT = 'SOURCE'
 
 class TestWorkspaceFileInfo(object):
     def test_to_row_not_long_form_not_absolute(self):
-        file_info = api.WorkspaceFileInfo(TEST_WORKSPACE_PATH, api.NOTEBOOK)
+        file_info = api.WorkspaceFileInfo(TEST_WORKSPACE_PATH, api.NOTEBOOK,
+                                          TEST_WORKSPACE_OBJECT_ID)
         row = file_info.to_row(is_long_form=False, is_absolute=False)
         assert len(row) == 1
         assert row[0] == file_info.basename
 
     def test_to_row_not_long_form_absolute(self):
-        file_info = api.WorkspaceFileInfo(TEST_WORKSPACE_PATH, api.NOTEBOOK)
+        file_info = api.WorkspaceFileInfo(TEST_WORKSPACE_PATH, api.NOTEBOOK,
+                                          TEST_WORKSPACE_OBJECT_ID)
         row = file_info.to_row(is_long_form=False, is_absolute=True)
         assert len(row) == 1
         assert row[0] == TEST_WORKSPACE_PATH
 
     def test_to_row_long_form_absolute(self):
-        file_info = api.WorkspaceFileInfo(TEST_WORKSPACE_PATH, api.NOTEBOOK)
+        file_info = api.WorkspaceFileInfo(TEST_WORKSPACE_PATH, api.NOTEBOOK,
+                                          TEST_WORKSPACE_OBJECT_ID)
         row = file_info.to_row(is_long_form=True, is_absolute=True)
         assert len(row) == 3
         assert row[0] == api.NOTEBOOK
@@ -62,7 +68,8 @@ class TestWorkspaceFileInfo(object):
         assert row[2] is None
 
     def test_basename(self):
-        file_info = api.WorkspaceFileInfo(TEST_WORKSPACE_PATH, api.NOTEBOOK)
+        file_info = api.WorkspaceFileInfo(TEST_WORKSPACE_PATH, api.NOTEBOOK,
+                                          TEST_WORKSPACE_OBJECT_ID)
         assert file_info.basename == 'path'
 
     def test_from_json(self):
@@ -104,8 +111,8 @@ class TestWorkspaceApi(object):
         test_file_path = os.path.join(tmpdir.strpath, 'test')
         with open(test_file_path, 'w') as f:
             f.write('test')
-        workspace_api.import_workspace(test_file_path, TEST_WORKSPACE_PATH, TEST_LANGUAGE, TEST_FMT,
-                                       is_overwrite=False)
+        workspace_api.import_workspace(test_file_path, TEST_WORKSPACE_PATH, TEST_LANGUAGE,
+                                       TEST_FMT, is_overwrite=False)
         import_workspace_mock = workspace_api.client.import_workspace
         assert import_workspace_mock.call_count == 1
         assert import_workspace_mock.call_args[0][0] == TEST_WORKSPACE_PATH
@@ -147,18 +154,22 @@ class TestWorkspaceApi(object):
         def _list_objects_mock(path, headers=None):
             if path == '/':
                 return [
-                    WorkspaceFileInfo('/a', api.DIRECTORY),
-                    WorkspaceFileInfo('/f', api.DIRECTORY)
+                    WorkspaceFileInfo('/a', api.DIRECTORY, TEST_WORKSPACE_OBJECT_ID),
+                    WorkspaceFileInfo('/f', api.DIRECTORY, TEST_WORKSPACE_OBJECT_ID)
                 ]
             elif path == '/a':
                 return [
-                    WorkspaceFileInfo('/a/b', api.NOTEBOOK, WorkspaceLanguage.SCALA),
-                    WorkspaceFileInfo('/a/c', api.NOTEBOOK, WorkspaceLanguage.PYTHON),
-                    WorkspaceFileInfo('/a/d', api.NOTEBOOK, WorkspaceLanguage.R),
-                    WorkspaceFileInfo('/a/e', api.NOTEBOOK, WorkspaceLanguage.SQL),
+                    WorkspaceFileInfo('/a/b', api.NOTEBOOK, TEST_WORKSPACE_OBJECT_ID,
+                                      WorkspaceLanguage.SCALA),
+                    WorkspaceFileInfo('/a/c', api.NOTEBOOK, TEST_WORKSPACE_OBJECT_ID,
+                                      WorkspaceLanguage.PYTHON),
+                    WorkspaceFileInfo('/a/d', api.NOTEBOOK, TEST_WORKSPACE_OBJECT_ID,
+                                      WorkspaceLanguage.R),
+                    WorkspaceFileInfo('/a/e', api.NOTEBOOK, TEST_WORKSPACE_OBJECT_ID,
+                                      WorkspaceLanguage.SQL),
                 ]
             elif path == '/f':
-                return [WorkspaceFileInfo('/f/g', api.DIRECTORY)]
+                return [WorkspaceFileInfo('/f/g', api.DIRECTORY, TEST_WORKSPACE_OBJECT_ID)]
             elif path == '/f/g':
                 return []
             else:
