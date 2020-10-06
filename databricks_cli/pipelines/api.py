@@ -60,6 +60,17 @@ class PipelinesApi(object):
     def get(self, pipeline_id, headers=None):
         return self.client.get(pipeline_id, headers)
 
+    def list(self, page_token=None, max_results=None, order_by=None, headers=None):
+        pagination = {}
+        if page_token:
+            pagination["page_token"] = page_token
+        if max_results:
+            pagination["max_results"] = max_results
+        if order_by:
+            pagination["order_by"] = order_by
+
+        return self.client.list(pagination=pagination, headers=headers)
+
     def reset(self, pipeline_id, headers=None):
         self.client.reset(pipeline_id, headers)
 

@@ -313,3 +313,19 @@ def test_library_object_serialization_deserialization():
 
     libs = LibraryObject.to_json(library_objects)
     assert libs == libraries
+
+
+def test_list(pipelines_api):
+    pipelines_api.list(max_results=10, order_by=["name asc"])
+    client_mock = pipelines_api.client.client.perform_query
+    assert client_mock.call_count == 1
+    client_mock.assert_called_with('GET', '/pipelines',
+                                   data={"pagination": {"max_results": 10, "order_by": ["name asc"]}}, headers=None)
+
+
+def test_list_with_page_token(pipelines_api):
+    pipelines_api.list(page_token="a")
+    client_mock = pipelines_api.client.client.perform_query
+    assert client_mock.call_count == 1
+    client_mock.assert_called_with('GET', '/pipelines',
+                                   data={"pagination": {"page_token": "a"}}, headers=None)

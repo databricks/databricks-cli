@@ -109,7 +109,7 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
                 "the spec '{}'. Please resolve the conflict and try the command again. "
                 "Because pipeline IDs are no longer persisted after being deleted, we "
                 "recommend removing the ID field from your spec."
-                .format(pipeline_id, spec["id"])
+                    .format(pipeline_id, spec["id"])
             )
 
         spec_obj['id'] = pipeline_id or spec_obj.get('id', None)
@@ -163,6 +163,25 @@ def get_cli(api_client, pipeline_id):
     """
     _validate_pipeline_id(pipeline_id)
     click.echo(pretty_format(PipelinesApi(api_client).get(pipeline_id)))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Gets a delta pipeline\'s current spec and status')
+@debug_option
+@profile_option
+@pipelines_exception_eater
+@provide_api_client
+def list_cli(api_client):
+    pipelines_api = PipelinesApi(api_client)
+
+    response = pipelines_api.list()
+    pipelines = response["statuses"]
+
+    while "next_page_token" in response["pagination"]:
+        response = pipelines_api.list(page_token=response["pagination"]["next_page_token"])
+        pipelines.extend(response["statuses"])
+
+    click.echo(pretty_format(pipelines))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -318,6 +337,7 @@ def pipelines_group():  # pragma: no cover
 pipelines_group.add_command(deploy_cli, name='deploy')
 pipelines_group.add_command(delete_cli, name='delete')
 pipelines_group.add_command(get_cli, name='get')
+pipelines_group.add_command(list_cli, name='list')
 pipelines_group.add_command(reset_cli, name='reset')
 pipelines_group.add_command(run_cli, name='run')
 pipelines_group.add_command(stop_cli, name='stop')

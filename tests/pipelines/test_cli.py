@@ -308,3 +308,9 @@ def test_deploy_pipeline_conflicting_ids(pipelines_api_mock, tmpdir):
     result = CliRunner().invoke(cli.deploy_cli, ['--spec', path, '--pipeline-id', "fake"])
     assert result.exit_code == 1
     assert pipelines_api_mock.deploy.call_count == 0
+
+
+def test_list_cli(pipelines_api_mock):
+    runner = CliRunner()
+    runner.invoke(cli.list_cli)
+    assert pipelines_api_mock.list.call_count == 1
