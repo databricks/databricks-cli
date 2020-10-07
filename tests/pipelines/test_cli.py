@@ -310,6 +310,7 @@ def test_deploy_pipeline_conflicting_ids(pipelines_api_mock, tmpdir):
     assert pipelines_api_mock.deploy.call_count == 0
 
 
+@provide_conf
 def test_list_cli(pipelines_api_mock):
     runner = CliRunner()
     runner.invoke(cli.list_cli)
