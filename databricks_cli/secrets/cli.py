@@ -73,10 +73,13 @@ def create_scope(api_client, scope, initial_manage_principal,
     """
     Creates a new secret scope with given name.
     """
-    backend_azure_keyvault = {
-        'resource_id': resource_id,
-        'dns_name': dns_name
-    }
+    backend_azure_keyvault = None
+
+    if resource_id is not None and dns_name is not None:
+        backend_azure_keyvault = {
+            'resource_id': resource_id,
+            'dns_name': dns_name
+        }
     SecretApi(api_client).create_scope(scope, initial_manage_principal,
                                        scope_backend_type, backend_azure_keyvault)
 
