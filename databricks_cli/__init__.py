@@ -26,9 +26,9 @@
 
 
 def initialize_cli_for_databricks_notebooks():
-    import PythonShell
+    import IPython
     from databricksCli import init_databricks_cli_config_provider
-    init_databricks_cli_config_provider(PythonShell.IPython.get_ipython().user_ns.entry_point)
+    init_databricks_cli_config_provider(IPython.get_ipython().user_ns.entry_point)
 
 
 try:

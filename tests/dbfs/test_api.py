@@ -40,7 +40,6 @@ TEST_FILE_JSON = {
     'file_size': 1
 }
 TEST_FILE_INFO = api.FileInfo(TEST_DBFS_PATH, False, 1)
-MAX_RETRY_ATTEMPTS = 8
 
 
 def get_resource_does_not_exist_exception():
@@ -141,7 +140,7 @@ class TestDbfsApi(object):
         dbfs_api.client.mkdirs = mock.Mock(side_effect=exception_sequence)
         with pytest.raises(RateLimitException):
             dbfs_api.mkdirs(DbfsPath('dbfs:/test/mkdir'))
-        assert dbfs_api.client.mkdirs.call_count == MAX_RETRY_ATTEMPTS
+        assert dbfs_api.client.mkdirs.call_count == api.Retry429.MAX_RETRY_ATTEMPTS
 
     def test_file_exists_true(self, dbfs_api):
         dbfs_api.client.get_status.return_value = TEST_FILE_JSON
