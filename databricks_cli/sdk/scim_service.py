@@ -22,7 +22,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from databricks_cli.utils import debug
 
 
 class ScimService(object):
@@ -167,7 +166,6 @@ class ScimService(object):
             'Operations': [operation_data]
         }
 
-        debug('update_group_by_id', 'data: {}'.format(_data))
         return self.client.perform_query('PATCH', '{}Groups/{}'.format(self.PREVIEW_BASE, group_id), data=_data,
                                          headers=headers)
 

@@ -21,9 +21,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from databricks_cli.scim.exceptions import ScimError
 from databricks_cli.sdk import ScimService
-from databricks_cli.utils import is_int, debug
+from databricks_cli.utils import is_int
+
+
+class ScimError(Exception):
+    pass
 
 
 class ScimApi(object):
@@ -39,7 +42,6 @@ class ScimApi(object):
         else:
             filters = self.GROUP_NAME_FILTER.format(group_name)
             content = self.list_groups(filters=filters)
-        debug('get_group', content)
         return content
 
     def get_user(self, user_id=None, user_name=None):
@@ -58,14 +60,12 @@ class ScimApi(object):
 
     def get_group_id_for_group(self, group_name):
         content = self.get_group(group_name=group_name)
-        debug('get_group_id_for_group', content)
         return self._parse_id_from_json(name='group', value=group_name,
                                         filters=self.GROUP_NAME_FILTER.format(group_name),
                                         data=content)
 
     def get_group_name_for_group(self, group_id):
         content = self.get_group(group_id=group_id)
-        debug('get_group_id_for_group', content)
         return self._parse_name_from_json(id_value=group_id, value=group_id, data=content)
 
     def delete_user(self, user_id=None, user_name=None):
@@ -76,19 +76,10 @@ class ScimApi(object):
         return content
 
     def list_users(self, filters=None, active=None):
+        # filtering on active doesn't work:
         # https://help.databricks.com/hc/en-us/requests/24688
-        # filtering on active doesn't work.
-        # if active is not None:
-        #     active_flag = 'active eq {}'.format(active)
-        #
-        #     if filters is not None:
-        #         filters = filters + ' and {}'.format(active_flag)
-        #     else:
-        #         filters = active_flag
-
-        debug('list_users', 'filters: {}'.format(filters))
         content = self.client.users(filters)
-        # debug('list_users', 'content: {}'.format(content))
+
         return self.filter_active_only(content, active)
 
     def get_user_by_id(self, user_id):
@@ -127,7 +118,6 @@ class ScimApi(object):
             else:
                 filters = extra_filter
 
-        debug('list_groups', 'filters: {}'.format(filters))
         return self.client.groups(filters)
 
     def get_group_by_id(self, group_id):
@@ -193,7 +183,6 @@ class ScimApi(object):
     def filter_active_only(cls, content, active):
         resources = content.get('Resources')
         if active is not None and resources:
-            debug('filter_active_only', 'Filtering for active == {}'.format(active))
             content['Resources'] = [
                 resource for resource in resources if resource.get('active') == active
             ]
@@ -208,7 +197,6 @@ class ScimApi(object):
 
         resources = data.get('Resources')
         if not resources:
-            debug('{} no resources'.format(name), resources)
             raise ScimError('Failed to find resources in json data for response: {}'.format(data))
 
         if len(resources) != 1:
@@ -218,12 +206,10 @@ class ScimApi(object):
         resource = resources[0]
         resource_id = resource.get('id')
         if not resource_id:
-            debug('{name} no {name}'.format(name=name), resource)
             raise ScimError(
                 'Expected {} id in resource using filter {} in json data: {}'.format(name,
                                                                                      filters, data))
 
-        debug('{name} {name}: '.format(name=name), resource_id)
         return resource_id
 
     @classmethod
@@ -233,7 +219,6 @@ class ScimApi(object):
 
         resources = data.get('Resources')
         if not resources:
-            debug('{} no resources'.format(id_value), resources)
             raise ScimError('Failed to find resources in json data for response: {}'.format(data))
 
         resource_name = None
@@ -242,7 +227,6 @@ class ScimApi(object):
                 resource_name = resource.get('displayName')
                 break
 
-        debug('{name} {name}: '.format(name=id_value), resource_name)
         return resource_name
 
     @classmethod

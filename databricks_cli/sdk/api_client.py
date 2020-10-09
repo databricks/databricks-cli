@@ -129,8 +129,9 @@ class ApiClient(object):
                 pass
             raise requests.exceptions.HTTPError(message, response=e.response)
 
-        # delete returns nothing.
-        if method.lower() == 'delete':
+        if method.lower() == 'delete' and not resp.content:
+            # it is possible for delete to return a completely empty body.
+            # If it does, return an empty dict rather than have resp.json throw.
             return {}
 
         return resp.json()

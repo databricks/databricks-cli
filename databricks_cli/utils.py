@@ -94,12 +94,6 @@ def is_debug_mode():
     return context_object.debug_mode
 
 
-def debug(name, content):
-    if is_debug_mode():
-        # pylint:disable=superfluous-parens
-        print('{}: {}'.format(name, json_dumps(content, indent=4)))
-
-
 def error_and_quit(message):
     ctx = click.get_current_context()
     context_object = ctx.ensure_object(ContextObject)
