@@ -28,9 +28,13 @@ import shutil
 import tempfile
 
 import re
+import logging
+import sys
 import click
 
+
 from tenacity import retry, wait_random_exponential, retry_if_exception_type, stop_after_attempt
+
 from requests.exceptions import HTTPError
 
 from databricks_cli.sdk import DbfsService
@@ -41,8 +45,12 @@ from databricks_cli.dbfs.exceptions import LocalFileExistsException, RateLimitEx
 BUFFER_SIZE_BYTES = 2**20
 EXPONENTIAL_BACKOFF_MULTIPLIER = 1
 MAX_SECONDS_WAIT = 60
-MAX_RETRY_ATTEMPTS = 8
+MAX_RETRY_ATTEMPTS = 7
 time_for_last_retry = 0
+
+logging.basicConfig(stream=sys.stderr, level=logging.WARNING)
+
+logger = logging.getLogger(__name__)
 
 
 class ParseException(Exception):
@@ -86,21 +94,13 @@ class DbfsErrorCodes(object):
 def before_sleep_on_429(retry_state):
     global time_for_last_retry
     if retry_state.attempt_number < 1:
-        click.echo("Warning: Unexpected retry_state.attempt_number={}.".format(
-            retry_state.attempt_number))
-        click.echo("Received 429 REQUEST_LIMIT_EXCEEDED. Retrying with exponential backoff.")
+        loglevel = logging.INFO
     else:
-        # Initialize time_for_last_retry on the first attempt.
-        if retry_state.attempt_number == 1:
-            time_for_last_retry = 0
-        # Note: Here idle_for represents the total time spent sleeping in all retries so far +
-        # the time that we will sleep until the next retry. We determined this empirically,
-        # as it is not clearly stated in the Tenacity docs.
-        time_until_next_retry = retry_state.idle_for - time_for_last_retry
-        click.echo(("Received 429 REQUEST_LIMIT_EXCEEDED for attempt {}. "
-                    "Retrying in {:.2f} seconds.").format(retry_state.attempt_number,
-                                                          time_until_next_retry))
-        time_for_last_retry = retry_state.idle_for
+        loglevel = logging.WARNING   
+    logger.log(
+        loglevel, ' Received 429 REQUEST_LIMIT_EXCEEDED for attempt %s. Retrying in %s seconds.',
+        retry_state.attempt_number, retry_state.idle_for - time_for_last_retry)
+    time_for_last_retry = retry_state.idle_for
 
 
 def retry_429(func):
@@ -113,6 +113,7 @@ def retry_429(func):
             return func(*args, **kwargs)
         except HTTPError as e:
             if e.response.status_code == 429:
+                click.echo("Rate limit exceeded. Retrying with exponential backoff.")
                 raise RateLimitException("429 Too Many Requests")
             raise e
     return wrapped_function
