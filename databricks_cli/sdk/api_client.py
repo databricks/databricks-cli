@@ -72,7 +72,7 @@ class ApiClient(object):
         if host[-1] == "/":
             host = host[:-1]
 
-        retries = max_retries=Retry(
+        retries = Retry(
             total=6,
             backoff_factor=1,
             status_forcelist=[429],
