@@ -28,16 +28,14 @@ import shutil
 import tempfile
 
 import re
-import functools
 import click
 
-from tenacity import retry, wait_random_exponential, retry_if_exception_type, stop_after_attempt
 from requests.exceptions import HTTPError
 
 from databricks_cli.sdk import DbfsService
 from databricks_cli.utils import error_and_quit
 from databricks_cli.dbfs.dbfs_path import DbfsPath
-from databricks_cli.dbfs.exceptions import LocalFileExistsException, RateLimitException
+from databricks_cli.dbfs.exceptions import LocalFileExistsException
 
 BUFFER_SIZE_BYTES = 2**20
 
@@ -77,78 +75,12 @@ class DbfsErrorCodes(object):
     RESOURCE_DOES_NOT_EXIST = 'RESOURCE_DOES_NOT_EXIST'
     RESOURCE_ALREADY_EXISTS = 'RESOURCE_ALREADY_EXISTS'
     PARTIAL_DELETE = 'PARTIAL_DELETE'
-    TOO_MANY_REQUESTS = 'TOO_MANY_REQUESTS'
-
-
-class CustomRetryState(object):
-    def __init__(self):
-        self.time_for_last_retry = 0
-
-    def reset(self):
-        self.time_for_last_retry = 0
-
-
-class Retry429(object):
-    EXPONENTIAL_BACKOFF_MULTIPLIER = 1
-    MAX_SECONDS_WAIT = 60
-    MAX_RETRY_ATTEMPTS = 8
-
-    def __init__(self, func):
-        """
-        If there are no decorator arguments, the function to be decorated is passed to
-        the constructor. It is called only once for each function decorated with it.
-        """
-        self.retry_state_429 = CustomRetryState()
-
-        @retry(wait=wait_random_exponential(multiplier=self.EXPONENTIAL_BACKOFF_MULTIPLIER,
-               max=self.MAX_SECONDS_WAIT), retry=retry_if_exception_type(RateLimitException),
-               stop=stop_after_attempt(self.MAX_RETRY_ATTEMPTS), reraise=True,
-               before_sleep=lambda retry_state: self.before_sleep_on_429(retry_state, 
-                                                                         self.retry_state_429))
-        def wrapped_function(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except HTTPError as e:
-                if e.response.status_code == 429:
-                    raise RateLimitException("429 Too Many Requests")
-                raise e
-
-        self.func = wrapped_function
-
-    def __call__(self, *args, **kwargs):
-        """
-        The __call__ method is called every time a decorated function is called.
-        """
-        self.retry_state_429.reset()
-
-        return self.func(*args, **kwargs)
-
-    def __get__(self, obj, objtype):
-        """
-        Making this decorator a descriptor such that we can use it on class methods.
-        See https://stackoverflow.com/a/3296318/12359607
-        """
-        return functools.partial(self.__call__, obj)
-
-    @staticmethod
-    def before_sleep_on_429(retry_state, retry_state_429):
-        """
-        Note: Here idle_for represents the total time spent sleeping in all retries so far +
-        the time that we will sleep until the next retry. We determined this empirically,
-        as it is not clearly stated in the Tenacity docs.
-        """
-        time_until_next_retry = retry_state.idle_for - retry_state_429.time_for_last_retry
-        click.echo(("Received 429 REQUEST_LIMIT_EXCEEDED for attempt {}. "
-                    "Retrying in {:.2f} seconds.").format(retry_state.attempt_number,
-                                                          time_until_next_retry))
-        retry_state_429.time_for_last_retry = retry_state.idle_for
 
 
 class DbfsApi(object):
     def __init__(self, api_client):
         self.client = DbfsService(api_client)
 
-    @Retry429
     def list_files(self, dbfs_path, headers=None):
         list_response = self.client.list(dbfs_path.absolute_path, headers=headers)
         if 'files' in list_response:
@@ -169,37 +101,20 @@ class DbfsApi(object):
             raise e
         return True
 
-    @Retry429
     def get_status(self, dbfs_path, headers=None):
         json = self.client.get_status(dbfs_path.absolute_path, headers=headers)
         return FileInfo.from_json(json)
 
-    @Retry429
-    def create(self, dbfs_path, overwrite, headers):
-        return self.client.create(dbfs_path.absolute_path, overwrite, headers=headers)
-
-    @Retry429
-    def add_block(self, handle, contents, headers):
-        self.client.add_block(handle, contents, headers=headers)
-
-    @Retry429
-    def close(self, handle, headers):
-        self.client.close(handle, headers=headers)
-
     def put_file(self, src_path, dbfs_path, overwrite, headers=None):
-        handle = self.create(dbfs_path, overwrite, headers=headers)['handle']
+        handle = self.client.create(dbfs_path.absolute_path, overwrite, headers=headers)['handle']
         with open(src_path, 'rb') as local_file:
             while True:
                 contents = local_file.read(BUFFER_SIZE_BYTES)
                 if len(contents) == 0:
                     break
                 # add_block should not take a bytes object.
-                self.add_block(handle, b64encode(contents).decode(), headers=headers)
-            self.close(handle, headers=headers)
-
-    @Retry429
-    def read(self, dbfs_path, offset, headers):
-        return self.client.read(dbfs_path.absolute_path, offset, BUFFER_SIZE_BYTES, headers=headers)       
+                self.client.add_block(handle, b64encode(contents).decode(), headers=headers)
+            self.client.close(handle, headers=headers)
 
     def get_file(self, dbfs_path, dst_path, overwrite, headers=None):
         if os.path.exists(dst_path) and not overwrite:
@@ -211,7 +126,8 @@ class DbfsApi(object):
         offset = 0
         with open(dst_path, 'wb') as local_file:
             while offset < length:
-                response = self.read(dbfs_path, offset, headers=headers)
+                response = self.client.read(dbfs_path.absolute_path, offset, BUFFER_SIZE_BYTES,
+                                            headers=headers)
                 bytes_read = response['bytes_read']
                 data = response['data']
                 offset += bytes_read
@@ -230,13 +146,11 @@ class DbfsApi(object):
                     message))
         return int(m.group(1))
 
-    @Retry429
     def delete(self, dbfs_path, recursive, headers=None):
         num_files_deleted = 0
         while True:
             try:
-                self.client.delete(dbfs_path.absolute_path, 
-                                   recursive=recursive, headers=headers)
+                self.client.delete(dbfs_path.absolute_path, recursive=recursive, headers=headers)
             except HTTPError as e:
                 if e.response.status_code == 503:
                     try:
@@ -258,11 +172,9 @@ class DbfsApi(object):
             break
         click.echo("\rDelete finished successfully.\033[K")
 
-    @Retry429
     def mkdirs(self, dbfs_path, headers=None):
         self.client.mkdirs(dbfs_path.absolute_path, headers=headers)
 
-    @Retry429
     def move(self, dbfs_src, dbfs_dst, headers=None):
         self.client.move(dbfs_src.absolute_path, dbfs_dst.absolute_path, headers=headers)
 

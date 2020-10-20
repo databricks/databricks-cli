@@ -44,9 +44,11 @@ from six.moves.urllib.parse import urlparse
 try:
     from requests.packages.urllib3.poolmanager import PoolManager
     from requests.packages.urllib3 import exceptions
+    from requests.packages.urllib3.util.retry import Retry
 except ImportError:
     from urllib3.poolmanager import PoolManager
     from urllib3 import exceptions
+    from urllib3.util.retry import Retry
 
 from databricks_cli.version import version as databricks_cli_version
 
@@ -70,8 +72,16 @@ class ApiClient(object):
         if host[-1] == "/":
             host = host[:-1]
 
+        retries = Retry(
+            total=6,
+            backoff_factor=1,
+            status_forcelist=[429],
+            method_whitelist=set({'POST'}) | set(Retry.DEFAULT_METHOD_WHITELIST),
+            respect_retry_after_header=True,
+            raise_on_status=False # return original response when retries have been exhausted
+        )
         self.session = requests.Session()
-        self.session.mount('https://', TlsV1HttpAdapter())
+        self.session.mount('https://', TlsV1HttpAdapter(max_retries=retries))
 
         parsed_url = urlparse(host)
         scheme = parsed_url.scheme
