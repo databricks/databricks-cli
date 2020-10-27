@@ -312,6 +312,42 @@ def test_deploy_pipeline_conflicting_ids(pipelines_api_mock, tmpdir):
 
 @provide_conf
 def test_list_cli(pipelines_api_mock):
+    pipelines_api_mock.list = mock.Mock()
+    pipelines_api_mock.list.side_effect = [
+        {'statuses': [{'pipeline_id': '38a48a6b-1f53-4234-aa62-2fcbfb945620', 'state': 'RUNNING',
+                       'cluster_id': '1024-161828-gram477', 'name': 'windfarm-pipe-v2', 'health': 'HEALTHY'},
+                      {'pipeline_id': '38a48a6b-1f53-4836-aa62-2fcbfb965620', 'state': 'RUNNING',
+                       'cluster_id': '1024-160918-tees475', 'name': 'Wiki Pipeline', 'health': 'HEALTHY'}],
+         'pagination': {
+             'next_page_token': 'page2'}},
+        {'statuses': [{'pipeline_id': '38a48a6c-1f53-4234-aa62-2fcbfc915620', 'state': 'RUNNING',
+                       'cluster_id': '1026-062128-blare168', 'name': 'airline-demo-workflow', 'health': 'HEALTHY'},
+                      {'pipeline_id': '6421a82c-79e5-4926-90a5-af0f1bbee0b7', 'state': 'RUNNING',
+                       'cluster_id': '1023-093505-corm4', 'name': 'Jira Automation Staging', 'health': 'HEALTHY'}],
+         'pagination': {
+             'next_page_token': 'page3',
+             'prev_page_token': 'page2'}},
+        {'statuses': [{'pipeline_id': '670f286c-740f-4270-8259-cb21d73abf63', 'state': 'FAILED',
+                       'cluster_id': '1023-090246-helix16', 'name': 'Marek', 'health': 'UNHEALTHY'},
+                      {'pipeline_id': 'ab88d5a2-b313-4073-b659-123e6486b3ab', 'state': 'RUNNING',
+                       'cluster_id': '1027-061023-clasp844', 'name': 'Pipeline Demo NYCTaxi', 'health': 'HEALTHY'}],
+         'pagination': {
+             'next_page_token': 'page4',
+             'prev_page_token': 'page3'}},
+        {'statuses': [{'pipeline_id': 'ede14b7f-5261-4782-a1c6-7f4b3ceeb9e3', 'state': 'RUNNING',
+                       'cluster_id': '1023-090256-woke18', 'name': 'Discovery Staging', 'health': 'HEALTHY'},
+                      {'pipeline_id': 'very-large-pipeline', 'state': 'RUNNING', 'cluster_id': '1023-093334-cluck1',
+                       'name': 'Very Large Pipeline', 'health': 'HEALTHY'}], 'pagination': {
+            'prev_page_token': 'page4'}}
+    ]
+
     runner = CliRunner()
     runner.invoke(cli.list_cli)
-    assert pipelines_api_mock.list.call_count == 1
+    assert pipelines_api_mock.list.call_count == 4
+    pipelines_api_mock.list.assert_has_calls(
+        [
+            mock.call(),
+            mock.call(page_token='page2'),
+            mock.call(page_token='page3'),
+            mock.call(page_token='page4')
+        ], any_order=False)

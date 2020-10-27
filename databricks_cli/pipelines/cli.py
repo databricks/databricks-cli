@@ -174,13 +174,12 @@ def get_cli(api_client, pipeline_id):
 def list_cli(api_client):
     pipelines_api = PipelinesApi(api_client)
 
-    shared_kwargs = {"max_results": 1}
-    response = pipelines_api.list(**shared_kwargs)
+    response = pipelines_api.list()
     pipelines = response["statuses"]
 
     while "next_page_token" in response["pagination"]:
         response = pipelines_api.list(
-            page_token=response["pagination"]["next_page_token"], **shared_kwargs
+            page_token=response["pagination"]["next_page_token"]
         )
         pipelines.extend(response["statuses"])
 
