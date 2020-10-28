@@ -380,26 +380,13 @@ def test_list_with_paginated_responses(pipelines_api):
                        'name': 'Pipeline Demo NYCTaxi',
                        'health': 'HEALTHY'}],
          'pagination': {
-             'next_page_token': 'page4',
              'prev_page_token': 'page3'}
-         },
-        {'statuses': [{'pipeline_id': '7',
-                       'state': 'RUNNING',
-                       'cluster_id': '1023-090256-woke18',
-                       'name': 'Discovery Staging',
-                       'health': 'HEALTHY'},
-                      {'pipeline_id': '8',
-                       'state': 'RUNNING',
-                       'cluster_id': '1023-093334-cluck1',
-                       'name': 'Very Large Pipeline',
-                       'health': 'HEALTHY'}],
-         'pagination': {'prev_page_token': 'page4'}
          }
     ]
 
     pipelines = pipelines_api.list(max_results=2, order_by=["id asc"])
 
-    assert client_mock.call_count == 4
+    assert client_mock.call_count == 3
     client_mock.assert_has_calls(
         [
             mock.call('GET', '/pipelines',
@@ -410,10 +397,7 @@ def test_list_with_paginated_responses(pipelines_api):
                       headers=None),
             mock.call('GET', '/pipelines',
                       data={"pagination.max_results": 2, "pagination.page_token": "page3"},
-                      headers=None),
-            mock.call('GET', '/pipelines',
-                      data={"pagination.max_results": 2, "pagination.page_token": "page4"},
-                      headers=None),
+                      headers=None)
         ], any_order=False)
 
-    assert [status["pipeline_id"] for status in pipelines] == ["1", "2", "3", "4", "5", "6", "7", "8"]
+    assert [status["pipeline_id"] for status in pipelines] == ["1", "2", "3", "4", "5", "6"]

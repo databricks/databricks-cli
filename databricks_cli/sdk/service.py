@@ -1015,6 +1015,7 @@ class DeltaPipelinesService(object):
     def list(self, pagination=None, headers=None):
         _data = {}
         if pagination is not None:
+            _data['pagination'] = pagination
             if not isinstance(pagination, dict):
                 raise TypeError('Expected databricks.Pagination() or dict for field pagination')
         return self.client.perform_query('GET', '/pipelines', data=_data, headers=headers)
