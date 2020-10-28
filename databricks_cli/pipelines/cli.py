@@ -172,18 +172,7 @@ def get_cli(api_client, pipeline_id):
 @pipelines_exception_eater
 @provide_api_client
 def list_cli(api_client):
-    pipelines_api = PipelinesApi(api_client)
-
-    response = pipelines_api.list()
-    pipelines = response["statuses"]
-
-    while "next_page_token" in response["pagination"]:
-        response = pipelines_api.list(
-            page_token=response["pagination"]["next_page_token"]
-        )
-        pipelines.extend(response["statuses"])
-
-    click.echo(pretty_format(pipelines))
+    click.echo(pretty_format(PipelinesApi(api_client).list()))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
