@@ -166,6 +166,16 @@ def get_cli(api_client, pipeline_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Gets a delta pipeline\'s current spec and status')
+@debug_option
+@profile_option
+@pipelines_exception_eater
+@provide_api_client
+def list_cli(api_client):
+    click.echo(pretty_format(PipelinesApi(api_client).list()))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Resets a delta pipeline so data can be reprocessed from scratch')
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
@@ -318,6 +328,7 @@ def pipelines_group():  # pragma: no cover
 pipelines_group.add_command(deploy_cli, name='deploy')
 pipelines_group.add_command(delete_cli, name='delete')
 pipelines_group.add_command(get_cli, name='get')
+pipelines_group.add_command(list_cli, name='list')
 pipelines_group.add_command(reset_cli, name='reset')
 pipelines_group.add_command(run_cli, name='run')
 pipelines_group.add_command(stop_cli, name='stop')

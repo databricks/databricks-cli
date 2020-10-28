@@ -123,10 +123,10 @@ class ApiClient(object):
             if method == 'GET':
                 translated_data = {k: _translate_boolean_to_query_param(data[k]) for k in data}
                 resp = self.session.request(method, self.url + path, params = translated_data,
-                    verify = self.verify, headers = headers)
+                                            verify = self.verify, headers = headers)
             else:
                 resp = self.session.request(method, self.url + path, data = json.dumps(data),
-                    verify = self.verify, headers = headers)
+                                            verify = self.verify, headers = headers)
         try:
             resp.raise_for_status()
         except requests.exceptions.HTTPError as e:

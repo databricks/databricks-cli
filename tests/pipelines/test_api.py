@@ -313,3 +313,88 @@ def test_library_object_serialization_deserialization():
 
     libs = LibraryObject.to_json(library_objects)
     assert libs == libraries
+
+
+def test_list(pipelines_api):
+    client_mock = pipelines_api.client.client.perform_query
+    client_mock.side_effect = [{"statuses": [], "pagination": {}}]
+
+    pipelines_api.list()
+    assert client_mock.call_count == 1
+    client_mock.assert_called_with('GET', '/pipelines',
+                                   data={},
+                                   headers=None)
+
+
+def test_list_with_page_token(pipelines_api):
+    client_mock = pipelines_api.client.client.perform_query
+    client_mock.side_effect = [{"statuses": [], "pagination": {"next_page_token": "a"}},
+                               {"statuses": [], "pagination": {}}]
+
+    pipelines_api.list()
+    assert client_mock.call_count == 2
+    client_mock.assert_called_with('GET', '/pipelines',
+                                   data={"pagination.page_token": "a"}, headers=None)
+
+
+def test_list_with_paginated_responses(pipelines_api):
+    client_mock = pipelines_api.client.client.perform_query
+    client_mock.side_effect = [
+        {'statuses': [{'pipeline_id': '1',
+                       'state': 'RUNNING',
+                       'cluster_id': '1024-161828-gram477',
+                       'name': 'windfarm-pipe-v2',
+                       'health': 'HEALTHY'},
+                      {'pipeline_id': '2',
+                       'state': 'RUNNING',
+                       'cluster_id': '1024-160918-tees475',
+                       'name': 'Wiki Pipeline',
+                       'health': 'HEALTHY'}],
+         'pagination': {'next_page_token': 'page2'}
+         },
+        {'statuses': [{'pipeline_id': '3',
+                       'state': 'RUNNING',
+                       'cluster_id': '1026-062128-blare168',
+                       'name': 'airline-demo-workflow',
+                       'health': 'HEALTHY'},
+                      {'pipeline_id': '4',
+                       'state': 'RUNNING',
+                       'cluster_id': '1023-093505-corm4',
+                       'name': 'Jira Automation Staging',
+                       'health': 'HEALTHY'}],
+         'pagination': {
+             'next_page_token': 'page3',
+             'prev_page_token': 'page2'}
+         },
+        {'statuses': [{'pipeline_id': '5',
+                       'state': 'FAILED',
+                       'cluster_id': '1023-090246-helix16',
+                       'name': 'Marek',
+                       'health': 'UNHEALTHY'},
+                      {'pipeline_id': '6',
+                       'state': 'RUNNING',
+                       'cluster_id': '1027-061023-clasp844',
+                       'name': 'Pipeline Demo NYCTaxi',
+                       'health': 'HEALTHY'}],
+         'pagination': {
+             'prev_page_token': 'page3'}
+         }
+    ]
+
+    pipelines = pipelines_api.list()
+
+    assert client_mock.call_count == 3
+    client_mock.assert_has_calls(
+        [
+            mock.call('GET', '/pipelines',
+                      data={},
+                      headers=None),
+            mock.call('GET', '/pipelines',
+                      data={"pagination.page_token": "page2"},
+                      headers=None),
+            mock.call('GET', '/pipelines',
+                      data={"pagination.page_token": "page3"},
+                      headers=None)
+        ], any_order=False)
+
+    assert [status["pipeline_id"] for status in pipelines] == ["1", "2", "3", "4", "5", "6"]
