@@ -322,7 +322,10 @@ def test_list(pipelines_api):
     pipelines_api.list(max_results=10, order_by=["name asc"])
     assert client_mock.call_count == 1
     client_mock.assert_called_with('GET', '/pipelines',
-                                   data={"pagination.max_results": 10, "pagination.order_by": ["name asc"]},
+                                   data={
+                                       "pagination.max_results": 10,
+                                       "pagination.order_by": ["name asc"]
+                                   },
                                    headers=None)
 
 
@@ -340,31 +343,58 @@ def test_list_with_page_token(pipelines_api):
 def test_list_with_paginated_responses(pipelines_api):
     client_mock = pipelines_api.client.client.perform_query
     client_mock.side_effect = [
-        {'statuses': [{'pipeline_id': '1', 'state': 'RUNNING',
-                       'cluster_id': '1024-161828-gram477', 'name': 'windfarm-pipe-v2', 'health': 'HEALTHY'},
-                      {'pipeline_id': '2', 'state': 'RUNNING',
-                       'cluster_id': '1024-160918-tees475', 'name': 'Wiki Pipeline', 'health': 'HEALTHY'}],
-         'pagination': {
-             'next_page_token': 'page2'}},
-        {'statuses': [{'pipeline_id': '3', 'state': 'RUNNING',
-                       'cluster_id': '1026-062128-blare168', 'name': 'airline-demo-workflow', 'health': 'HEALTHY'},
-                      {'pipeline_id': '4', 'state': 'RUNNING',
-                       'cluster_id': '1023-093505-corm4', 'name': 'Jira Automation Staging', 'health': 'HEALTHY'}],
+        {'statuses': [{'pipeline_id': '1',
+                       'state': 'RUNNING',
+                       'cluster_id': '1024-161828-gram477',
+                       'name': 'windfarm-pipe-v2',
+                       'health': 'HEALTHY'},
+                      {'pipeline_id': '2',
+                       'state': 'RUNNING',
+                       'cluster_id': '1024-160918-tees475',
+                       'name': 'Wiki Pipeline',
+                       'health': 'HEALTHY'}],
+         'pagination': {'next_page_token': 'page2'}
+         },
+        {'statuses': [{'pipeline_id': '3',
+                       'state': 'RUNNING',
+                       'cluster_id': '1026-062128-blare168',
+                       'name': 'airline-demo-workflow',
+                       'health': 'HEALTHY'},
+                      {'pipeline_id': '4',
+                       'state': 'RUNNING',
+                       'cluster_id': '1023-093505-corm4',
+                       'name': 'Jira Automation Staging',
+                       'health': 'HEALTHY'}],
          'pagination': {
              'next_page_token': 'page3',
-             'prev_page_token': 'page2'}},
-        {'statuses': [{'pipeline_id': '5', 'state': 'FAILED',
-                       'cluster_id': '1023-090246-helix16', 'name': 'Marek', 'health': 'UNHEALTHY'},
-                      {'pipeline_id': '6', 'state': 'RUNNING',
-                       'cluster_id': '1027-061023-clasp844', 'name': 'Pipeline Demo NYCTaxi', 'health': 'HEALTHY'}],
+             'prev_page_token': 'page2'}
+         },
+        {'statuses': [{'pipeline_id': '5',
+                       'state': 'FAILED',
+                       'cluster_id': '1023-090246-helix16',
+                       'name': 'Marek',
+                       'health': 'UNHEALTHY'},
+                      {'pipeline_id': '6',
+                       'state': 'RUNNING',
+                       'cluster_id': '1027-061023-clasp844',
+                       'name': 'Pipeline Demo NYCTaxi',
+                       'health': 'HEALTHY'}],
          'pagination': {
              'next_page_token': 'page4',
-             'prev_page_token': 'page3'}},
-        {'statuses': [{'pipeline_id': '7', 'state': 'RUNNING',
-                       'cluster_id': '1023-090256-woke18', 'name': 'Discovery Staging', 'health': 'HEALTHY'},
-                      {'pipeline_id': '8', 'state': 'RUNNING', 'cluster_id': '1023-093334-cluck1',
-                       'name': 'Very Large Pipeline', 'health': 'HEALTHY'}], 'pagination': {
-            'prev_page_token': 'page4'}}
+             'prev_page_token': 'page3'}
+         },
+        {'statuses': [{'pipeline_id': '7',
+                       'state': 'RUNNING',
+                       'cluster_id': '1023-090256-woke18',
+                       'name': 'Discovery Staging',
+                       'health': 'HEALTHY'},
+                      {'pipeline_id': '8',
+                       'state': 'RUNNING',
+                       'cluster_id': '1023-093334-cluck1',
+                       'name': 'Very Large Pipeline',
+                       'health': 'HEALTHY'}],
+         'pagination': {'prev_page_token': 'page4'}
+         }
     ]
 
     pipelines = pipelines_api.list(max_results=2, order_by=["id asc"])
@@ -372,13 +402,17 @@ def test_list_with_paginated_responses(pipelines_api):
     assert client_mock.call_count == 4
     client_mock.assert_has_calls(
         [
-            mock.call('GET', '/pipelines', data={"pagination.max_results": 2, "pagination.order_by": ["id asc"]},
+            mock.call('GET', '/pipelines',
+                      data={"pagination.max_results": 2, "pagination.order_by": ["id asc"]},
                       headers=None),
-            mock.call('GET', '/pipelines', data={"pagination.max_results": 2, "pagination.page_token": "page2"},
+            mock.call('GET', '/pipelines',
+                      data={"pagination.max_results": 2, "pagination.page_token": "page2"},
                       headers=None),
-            mock.call('GET', '/pipelines', data={"pagination.max_results": 2, "pagination.page_token": "page3"},
+            mock.call('GET', '/pipelines',
+                      data={"pagination.max_results": 2, "pagination.page_token": "page3"},
                       headers=None),
-            mock.call('GET', '/pipelines', data={"pagination.max_results": 2, "pagination.page_token": "page4"},
+            mock.call('GET', '/pipelines',
+                      data={"pagination.max_results": 2, "pagination.page_token": "page4"},
                       headers=None),
         ], any_order=False)
 

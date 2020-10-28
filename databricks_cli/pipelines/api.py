@@ -70,7 +70,8 @@ class PipelinesApi(object):
             if order_by:
                 _data["pagination.order_by"] = order_by
 
-            return self.client.client.perform_query('GET', '/pipelines', data=_data, headers=headers)
+            return self.client.client.perform_query(
+                'GET', '/pipelines', data=_data, headers=headers)
 
         response = call(order_by=order_by)
         pipelines = response["statuses"]
