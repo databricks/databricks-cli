@@ -319,13 +319,10 @@ def test_list(pipelines_api):
     client_mock = pipelines_api.client.client.perform_query
     client_mock.side_effect = [{"statuses": [], "pagination": {}}]
 
-    pipelines_api.list(max_results=10, order_by=["name asc"])
+    pipelines_api.list()
     assert client_mock.call_count == 1
     client_mock.assert_called_with('GET', '/pipelines',
-                                   data={
-                                       "pagination.max_results": 10,
-                                       "pagination.order_by": ["name asc"]
-                                   },
+                                   data={},
                                    headers=None)
 
 
@@ -384,19 +381,19 @@ def test_list_with_paginated_responses(pipelines_api):
          }
     ]
 
-    pipelines = pipelines_api.list(max_results=2, order_by=["id asc"])
+    pipelines = pipelines_api.list()
 
     assert client_mock.call_count == 3
     client_mock.assert_has_calls(
         [
             mock.call('GET', '/pipelines',
-                      data={"pagination.max_results": 2, "pagination.order_by": ["id asc"]},
+                      data={},
                       headers=None),
             mock.call('GET', '/pipelines',
-                      data={"pagination.max_results": 2, "pagination.page_token": "page2"},
+                      data={"pagination.page_token": "page2"},
                       headers=None),
             mock.call('GET', '/pipelines',
-                      data={"pagination.max_results": 2, "pagination.page_token": "page3"},
+                      data={"pagination.page_token": "page3"},
                       headers=None)
         ], any_order=False)
 
