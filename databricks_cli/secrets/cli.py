@@ -51,7 +51,7 @@ DASH_MARKER = '# ' + '-' * 70 + '\n'
               ' workspace. If not specified, the initial ACL with MANAGE permission applied to the'
               ' scope is assigned to the request issuer\'s user identity.')
 @click.option('--scope-backend-type',
-              type=click.Choice(['AZURE_KEYVAULT', 'DATABRICKS'], case_sensitive=True),
+              type=click.Choice(['AZURE_KEYVAULT', 'DATABRICKS']),
               default='DATABRICKS', help='The backend that will be used for this secret scope. '
                                          'Options are (case-sensitive): 1) \'AZURE_KEYVAULT\' and '
                                          '2) \'DATABRICKS\' (default option)'
