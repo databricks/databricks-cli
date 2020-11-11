@@ -106,6 +106,21 @@ class PipelineIdClickType(ParamType):
     help = 'Delta Pipeline ID'
 
 
+class MetastoreIdClickType(ParamType):
+    name = 'METASTORE_ID'
+    help = 'ID of the Metastore'
+
+
+class DacIdClickType(ParamType):
+    name = 'DAC_ID'
+    help = 'ID of the desired data access configuration'
+
+
+class WorkspaceIdClickType(ParamType):
+    name = 'WORKSPACE_ID'
+    help = 'ID of the Workspace'
+
+
 class OneOfOption(Option):
     def __init__(self, *args, **kwargs):
         self.one_of = kwargs.pop('one_of')

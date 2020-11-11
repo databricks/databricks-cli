@@ -1063,6 +1063,8 @@ class DeltaPipelinesService(object):
 
         return self.client.perform_query('POST', '/pipelines/{pipeline_id}/stop'.format(pipeline_id=pipeline_id),
                                          data=_data, headers=headers)
+
+
 class ReposService(object):
     def __init__(self, client):
         self.client = client

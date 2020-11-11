@@ -1,0 +1,4 @@
+{
+  "name": "my_metastore",
+  "storage_root": "s3://my.other.bucket"
+}

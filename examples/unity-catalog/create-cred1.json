@@ -1,0 +1,6 @@
+{
+    "name": "mycred",
+    "aws_iam_role": {
+        "role_arn": "arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF"
+    }
+}

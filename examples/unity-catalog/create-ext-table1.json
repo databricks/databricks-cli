@@ -1,0 +1,27 @@
+{
+	"catalog_name": "main",
+	"schema_name": "default",
+	"name": "CHANGE_ME",
+	"comment": "This a CSV table in UC, created in API endpoint",
+	"table_type": "EXTERNAL",
+	"data_source_format": "CSV",
+	"columns": [
+		{
+			"name": "a",
+			"type_name": "INT",
+			"type_text": "int",
+			"type_json": "{\"name\":\"a\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}",
+			"nullable": true,
+			"position": 0
+		},
+		{
+			"name": "b",
+			"type_name": "STRING",
+			"type_text": "string",
+			"type_json": "{\"name\":\"b\",\"type\":\"string\",\"nullable\":true,\"metadata\":{}}",
+			"nullable": true,
+			"position": 1
+		}
+	],
+	"storage_location": "s3://us-west-2-extstaging-managed-catalog-test-bucket-2/my_test_uc_folder/"
+}
