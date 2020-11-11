@@ -106,6 +106,16 @@ class PipelineIdClickType(ParamType):
     help = 'Delta Pipeline ID'
 
 
+class CatalogNameClickType(ParamType):
+    name = 'CATALOG_NAME'
+    help = 'Name of the desired catalog'
+
+
+class SchemaNameClickType(ParamType):
+    name = 'SCHEMA_NAME'
+    help = 'Name of the desired schema'
+
+
 class OneOfOption(Option):
     def __init__(self, *args, **kwargs):
         self.one_of = kwargs.pop('one_of')

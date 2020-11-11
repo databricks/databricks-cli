@@ -1037,3 +1037,23 @@ class DeltaPipelinesService(object):
 
         return self.client.perform_query('POST', '/pipelines/{pipeline_id}/stop'.format(pipeline_id=pipeline_id),
                                          data=_data, headers=headers)
+
+class ManagedCatalogService(object):
+    def __init__(self, client):
+        self.client = client
+
+    def create_table(self, catalog_name, schema_name, headers=None):
+        _data = {
+            'catalog_name': catalog_name,
+            'schema_name': schema_name
+        }
+        return self.client.perform_query('POST', '/managed-catalog/table', data=_data, headers=headers)
+
+    def list_tables(self, catalog_name=None, schema_name=None, headers=None):
+        _data = {}
+        if catalog_name is not None:
+            _data['catalog_name'] = catalog_name
+        if schema_name is not None:
+            _data['schema_name'] = catalog_name
+
+        return self.client.perform_query('GET', '/managed-catalog/table/', data=_data, headers=headers)
