@@ -398,3 +398,61 @@ def test_list_with_paginated_responses(pipelines_api):
         ], any_order=False)
 
     assert [status["pipeline_id"] for status in pipelines] == ["1", "2", "3", "4", "5", "6"]
+
+
+def test_list_with_no_returned_pipelines(pipelines_api):
+    client_mock = pipelines_api.client.client.perform_query
+    client_mock.side_effect = [
+        {'statuses': [{'pipeline_id': '1',
+                       'state': 'RUNNING',
+                       'cluster_id': '1024-161828-gram477',
+                       'name': 'windfarm-pipe-v2',
+                       'health': 'HEALTHY'},
+                      {'pipeline_id': '2',
+                       'state': 'RUNNING',
+                       'cluster_id': '1024-160918-tees475',
+                       'name': 'Wiki Pipeline',
+                       'health': 'HEALTHY'}],
+         'pagination': {'next_page_token': 'page2'}
+         },
+        {}
+    ]
+
+    pipelines = pipelines_api.list()
+
+    assert client_mock.call_count == 2
+    client_mock.assert_has_calls(
+        [
+            mock.call('GET', '/pipelines',
+                      data={},
+                      headers=None),
+            mock.call('GET', '/pipelines',
+                      data={"pagination.page_token": "page2"},
+                      headers=None)
+        ], any_order=False)
+
+    assert [status["pipeline_id"] for status in pipelines] == ["1", "2"]
+
+
+def test_list_without_pagination(pipelines_api):
+    client_mock = pipelines_api.client.client.perform_query
+    client_mock.side_effect = [
+        {'statuses': [{'pipeline_id': '1',
+                       'state': 'RUNNING',
+                       'cluster_id': '1024-161828-gram477',
+                       'name': 'windfarm-pipe-v2',
+                       'health': 'HEALTHY'}],
+         }
+    ]
+
+    pipelines = pipelines_api.list()
+
+    assert client_mock.call_count == 1
+    client_mock.assert_has_calls(
+        [
+            mock.call('GET', '/pipelines',
+                      data={},
+                      headers=None)
+        ], any_order=False)
+
+    assert [status["pipeline_id"] for status in pipelines] == ["1"]
