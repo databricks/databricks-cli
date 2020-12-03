@@ -115,7 +115,8 @@ EXPORT_RETURN = {
         },
         {
             # {"foo":"bar"} urlencoded and base64 encoded
-            'content': "<script>var __DATABRICKS_NOTEBOOK_MODEL = 'JTdCJTIyZm9vJTIyJTNBJTIyYmFyJTIyJTdE';</script>"
+            'content': "<script>var __DATABRICKS_NOTEBOOK_MODEL = "
+                       "'JTdCJTIyZm9vJTIyJTNBJTIyYmFyJTIyJTdE';</script>"
         },
     ]
 }
@@ -129,6 +130,7 @@ def test_export_no_parse_model(runs_api_mock):
         runner.invoke(cli.export_cli, ['--run-id', 1])
         assert runs_api_mock.export_run.call_args[0][0] == 1
         assert echo_mock.call_args[0][0] == pretty_format(EXPORT_RETURN)
+
 
 @provide_conf
 def test_export_parse_model(runs_api_mock):
@@ -144,7 +146,8 @@ def test_export_parse_model(runs_api_mock):
                     'content': 'invalid'
                 },
                 {
-                    'content': "<script>var __DATABRICKS_NOTEBOOK_MODEL = 'JTdCJTIyZm9vJTIyJTNBJTIyYmFyJTIyJTdE';</script>",
+                    'content': "<script>var __DATABRICKS_NOTEBOOK_MODEL = "
+                               "'JTdCJTIyZm9vJTIyJTNBJTIyYmFyJTIyJTdE';</script>",
                     'model': {
                         'foo': 'bar'
                     }

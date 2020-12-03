@@ -22,17 +22,18 @@
 # limitations under the License.
 
 import base64
-import click
-import json
 import re
-from tabulate import tabulate
+from json import loads as json_loads
+
+import click
 from six.moves.urllib.parse import unquote_to_bytes
+from tabulate import tabulate
 
 from databricks_cli.click_types import OutputClickType, JsonClickType, RunIdClickType
-from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base, \
-    truncate_string
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.runs.api import RunsApi
+from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base, \
+    truncate_string
 from databricks_cli.version import print_version_callback, version
 
 
@@ -144,7 +145,8 @@ def get_output_cli(api_client, run_id):
 @click.option('--views-to-export', required=False,
               type=click.Choice(['CODE', 'DASHBOARDS', 'ALL'], case_sensitive=False), default='ALL')
 @click.option('--parse-model', is_flag=True, default=None,
-              help='Parse the Notebook model JSON embedded in the HTML of each view and add it as the "model" field.')
+              help='Parse the Notebook model JSON embedded in the HTML of each view and add '
+                   'it as the "model" field.')
 @debug_option
 @profile_option
 @eat_exceptions
@@ -169,7 +171,7 @@ def export_cli(api_client, run_id, views_to_export, parse_model):
             model_base64 = match.group(1)
             model_urlencoded = base64.b64decode(model_base64)
             model_json = unquote_to_bytes(model_urlencoded)
-            model_data = json.loads(model_json)
+            model_data = json_loads(model_json)
             view['model'] = model_data
 
     click.echo(pretty_format(raw_export))
