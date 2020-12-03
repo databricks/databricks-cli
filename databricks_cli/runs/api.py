@@ -42,3 +42,6 @@ class RunsApi(object):
 
     def get_run_output(self, run_id):
         return self.client.get_run_output(run_id)
+
+    def export_run(self, run_id, views_to_export=None):
+        return self.client.export_run(run_id, views_to_export)

@@ -21,8 +21,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import base64
 import click
+import json
+import re
 from tabulate import tabulate
+from six.moves.urllib.parse import unquote_to_bytes
 
 from databricks_cli.click_types import OutputClickType, JsonClickType, RunIdClickType
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base, \
@@ -137,6 +141,42 @@ def get_output_cli(api_client, run_id):
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--run-id', required=True, type=RunIdClickType())
+@click.option('--views-to-export', required=False,
+              type=click.Choice(['CODE', 'DASHBOARDS', 'ALL'], case_sensitive=False), default='ALL')
+@click.option('--parse-model', is_flag=True, default=None,
+              help='Parse the Notebook model JSON embedded in the HTML of each view and add it as the "model" field.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def export_cli(api_client, run_id, views_to_export, parse_model):
+    """
+    Export and retrieve the job run task.
+
+    The output schema is documented https://docs.databricks.com/api/latest/jobs.html#runs-export.
+    """
+    raw_export = RunsApi(api_client).export_run(run_id, views_to_export)
+
+    if parse_model:
+        views = raw_export.get('views', [])
+        for (i, view) in enumerate(views):
+            content = view.get('content', '')
+            model_re = re.compile("__DATABRICKS_NOTEBOOK_MODEL\\s*=\\s*'(.*)';")
+            match = model_re.search(content)
+            if match is None:
+                click.echo("Could not parse model in view {}".format(i), err=True)
+                continue
+            model_base64 = match.group(1)
+            model_urlencoded = base64.b64decode(model_base64)
+            model_json = unquote_to_bytes(model_urlencoded)
+            model_data = json.loads(model_json)
+            view['model'] = model_data
+
+    click.echo(pretty_format(raw_export))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS)
+@click.option('--run-id', required=True, type=RunIdClickType())
 @debug_option
 @profile_option
 @eat_exceptions
@@ -165,5 +205,6 @@ def runs_group():  # pragma: no cover
 runs_group.add_command(submit_cli, name='submit')
 runs_group.add_command(list_cli, name='list')
 runs_group.add_command(get_cli, name='get')
+runs_group.add_command(export_cli, name='export')
 runs_group.add_command(cancel_cli, name='cancel')
 runs_group.add_command(get_output_cli, name='get-output')
