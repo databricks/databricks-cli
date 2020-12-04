@@ -25,8 +25,12 @@ import base64
 import re
 from json import loads as json_loads
 
+try:
+    from urlparse import unquote_to_bytes
+except ImportError:
+    from urllib.parse import unquote_to_bytes
+
 import click
-from six.moves.urllib.parse import unquote_to_bytes  # pylint: disable=relative-import
 from tabulate import tabulate
 
 from databricks_cli.click_types import OutputClickType, JsonClickType, RunIdClickType
