@@ -26,7 +26,7 @@ import re
 from json import loads as json_loads
 
 import click
-from six.moves.urllib.parse import unquote_to_bytes
+from six.moves.urllib.parse import unquote_to_bytes  # pylint: disable=W0403
 from tabulate import tabulate
 
 from databricks_cli.click_types import OutputClickType, JsonClickType, RunIdClickType
