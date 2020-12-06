@@ -105,6 +105,17 @@ class PipelineIdClickType(ParamType):
     name = 'PIPELINE_ID'
     help = 'Delta Pipeline ID'
 
+class SqlQueryClickType(ParamType):
+    name = 'SQL_QUERY'
+    help = 'Text of the SQL query to perform'
+
+class SqlQueryFileClickType(ParamType):
+    name = 'SQL_QUERY_FILE'
+    help = 'Path of file containing the the SQL query to perform'
+
+class SqlEndpointNameClickType(ParamType):
+    name = 'ENDPOINT_NAME'
+    help = 'Name of the SQL Endpoint'
 
 class OneOfOption(Option):
     def __init__(self, *args, **kwargs):

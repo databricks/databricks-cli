@@ -37,6 +37,7 @@ import copy
 import pprint
 
 from . import version
+from click import MissingParameter
 
 from requests.adapters import HTTPAdapter
 from six.moves.urllib.parse import urlparse
@@ -83,10 +84,14 @@ class ApiClient(object):
         self.session = requests.Session()
         self.session.mount('https://', TlsV1HttpAdapter(max_retries=retries))
 
+        self.username = user
+        self.password = password
+
         parsed_url = urlparse(host)
         scheme = parsed_url.scheme
-        hostname = parsed_url.hostname
-        self.url = "%s://%s/api/%s" % (scheme, hostname, apiVersion)
+        self.hostname = parsed_url.hostname
+        self.base_url = "%s://%s" % (scheme, self.hostname)
+        self.api_url = "%s/api/%s" % (self.base_url, apiVersion)
         if user is not None and password is not None:
             encoded_auth = (user + ":" + password).encode()
             user_header_data = "Basic " + base64.standard_b64encode(encoded_auth).decode()
@@ -102,6 +107,7 @@ class ApiClient(object):
         self.default_headers.update(default_headers)
         self.default_headers.update(user_agent)
         self.verify = verify
+        self.cookies = {}
 
     def close(self):
         """Close the client"""
@@ -109,7 +115,8 @@ class ApiClient(object):
 
     # helper functions starting here
 
-    def perform_query(self, method, path, data = {}, headers = None):
+    def perform_query(self, method, path, data=None, headers=None, use_api_prefix=True, request_is_json=True):
+        data = {} if data is None else data
         """set up connection and perform query"""
         if headers is None:
             headers = self.default_headers
@@ -118,15 +125,24 @@ class ApiClient(object):
             tmp_headers.update(headers)
             headers = tmp_headers
 
+        url = self.api_url if use_api_prefix else self.base_url
+
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", exceptions.InsecureRequestWarning)
             if method == 'GET':
                 translated_data = {k: _translate_boolean_to_query_param(data[k]) for k in data}
-                resp = self.session.request(method, self.url + path, params = translated_data,
-                                            verify = self.verify, headers = headers)
+                resp = self.session.request(method, url + path, params=translated_data,
+                                            verify=self.verify, headers=headers, cookies=self.cookies)
             else:
-                resp = self.session.request(method, self.url + path, data = json.dumps(data),
-                                            verify = self.verify, headers = headers)
+                if request_is_json:
+                    data_body = json.dumps(data)
+                else:
+                    data_body = data  # will get url-encoded automatically
+                    headers.pop('Content-Type', None)
+                    #headers['Content-type'] = "application/x-www-form-urlencoded; charset=UTF-8"
+
+                resp = self.session.request(method, url + path, data=data_body, verify=self.verify, headers=headers,
+                                            cookies=self.cookies, allow_redirects=False)
         try:
             resp.raise_for_status()
         except requests.exceptions.HTTPError as e:
@@ -137,8 +153,29 @@ class ApiClient(object):
             except ValueError:
                 pass
             raise requests.exceptions.HTTPError(message, response=e.response)
-        return resp.json()
 
+        if 'application/json' in resp.headers.get('content-type', ''):
+            return resp.json()
+        return resp.text
+
+    def do_login(self):
+        if self.username is None or self.password is None:
+            raise MissingParameter("Must have both username and password in configuration")
+
+        self.default_headers.pop('Authorization', None)
+
+        form_data = {
+            "j_username": self.username,
+            "j_password": self.password
+        }
+        self.perform_query('POST', '/j_security_check', data=form_data,
+                           use_api_prefix=False, request_is_json=False)
+        # Cookie gets automatically set to session
+
+        resp = self.perform_query('GET', '/config', use_api_prefix=False)
+        # TODO: sanity check results
+        self.default_headers.update({'X-CSRF-Token': resp['csrfToken']})
+        return
 
 def _translate_boolean_to_query_param(value):
     assert not isinstance(value, list), 'GET parameters cannot pass list of objects'
