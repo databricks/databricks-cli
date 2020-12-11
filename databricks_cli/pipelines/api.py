@@ -74,11 +74,11 @@ class PipelinesApi(object):
                 'GET', '/pipelines', data=_data, headers=headers)
 
         response = call()
-        pipelines = response["statuses"]
+        pipelines = response.get("statuses", [])
 
-        while "next_page_token" in response["pagination"]:
+        while "next_page_token" in response.get("pagination", {}):
             response = call(page_token=response["pagination"]["next_page_token"])
-            pipelines.extend(response["statuses"])
+            pipelines.extend(response.get("statuses", []))
         return pipelines
 
     def reset(self, pipeline_id, headers=None):
