@@ -33,7 +33,6 @@ from databricks_cli.dbfs.dbfs_path import DbfsPath
 
 BUFFER_SIZE = 1024 * 64
 base_pipelines_dir = 'dbfs:/pipelines/code'
-supported_lib_types = {'jar', 'whl', 'maven'}
 
 
 class PipelinesApi(object):
@@ -102,21 +101,23 @@ class PipelinesApi(object):
     @staticmethod
     def _identify_local_libraries(lib_objects):
         """
-        Partitions the given set of libraries into local and those already present in dbfs/s3 etc.
-        Local libraries are (currently) jar files with a file scheme or no scheme at all.
-        All other libraries should be present in a supported external source.
+        Partitions the given set of libraries into local libraries i.e. libraries that should
+        be uploaded to DBFS, and non-local libraries. Jars or whls with a file scheme or no scheme
+        at all are (currently) considered local libraries.
+
         :param lib_objects: List[LibraryObject]
         :return: List[List[LibraryObject], List[LibraryObject]] ([Local, External])
         """
         local_lib_objects, external_lib_objects = [], []
         for lib_object in lib_objects:
-            if lib_object.lib_type == 'maven':
+            if lib_object.lib_type not in ['jar', 'whl']:
                 external_lib_objects.append(lib_object)
                 continue
+
             parsed_uri = urllib.parse.urlparse(lib_object.path)
-            if lib_object.lib_type in supported_lib_types and parsed_uri.scheme == '':
+            if parsed_uri.scheme == '':
                 local_lib_objects.append(lib_object)
-            elif lib_object.lib_type in supported_lib_types and parsed_uri.scheme.lower() == 'file':
+            elif parsed_uri.scheme.lower() == 'file':
                 # exactly 1 or 3
                 if parsed_uri.path.startswith('//') or parsed_uri.netloc != '':
                     raise RuntimeError('invalid file uri scheme, '
