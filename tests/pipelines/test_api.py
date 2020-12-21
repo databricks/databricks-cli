@@ -93,6 +93,7 @@ def _test_library_uploads(pipelines_api, api_method, spec, put_file_mock, dbfs_p
     2. File already present in dbfs
     3. Local files already present in dbfs
     4. Local files that need to be uploaded to dbfs
+    5. Future / unknown library types
     Every test local file which has '123' written to it is expected to be already present in Dbfs.
     A test local file which has '456' written to it is not present in Dbfs and therefore must be.
     uploaded to dbfs.
@@ -119,26 +120,35 @@ def _test_library_uploads(pipelines_api, api_method, spec, put_file_mock, dbfs_p
         f.write('456')
     with open(wheel1, 'w') as f:
         f.write('456')
-    libraries = [{'jar': 'dbfs:/pipelines/code/file.jar'},
-                 {'maven': {'coordinates': 'com.org.name:package:0.1.0'}},
-                 {'jar': jar1},
-                 {'jar': jar2},
-                 {'jar': jar3_relpath},
-                 {'jar': jar4_file_prefix},
-                 {'whl': wheel1}]
+    libraries = [
+        {'jar': 'dbfs:/pipelines/code/file.jar'},
+        {'maven': {'coordinates': 'com.org.name:package:0.1.0'}},
+        {'unknown': {'attr1': 'value1'}},
+        {'unknown': '/foo/bar'},
+        {'jar': jar1},
+        {'jar': jar2},
+        {'jar': jar3_relpath},
+        {'jar': jar4_file_prefix},
+        {'whl': wheel1},
+    ]
 
     expected_data = copy.deepcopy(spec)
 
     spec['libraries'] = libraries
 
+    hash123 = "40bd001563085fc35165329ea1ff5c5ecbdbbeef"
+    hash456 = "51eac6b471a284d3341d8c0c63d0f1a286262a18"
     expected_data['libraries'] = [
         {'jar': 'dbfs:/pipelines/code/file.jar'},
         {'maven': {'coordinates': 'com.org.name:package:0.1.0'}},
-        {'jar': 'dbfs:/pipelines/code/40bd001563085fc35165329ea1ff5c5ecbdbbeef.jar'},
-        {'jar': 'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar'},
-        {'jar': 'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar'},
-        {'jar': 'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar'},
-        {'whl': 'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18/wheel-name-conv.whl'}
+        # Unknown library type attributes are passed as is.
+        {'unknown': {'attr1': 'value1'}},
+        {'unknown': '/foo/bar'},
+        {'jar': 'dbfs:/pipelines/code/{}.jar'.format(hash123)},
+        {'jar': 'dbfs:/pipelines/code/{}.jar'.format(hash456)},
+        {'jar': 'dbfs:/pipelines/code/{}.jar'.format(hash456)},
+        {'jar': 'dbfs:/pipelines/code/{}.jar'.format(hash456)},
+        {'whl': 'dbfs:/pipelines/code/{}/wheel-name-conv.whl'.format(hash456)},
     ]
     expected_data['allow_duplicate_names'] = allow_duplicate_names
 
