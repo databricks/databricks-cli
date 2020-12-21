@@ -123,7 +123,7 @@ def _test_library_uploads(pipelines_api, api_method, spec, put_file_mock, dbfs_p
     libraries = [
         {'jar': 'dbfs:/pipelines/code/file.jar'},
         {'maven': {'coordinates': 'com.org.name:package:0.1.0'}},
-        {'future-library-type': {'attr1': 'value1'}},
+        {'unknown': {'attr1': 'value1'}},
         {'unknown': '/foo/bar'},
         {'jar': jar1},
         {'jar': jar2},
@@ -141,7 +141,8 @@ def _test_library_uploads(pipelines_api, api_method, spec, put_file_mock, dbfs_p
     expected_data['libraries'] = [
         {'jar': 'dbfs:/pipelines/code/file.jar'},
         {'maven': {'coordinates': 'com.org.name:package:0.1.0'}},
-        {'future-library-type': {'attr1': 'value1'}},
+        # Unknown library type attributes are passed as is.
+        {'unknown': {'attr1': 'value1'}},
         {'unknown': '/foo/bar'},
         {'jar': 'dbfs:/pipelines/code/{}.jar'.format(hash123)},
         {'jar': 'dbfs:/pipelines/code/{}.jar'.format(hash456)},
