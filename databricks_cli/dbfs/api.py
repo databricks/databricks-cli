@@ -57,16 +57,20 @@ class FileInfo(object):
         if is_long_form:
             filetype = 'dir' if self.is_dir else 'file'
             # Do not return modification time if it is not available from server.
-            return ([filetype, self.file_size, stylized_path] if self.modification_time is None else 
-                    [filetype, self.file_size, stylized_path, self.modification_time])
+            return (
+                [filetype, self.file_size, stylized_path] if self.modification_time is None else
+                [filetype, self.file_size, stylized_path, self.modification_time]
+            )
         return [stylized_path]
 
     @classmethod
     def from_json(cls, json):
         dbfs_path = DbfsPath.from_api_path(json['path'])
         # If JSON doesn't include modification_time data, replace it with None.
-        return (cls(dbfs_path, json['is_dir'], json['file_size'], json['modification_time']) if 'modification_time' in json else
-                cls(dbfs_path, json['is_dir'], json['file_size'], None))
+        return (
+            cls(dbfs_path, json['is_dir'], json['file_size'], None) if 'modification_time' not in json else
+            cls(dbfs_path, json['is_dir'], json['file_size'], json['modification_time'])
+        )
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
