@@ -36,7 +36,7 @@ from databricks_cli.dbfs.dbfs_path import DbfsPath
 from databricks_cli.dbfs.exceptions import LocalFileExistsException
 
 TEST_DBFS_PATH = DbfsPath('dbfs:/test')
-DUMMY_TIME = time.time() * 1000
+DUMMY_TIME = 1613158406000
 TEST_FILE_JSON = {
     'path': '/test',
     'is_dir': False,
