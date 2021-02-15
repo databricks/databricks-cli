@@ -45,29 +45,37 @@ class ParseException(Exception):
 
 
 class FileInfo(object):
-    def __init__(self, dbfs_path, is_dir, file_size):
+    def __init__(self, dbfs_path, is_dir, file_size, modification_time):
         self.dbfs_path = dbfs_path
         self.is_dir = is_dir
         self.file_size = file_size
+        self.modification_time = modification_time
 
     def to_row(self, is_long_form, is_absolute):
         path = self.dbfs_path.absolute_path if is_absolute else self.dbfs_path.basename
         stylized_path = click.style(path, 'cyan') if self.is_dir else path
         if is_long_form:
             filetype = 'dir' if self.is_dir else 'file'
-            return [filetype, self.file_size, stylized_path]
+            row = [filetype, self.file_size, stylized_path]
+            # Add modification time if it is available.
+            if self.modification_time is not None:
+                row.append(self.modification_time)
+            return row
         return [stylized_path]
 
     @classmethod
     def from_json(cls, json):
         dbfs_path = DbfsPath.from_api_path(json['path'])
-        return cls(dbfs_path, json['is_dir'], json['file_size'])
+        # If JSON doesn't include modification_time data, replace it with None.
+        modification_time = json['modification_time'] if 'modification_time' in json else None
+        return cls(dbfs_path, json['is_dir'], json['file_size'], modification_time)
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             return self.dbfs_path == other.dbfs_path and \
                 self.is_dir == other.is_dir and \
-                self.file_size == other.file_size
+                self.file_size == other.file_size and \
+                self.modification_time == other.modification_time
         return False
 
 

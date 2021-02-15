@@ -25,6 +25,7 @@
 from base64 import b64encode
 
 import os
+
 import requests
 import mock
 import pytest
@@ -34,12 +35,14 @@ from databricks_cli.dbfs.dbfs_path import DbfsPath
 from databricks_cli.dbfs.exceptions import LocalFileExistsException
 
 TEST_DBFS_PATH = DbfsPath('dbfs:/test')
+DUMMY_TIME = 1613158406000
 TEST_FILE_JSON = {
     'path': '/test',
     'is_dir': False,
-    'file_size': 1
+    'file_size': 1,
+    'modification_time': DUMMY_TIME
 }
-TEST_FILE_INFO = api.FileInfo(TEST_DBFS_PATH, False, 1)
+TEST_FILE_INFO = api.FileInfo(TEST_DBFS_PATH, False, 1, DUMMY_TIME)
 
 
 def get_resource_does_not_exist_exception():
@@ -57,15 +60,15 @@ def get_partial_delete_exception(message="[...] operation has deleted 10 files [
 
 class TestFileInfo(object):
     def test_to_row_not_long_form_not_absolute(self):
-        file_info = api.FileInfo(TEST_DBFS_PATH, False, 1)
+        file_info = api.FileInfo(TEST_DBFS_PATH, False, 1, DUMMY_TIME)
         row = file_info.to_row(is_long_form=False, is_absolute=False)
         assert len(row) == 1
         assert TEST_DBFS_PATH.basename == row[0]
 
     def test_to_row_long_form_not_absolute(self):
-        file_info = api.FileInfo(TEST_DBFS_PATH, False, 1)
+        file_info = api.FileInfo(TEST_DBFS_PATH, False, 1, DUMMY_TIME)
         row = file_info.to_row(is_long_form=True, is_absolute=False)
-        assert len(row) == 3
+        assert len(row) == 4
         assert row[0] == 'file'
         assert row[1] == 1
         assert TEST_DBFS_PATH.basename == row[2]
@@ -163,7 +166,8 @@ class TestDbfsApi(object):
         dbfs_api.client.get_status.return_value = {
             'path': '/test',
             'is_dir': False,
-            'file_size': 1
+            'file_size': 1,
+            'modification_time': DUMMY_TIME
         }
         dbfs_api.client.read.return_value = {
             'bytes_read': 1,

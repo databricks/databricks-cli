@@ -36,7 +36,8 @@ from databricks_cli.dbfs.dbfs_path import DbfsPath, DbfsPathClickType
 @click.option('--absolute', is_flag=True, default=False,
               help='Displays absolute paths.')
 @click.option('-l', is_flag=True, default=False,
-              help='Displays full information including size and file type.')
+              help="""Displays full information including size, file type 
+                      and modification time since Epoch in milliseconds.""")
 @click.argument('dbfs_path', nargs=-1, type=DbfsPathClickType())
 @debug_option
 @profile_option
