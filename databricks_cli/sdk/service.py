@@ -1047,7 +1047,7 @@ class ManagedCatalogService(object):
             'catalog_name': catalog_name,
             'schema_name': schema_name
         }
-        return self.client.perform_query('POST', '/managed-catalog/table', data=_data, headers=headers)
+        return self.client.perform_query('POST', '/managed-catalog/tables', data=_data, headers=headers)
 
     def list_tables(self, catalog_name=None, schema_name=None, headers=None):
         _data = {}
@@ -1056,4 +1056,14 @@ class ManagedCatalogService(object):
         if schema_name is not None:
             _data['schema_name'] = catalog_name
 
-        return self.client.perform_query('GET', '/managed-catalog/table/', data=_data, headers=headers)
+        return self.client.perform_query('GET', '/managed-catalog/tables/', data=_data, headers=headers)
+
+    def create_dac(self, dac, headers=None):
+        _data = {
+            'data_access_configuration': dac,
+        }
+        return self.client.perform_query('POST', '/managed-catalog/data-access-configurations', data=_data, headers=headers)
+
+    def get_dac(self, dac_id, headers=None):
+        return self.client.perform_query('GET', '/managed-catalog/data-access-configurations/{id}'.format(id=dac_id),
+                                         headers=headers)

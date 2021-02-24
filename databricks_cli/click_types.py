@@ -116,6 +116,11 @@ class SchemaNameClickType(ParamType):
     help = 'Name of the desired schema'
 
 
+class DacIdClickType(ParamType):
+    name = 'DAC_ID'
+    help = 'ID of the desired data access configuration'
+
+
 class OneOfOption(Option):
     def __init__(self, *args, **kwargs):
         self.one_of = kwargs.pop('one_of')

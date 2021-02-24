@@ -33,3 +33,8 @@ class ManagedCatalogApi(object):
     def list_tables(self, catalog, schema):
         return self.client.list_tables(catalog, schema)
 
+    def create_dac(self, dac):
+        return self.client.create_dac(dac)
+
+    def get_dac(self, dac_id):
+        return self.client.get_dac(dac_id)
