@@ -109,7 +109,7 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
                 "the spec '{}'. Please resolve the conflict and try the command again. "
                 "Because pipeline IDs are no longer persisted after being deleted, we "
                 "recommend removing the ID field from your spec."
-                .format(pipeline_id, spec["id"])
+                .format(pipeline_id, spec_obj["id"])
             )
 
         spec_obj['id'] = pipeline_id or spec_obj.get('id', None)
