@@ -307,4 +307,6 @@ def test_deploy_pipeline_conflicting_ids(pipelines_api_mock, tmpdir):
 
     result = CliRunner().invoke(cli.deploy_cli, ['--spec', path, '--pipeline-id', "fake"])
     assert result.exit_code == 1
+    assert "ValueError: The ID provided in --pipeline_id 'fake' is different from the id " \
+           "provided in the spec '123'." in result.stdout
     assert pipelines_api_mock.deploy.call_count == 0
