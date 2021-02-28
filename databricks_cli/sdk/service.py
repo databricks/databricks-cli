@@ -1062,8 +1062,13 @@ class ManagedCatalogService(object):
         _data = {
             'data_access_configuration': dac,
         }
-        return self.client.perform_query('POST', '/managed-catalog/data-access-configurations', data=_data, headers=headers)
+        return self.client.perform_query('POST', '/managed-catalog/data-access-configurations', data=_data,
+                                         headers=headers)
 
     def get_dac(self, dac_id, headers=None):
         return self.client.perform_query('GET', '/managed-catalog/data-access-configurations/{id}'.format(id=dac_id),
+                                         headers=headers)
+
+    def create_root_credentials(self, root_creds_obj, headers=None):
+        return self.client.perform_query('POST', '/managed-catalog/data-access-configurations', data=root_creds_obj,
                                          headers=headers)

@@ -52,7 +52,7 @@ def create_table_cli(api_client, catalog, schema, output):
     Create new table within the specified schema and catalog.
 
     Calls the 'createTable' RPC endpoint of the Managed Catalog service.
-    Returns the properties of the newly-crated table.
+    Returns the properties of the newly-created table.
 
     """
     table_json = ManagedCatalogApi(api_client).create_table(catalog, schema)
@@ -103,19 +103,11 @@ def create_dac_cli(api_client, json_file, json):
 
     Calls the 'createDataAccessConfiguration' RPC endpoint of the Managed Catalog service.
     The specification for the request json can be found at <insert doc link here>.
-    Returns the properties of the newly-crated DAC.
+    Returns the properties of the newly-created DAC.
 
     """
     json_cli_base(json_file, json,
                   lambda json: ManagedCatalogApi(api_client).create_dac(json))
-"""
-    dac_json = ManagedCatalogApi(api_client).create_dac(name)
-    click.echo("dac_json: %s" % (dac_json))   # Debugging
-    if OutputClickType.is_json(output):
-        click.echo(pretty_format(dac_json))
-    else:
-        click.echo(dac_json)
-"""
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Get data access configuration.')
@@ -140,6 +132,28 @@ def get_dac_cli(api_client, dac_id, output):
     else:
         click.echo(dac_json)
 
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Create temporary credentials for storage root access.')
+@click.option('--json-file', default=None, type=click.Path(),
+              help='File containing JSON request to POST to /api/2.0/managed-catalog/root-credentials.')
+@click.option('--json', default=None, type=JsonClickType(),
+              help=JsonClickType.help('/api/2.0/managed-catalog/root-credentials'))
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def create_root_credentials_cli(api_client, json_file, json):
+    """
+    Create new temporary credentials (token) for storage root access.
+
+    Calls the 'createRootCredentials' RPC endpoint of the Managed Catalog service.
+    The specification for the request json can be found at <insert doc link here>.
+    Returns the newly-created temporary credentials.
+
+    """
+    json_cli_base(json_file, json,
+                  lambda json: ManagedCatalogApi(api_client).create_root_credentials(json))
+
 @click.group(context_settings=CONTEXT_SETTINGS,
              short_help='Utility to interact with Databricks managed-catalog.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
@@ -157,4 +171,4 @@ managed_catalog_group.add_command(create_table_cli, name='create-table')
 managed_catalog_group.add_command(list_tables_cli, name='list-tables')
 managed_catalog_group.add_command(create_dac_cli, name='create-dac')
 managed_catalog_group.add_command(get_dac_cli, name='get-dac')
-
+managed_catalog_group.add_command(create_dac_cli, name='create-root-credentials')

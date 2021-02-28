@@ -38,3 +38,6 @@ class ManagedCatalogApi(object):
 
     def get_dac(self, dac_id):
         return self.client.get_dac(dac_id)
+
+    def create_root_credentials(self, root_creds):
+        return self.client.create_root_credentials(root_creds)
