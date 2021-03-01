@@ -1070,5 +1070,5 @@ class ManagedCatalogService(object):
                                          headers=headers)
 
     def create_root_credentials(self, root_creds_obj, headers=None):
-        return self.client.perform_query('POST', '/managed-catalog/data-access-configurations', data=root_creds_obj,
-                                         headers=headers)
+        return self.client.perform_query('POST', '/managed-catalog/temporary-root-access-credentials',
+                                         data=root_creds_obj, headers=headers)
