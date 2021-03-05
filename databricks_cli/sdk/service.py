@@ -1037,3 +1037,19 @@ class DeltaPipelinesService(object):
 
         return self.client.perform_query('POST', '/pipelines/{pipeline_id}/stop'.format(pipeline_id=pipeline_id),
                                          data=_data, headers=headers)
+
+
+class ReposService(object):
+    def __init__(self, client):
+        self.client = client
+
+    def update(self, repo_id, branch, headers=None):
+        _data = {}
+        if not repo_id or not branch:
+            raise
+
+        _data['branch'] = branch
+
+        return self.client.perform_query('PATCH', '/repos/{repo_id}'.format(repo_id=repo_id),
+                                         data=_data, headers=headers)
+
