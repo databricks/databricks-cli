@@ -88,7 +88,7 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
     databricks pipelines deploy --pipeline-id 1234 --spec example.json
     """
     if bool(spec_arg) == bool(spec):
-        raise RuntimeError('The spec should be provided either by an option or argument')
+        raise ValueError('The spec should be provided either by an option or argument')
     src = spec_arg if bool(spec_arg) else spec
     spec_obj = _read_spec(src)
     if not pipeline_id and 'id' not in spec_obj:
@@ -254,7 +254,7 @@ def _read_spec(src):
         except json_parse_exception as e:
             error_and_quit("Invalid JSON provided in spec\n{}".format(e))
     else:
-        raise RuntimeError('The provided file extension for the spec is not supported')
+        raise ValueError('The provided file extension for the spec is not supported')
 
 
 def _get_pipeline_url(api_client, pipeline_id):
@@ -271,27 +271,11 @@ def _write_spec(src, spec):
         f.write(data)
 
 
-def _get_pipeline_id(spec_arg, spec, pipeline_id):
-    """
-    Ensures that the user has either specified a spec (either through argument or option) or a
-    pipeline ID directly, and returns the pipeline id to use.
-    """
-    # Only one out of spec/pipeline_id/spec_arg should be supplied
-    if bool(spec_arg) + bool(spec) + bool(pipeline_id) != 1:
-        raise RuntimeError('Either spec should be provided as an argument '
-                           'or option, or the pipeline-id should be provided')
-    if bool(spec_arg) or bool(spec):
-        src = spec_arg if bool(spec_arg) else spec
-        pipeline_id = _read_spec(src)["id"]
-    _validate_pipeline_id(pipeline_id)
-    return pipeline_id
-
-
 def _validate_pipeline_id(pipeline_id):
     """
-    Checks if the pipeline_id only contain -, _ and alphanumeric characters
+    Checks if the pipeline_id is not empty and only contains -, _ and alphanumeric characters
     """
-    if len(pipeline_id) == 0:
+    if pipeline_id is None or len(pipeline_id) == 0:
         error_and_quit(u'Empty pipeline id provided')
     if not set(pipeline_id) <= PIPELINE_ID_PERMITTED_CHARACTERS:
         message = u'Pipeline id {} has invalid character(s)\n'.format(pipeline_id)
