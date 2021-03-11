@@ -186,6 +186,16 @@ def test_deploy_update_delete_cli_correct_spec_extensions(pipelines_api_mock, tm
 
 
 @provide_conf
+def test_deploy_with_invalid_spec_extension(pipelines_api_mock):
+    pipelines_api_mock.deploy = mock.Mock()
+    result = CliRunner().invoke(cli.deploy_cli, ['--spec', 'spec.invalid'])
+    assert result.exit_code == 1
+    assert "ValueError: The provided file extension for the spec is not " \
+           "supported" in result.stdout
+    assert pipelines_api_mock.deploy.call_count == 0   
+
+
+@provide_conf
 def test_cli_id(pipelines_api_mock):
     for command in [cli.reset_cli, cli.stop_cli, cli.run_cli]:
         runner = CliRunner()
@@ -310,3 +320,12 @@ def test_deploy_pipeline_conflicting_ids(pipelines_api_mock, tmpdir):
     assert "ValueError: The ID provided in --pipeline_id 'fake' is different from the id " \
            "provided in the spec '123'." in result.stdout
     assert pipelines_api_mock.deploy.call_count == 0
+
+
+@provide_conf
+def test_deploy_with_missing_spec(pipelines_api_mock):
+    pipelines_api_mock.deploy = mock.Mock()
+    result = CliRunner().invoke(cli.deploy_cli, [])
+    assert result.exit_code == 1
+    assert "ValueError: The spec should be provided" in result.stdout
+    assert pipelines_api_mock.deploy.call_count == 0    
