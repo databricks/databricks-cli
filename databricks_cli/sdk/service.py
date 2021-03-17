@@ -1052,4 +1052,3 @@ class ReposService(object):
 
         return self.client.perform_query('PATCH', '/repos/{repo_id}'.format(repo_id=repo_id),
                                          data=_data, headers=headers)
-

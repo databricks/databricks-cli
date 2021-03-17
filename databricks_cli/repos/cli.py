@@ -31,19 +31,34 @@ from databricks_cli.version import print_version_callback, version
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Checkout the given branch of repository')
-@click.option('--repo-id', required=True, help="Repository ID (you can find it in UI)")
+@click.option('--repos-id', required=True, help="Repository ID (you can find it in UI)")
 @click.option('--branch', required=True, help="Branch name")
 @debug_option
 @profile_option
 @eat_exceptions  # noqa
 @provide_api_client
-def update_repo_cli(api_client, repo_id, branch):
+def update_repo_cli(api_client, repos_id, branch):
     """
     Checkout and updates given branch of the repository
     This call returns the error if branch or repository doesn't exist
     """
-    content = ReposApi(api_client).update(repo_id, branch)
+    content = ReposApi(api_client).update(repos_id, branch)
     click.echo(pretty_format(content))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Find Repos ID by path.')
+@click.argument('path')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def get_repos_id_cli(api_client, path): # NOQA
+    """
+    Finds Repos ID by path, like, '/Repos/user/...'
+    """
+    repo_id = ReposApi(api_client).get_repos_id(path)
+    click.echo(repo_id)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
@@ -59,3 +74,4 @@ def repos_group():  # pragma: no cover
 
 
 repos_group.add_command(update_repo_cli, name='update')
+repos_group.add_command(get_repos_id_cli, name='get-repos-id')

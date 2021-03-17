@@ -30,8 +30,9 @@ from click.testing import CliRunner
 import databricks_cli.repos.cli as cli
 from tests.utils import provide_conf
 
+SOME_REPO_PATH = '/Repos/SomeRepo'
 
-REPO_ID = '123456'
+REPOS_ID = '123456'
 BRANCH_NAME = 'main'
 
 
@@ -46,7 +47,13 @@ def repos_api_mock():
 @provide_conf
 def test_update_repos(repos_api_mock):
     runner = CliRunner()
-    runner.invoke(cli.update_repo_cli, ['--repo-id', REPO_ID, '--branch', BRANCH_NAME])
-    assert repos_api_mock.update.call_args[0][0] == REPO_ID
+    runner.invoke(cli.update_repo_cli, ['--repos-id', REPOS_ID, '--branch', BRANCH_NAME])
+    assert repos_api_mock.update.call_args[0][0] == REPOS_ID
     assert repos_api_mock.update.call_args[0][1] == BRANCH_NAME
 
+
+@provide_conf
+def test_get_repos_id(repos_api_mock):
+    runner = CliRunner()
+    runner.invoke(cli.get_repos_id_cli, [SOME_REPO_PATH])
+    assert repos_api_mock.get_repos_id.call_args[0][0] == SOME_REPO_PATH
