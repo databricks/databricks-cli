@@ -1042,21 +1042,43 @@ class ManagedCatalogService(object):
     def __init__(self, client):
         self.client = client
 
-    def create_table(self, catalog_name, schema_name, headers=None):
+    def create_catalog(self, catalog_name, comment=None, headers=None):
+        _data = {
+            'name': catalog_name,
+        }
+        if comment is not None:
+            _data['comment'] = comment
+        return self.client.perform_query('POST', '/managed-catalog/catalogs', data=_data, headers=headers)
+
+    def delete_catalog(self, catalog_name, headers=None):
+        _data = {}
+
+        return self.client.perform_query('DELETE', '/managed-catalog/catalogs/{catalog_name}'.format(catalog_name=catalog_name),
+                                         data=_data, headers=headers)
+
+    def create_schema(self, catalog_name, new_schema_name, comment=None, headers=None):
         _data = {
             'catalog_name': catalog_name,
-            'schema_name': schema_name
+            'name': new_schema_name,
         }
-        return self.client.perform_query('POST', '/managed-catalog/tables', data=_data, headers=headers)
+        if comment is not None:
+            _data['comment'] = comment
+        return self.client.perform_query('POST', '/managed-catalog/schemas', data=_data, headers=headers)
 
-    def list_tables(self, catalog_name=None, schema_name=None, headers=None):
+    def delete_schema(self, full_name, headers=None):
         _data = {}
-        if catalog_name is not None:
-            _data['catalog_name'] = catalog_name
-        if schema_name is not None:
-            _data['schema_name'] = catalog_name
 
-        return self.client.perform_query('GET', '/managed-catalog/tables/', data=_data, headers=headers)
+        return self.client.perform_query('DELETE', '/managed-catalog/schemas/{full_name}'.format(full_name=full_name),
+                                         data=_data, headers=headers)
+
+    def create_table(self, table_spec, headers=None):
+        return self.client.perform_query('POST', '/managed-catalog/tables', data=table_spec, headers=headers)
+
+    def delete_table(self, full_name, headers=None):
+        _data = {}
+
+        return self.client.perform_query('DELETE', '/managed-catalog/tables/{full_name}'.format(full_name=full_name),
+                                         data=_data, headers=headers)
 
     def create_dac(self, dac, headers=None):
         _data = {

@@ -28,65 +28,146 @@ from json import loads as json_loads
 import click
 from tabulate import tabulate
 
-from databricks_cli.click_types import OutputClickType, CatalogNameClickType, SchemaNameClickType, \
-    DacIdClickType, JsonClickType
+from databricks_cli.click_types import CatalogNameClickType, \
+     SchemaNameClickType, SchemaFullNameClickType, TableFullNameClickType, \
+     CommentClickType, DacIdClickType, JsonClickType
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.managed_catalog.api import ManagedCatalogApi
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base
 from databricks_cli.version import print_version_callback, version
 
 
+#
+# Catalog Commands
+#
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Create table in specified schema.')
-@click.option('--catalog', default=None, required=True, type=CatalogNameClickType(),
-              help='Catalog containing the parent schema for the new table.')
-@click.option('--schema', default=None, required=True, type=SchemaNameClickType(),
-              help='Parent schema for the new table.')
-@click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
+               short_help='Create a new catalog.')
+@click.option('--name', required=True, type=CatalogNameClickType(),
+              help='Name of new catalog.')
+@click.option('--comment', default=None, required=False, type=CommentClickType(),
+              help='Free-form text description.')
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def create_table_cli(api_client, catalog, schema, output):
+def create_catalog_cli(api_client, name, comment):
     """
-    Create new table within the specified schema and catalog.
+    Create a new catalog in the specified catalog.
+
+    Calls the 'createCatalog' RPC endpoint of the Managed Catalog service.
+    Returns the CatalogInfo for the newly-created catalog.
+
+    """
+    catalog_json = ManagedCatalogApi(api_client).create_catalog(name, comment)
+    click.echo(pretty_format(catalog_json))
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Delete a catalog.')
+@click.option('--name', required=True, type=CatalogNameClickType(),
+              help='Name of the catalog to delete.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def delete_catalog_cli(api_client, name):
+    """
+    Delete a catalog.
+
+    Calls the 'deleteCatalog' RPC endpoint of the Managed Catalog service.
+    Returns nothing.
+
+    """
+    ManagedCatalogApi(api_client).delete_catalog(name)
+
+#
+# Schema Commands
+#
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Create a new schema.')
+@click.option('--catalog', required=True, type=CatalogNameClickType(),
+              help='Parent catalog of new schema.')
+@click.option('--name', required=True, type=SchemaNameClickType(),
+              help='Name of new schema, relative to parent catalog.')
+@click.option('--comment', default=None, required=False, type=CommentClickType(),
+              help='Free-form text description.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def create_schema_cli(api_client, catalog, name, comment):
+    """
+    Create a new schema in the specified catalog.
+
+    Calls the 'createSchema' RPC endpoint of the Managed Catalog service.
+    Returns the SchemaInfo for the newly-created schema.
+
+    """
+    schema_json = ManagedCatalogApi(api_client).create_schema(catalog, name, comment)
+    click.echo(pretty_format(schema_json))
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Delete a schema.')
+@click.option('--full-name', required=True, type=SchemaFullNameClickType(),
+              help='Full name (<catalog>.<schema>) of the schema to delete.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def delete_schema_cli(api_client, full_name):
+    """
+    Delete a schema.
+
+    Calls the 'deleteSchema' RPC endpoint of the Managed Catalog service.
+    Returns nothing.
+
+    """
+    ManagedCatalogApi(api_client).delete_schema(full_name)
+
+#
+# Table Commands
+#
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Create a table.')
+@click.option('--json-file', default=None, type=click.Path(),
+              help='File containing JSON request to POST to /api/2.0/managed-catalog/data-access-configurations.')
+@click.option('--json', default=None, type=JsonClickType(),
+              help=JsonClickType.help('/api/2.0/managed-catalog/data-access-configurations'))
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def create_table_cli(api_client, json_file, json):
+    """
+    Create new table specified by the JSON input.
 
     Calls the 'createTable' RPC endpoint of the Managed Catalog service.
     Returns the properties of the newly-created table.
 
     """
-    table_json = ManagedCatalogApi(api_client).create_table(catalog, schema)
-    click.echo("table_json: %s" % (table_json))   # Debugging
-    if OutputClickType.is_json(output):
-        click.echo(pretty_format(table_json))
-    else:
-        click.echo(table_json)
+    json_cli_base(json_file, json,
+                  lambda json: ManagedCatalogApi(api_client).create_table(json))
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Lists tables in specified schema.')
-@click.option('--catalog', default=None, required=False, type=CatalogNameClickType(),
-              help='List tables within all schemas of specified catalog.')
-@click.option('--schema', default=None, required=False, type=SchemaNameClickType(),
-              help='List tables within specified schema.')
-@click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
+               short_help='Delete a table.')
+@click.option('--full-name', required=True, type=TableFullNameClickType(),
+              help='Full name (<catalog>.<schema>.<table>) of the table to delete.')
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def list_tables_cli(api_client, catalog, schema, output):
+def delete_table_cli(api_client, full_name):
     """
-    Lists tables in specified schema and/or database.
+    Delete a table.
 
-    Calls the 'listTables' RPC endpoint of the Managed Catalog service.
-    Returns list of table names for the specified schema and catalog.
+    Calls the 'deleteTable' RPC endpoint of the Managed Catalog service.
+    Returns nothing.
 
     """
-    tables_json = ManagedCatalogApi(api_client).list_tables(catalog, schema)
-    if OutputClickType.is_json(output):
-        click.echo(pretty_format(tables_json))
-    else:
-        click.echo(tables_json['table_names'])
+    ManagedCatalogApi(api_client).delete_table(full_name)
 
+#
+# Data Access Configuration Commands
+#
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Create data access configuration.')
 @click.option('--json-file', default=None, type=click.Path(),
@@ -113,12 +194,11 @@ def create_dac_cli(api_client, json_file, json):
                short_help='Get data access configuration.')
 @click.option('--dac-id', required=True, type=DacIdClickType(),
               help='Data access configuration ID.')
-@click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def get_dac_cli(api_client, dac_id, output):
+def get_dac_cli(api_client, dac_id):
     """
     Get data access configuration details.
 
@@ -127,10 +207,7 @@ def get_dac_cli(api_client, dac_id, output):
 
     """
     dac_json = ManagedCatalogApi(api_client).get_dac(dac_id)
-    if OutputClickType.is_json(output):
-        click.echo(pretty_format(dac_json))
-    else:
-        click.echo(dac_json)
+    click.echo(pretty_format(dac_json))
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Create temporary credentials for storage root access.')
@@ -168,7 +245,12 @@ def managed_catalog_group():  # pragma: no cover
     pass
 
 managed_catalog_group.add_command(create_table_cli, name='create-table')
-managed_catalog_group.add_command(list_tables_cli, name='list-tables')
+managed_catalog_group.add_command(create_catalog_cli, name='create-catalog')
+managed_catalog_group.add_command(delete_catalog_cli, name='delete-catalog')
+managed_catalog_group.add_command(create_schema_cli, name='create-schema')
+managed_catalog_group.add_command(delete_schema_cli, name='delete-schema')
+managed_catalog_group.add_command(create_table_cli, name='create-table')
+managed_catalog_group.add_command(delete_table_cli, name='delete-table')
 managed_catalog_group.add_command(create_dac_cli, name='create-dac')
 managed_catalog_group.add_command(get_dac_cli, name='get-dac')
 managed_catalog_group.add_command(create_root_credentials_cli, name='create-root-credentials')

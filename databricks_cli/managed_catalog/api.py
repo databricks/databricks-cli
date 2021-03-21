@@ -27,11 +27,23 @@ class ManagedCatalogApi(object):
     def __init__(self, api_client):
         self.client = ManagedCatalogService(api_client)
 
-    def create_table(self, catalog, schema):
-        return self.client.create_table(catalog, schema)
+    def create_catalog(self, catalog_name, comment):
+        return self.client.create_catalog(catalog_name, comment)
 
-    def list_tables(self, catalog, schema):
-        return self.client.list_tables(catalog, schema)
+    def delete_catalog(self, catalog_name):
+        return self.client.delete_catalog(catalog_name)
+
+    def create_schema(self, catalog_name, schema_name, comment):
+        return self.client.create_schema(catalog_name, schema_name, comment)
+
+    def delete_schema(self, schema_full_name):
+        return self.client.delete_schema(schema_full_name)
+
+    def create_table(self, table_spec):
+        return self.client.create_table(table_spec)
+
+    def delete_table(self, table_full_name):
+        return self.client.delete_table(table_full_name)
 
     def create_dac(self, dac):
         return self.client.create_dac(dac)

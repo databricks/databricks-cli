@@ -1,0 +1,25 @@
+{
+	"schema_full_name": "some_cat.my_schema",
+	"name": "my_new_table",
+	"comment": "something really insightful",
+	"table_type": "MANAGED",
+	"data_source_format": "DELTA",
+	"columns": [
+		{
+			"name": "cust_id",
+			"type": "INT",
+			"nullable": false
+		},
+		{
+			"name": "name",
+			"type": "STRING",
+			"comment": "Short name"
+		},
+		{
+			"name": "some_flag",
+			"type": "BOOLEAN",
+			"nullable": false
+		}
+	],
+	"storage_location": "abfss://mycat@acct.dfs.core.windows.net"
+}
