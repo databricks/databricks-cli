@@ -1,5 +1,6 @@
 {
-	"schema_full_name": "some_cat.my_schema",
+	"catalog_name": "my_catalog",
+	"schema_name": "my_schema",
 	"name": "my_new_table",
 	"comment": "something really insightful",
 	"table_type": "MANAGED",

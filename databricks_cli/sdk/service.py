@@ -1042,6 +1042,34 @@ class ManagedCatalogService(object):
     def __init__(self, client):
         self.client = client
 
+    def create_metastore(self, name, storage_root, headers=None):
+        _data = {
+            'name': name,
+            'storage_root': storage_root,
+        }
+        return self.client.perform_query('POST', '/managed-catalog/admin/metastores', data=_data, headers=headers)
+
+    def list_metastores(self, headers=None):
+        _data = {}
+
+        return self.client.perform_query('GET', '/managed-catalog/admin/metastores', data=_data, headers=headers)
+
+    def get_metastore(self, metastore_id, headers=None):
+        _data = {}
+
+        return self.client.perform_query('GET', '/managed-catalog/admin/metastores/{metastore_id}'.format(metastore_id=metastore_id),
+                                         data=_data, headers=headers)
+
+    def update_metastore(self, metastore_id, metastore_spec, headers=None):
+        return self.client.perform_query('PATCH', '/managed-catalog/admin/metastores/{metastore_id}'.format(metastore_id=metastore_id),
+                                         data=metastore_spec, headers=headers)
+
+    def delete_metastore(self, metastore_id, headers=None):
+        _data = {}
+
+        return self.client.perform_query('DELETE', '/managed-catalog/admin/metastores/{metastore_id}'.format(metastore_id=metastore_id),
+                                         data=_data, headers=headers)
+
     def create_catalog(self, catalog_name, comment=None, headers=None):
         _data = {
             'name': catalog_name,

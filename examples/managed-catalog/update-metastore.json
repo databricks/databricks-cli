@@ -1,0 +1,6 @@
+{
+  "name": "my_metastore",
+  "metastore_id": "b8884cc1-41cf-4596-a121-130e49b53730",
+  "generation": 4,
+  "storage_root": "s3://my.other.bucket"
+}

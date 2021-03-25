@@ -27,6 +27,21 @@ class ManagedCatalogApi(object):
     def __init__(self, api_client):
         self.client = ManagedCatalogService(api_client)
 
+    def create_metastore(self, name, storage_root):
+        return self.client.create_metastore(name, storage_root)
+
+    def list_metastores(self):
+        return self.client.list_metastores()
+
+    def get_metastore(self, metastore_id):
+        return self.client.get_metastore(metastore_id)
+
+    def update_metastore(self, metastore_id, metastore_spec):
+        return self.client.update_metastore(metastore_id, metastore_spec)
+
+    def delete_metastore(self, metastore_id):
+        return self.client.delete_metastore(metastore_id)
+
     def create_catalog(self, catalog_name, comment):
         return self.client.create_catalog(catalog_name, comment)
 

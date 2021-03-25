@@ -21,30 +21,127 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
-from datetime import datetime
-from json import loads as json_loads
-
 import click
-from tabulate import tabulate
 
-from databricks_cli.click_types import CatalogNameClickType, \
-     SchemaNameClickType, SchemaFullNameClickType, TableFullNameClickType, \
-     CommentClickType, DacIdClickType, JsonClickType
+from databricks_cli.click_types import MetastoreIdClickType, DacIdClickType, JsonClickType
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.managed_catalog.api import ManagedCatalogApi
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base
 from databricks_cli.version import print_version_callback, version
 
 
-#
-# Catalog Commands
-#
+#################  Metastore Commands  #####################
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Create a metastore.')
+@click.option('--name', required=True, help='Name of the new metastore.')
+@click.option('--storage-root', required=True,
+              help='Storage root URL for the new metastore.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def create_metastore_cli(api_client, name, storage_root):
+    """
+    Create new metastore specified by the JSON input.
+
+    Calls the 'createMetastore' RPC endpoint of the Managed Catalog service.
+    Returns the properties of the newly-created metastore.
+
+    """
+    metastore_json = ManagedCatalogApi(api_client).create_metastore(name, storage_root)
+    click.echo(pretty_format(metastore_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='List metastores.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def list_metastores_cli(api_client):
+    """
+    List metastores.
+
+    Calls the 'listMetastores' RPC endpoint of the Managed Catalog service.
+    Returns array of MetastoreInfos.
+
+    """
+    metastores_json = ManagedCatalogApi(api_client).list_metastores()
+    click.echo(pretty_format(metastores_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Get a metastore.')
+@click.option('--id', 'metastore_id', required=True, type=MetastoreIdClickType(),
+              help='Unique identifier of the metastore to get.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def get_metastore_cli(api_client, metastore_id):
+    """
+    Get a metastore.
+
+    Calls the 'getMetastore' RPC endpoint of the Managed Catalog service.
+    Returns nothing.
+
+    """
+    metastore_json = ManagedCatalogApi(api_client).get_metastore(metastore_id)
+    click.echo(pretty_format(metastore_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Update a metastore.')
+@click.option('--id', 'metastore_id', required=True, type=MetastoreIdClickType(),
+              help='Unique identifier of the metastore to update.')
+@click.option('--json-file', default=None, type=click.Path(),
+              help='File containing JSON request to PATCH.')
+@click.option('--json', default=None, type=JsonClickType(),
+              help=JsonClickType.help('/api/2.0/admin/metastores'))
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def update_metastore_cli(api_client, metastore_id, json_file, json):
+    """
+    Update a metastore.
+
+    Calls the 'updateMetastore' RPC endpoint of the Managed Catalog service.
+    Returns nothing.
+
+    """
+    json_cli_base(json_file, json,
+                  lambda json: ManagedCatalogApi(api_client).update_metastore(metastore_id, json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Delete a metastore.')
+@click.option('--id', 'metastore_id', required=True, type=MetastoreIdClickType(),
+              help='Unique identifier of the metastore to delete.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def delete_metastore_cli(api_client, metastore_id):
+    """
+    Delete a metastore.
+
+    Calls the 'deleteMetastore' RPC endpoint of the Managed Catalog service.
+    Returns nothing.
+
+    """
+    ManagedCatalogApi(api_client).delete_metastore(metastore_id)
+
+
+##############  Catalog Commands  ##############
+
+
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Create a new catalog.')
-@click.option('--name', required=True, type=CatalogNameClickType(),
-              help='Name of new catalog.')
-@click.option('--comment', default=None, required=False, type=CommentClickType(),
+@click.option('--name', required=True, help='Name of new catalog.')
+@click.option('--comment', default=None, required=False,
               help='Free-form text description.')
 @debug_option
 @profile_option
@@ -52,7 +149,7 @@ from databricks_cli.version import print_version_callback, version
 @provide_api_client
 def create_catalog_cli(api_client, name, comment):
     """
-    Create a new catalog in the specified catalog.
+    Create a new catalog.
 
     Calls the 'createCatalog' RPC endpoint of the Managed Catalog service.
     Returns the CatalogInfo for the newly-created catalog.
@@ -61,9 +158,10 @@ def create_catalog_cli(api_client, name, comment):
     catalog_json = ManagedCatalogApi(api_client).create_catalog(name, comment)
     click.echo(pretty_format(catalog_json))
 
+
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Delete a catalog.')
-@click.option('--name', required=True, type=CatalogNameClickType(),
+@click.option('--name', required=True,
               help='Name of the catalog to delete.')
 @debug_option
 @profile_option
@@ -79,16 +177,16 @@ def delete_catalog_cli(api_client, name):
     """
     ManagedCatalogApi(api_client).delete_catalog(name)
 
-#
-# Schema Commands
-#
+
+#############  Schema Commands ##############
+
+
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Create a new schema.')
-@click.option('--catalog', required=True, type=CatalogNameClickType(),
-              help='Parent catalog of new schema.')
-@click.option('--name', required=True, type=SchemaNameClickType(),
+@click.option('--catalog', required=True, help='Parent catalog of new schema.')
+@click.option('--name', required=True,
               help='Name of new schema, relative to parent catalog.')
-@click.option('--comment', default=None, required=False, type=CommentClickType(),
+@click.option('--comment', default=None, required=False,
               help='Free-form text description.')
 @debug_option
 @profile_option
@@ -105,9 +203,10 @@ def create_schema_cli(api_client, catalog, name, comment):
     schema_json = ManagedCatalogApi(api_client).create_schema(catalog, name, comment)
     click.echo(pretty_format(schema_json))
 
+
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Delete a schema.')
-@click.option('--full-name', required=True, type=SchemaFullNameClickType(),
+@click.option('--full-name', required=True,
               help='Full name (<catalog>.<schema>) of the schema to delete.')
 @debug_option
 @profile_option
@@ -123,15 +222,16 @@ def delete_schema_cli(api_client, full_name):
     """
     ManagedCatalogApi(api_client).delete_schema(full_name)
 
-#
-# Table Commands
-#
+
+##############  Table Commands  #################
+
+
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Create a table.')
 @click.option('--json-file', default=None, type=click.Path(),
-              help='File containing JSON request to POST to /api/2.0/managed-catalog/data-access-configurations.')
+              help='File containing JSON request to POST.')
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/managed-catalog/data-access-configurations'))
+              help=JsonClickType.help('/api/2.0/managed-catalog/tables'))
 @debug_option
 @profile_option
 @eat_exceptions
@@ -147,9 +247,10 @@ def create_table_cli(api_client, json_file, json):
     json_cli_base(json_file, json,
                   lambda json: ManagedCatalogApi(api_client).create_table(json))
 
+
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Delete a table.')
-@click.option('--full-name', required=True, type=TableFullNameClickType(),
+@click.option('--full-name', required=True,
               help='Full name (<catalog>.<schema>.<table>) of the table to delete.')
 @debug_option
 @profile_option
@@ -165,13 +266,14 @@ def delete_table_cli(api_client, full_name):
     """
     ManagedCatalogApi(api_client).delete_table(full_name)
 
-#
-# Data Access Configuration Commands
-#
+
+#############  Data Access Configuration Commands  ############
+
+
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Create data access configuration.')
 @click.option('--json-file', default=None, type=click.Path(),
-              help='File containing JSON request to POST to /api/2.0/managed-catalog/data-access-configurations.')
+              help='File containing JSON request to POST.')
 @click.option('--json', default=None, type=JsonClickType(),
               help=JsonClickType.help('/api/2.0/managed-catalog/data-access-configurations'))
 @debug_option
@@ -189,6 +291,7 @@ def create_dac_cli(api_client, json_file, json):
     """
     json_cli_base(json_file, json,
                   lambda json: ManagedCatalogApi(api_client).create_dac(json))
+
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Get data access configuration.')
@@ -209,10 +312,11 @@ def get_dac_cli(api_client, dac_id):
     dac_json = ManagedCatalogApi(api_client).get_dac(dac_id)
     click.echo(pretty_format(dac_json))
 
+
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Create temporary credentials for storage root access.')
 @click.option('--json-file', default=None, type=click.Path(),
-              help='File containing JSON request to POST to /api/2.0/managed-catalog/root-credentials.')
+              help='File containing JSON request to POST.')
 @click.option('--json', default=None, type=JsonClickType(),
               help=JsonClickType.help('/api/2.0/managed-catalog/root-credentials'))
 @debug_option
@@ -231,6 +335,7 @@ def create_root_credentials_cli(api_client, json_file, json):
     json_cli_base(json_file, json,
                   lambda json: ManagedCatalogApi(api_client).create_root_credentials(json))
 
+
 @click.group(context_settings=CONTEXT_SETTINGS,
              short_help='Utility to interact with Databricks managed-catalog.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
@@ -244,7 +349,12 @@ def managed_catalog_group():  # pragma: no cover
     """
     pass
 
-managed_catalog_group.add_command(create_table_cli, name='create-table')
+
+managed_catalog_group.add_command(create_metastore_cli, name='create-metastore')
+managed_catalog_group.add_command(list_metastores_cli, name='list-metastores')
+managed_catalog_group.add_command(get_metastore_cli, name='get-metastore')
+managed_catalog_group.add_command(update_metastore_cli, name='update-metastore')
+managed_catalog_group.add_command(delete_metastore_cli, name='delete-metastore')
 managed_catalog_group.add_command(create_catalog_cli, name='create-catalog')
 managed_catalog_group.add_command(delete_catalog_cli, name='delete-catalog')
 managed_catalog_group.add_command(create_schema_cli, name='create-schema')

@@ -106,29 +106,9 @@ class PipelineIdClickType(ParamType):
     help = 'Delta Pipeline ID'
 
 
-class CommentClickType(ParamType):
-    name = 'COMMENT'
-    help = 'Free-form text'
-
-
-class CatalogNameClickType(ParamType):
-    name = 'CATALOG_NAME'
-    help = 'Name of the desired catalog'
-
-
-class SchemaNameClickType(ParamType):
-    name = 'SCHEMA_NAME'
-    help = 'Name of the desired schema'
-
-
-class SchemaFullNameClickType(ParamType):
-    name = 'SCHEMA_FULL_NAME'
-    help = 'Full name of the desired schema'
-
-
-class TableFullNameClickType(ParamType):
-    name = 'TABLE_FULL_NAME'
-    help = 'Full name of the desired table'
+class MetastoreIdClickType(ParamType):
+    name = 'METASTORE_ID'
+    help = 'ID of the Metastore'
 
 
 class DacIdClickType(ParamType):
