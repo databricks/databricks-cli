@@ -1042,6 +1042,8 @@ class ManagedCatalogService(object):
     def __init__(self, client):
         self.client = client
 
+    # Metastore Operations
+
     def create_metastore(self, name, storage_root, headers=None):
         _data = {
             'name': name,
@@ -1070,19 +1072,38 @@ class ManagedCatalogService(object):
         return self.client.perform_query('DELETE', '/managed-catalog/admin/metastores/{metastore_id}'.format(metastore_id=metastore_id),
                                          data=_data, headers=headers)
 
-    def create_catalog(self, catalog_name, comment=None, headers=None):
+    # Catalog Operations
+
+    def create_catalog(self, name, comment=None, headers=None):
         _data = {
-            'name': catalog_name,
+            'name': name,
         }
         if comment is not None:
             _data['comment'] = comment
         return self.client.perform_query('POST', '/managed-catalog/catalogs', data=_data, headers=headers)
 
-    def delete_catalog(self, catalog_name, headers=None):
+    def list_catalogs(self, headers=None):
         _data = {}
 
-        return self.client.perform_query('DELETE', '/managed-catalog/catalogs/{catalog_name}'.format(catalog_name=catalog_name),
+        return self.client.perform_query('GET', '/managed-catalog/catalogs', data=_data, headers=headers)
+
+    def get_catalog(self, name, headers=None):
+        _data = {}
+
+        return self.client.perform_query('GET', '/managed-catalog/catalogs/{name}'.format(name=name),
                                          data=_data, headers=headers)
+
+    def update_catalog(self, name, catalog_spec, headers=None):
+        return self.client.perform_query('PATCH', '/managed-catalog/catalogs/{name}'.format(name=name),
+                                         data=catalog_spec, headers=headers)
+
+    def delete_catalog(self, name, headers=None):
+        _data = {}
+
+        return self.client.perform_query('DELETE', '/managed-catalog/catalogs/{name}'.format(name=name),
+                                         data=_data, headers=headers)
+
+    # Schema Operations
 
     def create_schema(self, catalog_name, new_schema_name, comment=None, headers=None):
         _data = {
@@ -1093,20 +1114,59 @@ class ManagedCatalogService(object):
             _data['comment'] = comment
         return self.client.perform_query('POST', '/managed-catalog/schemas', data=_data, headers=headers)
 
+    def list_schemas(self, headers=None):
+        _data = {}
+
+        return self.client.perform_query('GET', '/managed-catalog/schemas', data=_data, headers=headers)
+
+    def get_schema(self, full_name, headers=None):
+        _data = {}
+
+        return self.client.perform_query('GET', '/managed-catalog/schemas/{full_name}'.format(full_name=full_name),
+                                         data=_data, headers=headers)
+
+    def update_schema(self, full_name, schema_spec, headers=None):
+        return self.client.perform_query('PATCH', '/managed-catalog/schemas/{full_name}'.format(full_name=full_name),
+                                         data=schema_spec, headers=headers)
+
+    def delete_schema(self, full_name, headers=None):
+        _data = {}
+
+        return self.client.perform_query('DELETE', '/managed-catalog/schemas/{full_name}'.format(full_name=full_name),
+                                         data=_data, headers=headers)
     def delete_schema(self, full_name, headers=None):
         _data = {}
 
         return self.client.perform_query('DELETE', '/managed-catalog/schemas/{full_name}'.format(full_name=full_name),
                                          data=_data, headers=headers)
 
+    # Table Operations
+
     def create_table(self, table_spec, headers=None):
         return self.client.perform_query('POST', '/managed-catalog/tables', data=table_spec, headers=headers)
+
+    def list_tables(self, headers=None):
+        _data = {}
+
+        return self.client.perform_query('GET', '/managed-catalog/tables', data=_data, headers=headers)
+
+    def get_table(self, full_name, headers=None):
+        _data = {}
+
+        return self.client.perform_query('GET', '/managed-catalog/tables/{full_name}'.format(full_name=full_name),
+                                         data=_data, headers=headers)
+
+    def update_table(self, full_name, table_spec, headers=None):
+        return self.client.perform_query('PATCH', '/managed-catalog/tables/{full_name}'.format(full_name=full_name),
+                                         data=table_spec, headers=headers)
 
     def delete_table(self, full_name, headers=None):
         _data = {}
 
         return self.client.perform_query('DELETE', '/managed-catalog/tables/{full_name}'.format(full_name=full_name),
                                          data=_data, headers=headers)
+
+    # Data Access Configuration Operations
 
     def create_dac(self, dac, headers=None):
         _data = {

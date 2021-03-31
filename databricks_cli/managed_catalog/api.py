@@ -27,6 +27,8 @@ class ManagedCatalogApi(object):
     def __init__(self, api_client):
         self.client = ManagedCatalogService(api_client)
 
+    # Metastore APIs
+
     def create_metastore(self, name, storage_root):
         return self.client.create_metastore(name, storage_root)
 
@@ -42,23 +44,58 @@ class ManagedCatalogApi(object):
     def delete_metastore(self, metastore_id):
         return self.client.delete_metastore(metastore_id)
 
+    # Catalog APIs
+
     def create_catalog(self, catalog_name, comment):
         return self.client.create_catalog(catalog_name, comment)
+
+    def list_catalogs(self):
+        return self.client.list_catalogs()
+
+    def get_catalog(self, name):
+        return self.client.get_catalog(name)
+
+    def update_catalog(self, name, catalog_spec):
+        return self.client.update_catalog(name, catalog_spec)
 
     def delete_catalog(self, catalog_name):
         return self.client.delete_catalog(catalog_name)
 
+    # Schema APIs
+
     def create_schema(self, catalog_name, schema_name, comment):
         return self.client.create_schema(catalog_name, schema_name, comment)
+
+    def list_schemas(self):
+        return self.client.list_schemas()
+
+    def get_schema(self, full_name):
+        return self.client.get_schema(full_name)
+
+    def update_schema(self, full_name, schema_spec):
+        return self.client.update_schema(full_name, schema_spec)
 
     def delete_schema(self, schema_full_name):
         return self.client.delete_schema(schema_full_name)
 
+    # Table APIs
+
     def create_table(self, table_spec):
         return self.client.create_table(table_spec)
 
+    def list_tables(self):
+        return self.client.list_tables()
+
+    def get_table(self, full_name):
+        return self.client.get_table(full_name)
+
+    def update_table(self, full_name, table_spec):
+        return self.client.update_table(full_name, table_spec)
+
     def delete_table(self, table_full_name):
         return self.client.delete_table(table_full_name)
+
+    # Data Access Configuration APIs
 
     def create_dac(self, dac):
         return self.client.create_dac(dac)

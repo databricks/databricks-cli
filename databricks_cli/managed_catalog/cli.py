@@ -160,6 +160,68 @@ def create_catalog_cli(api_client, name, comment):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='List catalogs.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def list_catalogs_cli(api_client):
+    """
+    List catalogs.
+
+    Calls the 'listCatalogs' RPC endpoint of the Managed Catalog service.
+    Returns array of CatalogInfos.
+
+    """
+    catalogs_json = ManagedCatalogApi(api_client).list_catalogs()
+    click.echo(pretty_format(catalogs_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Get a catalog.')
+@click.option('--name', required=True,
+              help='Name of the catalog to get.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def get_catalog_cli(api_client, name):
+    """
+    Get a catalog.
+
+    Calls the 'getCatalog' RPC endpoint of the Managed Catalog service.
+    Returns nothing.
+
+    """
+    catalog_json = ManagedCatalogApi(api_client).get_catalog(name)
+    click.echo(pretty_format(catalog_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Update a catalog.')
+@click.option('--name', required=True,
+              help='Name of the catalog to update.')
+@click.option('--json-file', default=None, type=click.Path(),
+              help='File containing JSON request to PATCH.')
+@click.option('--json', default=None, type=JsonClickType(),
+              help=JsonClickType.help('/api/2.0/catalogs'))
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def update_catalog_cli(api_client, name, json_file, json):
+    """
+    Update a catalog.
+
+    Calls the 'updateCatalog' RPC endpoint of the Managed Catalog service.
+    Returns nothing.
+
+    """
+    json_cli_base(json_file, json,
+                  lambda json: ManagedCatalogApi(api_client).update_catalog(name, json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Delete a catalog.')
 @click.option('--name', required=True,
               help='Name of the catalog to delete.')
@@ -205,6 +267,68 @@ def create_schema_cli(api_client, catalog, name, comment):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='List schemas.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def list_schemas_cli(api_client):
+    """
+    List schemas.
+
+    Calls the 'listSchemas' RPC endpoint of the Managed Catalog service.
+    Returns array of SchemaInfos.
+
+    """
+    schemas_json = ManagedCatalogApi(api_client).list_schemas()
+    click.echo(pretty_format(schemas_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Get a schema.')
+@click.option('--full-name', required=True,
+              help='Full name (<catalog>.<schema>) of the schema to get.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def get_schema_cli(api_client, full_name):
+    """
+    Get a schema.
+
+    Calls the 'getSchema' RPC endpoint of the Managed Catalog service.
+    Returns nothing.
+
+    """
+    schema_json = ManagedCatalogApi(api_client).get_schema(full_name)
+    click.echo(pretty_format(schema_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Update a schema.')
+@click.option('--full-name', required=True,
+              help='Full name (<catalog>.<schema>) of the schema to update.')
+@click.option('--json-file', default=None, type=click.Path(),
+              help='File containing JSON request to PATCH.')
+@click.option('--json', default=None, type=JsonClickType(),
+              help=JsonClickType.help('/api/2.0/schemas'))
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def update_schema_cli(api_client, full_name, json_file, json):
+    """
+    Update a schema.
+
+    Calls the 'updateSchema' RPC endpoint of the Managed Catalog service.
+    Returns nothing.
+
+    """
+    json_cli_base(json_file, json,
+                  lambda json: ManagedCatalogApi(api_client).update_schema(full_name, json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Delete a schema.')
 @click.option('--full-name', required=True,
               help='Full name (<catalog>.<schema>) of the schema to delete.')
@@ -246,6 +370,68 @@ def create_table_cli(api_client, json_file, json):
     """
     json_cli_base(json_file, json,
                   lambda json: ManagedCatalogApi(api_client).create_table(json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='List tables.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def list_tables_cli(api_client):
+    """
+    List tables.
+
+    Calls the 'listTables' RPC endpoint of the Managed Catalog service.
+    Returns array of TableInfos.
+
+    """
+    tables_json = ManagedCatalogApi(api_client).list_tables()
+    click.echo(pretty_format(tables_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Get a table.')
+@click.option('--full-name', required=True,
+              help='Full name (<catalog>.<schema>.<table>) of the table to get.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def get_table_cli(api_client, full_name):
+    """
+    Get a table.
+
+    Calls the 'getTable' RPC endpoint of the Managed Catalog service.
+    Returns nothing.
+
+    """
+    table_json = ManagedCatalogApi(api_client).get_table(full_name)
+    click.echo(pretty_format(table_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Update a table.')
+@click.option('--full-name', required=True,
+              help='Full name (<catalog>.<schema>.<table>) of the table to update.')
+@click.option('--json-file', default=None, type=click.Path(),
+              help='File containing JSON request to PATCH.')
+@click.option('--json', default=None, type=JsonClickType(),
+              help=JsonClickType.help('/api/2.0/tables'))
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def update_table_cli(api_client, full_name, json_file, json):
+    """
+    Update a table.
+
+    Calls the 'updateTable' RPC endpoint of the Managed Catalog service.
+    Returns nothing.
+
+    """
+    json_cli_base(json_file, json,
+                  lambda json: ManagedCatalogApi(api_client).update_table(full_name, json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -356,10 +542,19 @@ managed_catalog_group.add_command(get_metastore_cli, name='get-metastore')
 managed_catalog_group.add_command(update_metastore_cli, name='update-metastore')
 managed_catalog_group.add_command(delete_metastore_cli, name='delete-metastore')
 managed_catalog_group.add_command(create_catalog_cli, name='create-catalog')
+managed_catalog_group.add_command(list_catalogs_cli, name='list-catalogs')
+managed_catalog_group.add_command(get_catalog_cli, name='get-catalog')
+managed_catalog_group.add_command(update_catalog_cli, name='update-catalog')
 managed_catalog_group.add_command(delete_catalog_cli, name='delete-catalog')
 managed_catalog_group.add_command(create_schema_cli, name='create-schema')
+managed_catalog_group.add_command(list_schemas_cli, name='list-schemas')
+managed_catalog_group.add_command(get_schema_cli, name='get-schema')
+managed_catalog_group.add_command(update_schema_cli, name='update-schema')
 managed_catalog_group.add_command(delete_schema_cli, name='delete-schema')
 managed_catalog_group.add_command(create_table_cli, name='create-table')
+managed_catalog_group.add_command(list_tables_cli, name='list-tables')
+managed_catalog_group.add_command(get_table_cli, name='get-table')
+managed_catalog_group.add_command(update_table_cli, name='update-table')
 managed_catalog_group.add_command(delete_table_cli, name='delete-table')
 managed_catalog_group.add_command(create_dac_cli, name='create-dac')
 managed_catalog_group.add_command(get_dac_cli, name='get-dac')
