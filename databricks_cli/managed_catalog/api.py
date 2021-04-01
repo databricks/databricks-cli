@@ -97,11 +97,11 @@ class ManagedCatalogApi(object):
 
     # Data Access Configuration APIs
 
-    def create_dac(self, dac):
-        return self.client.create_dac(dac)
+    def create_dac(self, metastore_id, dac):
+        return self.client.create_dac(metastore_id, dac)
 
-    def get_dac(self, dac_id):
-        return self.client.get_dac(dac_id)
+    def get_dac(self, metastore_id, dac_id):
+        return self.client.get_dac(metastore_id, dac_id)
 
     def create_root_credentials(self, root_creds):
         return self.client.create_root_credentials(root_creds)

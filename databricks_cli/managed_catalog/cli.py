@@ -458,6 +458,8 @@ def delete_table_cli(api_client, full_name):
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Create data access configuration.')
+@click.option('--metastore-id', required=True, type=MetastoreIdClickType(),
+              help='Unique identifier of the metastore parent of the DAC.')
 @click.option('--json-file', default=None, type=click.Path(),
               help='File containing JSON request to POST.')
 @click.option('--json', default=None, type=JsonClickType(),
@@ -466,7 +468,7 @@ def delete_table_cli(api_client, full_name):
 @profile_option
 @eat_exceptions
 @provide_api_client
-def create_dac_cli(api_client, json_file, json):
+def create_dac_cli(api_client, metastore_id, json_file, json):
     """
     Create new data access configuration.
 
@@ -476,18 +478,20 @@ def create_dac_cli(api_client, json_file, json):
 
     """
     json_cli_base(json_file, json,
-                  lambda json: ManagedCatalogApi(api_client).create_dac(json))
+                  lambda json: ManagedCatalogApi(api_client).create_dac(metastore_id, json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Get data access configuration.')
+@click.option('--metastore-id', required=True, type=MetastoreIdClickType(),
+              help='Unique identifier of the metastore parent of the DAC.')
 @click.option('--dac-id', required=True, type=DacIdClickType(),
               help='Data access configuration ID.')
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def get_dac_cli(api_client, dac_id):
+def get_dac_cli(api_client, metastore_id, dac_id):
     """
     Get data access configuration details.
 
@@ -495,7 +499,7 @@ def get_dac_cli(api_client, dac_id):
     Returns details of the DAC specified by its id (TODO: lookup by DAC name?).
 
     """
-    dac_json = ManagedCatalogApi(api_client).get_dac(dac_id)
+    dac_json = ManagedCatalogApi(api_client).get_dac(metastore_id, dac_id)
     click.echo(pretty_format(dac_json))
 
 

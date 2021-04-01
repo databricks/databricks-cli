@@ -1168,16 +1168,16 @@ class ManagedCatalogService(object):
 
     # Data Access Configuration Operations
 
-    def create_dac(self, dac, headers=None):
+    def create_dac(self, metastore_id, dac, headers=None):
         _data = {
             'data_access_configuration': dac,
         }
-        return self.client.perform_query('POST', '/managed-catalog/data-access-configurations', data=_data,
-                                         headers=headers)
+        url = '/managed-catalog/metastores/{metastore_id}/data-access-configurations'.format(metastore_id=metastore_id)
+        return self.client.perform_query('POST', url, data=_data, headers=headers)
 
-    def get_dac(self, dac_id, headers=None):
-        return self.client.perform_query('GET', '/managed-catalog/data-access-configurations/{id}'.format(id=dac_id),
-                                         headers=headers)
+    def get_dac(self, metastore_id, dac_id, headers=None):
+        url = '/managed-catalog/metastores/{metastore_id}/data-access-configurations/{dac_id}'.format(metastore_id=metastore_id, dac_id=dac_id)
+        return self.client.perform_query('GET', url, headers=headers)
 
     def create_root_credentials(self, root_creds_obj, headers=None):
         return self.client.perform_query('POST', '/managed-catalog/temporary-root-access-credentials',
