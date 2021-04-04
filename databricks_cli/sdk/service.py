@@ -1114,8 +1114,12 @@ class ManagedCatalogService(object):
             _data['comment'] = comment
         return self.client.perform_query('POST', '/managed-catalog/schemas', data=_data, headers=headers)
 
-    def list_schemas(self, headers=None):
+    def list_schemas(self, catalog_name=None, name_regex=None, headers=None):
         _data = {}
+        if catalog_name is not None:
+            _data['catalog_name'] = catalog_name
+        if name_regex is not None:
+            _data['schema_name_regex'] = name_regex
 
         return self.client.perform_query('GET', '/managed-catalog/schemas', data=_data, headers=headers)
 
@@ -1146,8 +1150,14 @@ class ManagedCatalogService(object):
         _data = table_spec
         return self.client.perform_query('POST', '/managed-catalog/tables', data=_data, headers=headers)
 
-    def list_tables(self, headers=None):
-        _data = {}
+    def list_tables(self, catalog_name, schema_name=None, name_regex=None, headers=None):
+        _data = {
+            'catalog_name': catalog_name
+        }
+        if schema_name is not None:
+            _data['schema_name'] = schema_name
+        if name_regex is not None:
+            _data['table_name_regex'] = name_regex
 
         return self.client.perform_query('GET', '/managed-catalog/tables', data=_data, headers=headers)
 

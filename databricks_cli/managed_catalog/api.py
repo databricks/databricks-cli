@@ -66,8 +66,8 @@ class ManagedCatalogApi(object):
     def create_schema(self, catalog_name, schema_name, comment):
         return self.client.create_schema(catalog_name, schema_name, comment)
 
-    def list_schemas(self):
-        return self.client.list_schemas()
+    def list_schemas(self, catalog_name, name_regex):
+        return self.client.list_schemas(catalog_name, name_regex)
 
     def get_schema(self, full_name):
         return self.client.get_schema(full_name)
@@ -83,8 +83,8 @@ class ManagedCatalogApi(object):
     def create_table(self, table_spec):
         return self.client.create_table(table_spec)
 
-    def list_tables(self):
-        return self.client.list_tables()
+    def list_tables(self, catalog_name, schema_name, name_regex):
+        return self.client.list_tables(catalog_name, schema_name, name_regex)
 
     def get_table(self, full_name):
         return self.client.get_table(full_name)

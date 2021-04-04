@@ -269,11 +269,15 @@ def create_schema_cli(api_client, catalog, name, comment):
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='List schemas.')
+@click.option('--catalog-name', required=True,
+              help='Name of the parent catalog for schemas of interest.')
+@click.option('--name-regex', default=None,
+              help='Regex that the schema name must match to be in list.')
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def list_schemas_cli(api_client):
+def list_schemas_cli(api_client, catalog_name, name_regex):
     """
     List schemas.
 
@@ -281,7 +285,7 @@ def list_schemas_cli(api_client):
     Returns array of SchemaInfos.
 
     """
-    schemas_json = ManagedCatalogApi(api_client).list_schemas()
+    schemas_json = ManagedCatalogApi(api_client).list_schemas(catalog_name, name_regex)
     click.echo(pretty_format(schemas_json))
 
 
@@ -375,11 +379,17 @@ def create_table_cli(api_client, json_file, json):
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='List tables.')
+@click.option('--catalog-name', required=True,
+              help='Name of the parent catalog for tables of interest.')
+@click.option('--schema-name', required=True,
+              help='Name of the parent schema for tables of interest.')
+@click.option('--name-regex', default=None,
+              help='Regex that the table name must match to be in list.')
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def list_tables_cli(api_client):
+def list_tables_cli(api_client, catalog_name, schema_name, name_regex):
     """
     List tables.
 
@@ -387,7 +397,7 @@ def list_tables_cli(api_client):
     Returns array of TableInfos.
 
     """
-    tables_json = ManagedCatalogApi(api_client).list_tables()
+    tables_json = ManagedCatalogApi(api_client).list_tables(catalog_name, schema_name, name_regex)
     click.echo(pretty_format(tables_json))
 
 
