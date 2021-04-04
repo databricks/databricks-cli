@@ -105,3 +105,14 @@ class ManagedCatalogApi(object):
 
     def create_root_credentials(self, root_creds):
         return self.client.create_root_credentials(root_creds)
+
+    def get_permissions(self, catalog_name, schema_full_name, table_full_name):
+        return self.client.get_permissions(catalog_name, schema_full_name, table_full_name)
+
+    def update_permissions(self, catalog_name, schema_full_name, table_full_name, diff_spec):
+        return self.client.update_permissions(catalog_name, schema_full_name, table_full_name,
+                                              diff_spec)
+
+    def replace_permissions(self, catalog_name, schema_full_name, table_full_name, perm_spec):
+        return self.client.replace_permissions(catalog_name, schema_full_name, table_full_name,
+                                               perm_spec)

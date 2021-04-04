@@ -1143,7 +1143,8 @@ class ManagedCatalogService(object):
     # Table Operations
 
     def create_table(self, table_spec, headers=None):
-        return self.client.perform_query('POST', '/managed-catalog/tables', data=table_spec, headers=headers)
+        _data = table_spec
+        return self.client.perform_query('POST', '/managed-catalog/tables', data=_data, headers=headers)
 
     def list_tables(self, headers=None):
         _data = {}
@@ -1182,3 +1183,29 @@ class ManagedCatalogService(object):
     def create_root_credentials(self, root_creds_obj, headers=None):
         return self.client.perform_query('POST', '/managed-catalog/temporary-root-access-credentials',
                                          data=root_creds_obj, headers=headers)
+    # Permissions Operations
+
+    def _get_perm_obj_name_and_type(self, catalog_name, schema_full_name, table_full_name):
+        if (catalog_name):
+            return ('catalogs', catalog_name)
+        elif (schema_full_name):
+            return ('schemas', schema_full_name)
+        return ('tables', table_full_name)
+
+    def get_permissions(self, catalog_name, schema_full_name, table_full_name, headers=None):
+        obj_type, obj_name = self._get_perm_obj_name_and_type(catalog_name, schema_full_name, table_full_name)
+        _data = {}
+        url = '/managed-catalog/permissions/{obj_type}/{obj_name}'.format(obj_type=obj_type, obj_name=obj_name)
+        return self.client.perform_query('GET', url, data=_data, headers=headers)
+
+    def update_permissions(self, catalog_name, schema_full_name, table_full_name, perm_diff_spec, headers=None):
+        obj_type, obj_name = self._get_perm_obj_name_and_type(catalog_name, schema_full_name, table_full_name)
+        _data = perm_diff_spec
+        url = '/managed-catalog/permissions/{obj_type}/{obj_name}'.format(obj_type=obj_type, obj_name=obj_name)
+        return self.client.perform_query('PATCH', url, data=_data, headers=headers)
+
+    def replace_permissions(self, catalog_name, schema_full_name, table_full_name, perm_spec, headers=None):
+        obj_type, obj_name = self._get_perm_obj_name_and_type(catalog_name, schema_full_name, table_full_name)
+        _data = perm_spec
+        url = '/managed-catalog/permissions/{obj_type}/{obj_name}'.format(obj_type=obj_type, obj_name=obj_name)
+        return self.client.perform_query('PUT', url, data=_data, headers=headers)

@@ -23,7 +23,8 @@
 
 import click
 
-from databricks_cli.click_types import MetastoreIdClickType, DacIdClickType, JsonClickType
+from databricks_cli.click_types import MetastoreIdClickType, DacIdClickType, \
+    JsonClickType, OneOfOption
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.managed_catalog.api import ManagedCatalogApi
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base
@@ -526,6 +527,100 @@ def create_root_credentials_cli(api_client, json_file, json):
                   lambda json: ManagedCatalogApi(api_client).create_root_credentials(json))
 
 
+PERMISSIONS_OBJ_TYPES = ['catalog', 'schema', 'table']
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Get permissions on an object.')
+@click.option('--catalog', cls=OneOfOption, default=None,
+              one_of=PERMISSIONS_OBJ_TYPES,
+              help='Name of catalog of interest')
+@click.option('--schema', cls=OneOfOption, default=None,
+              one_of=PERMISSIONS_OBJ_TYPES,
+              help='Full name of schema of interest')
+@click.option('--table', cls=OneOfOption, default=None,
+              one_of=PERMISSIONS_OBJ_TYPES,
+              help='Full name of table of interest')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def get_permissions_cli(api_client, catalog, schema, table):
+    """
+    Get permissions on an object.
+
+    Calls the 'getPermissions' RPC endpoint of the Managed Catalog service.
+    Returns PermissionsList for the requested object.
+
+    """
+    perm_json = ManagedCatalogApi(api_client).get_permissions(catalog, schema, table)
+    click.echo(pretty_format(perm_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='update permissions on an object.')
+@click.option('--catalog', cls=OneOfOption, default=None,
+              one_of=PERMISSIONS_OBJ_TYPES,
+              help='Name of catalog of interest')
+@click.option('--schema', cls=OneOfOption, default=None,
+              one_of=PERMISSIONS_OBJ_TYPES,
+              help='Full name of schema of interest')
+@click.option('--table', cls=OneOfOption, default=None,
+              one_of=PERMISSIONS_OBJ_TYPES,
+              help='Full name of table of interest')
+@click.option('--json-file', default=None, type=click.Path(),
+              help='File containing JSON of permissions change to PATCH.')
+@click.option('--json', default=None, type=JsonClickType(),
+              help=JsonClickType.help('/api/2.0/managed-catalog/permissions'))
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def update_permissions_cli(api_client, catalog, schema, table, json_file, json):
+    """
+    Update permissions on an object.
+
+    Calls the 'updatePermissions' RPC endpoint of the Managed Catalog service.
+    Returns updated PermissionsList for the requested object.
+
+    """
+    json_cli_base(json_file, json,
+                  lambda json: ManagedCatalogApi(api_client).update_permissions(catalog, schema,
+                                                                                table, json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='replacepermissions on an object.')
+@click.option('--catalog', cls=OneOfOption, default=None,
+              one_of=PERMISSIONS_OBJ_TYPES,
+              help='Name of catalog of interest')
+@click.option('--schema', cls=OneOfOption, default=None,
+              one_of=PERMISSIONS_OBJ_TYPES,
+              help='Full name of schema of interest')
+@click.option('--table', cls=OneOfOption, default=None,
+              one_of=PERMISSIONS_OBJ_TYPES,
+              help='Full name of table of interest')
+@click.option('--json-file', default=None, type=click.Path(),
+              help='File containing JSON of permissions to PUT.')
+@click.option('--json', default=None, type=JsonClickType(),
+              help=JsonClickType.help('/api/2.0/managed-catalog/permissions'))
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def replace_permissions_cli(api_client, catalog, schema, table, json_file, json):
+    """
+    Replace permissions on an object.
+
+    Calls the 'replacePermissions' RPC endpoint of the Managed Catalog service.
+    Returns nothing.
+
+    """
+    json_cli_base(json_file, json,
+                  lambda json: ManagedCatalogApi(api_client).replace_permissions(catalog, schema,
+                                                                                 table, json))
+
+
 @click.group(context_settings=CONTEXT_SETTINGS,
              short_help='Utility to interact with Databricks managed-catalog.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
@@ -562,4 +657,7 @@ managed_catalog_group.add_command(update_table_cli, name='update-table')
 managed_catalog_group.add_command(delete_table_cli, name='delete-table')
 managed_catalog_group.add_command(create_dac_cli, name='create-dac')
 managed_catalog_group.add_command(get_dac_cli, name='get-dac')
+managed_catalog_group.add_command(get_permissions_cli, name='get-permissions')
+managed_catalog_group.add_command(update_permissions_cli, name='update-permissions')
+managed_catalog_group.add_command(replace_permissions_cli, name='replace-permissions')
 managed_catalog_group.add_command(create_root_credentials_cli, name='create-root-credentials')

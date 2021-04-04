@@ -22,5 +22,9 @@
 			"nullable": false
 		}
 	],
+	"properties": {
+		"first_key": "first value",
+		"second_key": "second value"
+	},
 	"storage_location": "abfss://mycat@acct.dfs.core.windows.net"
 }
