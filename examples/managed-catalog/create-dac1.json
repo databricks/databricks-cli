@@ -1,5 +1,3 @@
 {
-	"data_access_configuration": {
-		"name": "my-dac"
-	}
+	"foo": "bar"
 }

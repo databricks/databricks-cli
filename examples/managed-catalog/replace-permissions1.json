@@ -1,5 +1,5 @@
 {
-  "privileges_map": [
+  "privilege_assignments": [
     {
       "privileges": [
         "SELECT",
