@@ -541,7 +541,7 @@ PERMISSIONS_OBJ_TYPES = ['catalog', 'schema', 'table']
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Get permissions on an object.')
+               short_help='Get permissions on a securable.')
 @click.option('--catalog', cls=OneOfOption, default=None,
               one_of=PERMISSIONS_OBJ_TYPES,
               help='Name of catalog of interest')
@@ -557,10 +557,10 @@ PERMISSIONS_OBJ_TYPES = ['catalog', 'schema', 'table']
 @provide_api_client
 def get_permissions_cli(api_client, catalog, schema, table):
     """
-    Get permissions on an object.
+    Get permissions on a securable.
 
     Calls the 'getPermissions' RPC endpoint of the Managed Catalog service.
-    Returns PermissionsList for the requested object.
+    Returns PermissionsList for the requested securable.
 
     """
     perm_json = ManagedCatalogApi(api_client).get_permissions(catalog, schema, table)
@@ -568,7 +568,7 @@ def get_permissions_cli(api_client, catalog, schema, table):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='update permissions on an object.')
+               short_help='update permissions on a securable.')
 @click.option('--catalog', cls=OneOfOption, default=None,
               one_of=PERMISSIONS_OBJ_TYPES,
               help='Name of catalog of interest')
@@ -588,10 +588,10 @@ def get_permissions_cli(api_client, catalog, schema, table):
 @provide_api_client
 def update_permissions_cli(api_client, catalog, schema, table, json_file, json):
     """
-    Update permissions on an object.
+    Update permissions on a securable.
 
     Calls the 'updatePermissions' RPC endpoint of the Managed Catalog service.
-    Returns updated PermissionsList for the requested object.
+    Returns updated PermissionsList for the requested securable.
 
     """
     json_cli_base(json_file, json,
@@ -600,7 +600,7 @@ def update_permissions_cli(api_client, catalog, schema, table, json_file, json):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='replacepermissions on an object.')
+               short_help='replace permissions on a securable.')
 @click.option('--catalog', cls=OneOfOption, default=None,
               one_of=PERMISSIONS_OBJ_TYPES,
               help='Name of catalog of interest')
@@ -620,7 +620,7 @@ def update_permissions_cli(api_client, catalog, schema, table, json_file, json):
 @provide_api_client
 def replace_permissions_cli(api_client, catalog, schema, table, json_file, json):
     """
-    Replace permissions on an object.
+    Replace permissions on a securable.
 
     Calls the 'replacePermissions' RPC endpoint of the Managed Catalog service.
     Returns nothing.
