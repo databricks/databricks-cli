@@ -1049,27 +1049,27 @@ class ManagedCatalogService(object):
             'name': name,
             'storage_root': storage_root,
         }
-        return self.client.perform_query('POST', '/managed-catalog/admin/metastores', data=_data, headers=headers)
+        return self.client.perform_query('POST', '/managed-catalog/metastores', data=_data, headers=headers)
 
     def list_metastores(self, headers=None):
         _data = {}
 
-        return self.client.perform_query('GET', '/managed-catalog/admin/metastores', data=_data, headers=headers)
+        return self.client.perform_query('GET', '/managed-catalog/metastores', data=_data, headers=headers)
 
     def get_metastore(self, metastore_id, headers=None):
         _data = {}
 
-        return self.client.perform_query('GET', '/managed-catalog/admin/metastores/{metastore_id}'.format(metastore_id=metastore_id),
+        return self.client.perform_query('GET', '/managed-catalog/metastores/{metastore_id}'.format(metastore_id=metastore_id),
                                          data=_data, headers=headers)
 
     def update_metastore(self, metastore_id, metastore_spec, headers=None):
-        return self.client.perform_query('PATCH', '/managed-catalog/admin/metastores/{metastore_id}'.format(metastore_id=metastore_id),
+        return self.client.perform_query('PATCH', '/managed-catalog/metastores/{metastore_id}'.format(metastore_id=metastore_id),
                                          data=metastore_spec, headers=headers)
 
     def delete_metastore(self, metastore_id, headers=None):
         _data = {}
 
-        return self.client.perform_query('DELETE', '/managed-catalog/admin/metastores/{metastore_id}'.format(metastore_id=metastore_id),
+        return self.client.perform_query('DELETE', '/managed-catalog/metastores/{metastore_id}'.format(metastore_id=metastore_id),
                                          data=_data, headers=headers)
 
     # Catalog Operations
