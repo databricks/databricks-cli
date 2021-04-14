@@ -1179,10 +1179,8 @@ class ManagedCatalogService(object):
 
     # Data Access Configuration Operations
 
-    def create_dac(self, metastore_id, dac, headers=None):
-        _data = {
-            'data_access_configuration': dac,
-        }
+    def create_dac(self, metastore_id, dac_spec, headers=None):
+        _data = dac_spec
         url = '/managed-catalog/metastores/{metastore_id}/data-access-configurations'.format(metastore_id=metastore_id)
         return self.client.perform_query('POST', url, data=_data, headers=headers)
 
