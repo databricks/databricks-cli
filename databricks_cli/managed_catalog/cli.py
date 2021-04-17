@@ -493,6 +493,26 @@ def create_dac_cli(api_client, metastore_id, json_file, json):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='List data access configurations.')
+@click.option('--metastore-id', required=True, type=MetastoreIdClickType(),
+              help='Unique identifier of the metastore parent of the DAC(s).')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def list_dacs_cli(api_client, metastore_id):
+    """
+    List data access configurations.
+
+    Calls the 'listDataAccessConfigurations' RPC endpoint of the Managed Catalog service.
+    Returns array of DataAccessConfigurations.
+
+    """
+    dacs_json = ManagedCatalogApi(api_client).list_dacs(metastore_id)
+    click.echo(pretty_format(dacs_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Get data access configuration.')
 @click.option('--metastore-id', required=True, type=MetastoreIdClickType(),
               help='Unique identifier of the metastore parent of the DAC.')
@@ -512,6 +532,26 @@ def get_dac_cli(api_client, metastore_id, dac_id):
     """
     dac_json = ManagedCatalogApi(api_client).get_dac(metastore_id, dac_id)
     click.echo(pretty_format(dac_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Delete data access configuration.')
+@click.option('--metastore-id', required=True, type=MetastoreIdClickType(),
+              help='Unique identifier of the metastore parent of the DAC.')
+@click.option('--dac-id', required=True, type=DacIdClickType(),
+              help='Data access configuration ID.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def delete_dac_cli(api_client, metastore_id, dac_id):
+    """
+    Delete data access configuration details.
+
+    Calls the 'deleteDataAccessConfiguration' RPC endpoint of the Managed Catalog service.
+
+    """
+    ManagedCatalogApi(api_client).delete_dac(metastore_id, dac_id)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -666,7 +706,9 @@ managed_catalog_group.add_command(get_table_cli, name='get-table')
 managed_catalog_group.add_command(update_table_cli, name='update-table')
 managed_catalog_group.add_command(delete_table_cli, name='delete-table')
 managed_catalog_group.add_command(create_dac_cli, name='create-dac')
+managed_catalog_group.add_command(list_dacs_cli, name='list-dacs')
 managed_catalog_group.add_command(get_dac_cli, name='get-dac')
+managed_catalog_group.add_command(delete_dac_cli, name='delete-dac')
 managed_catalog_group.add_command(get_permissions_cli, name='get-permissions')
 managed_catalog_group.add_command(update_permissions_cli, name='update-permissions')
 managed_catalog_group.add_command(replace_permissions_cli, name='replace-permissions')

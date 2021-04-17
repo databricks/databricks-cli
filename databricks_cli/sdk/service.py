@@ -1184,9 +1184,19 @@ class ManagedCatalogService(object):
         url = '/managed-catalog/metastores/{metastore_id}/data-access-configurations'.format(metastore_id=metastore_id)
         return self.client.perform_query('POST', url, data=_data, headers=headers)
 
+    def list_dacs(self, metastore_id, headers=None):
+        _data = {}
+
+        url = '/managed-catalog/metastores/{metastore_id}/data-access-configurations'.format(metastore_id=metastore_id)
+        return self.client.perform_query('GET', url, data=_data, headers=headers)
+
     def get_dac(self, metastore_id, dac_id, headers=None):
         url = '/managed-catalog/metastores/{metastore_id}/data-access-configurations/{dac_id}'.format(metastore_id=metastore_id, dac_id=dac_id)
         return self.client.perform_query('GET', url, headers=headers)
+
+    def delete_dac(self, metastore_id, dac_id, headers=None):
+        url = '/managed-catalog/metastores/{metastore_id}/data-access-configurations/{dac_id}'.format(metastore_id=metastore_id, dac_id=dac_id)
+        return self.client.perform_query('DELETE', url, headers=headers)
 
     def create_root_credentials(self, root_creds_obj, headers=None):
         return self.client.perform_query('POST', '/managed-catalog/pe/temporary-root-access-credentials',

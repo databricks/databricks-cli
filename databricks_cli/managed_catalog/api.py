@@ -100,8 +100,14 @@ class ManagedCatalogApi(object):
     def create_dac(self, metastore_id, dac):
         return self.client.create_dac(metastore_id, dac)
 
+    def list_dacs(self, metastore_id):
+        return self.client.list_dacs(metastore_id)
+
     def get_dac(self, metastore_id, dac_id):
         return self.client.get_dac(metastore_id, dac_id)
+
+    def delete_dac(self, metastore_id, dac_id):
+        return self.client.delete_dac(metastore_id, dac_id)
 
     def create_root_credentials(self, root_creds):
         return self.client.create_root_credentials(root_creds)
