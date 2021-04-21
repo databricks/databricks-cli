@@ -136,6 +136,24 @@ def delete_metastore_cli(api_client, metastore_id):
     ManagedCatalogApi(api_client).delete_metastore(metastore_id)
 
 
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Get summary info of current metastore.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def metastore_summary_cli(api_client):
+    """
+    Get metastore summary.
+
+    Calls the 'getMetastoreSummary' RPC endpoint of the Managed Catalog service.
+    Returns nothing.
+
+    """
+    summary_json = ManagedCatalogApi(api_client).get_metastore_summary()
+    click.echo(pretty_format(summary_json))
+
+
 ##############  Catalog Commands  ##############
 
 
@@ -690,6 +708,7 @@ managed_catalog_group.add_command(list_metastores_cli, name='list-metastores')
 managed_catalog_group.add_command(get_metastore_cli, name='get-metastore')
 managed_catalog_group.add_command(update_metastore_cli, name='update-metastore')
 managed_catalog_group.add_command(delete_metastore_cli, name='delete-metastore')
+managed_catalog_group.add_command(metastore_summary_cli, name='metastore-summary')
 managed_catalog_group.add_command(create_catalog_cli, name='create-catalog')
 managed_catalog_group.add_command(list_catalogs_cli, name='list-catalogs')
 managed_catalog_group.add_command(get_catalog_cli, name='get-catalog')

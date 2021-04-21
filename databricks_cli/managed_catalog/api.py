@@ -44,6 +44,9 @@ class ManagedCatalogApi(object):
     def delete_metastore(self, metastore_id):
         return self.client.delete_metastore(metastore_id)
 
+    def get_metastore_summary(self):
+        return self.client.get_metastore_summary()
+
     # Catalog APIs
 
     def create_catalog(self, catalog_name, comment):

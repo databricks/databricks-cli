@@ -1062,6 +1062,11 @@ class ManagedCatalogService(object):
         return self.client.perform_query('GET', '/managed-catalog/metastores/{metastore_id}'.format(metastore_id=metastore_id),
                                          data=_data, headers=headers)
 
+    def get_metastore_summary(self, headers=None):
+        _data = {}
+
+        return self.client.perform_query('GET', '/managed-catalog/metastore_summary', data=_data, headers=headers)
+
     def update_metastore(self, metastore_id, metastore_spec, headers=None):
         return self.client.perform_query('PATCH', '/managed-catalog/metastores/{metastore_id}'.format(metastore_id=metastore_id),
                                          data=metastore_spec, headers=headers)
