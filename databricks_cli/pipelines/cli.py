@@ -293,7 +293,9 @@ def _handle_duplicate_name_exception(spec, exception):
 
     if error_code == 'RESOURCE_CONFLICT':
         raise ValueError("Pipeline with name '{}' already exists. ".format(spec['name']) +
-                         "You can use the --allow-duplicate-names option to skip this check.")
+                         "If you are updating an existing pipeline, provide the pipeline " +
+                         "id using --pipeline-id. Otherwise, " +
+                         "you can use the --allow-duplicate-names option to skip this check. ")
     raise exception
 
 
