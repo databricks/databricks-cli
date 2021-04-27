@@ -91,9 +91,10 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
         raise ValueError('The spec should be provided either by an option or argument')
     src = spec_arg if bool(spec_arg) else spec
     spec_obj = _read_spec(src)
+    spec_dir = os.path.dirname(src)
     if not pipeline_id and 'id' not in spec_obj:
         try:
-            response = PipelinesApi(api_client).create(spec_obj, allow_duplicate_names)
+            response = PipelinesApi(api_client).create(spec_obj, spec_dir, allow_duplicate_names)
         except requests.exceptions.HTTPError as e:
             _handle_duplicate_name_exception(spec_obj, e)
 
@@ -116,7 +117,7 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
         _validate_pipeline_id(spec_obj['id'])
 
         try:
-            PipelinesApi(api_client).deploy(spec_obj, allow_duplicate_names)
+            PipelinesApi(api_client).deploy(spec_obj, spec_dir, allow_duplicate_names)
         except requests.exceptions.HTTPError as e:
             _handle_duplicate_name_exception(spec_obj, e)
         click.echo("Successfully deployed pipeline: {}".format(
@@ -292,7 +293,9 @@ def _handle_duplicate_name_exception(spec, exception):
 
     if error_code == 'RESOURCE_CONFLICT':
         raise ValueError("Pipeline with name '{}' already exists. ".format(spec['name']) +
-                         "You can use the --allow-duplicate-names option to skip this check.")
+                         "If you are updating an existing pipeline, provide the pipeline " +
+                         "id using --pipeline-id. Otherwise, " +
+                         "you can use the --allow-duplicate-names option to skip this check. ")
     raise exception
 
 
