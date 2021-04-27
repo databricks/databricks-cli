@@ -94,8 +94,8 @@ class PipelinesApi(object):
         lib_objects = LibraryObject.from_json(spec.get('libraries', []))
         local_lib_objects, external_lib_objects = self._identify_local_libraries(lib_objects)
 
-        spec['libraries'] = LibraryObject.to_json(external_lib_objects +
-                                                  self._upload_local_libraries(spec_dir, local_lib_objects))
+        spec['libraries'] = LibraryObject.to_json(
+            external_lib_objects + self._upload_local_libraries(spec_dir, local_lib_objects))
         return spec
 
     @staticmethod
