@@ -273,19 +273,19 @@ def test_allow_duplicate_names_flag(pipelines_api_mock, tmpdir):
         f.write(DEPLOY_SPEC_NO_ID)
     runner = CliRunner()
     runner.invoke(cli.deploy_cli, [path])
-    assert pipelines_api_mock.create.call_args_list[0][0][1] is False
+    assert pipelines_api_mock.create.call_args_list[0][0][2] is False
 
     runner.invoke(cli.deploy_cli, [path, "--allow-duplicate-names"])
-    assert pipelines_api_mock.create.call_args_list[1][0][1] is True
+    assert pipelines_api_mock.create.call_args_list[1][0][2] is True
 
     with open(path, 'w') as f:
         f.write(DEPLOY_SPEC)
 
     runner.invoke(cli.deploy_cli, [path])
-    assert pipelines_api_mock.deploy.call_args_list[0][0][1] is False
+    assert pipelines_api_mock.deploy.call_args_list[0][0][2] is False
 
     runner.invoke(cli.deploy_cli, [path, "--allow-duplicate-names"])
-    assert pipelines_api_mock.deploy.call_args_list[1][0][1] is True
+    assert pipelines_api_mock.deploy.call_args_list[1][0][2] is True
 
 
 @provide_conf

@@ -103,10 +103,12 @@ def _test_library_uploads(pipelines_api, api_method, spec, put_file_mock, dbfs_p
     # set-up the test
     jar1 = tmpdir.join('jar1.jar').strpath
     jar2 = tmpdir.join('jar2.jar').strpath
-    jar3 = tmpdir.join('jar3.jar').strpath
+    jar3dir = 'some/relative/path'
+    jar3absdir = tmpdir.join(jar3dir).strpath
+    jar3relpath = os.path.join(jar3dir, 'jar3.jar')
+    jar3abspath = tmpdir.join(jar3relpath).strpath
     jar4 = tmpdir.join('jar4.jar').strpath
     wheel1 = tmpdir.join('wheel-name-conv.whl').strpath
-    jar3_relpath = os.path.relpath(jar3, os.getcwd())
     jar4_file_prefix = 'file:{}'.format(jar4)
     remote_path_456 = 'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar'
 
@@ -114,7 +116,8 @@ def _test_library_uploads(pipelines_api, api_method, spec, put_file_mock, dbfs_p
         f.write('123')
     with open(jar2, 'w') as f:
         f.write('456')
-    with open(jar3, 'w') as f:
+    os.makedirs(jar3absdir)
+    with open(jar3abspath, 'w') as f:
         f.write('456')
     with open(jar4, 'w') as f:
         f.write('456')
@@ -127,7 +130,7 @@ def _test_library_uploads(pipelines_api, api_method, spec, put_file_mock, dbfs_p
         {'unknown': '/foo/bar'},
         {'jar': jar1},
         {'jar': jar2},
-        {'jar': jar3_relpath},
+        {'jar': jar3relpath},
         {'jar': jar4_file_prefix},
         {'whl': wheel1},
     ]
@@ -152,12 +155,12 @@ def _test_library_uploads(pipelines_api, api_method, spec, put_file_mock, dbfs_p
     ]
     expected_data['allow_duplicate_names'] = allow_duplicate_names
 
-    api_method(spec, allow_duplicate_names)
+    api_method(spec, tmpdir.strpath, allow_duplicate_names)
     assert dbfs_path_validate.call_count == 5
     assert put_file_mock.call_count == 4
     assert put_file_mock.call_args_list[0][0][0] == jar2
     assert put_file_mock.call_args_list[0][0][1].absolute_path == remote_path_456
-    assert put_file_mock.call_args_list[1][0][0] == jar3_relpath
+    assert put_file_mock.call_args_list[1][0][0] == jar3abspath
     assert put_file_mock.call_args_list[2][0][0] == jar4
     assert put_file_mock.call_args_list[3][0][0] == wheel1
     client_mock = pipelines_api.client.client.perform_query
@@ -171,13 +174,13 @@ def test_create(pipelines_api):
     spec = copy.deepcopy(SPEC_WITHOUT_ID)
     spec['libraries'] = []
 
-    pipelines_api.create(spec, allow_duplicate_names=False)
+    pipelines_api.create(spec, spec_dir='.', allow_duplicate_names=False)
     data = copy.deepcopy(spec)
     data['allow_duplicate_names'] = False
     client_mock.assert_called_with("POST", "/pipelines", data=data, headers=None)
     assert client_mock.call_count == 1
 
-    pipelines_api.create(spec, allow_duplicate_names=True, headers=HEADERS)
+    pipelines_api.create(spec, spec_dir='.', allow_duplicate_names=True, headers=HEADERS)
     data = copy.deepcopy(spec)
     data['allow_duplicate_names'] = True
     client_mock.assert_called_with("POST", "/pipelines", data=data, headers=HEADERS)
@@ -190,13 +193,13 @@ def test_deploy(pipelines_api):
     spec = copy.deepcopy(SPEC)
     spec['libraries'] = []
 
-    pipelines_api.deploy(spec, allow_duplicate_names=False)
+    pipelines_api.deploy(spec, spec_dir='.', allow_duplicate_names=False)
     data = copy.deepcopy(spec)
     data['allow_duplicate_names'] = False
     client_mock.assert_called_with("PUT", "/pipelines/" + PIPELINE_ID, data=data, headers=None)
     assert client_mock.call_count == 1
 
-    pipelines_api.deploy(spec, allow_duplicate_names=True, headers=HEADERS)
+    pipelines_api.deploy(spec, spec_dir='.', allow_duplicate_names=True, headers=HEADERS)
     data = copy.deepcopy(spec)
     data['allow_duplicate_names'] = True
     client_mock.assert_called_with("PUT", "/pipelines/" + PIPELINE_ID, data=data, headers=HEADERS)
