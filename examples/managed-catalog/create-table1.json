@@ -1,25 +1,28 @@
 {
-	"catalog_name": "my_catalog",
-	"schema_name": "my_schema",
-	"name": "my_new_table",
+	"catalog_name": "default",
+	"schema_name": "default",
+	"name": "my_table",
 	"comment": "something really insightful",
 	"table_type": "MANAGED",
 	"data_source_format": "DELTA",
 	"columns": [
 		{
 			"name": "cust_id",
-			"type": "INT",
-			"nullable": false
+			"column_type": "INT",
+			"nullable": false,
+			"position": 0
 		},
 		{
 			"name": "name",
-			"type": "STRING",
-			"comment": "Short name"
+			"column_type": "STRING",
+			"comment": "Short name",
+			"position": 1
 		},
 		{
 			"name": "some_flag",
-			"type": "BOOLEAN",
-			"nullable": false
+			"column_type": "BOOLEAN",
+			"nullable": false,
+			"position": 2
 		}
 	],
 	"properties": {
