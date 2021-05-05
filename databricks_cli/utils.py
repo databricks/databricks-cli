@@ -101,7 +101,7 @@ def pretty_format(json, encode_utf8=False):
     return json_dumps(json, indent=2)
 
 
-def json_cli_base(json_file, json, api, print_response=True):
+def json_cli_base(json_file, json, api, print_response=True, encode_utf8=False):
     """
     Takes json_file or json string and calls an function "api" with the json
     deserialized
@@ -113,7 +113,7 @@ def json_cli_base(json_file, json, api, print_response=True):
             json = f.read()
     res = api(json_loads(json))
     if print_response:
-        click.echo(pretty_format(res))
+        click.echo(pretty_format(res, encode_utf8))
 
 
 def truncate_string(s, length=100):

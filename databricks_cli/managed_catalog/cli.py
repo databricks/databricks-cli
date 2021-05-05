@@ -397,7 +397,8 @@ def create_table_cli(api_client, json_file, json):
 
     """
     json_cli_base(json_file, json,
-                  lambda json: ManagedCatalogApi(api_client).create_table(json))
+                  lambda json: ManagedCatalogApi(api_client).create_table(json),
+                  encode_utf8=True)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -465,7 +466,8 @@ def update_table_cli(api_client, full_name, json_file, json):
 
     """
     json_cli_base(json_file, json,
-                  lambda json: ManagedCatalogApi(api_client).update_table(full_name, json))
+                  lambda json: ManagedCatalogApi(api_client).update_table(full_name, json),
+                  encode_utf8=True)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -512,7 +514,8 @@ def create_dac_cli(api_client, metastore_id, json_file, json):
 
     """
     json_cli_base(json_file, json,
-                  lambda json: ManagedCatalogApi(api_client).create_dac(metastore_id, json))
+                  lambda json: ManagedCatalogApi(api_client).create_dac(metastore_id, json),
+                  encode_utf8=True)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -597,7 +600,8 @@ def create_root_credentials_cli(api_client, json_file, json):
 
     """
     json_cli_base(json_file, json,
-                  lambda json: ManagedCatalogApi(api_client).create_root_credentials(json))
+                  lambda json: ManagedCatalogApi(api_client).create_root_credentials(json),
+                  encode_utf8=True)
 
 
 PERMISSIONS_OBJ_TYPES = ['catalog', 'schema', 'table']
@@ -659,7 +663,8 @@ def update_permissions_cli(api_client, catalog, schema, table, json_file, json):
     """
     json_cli_base(json_file, json,
                   lambda json: ManagedCatalogApi(api_client).update_permissions(catalog, schema,
-                                                                                table, json))
+                                                                                table, json),
+                  encode_utf8=True)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -691,7 +696,8 @@ def replace_permissions_cli(api_client, catalog, schema, table, json_file, json)
     """
     json_cli_base(json_file, json,
                   lambda json: ManagedCatalogApi(api_client).replace_permissions(catalog, schema,
-                                                                                 table, json))
+                                                                                 table, json),
+                  encode_utf8=True)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
