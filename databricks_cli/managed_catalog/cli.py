@@ -31,6 +31,11 @@ from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format
 from databricks_cli.version import print_version_callback, version
 
 
+# Encode UTF-8 strings in JSON blobs
+def mc_pretty_format(json):
+    return pretty_format(json, encode_utf8=True)
+
+
 #################  Metastore Commands  #####################
 
 
@@ -52,7 +57,7 @@ def create_metastore_cli(api_client, name, storage_root):
 
     """
     metastore_json = ManagedCatalogApi(api_client).create_metastore(name, storage_root)
-    click.echo(pretty_format(metastore_json))
+    click.echo(mc_pretty_format(metastore_json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -70,7 +75,7 @@ def list_metastores_cli(api_client):
 
     """
     metastores_json = ManagedCatalogApi(api_client).list_metastores()
-    click.echo(pretty_format(metastores_json))
+    click.echo(mc_pretty_format(metastores_json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -90,7 +95,7 @@ def get_metastore_cli(api_client, metastore_id):
 
     """
     metastore_json = ManagedCatalogApi(api_client).get_metastore(metastore_id)
-    click.echo(pretty_format(metastore_json))
+    click.echo(mc_pretty_format(metastore_json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -151,7 +156,7 @@ def metastore_summary_cli(api_client):
 
     """
     summary_json = ManagedCatalogApi(api_client).get_metastore_summary()
-    click.echo(pretty_format(summary_json))
+    click.echo(mc_pretty_format(summary_json))
 
 
 ##############  Catalog Commands  ##############
@@ -175,7 +180,7 @@ def create_catalog_cli(api_client, name, comment):
 
     """
     catalog_json = ManagedCatalogApi(api_client).create_catalog(name, comment)
-    click.echo(pretty_format(catalog_json))
+    click.echo(mc_pretty_format(catalog_json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -193,7 +198,7 @@ def list_catalogs_cli(api_client):
 
     """
     catalogs_json = ManagedCatalogApi(api_client).list_catalogs()
-    click.echo(pretty_format(catalogs_json))
+    click.echo(mc_pretty_format(catalogs_json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -213,7 +218,7 @@ def get_catalog_cli(api_client, name):
 
     """
     catalog_json = ManagedCatalogApi(api_client).get_catalog(name)
-    click.echo(pretty_format(catalog_json))
+    click.echo(mc_pretty_format(catalog_json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -282,7 +287,7 @@ def create_schema_cli(api_client, catalog, name, comment):
 
     """
     schema_json = ManagedCatalogApi(api_client).create_schema(catalog, name, comment)
-    click.echo(pretty_format(schema_json))
+    click.echo(mc_pretty_format(schema_json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -304,7 +309,7 @@ def list_schemas_cli(api_client, catalog_name, name_regex):
 
     """
     schemas_json = ManagedCatalogApi(api_client).list_schemas(catalog_name, name_regex)
-    click.echo(pretty_format(schemas_json))
+    click.echo(mc_pretty_format(schemas_json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -324,7 +329,7 @@ def get_schema_cli(api_client, full_name):
 
     """
     schema_json = ManagedCatalogApi(api_client).get_schema(full_name)
-    click.echo(pretty_format(schema_json))
+    click.echo(mc_pretty_format(schema_json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -416,7 +421,7 @@ def list_tables_cli(api_client, catalog_name, schema_name, name_regex):
 
     """
     tables_json = ManagedCatalogApi(api_client).list_tables(catalog_name, schema_name, name_regex)
-    click.echo(pretty_format(tables_json))
+    click.echo(mc_pretty_format(tables_json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -436,7 +441,7 @@ def get_table_cli(api_client, full_name):
 
     """
     table_json = ManagedCatalogApi(api_client).get_table(full_name)
-    click.echo(pretty_format(table_json))
+    click.echo(mc_pretty_format(table_json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -527,7 +532,7 @@ def list_dacs_cli(api_client, metastore_id):
 
     """
     dacs_json = ManagedCatalogApi(api_client).list_dacs(metastore_id)
-    click.echo(pretty_format(dacs_json))
+    click.echo(mc_pretty_format(dacs_json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -549,7 +554,7 @@ def get_dac_cli(api_client, metastore_id, dac_id):
 
     """
     dac_json = ManagedCatalogApi(api_client).get_dac(metastore_id, dac_id)
-    click.echo(pretty_format(dac_json))
+    click.echo(mc_pretty_format(dac_json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -622,7 +627,7 @@ def get_permissions_cli(api_client, catalog, schema, table):
 
     """
     perm_json = ManagedCatalogApi(api_client).get_permissions(catalog, schema, table)
-    click.echo(pretty_format(perm_json))
+    click.echo(mc_pretty_format(perm_json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
