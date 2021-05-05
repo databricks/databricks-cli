@@ -159,6 +159,48 @@ def cat_cli(api_client, src):
     DbfsApi(api_client).cat(src)
 
 
+@click.command(context_settings=CONTEXT_SETTINGS)
+@click.argument('src_path', type=click.Path(exists=True))
+@click.argument('dbfs_path', nargs=-1, type=DbfsPathClickType())
+@click.option('--overwrite', is_flag=True, default=False)
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def put_file_cli(api_client, src_path, dbfs_path, overwrite, headers=None):
+    """
+    Put file to DBFS with multipart form post.
+    """
+    if len(dbfs_path) == 0:
+        dbfs_path = DbfsPath('dbfs:/')
+    elif len(dbfs_path) == 1:
+        dbfs_path = dbfs_path[0]
+    else:
+        error_and_quit('ls can take a maximum of one path.')
+    DbfsApi(api_client).put_file(src_path, dbfs_path, overwrite, headers=headers)
+
+
+@click.command(context_settings=CONTEXT_SETTINGS)
+@click.argument('content')
+@click.argument('dbfs_path', nargs=-1, type=DbfsPathClickType())
+@click.option('--overwrite', is_flag=True, default=False)
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def put_content_cli(api_client, content, dbfs_path, overwrite, headers=None):
+    """
+    Put contents to a file in DBFS with multipart form post.
+    """
+    if len(dbfs_path) == 0:
+        dbfs_path = DbfsPath('dbfs:/')
+    elif len(dbfs_path) == 1:
+        dbfs_path = dbfs_path[0]
+    else:
+        error_and_quit('ls can take a maximum of one path.')
+    DbfsApi(api_client).put_content(content, dbfs_path, overwrite, headers=headers)
+
+
 dbfs_group.add_command(configure_cli, name='configure')
 dbfs_group.add_command(ls_cli, name='ls')
 dbfs_group.add_command(mkdirs_cli, name='mkdirs')
@@ -166,3 +208,5 @@ dbfs_group.add_command(rm_cli, name='rm')
 dbfs_group.add_command(cp_cli, name='cp')
 dbfs_group.add_command(mv_cli, name='mv')
 dbfs_group.add_command(cat_cli, name='cat')
+dbfs_group.add_command(put_file_cli, name='put_file')
+dbfs_group.add_command(put_content_cli, name='put_content')

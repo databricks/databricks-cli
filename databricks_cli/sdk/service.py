@@ -23,6 +23,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import os
+
+
 class JobsService(object):
     def __init__(self, client):
         self.client = client
@@ -519,15 +522,20 @@ class DbfsService(object):
             _data['path'] = path
         return self.client.perform_query('GET', '/dbfs-testing/list', data=_data, headers=headers)
 
-    def put(self, path, contents=None, overwrite=None, headers=None):
+    def put(self, path, src_path=None, contents=None, overwrite=None, headers=None):
         _data = {}
+        _files = None
         if path is not None:
             _data['path'] = path
         if contents is not None:
             _data['contents'] = contents
+        elif src_path is not None:
+            filename = os.path.basename(src_path)
+            _files = {"file": (filename, open(src_path, 'rb'))}
         if overwrite is not None:
             _data['overwrite'] = overwrite
-        return self.client.perform_query('POST', '/dbfs/put', data=_data, headers=headers)
+        print("query")
+        return self.client.perform_query('POST', '/dbfs/put', data=_data, files=_files, headers=headers)
 
     def put_test(self, path, contents=None, overwrite=None, headers=None):
         _data = {}
