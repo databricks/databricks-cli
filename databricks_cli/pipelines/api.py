@@ -40,14 +40,14 @@ class PipelinesApi(object):
         self.client = DeltaPipelinesService(api_client)
         self.dbfs_client = DbfsApi(api_client)
 
-    def create(self, spec, allow_duplicate_names, headers=None):
-        data = self._upload_libraries_and_update_spec(spec)
+    def create(self, spec, spec_dir, allow_duplicate_names, headers=None):
+        data = self._upload_libraries_and_update_spec(spec, spec_dir)
         data['allow_duplicate_names'] = allow_duplicate_names
         return self.client.client.perform_query('POST', '/pipelines', data=data,
                                                 headers=headers)
 
-    def deploy(self, spec, allow_duplicate_names, headers=None):
-        data = self._upload_libraries_and_update_spec(spec)
+    def deploy(self, spec, spec_dir, allow_duplicate_names, headers=None):
+        data = self._upload_libraries_and_update_spec(spec, spec_dir)
         data['allow_duplicate_names'] = allow_duplicate_names
         pipeline_id = data['id']
         self.client.client.perform_query('PUT', '/pipelines/{}'.format(pipeline_id), data=data,
@@ -89,13 +89,13 @@ class PipelinesApi(object):
     def stop(self, pipeline_id, headers=None):
         self.client.stop(pipeline_id, headers)
 
-    def _upload_libraries_and_update_spec(self, spec):
+    def _upload_libraries_and_update_spec(self, spec, spec_dir):
         spec = copy.deepcopy(spec)
         lib_objects = LibraryObject.from_json(spec.get('libraries', []))
         local_lib_objects, external_lib_objects = self._identify_local_libraries(lib_objects)
 
-        spec['libraries'] = LibraryObject.to_json(external_lib_objects +
-                                                  self._upload_local_libraries(local_lib_objects))
+        spec['libraries'] = LibraryObject.to_json(
+            external_lib_objects + self._upload_local_libraries(spec_dir, local_lib_objects))
         return spec
 
     @staticmethod
@@ -127,14 +127,15 @@ class PipelinesApi(object):
                 external_lib_objects.append(lib_object)
         return local_lib_objects, external_lib_objects
 
-    def _upload_local_libraries(self, local_lib_objects):
-        remote_lib_objects = [LibraryObject(llo.lib_type, self._get_hashed_path(llo.path))
-                              for llo in local_lib_objects]
-
+    def _upload_local_libraries(self, spec_dir, local_lib_objects):
+        relative_local_lib_objects = [LibraryObject(llo.lib_type, os.path.join(spec_dir, llo.path))
+                                      for llo in local_lib_objects]
+        remote_lib_objects = [LibraryObject(rllo.lib_type, self._get_hashed_path(rllo.path))
+                              for rllo in relative_local_lib_objects]
         transformed_remote_lib_objects = [LibraryObject(rlo.lib_type, DbfsPath(rlo.path))
                                           for rlo in remote_lib_objects]
         upload_files = [llo_tuple for llo_tuple in
-                        zip(local_lib_objects, transformed_remote_lib_objects)
+                        zip(relative_local_lib_objects, transformed_remote_lib_objects)
                         if not self.dbfs_client.file_exists(llo_tuple[1].path)]
 
         for llo, rlo in upload_files:
