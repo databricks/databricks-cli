@@ -159,37 +159,6 @@ def cat_cli(api_client, src):
     DbfsApi(api_client).cat(src)
 
 
-@click.command(context_settings=CONTEXT_SETTINGS)
-@click.argument('src_path', type=click.Path(exists=True, resolve_path=True))
-@click.argument('dbfs_path', type=DbfsPathClickType())
-@click.option('--overwrite', is_flag=True, default=False)
-@debug_option
-@profile_option
-@eat_exceptions
-@provide_api_client
-def put_file_cli(api_client, src_path, dbfs_path, overwrite, headers=None):
-    """
-    Put file to DBFS with multipart form post.
-    """
-    print(src_path)
-    DbfsApi(api_client).put_file(src_path, dbfs_path, overwrite, headers=headers)
-
-
-@click.command(context_settings=CONTEXT_SETTINGS)
-@click.argument('content')
-@click.argument('dbfs_path', type=DbfsPathClickType())
-@click.option('--overwrite', is_flag=True, default=False)
-@debug_option
-@profile_option
-@eat_exceptions
-@provide_api_client
-def put_content_cli(api_client, content, dbfs_path, overwrite, headers=None):
-    """
-    Put contents to a file in DBFS with multipart form post.
-    """
-    DbfsApi(api_client).put_content(content, dbfs_path, overwrite, headers=headers)
-
-
 dbfs_group.add_command(configure_cli, name='configure')
 dbfs_group.add_command(ls_cli, name='ls')
 dbfs_group.add_command(mkdirs_cli, name='mkdirs')

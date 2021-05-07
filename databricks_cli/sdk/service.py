@@ -24,7 +24,6 @@
 # limitations under the License.
 #
 import base64
-import json
 import os
 
 
@@ -524,7 +523,7 @@ class DbfsService(object):
             _data['path'] = path
         return self.client.perform_query('GET', '/dbfs-testing/list', data=_data, headers=headers)
 
-    def put(self, path, src_path=None, contents=None, overwrite=None, headers=None):
+    def put(self, path, contents=None, overwrite=None, headers=None, src_path=None):
         _data = {}
         _files = None
         if path is not None:
