@@ -23,6 +23,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import base64
+import json
 import os
 
 
@@ -528,13 +530,21 @@ class DbfsService(object):
         if path is not None:
             _data['path'] = path
         if contents is not None:
-            _data['contents'] = contents
-        elif src_path is not None:
-            filename = os.path.basename(src_path)
-            _files = {"file": (filename, open(src_path, 'rb'))}
+            # Because terminal might add trailing newlines, they need to be encoded properly.
+            encoded_contents = base64.b64encode(contents.encode('utf-8'))
+            _data['contents'] = encoded_contents.decode("utf-8")
         if overwrite is not None:
             _data['overwrite'] = overwrite
-        print("query")
+        if src_path is not None:
+            # @self.client sets Content-Type 'text/json' by default.
+            # For multipart/form-data POST Content-Type should be set automatically
+            # to decode 'Boundary' parameter.
+            headers = {'Content-Type': None}
+            filename = os.path.basename(src_path)
+            _files = {
+                'file': (filename, open(src_path, 'rb'), 'multipart/form-data')
+            }
+            # headers = {'Content-Type': 'multipart/form-data'}
         return self.client.perform_query('POST', '/dbfs/put', data=_data, files=_files, headers=headers)
 
     def put_test(self, path, contents=None, overwrite=None, headers=None):

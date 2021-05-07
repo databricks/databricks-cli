@@ -129,10 +129,8 @@ class ApiClient(object):
                     resp = self.session.request(method, self.url + path, data = json.dumps(data),
                                                 verify = self.verify, headers = headers)
                 else:
-                    print("here")
-                    print(files)
-                    resp = self.session.post(self.url + path, files=files, data=data, verify=self.verify,
-                                             headers=headers)
+                    resp = self.session.request(method, self.url + path, files=files, data=data,
+                                                verify=self.verify, headers=headers)
         try:
             resp.raise_for_status()
         except requests.exceptions.HTTPError as e:
