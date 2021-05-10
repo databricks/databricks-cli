@@ -21,7 +21,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from base64 import b64encode, b64decode
+from base64 import b64decode
 
 import os
 import shutil
@@ -114,10 +114,12 @@ class DbfsApi(object):
         return FileInfo.from_json(json)
 
     def put_file(self, src_path, dbfs_path, overwrite, headers=None):
-        self.client.put(dbfs_path.absolute_path, src_path=src_path, overwrite=overwrite, headers=headers)
+        self.client.put(dbfs_path.absolute_path, src_path=src_path,
+                        overwrite=overwrite, headers=headers)
 
     def put_content(self, content, dbfs_path, overwrite, headers=None):
-        self.client.put(dbfs_path.absolute_path, contents=content, overwrite=overwrite, headers=headers)
+        self.client.put(dbfs_path.absolute_path, contents=content,
+                        overwrite=overwrite, headers=headers)
 
     def get_file(self, dbfs_path, dst_path, overwrite, headers=None):
         if os.path.exists(dst_path) and not overwrite:
