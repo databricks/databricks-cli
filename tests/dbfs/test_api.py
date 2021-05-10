@@ -136,7 +136,6 @@ class TestDbfsApi(object):
         # Should succeed.
         dbfs_api.put_file(test_file_path, TEST_DBFS_PATH, True)
 
-
     def test_get_file_check_overwrite(self, dbfs_api, tmpdir):
         test_file_path = os.path.join(tmpdir.strpath, 'test')
         with open(test_file_path, 'w') as f:
