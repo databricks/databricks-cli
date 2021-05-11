@@ -125,10 +125,11 @@ class ApiClient(object):
                 resp = self.session.request(method, self.url + path, params = translated_data,
                                             verify = self.verify, headers = headers)
             else:
-                if files is None:
+                if 'file' not in data:
                     resp = self.session.request(method, self.url + path, data = json.dumps(data),
                                                 verify = self.verify, headers = headers)
                 else:
+                    # Multipart file upload
                     resp = self.session.request(method, self.url + path, files=files, data=data,
                                                 verify=self.verify, headers=headers)
         try:
