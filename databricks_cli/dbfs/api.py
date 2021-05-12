@@ -113,15 +113,10 @@ class DbfsApi(object):
         json = self.client.get_status(dbfs_path.absolute_path, headers=headers)
         return FileInfo.from_json(json)
 
-    # Two variations of put implemented. See https://docs.databricks.com/dev-tools/api/latest/dbfs.html#put
-    # @put_file() is for multipart-form-data file upload.
+    # Single variation of put implemented. See https://docs.databricks.com/dev-tools/api/latest/dbfs.html#put
+    # @put_file() is for multipart file upload.
     def put_file(self, src_path, dbfs_path, overwrite, headers=None):
         self.client.put(dbfs_path.absolute_path, src_path=src_path,
-                        overwrite=overwrite, headers=headers)
-
-    # @put_content() is for sending base64 content string.
-    def put_content(self, content, dbfs_path, overwrite, headers=None):
-        self.client.put(dbfs_path.absolute_path, contents=content,
                         overwrite=overwrite, headers=headers)
 
     def get_file(self, dbfs_path, dst_path, overwrite, headers=None):

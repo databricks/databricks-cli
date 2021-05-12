@@ -125,7 +125,7 @@ class ApiClient(object):
                 resp = self.session.request(method, self.url + path, params = translated_data,
                                             verify = self.verify, headers = headers)
             else:
-                if 'file' not in data:
+                if files is None:
                     resp = self.session.request(method, self.url + path, data = json.dumps(data),
                                                 verify = self.verify, headers = headers)
                 else:
