@@ -21,7 +21,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from base64 import b64decode
+from base64 import b64encode, b64decode
 
 import os
 import shutil
@@ -116,8 +116,20 @@ class DbfsApi(object):
     # Single variation of put implemented. See https://docs.databricks.com/dev-tools/api/latest/dbfs.html#put
     # @put_file() is for multipart file upload.
     def put_file(self, src_path, dbfs_path, overwrite, headers=None):
-        self.client.put(dbfs_path.absolute_path, src_path=src_path,
-                        overwrite=overwrite, headers=headers)
+        # If file size is >2Gb use streaming upload.
+        if os.path.getsize(src_path) <= 2147483648:
+            self.client.put(dbfs_path.absolute_path, src_path=src_path,
+                            overwrite=overwrite, headers=headers)
+        else:
+            handle = self.client.create(dbfs_path.absolute_path, overwrite, headers=headers)['handle']
+            with open(src_path, 'rb') as local_file:
+                while True:
+                    contents = local_file.read(BUFFER_SIZE_BYTES)
+                    if len(contents) == 0:
+                        break
+                    # add_block should not take a bytes object.
+                    self.client.add_block(handle, b64encode(contents).decode(), headers=headers)
+                self.client.close(handle, headers=headers)
 
     def get_file(self, dbfs_path, dst_path, overwrite, headers=None):
         if os.path.exists(dst_path) and not overwrite:
