@@ -144,10 +144,9 @@ class TestDbfsApi(object):
         test_handle = 0
         api_mock.create.return_value = {'handle': test_handle}
         dbfs_api.put_file(test_file_path, TEST_DBFS_PATH, True)
-
-        assert api_mock.add_block.call_count > 1
+        add_block_expected = 2254856676 / (2*820)
+        assert api_mock.add_block.call_count == add_block_expected
         assert test_handle == api_mock.add_block.call_args[0][0]
-        assert b64encode(b'\0').decode() == api_mock.add_block.call_args[0][1]
         assert api_mock.close.call_count == 1
         assert test_handle == api_mock.close.call_args[0][0]
 
