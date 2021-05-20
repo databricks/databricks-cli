@@ -130,8 +130,8 @@ class ApiClient(object):
                                                 verify = self.verify, headers = headers)
                 else:
                     # Multipart file upload
-                    resp = self.session.request(method, self.url + path, files=files, data=data,
-                                                verify=self.verify, headers=headers)
+                    resp = self.session.request(method, self.url + path, files = files, data = data,
+                                                verify = self.verify, headers = headers)
         try:
             resp.raise_for_status()
         except requests.exceptions.HTTPError as e:
