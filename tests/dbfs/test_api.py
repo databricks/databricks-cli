@@ -22,7 +22,6 @@
 # limitations under the License.
 
 # pylint:disable=redefined-outer-name
-import math
 from base64 import b64encode
 
 import os
