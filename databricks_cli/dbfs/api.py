@@ -120,9 +120,11 @@ class DbfsApi(object):
     def put_file(self, src_path, dbfs_path, overwrite, headers=None):
         # If file size is >2Gb use streaming upload.
         if os.path.getsize(src_path) < self.MULTIPART_UPLOAD_LIMIT:
+            print("using multipart")
             self.client.put(dbfs_path.absolute_path, src_path=src_path,
                             overwrite=overwrite, headers=headers)
         else:
+            print("using streaming")
             handle = self.client.create(dbfs_path.absolute_path, overwrite,
                                         headers=headers)['handle']
             with open(src_path, 'rb') as local_file:

@@ -535,6 +535,7 @@ class DbfsService(object):
             headers = {'Content-Type': None}
             filename = os.path.basename(src_path)
             _files = {'file': (filename, open(src_path, 'rb'), 'multipart/form-data')}
+            print("adding source file")
         return self.client.perform_query('POST', '/dbfs/put', data=_data, headers=headers, files=_files)
 
     def put_test(self, path, contents=None, overwrite=None, headers=None, src_path=None):
