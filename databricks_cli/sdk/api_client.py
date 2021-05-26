@@ -130,7 +130,6 @@ class ApiClient(object):
                                                 verify = self.verify, headers = headers)
                 else:
                     # Multipart file upload
-                    print("sending file")
                     resp = self.session.request(method, self.url + path, files = files, data = data,
                                                 verify = self.verify, headers = headers)
         try:
