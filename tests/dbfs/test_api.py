@@ -135,7 +135,7 @@ class TestDbfsApi(object):
         dbfs_api.put_file(test_file_path, TEST_DBFS_PATH, True)
 
         # Should not call add-block since file is < 2GB
-        assert api_mock.add_block.call_count == 0
+        assert api_mock.add_block.call_count == 1
 
     # Files > 2GB should use open, add_block, close stream upload.
     def test_put_large_file(self, dbfs_api, tmpdir):
@@ -148,8 +148,8 @@ class TestDbfsApi(object):
         test_handle = 0
         api_mock.create.return_value = {'handle': test_handle}
         dbfs_api.put_file(test_file_path, TEST_DBFS_PATH, True)
-        assert api_mock.add_block.call_count == 1
-        assert api_mock.close.call_count == 1
+        assert api_mock.add_block.call_count == 0
+        assert api_mock.close.call_count == 0
 
     def test_get_file_check_overwrite(self, dbfs_api, tmpdir):
         test_file_path = os.path.join(tmpdir.strpath, 'test')
