@@ -38,7 +38,7 @@ from tests.utils import provide_conf
 def test_debug_option():
     # Test that context object debug_mode property changes with --debug flag fed.
     @click.command()
-    @click.option('--debug-fed')
+    @click.option('--debug-fed', type=bool)
     @config.debug_option
     def test_debug(debug_fed): # noqa
         ctx = click.get_current_context()
