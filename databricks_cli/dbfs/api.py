@@ -116,7 +116,7 @@ class DbfsApi(object):
         return FileInfo.from_json(json)
 
     # Method makes multipart/form-data file upload for files <2GB.
-    # Otherwise uses open, add-block, close methods for streaming upload.
+    # Otherwise uses <span class="x x-first x-last">create</span>, add-block, close methods for streaming upload.
     def put_file(self, src_path, dbfs_path, overwrite, headers=None):
         # If file size is >2Gb use streaming upload.
         if os.path.getsize(src_path) < self.MULTIPART_UPLOAD_LIMIT:
