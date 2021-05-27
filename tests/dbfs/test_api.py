@@ -138,7 +138,7 @@ class TestDbfsApi(object):
         # Should not call add-block since file is < 2GB
         assert api_mock.add_block.call_count == 0
 
-    # Files &gt; 2GB should use <span class="x x-first x-last">create</span>, add_block, close stream upload.
+    # Files > 2GB should use create, add_block, close stream upload.
     def test_put_large_file(self, dbfs_api, tmpdir):
         test_file_path = os.path.join(tmpdir.strpath, 'test')
         with open(test_file_path, 'wt') as f:
