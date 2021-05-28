@@ -86,6 +86,8 @@ class DbfsErrorCodes(object):
 
 
 class DbfsApi(object):
+    MULTIPART_UPLOAD_LIMIT = 2147483648
+
     def __init__(self, api_client):
         self.client = DbfsService(api_client)
 
@@ -113,16 +115,24 @@ class DbfsApi(object):
         json = self.client.get_status(dbfs_path.absolute_path, headers=headers)
         return FileInfo.from_json(json)
 
+    # Method makes multipart/form-data file upload for files <2GB.
+    # Otherwise uses create, add-block, close methods for streaming upload.
     def put_file(self, src_path, dbfs_path, overwrite, headers=None):
-        handle = self.client.create(dbfs_path.absolute_path, overwrite, headers=headers)['handle']
-        with open(src_path, 'rb') as local_file:
-            while True:
-                contents = local_file.read(BUFFER_SIZE_BYTES)
-                if len(contents) == 0:
-                    break
-                # add_block should not take a bytes object.
-                self.client.add_block(handle, b64encode(contents).decode(), headers=headers)
-            self.client.close(handle, headers=headers)
+        # If file size is >2Gb use streaming upload.
+        if os.path.getsize(src_path) < self.MULTIPART_UPLOAD_LIMIT:
+            self.client.put(dbfs_path.absolute_path, src_path=src_path,
+                            overwrite=overwrite, headers=headers)
+        else:
+            handle = self.client.create(dbfs_path.absolute_path, overwrite,
+                                        headers=headers)['handle']
+            with open(src_path, 'rb') as local_file:
+                while True:
+                    contents = local_file.read(BUFFER_SIZE_BYTES)
+                    if len(contents) == 0:
+                        break
+                    # add_block should not take a bytes object.
+                    self.client.add_block(handle, b64encode(contents).decode(), headers=headers)
+                self.client.close(handle, headers=headers)
 
     def get_file(self, dbfs_path, dst_path, overwrite, headers=None):
         if os.path.exists(dst_path) and not overwrite:

@@ -135,6 +135,20 @@ class TestDbfsApi(object):
         api_mock.create.return_value = {'handle': test_handle}
         dbfs_api.put_file(test_file_path, TEST_DBFS_PATH, True)
 
+        # Should not call add-block since file is < 2GB
+        assert api_mock.add_block.call_count == 0
+
+    # Files >= 2GB should use create, add_block, close stream upload.
+    def test_put_large_file(self, dbfs_api, tmpdir):
+        test_file_path = os.path.join(tmpdir.strpath, 'test')
+        with open(test_file_path, 'wt') as f:
+            f.write('test')
+        api_mock = dbfs_api.client
+        # Make streaming upload threshold 2 bytes for testing.
+        dbfs_api.MULTIPART_UPLOAD_LIMIT = 2
+        test_handle = 0
+        api_mock.create.return_value = {'handle': test_handle}
+        dbfs_api.put_file(test_file_path, TEST_DBFS_PATH, True)
         assert api_mock.add_block.call_count == 1
         assert test_handle == api_mock.add_block.call_args[0][0]
         assert b64encode(b'test').decode() == api_mock.add_block.call_args[0][1]
