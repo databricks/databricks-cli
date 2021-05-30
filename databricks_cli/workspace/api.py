@@ -23,6 +23,7 @@
 
 import os
 from base64 import b64encode, b64decode
+from os.path import dirname
 
 import click
 from requests.exceptions import HTTPError
@@ -37,7 +38,7 @@ LIBRARY = 'LIBRARY'
 
 
 class WorkspaceFileInfo(object):
-    def __init__(self, path, object_type, object_id, language=None, **kwargs): # noqa
+    def __init__(self, path, object_type, language=None, object_id=None, **kwargs): # noqa
         self.path = path
         self.object_type = object_type
         self.language = language
@@ -61,6 +62,14 @@ class WorkspaceFileInfo(object):
             result.append(self.object_id)
 
         return result
+
+    def to_json(self):
+        return {
+            'path': self.path,
+            'object_type': self.object_type,
+            'language': self.language,
+            'object_id': self.object_id,
+        }
 
     @property
     def is_dir(self):
@@ -98,6 +107,7 @@ class WorkspaceApi(object):
         if 'objects' not in response:
             return []
         objects = response['objects']
+
         return [WorkspaceFileInfo.from_json(f) for f in objects]
 
     def mkdirs(self, workspace_path, headers=None):
@@ -186,3 +196,34 @@ class WorkspaceApi(object):
                     click.echo('{} already exists locally as {}. Skip.'.format(cur_src, cur_dst))
             else:
                 click.echo('{} is neither a dir or a notebook. Skip.'.format(cur_src))
+
+    def list_directory_info(self, workspace_path, headers=None):
+        # first, we need to trim the workspace_path
+        # then we need the parent
+        workspace_path = workspace_path.rstrip('/')
+        parent_path = dirname(workspace_path)
+        if len(parent_path) == 0:
+            parent_path = '/'
+
+        last_entry = workspace_path.split('/')[-1]
+
+        return [object_value for object_value in self.list_objects(parent_path, headers) if
+                last_entry in object_value.path]
+
+    def get_id_for_directory(self, path):
+        # type: (str) -> list[str]
+        """
+        Given a path, use the workspaces API to look up the object id.
+        :param path: path to a directory
+        :return: object id, [] if not found
+        """
+
+        if not path:
+            return []
+
+        objects = self.list_directory_info(path)
+        if not objects:
+            return []
+
+        # ls -d already filtered for us
+        return [workspace_object.object_id for workspace_object in objects]
