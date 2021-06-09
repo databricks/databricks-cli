@@ -701,7 +701,11 @@ def replace_permissions_cli(api_client, catalog, schema, table, json_file, json)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
-             short_help='Utility to interact with Databricks managed-catalog.')
+             help='Utility to interact with Databricks managed-catalog.\n\n' +
+             '**********************************************************************\n' +
+             'WARNING: these commands are EXPERIMENTAL and not officially supported.\n' +
+             '**********************************************************************',
+             hidden=True)
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
 @debug_option
