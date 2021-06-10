@@ -8,19 +8,22 @@
 	"columns": [
 		{
 			"name": "cust_id",
-			"data_type": "INT",
+			"type_name": "INT",
+			"type_text": "INT",
 			"nullable": false,
 			"position": 0
 		},
 		{
 			"name": "name",
-			"data_type": "STRING",
+			"type_name": "STRING",
+			"type_text": "STRING",
 			"comment": "Short name",
 			"position": 1
 		},
 		{
 			"name": "some_flag",
-			"data_type": "BOOLEAN",
+			"type_name": "BOOLEAN",
+			"type_text": "BOOLEAN",
 			"nullable": false,
 			"position": 2
 		}
