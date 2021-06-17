@@ -93,6 +93,7 @@ def _test_library_uploads(pipelines_api, api_method, spec, put_file_mock, dbfs_p
     2. File already present in dbfs
     3. Local files already present in dbfs
     4. Local files that need to be uploaded to dbfs
+    5. Future / unknown library types
     Every test local file which has '123' written to it is expected to be already present in Dbfs.
     A test local file which has '456' written to it is not present in Dbfs and therefore must be.
     uploaded to dbfs.
@@ -102,10 +103,12 @@ def _test_library_uploads(pipelines_api, api_method, spec, put_file_mock, dbfs_p
     # set-up the test
     jar1 = tmpdir.join('jar1.jar').strpath
     jar2 = tmpdir.join('jar2.jar').strpath
-    jar3 = tmpdir.join('jar3.jar').strpath
+    jar3dir = 'some/relative/path'
+    jar3absdir = tmpdir.join(jar3dir).strpath
+    jar3relpath = os.path.join(jar3dir, 'jar3.jar')
+    jar3abspath = tmpdir.join(jar3relpath).strpath
     jar4 = tmpdir.join('jar4.jar').strpath
     wheel1 = tmpdir.join('wheel-name-conv.whl').strpath
-    jar3_relpath = os.path.relpath(jar3, os.getcwd())
     jar4_file_prefix = 'file:{}'.format(jar4)
     remote_path_456 = 'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar'
 
@@ -113,41 +116,51 @@ def _test_library_uploads(pipelines_api, api_method, spec, put_file_mock, dbfs_p
         f.write('123')
     with open(jar2, 'w') as f:
         f.write('456')
-    with open(jar3, 'w') as f:
+    os.makedirs(jar3absdir)
+    with open(jar3abspath, 'w') as f:
         f.write('456')
     with open(jar4, 'w') as f:
         f.write('456')
     with open(wheel1, 'w') as f:
         f.write('456')
-    libraries = [{'jar': 'dbfs:/pipelines/code/file.jar'},
-                 {'maven': {'coordinates': 'com.org.name:package:0.1.0'}},
-                 {'jar': jar1},
-                 {'jar': jar2},
-                 {'jar': jar3_relpath},
-                 {'jar': jar4_file_prefix},
-                 {'whl': wheel1}]
+    libraries = [
+        {'jar': 'dbfs:/pipelines/code/file.jar'},
+        {'maven': {'coordinates': 'com.org.name:package:0.1.0'}},
+        {'unknown': {'attr1': 'value1'}},
+        {'unknown': '/foo/bar'},
+        {'jar': jar1},
+        {'jar': jar2},
+        {'jar': jar3relpath},
+        {'jar': jar4_file_prefix},
+        {'whl': wheel1},
+    ]
 
     expected_data = copy.deepcopy(spec)
 
     spec['libraries'] = libraries
 
+    hash123 = "40bd001563085fc35165329ea1ff5c5ecbdbbeef"
+    hash456 = "51eac6b471a284d3341d8c0c63d0f1a286262a18"
     expected_data['libraries'] = [
         {'jar': 'dbfs:/pipelines/code/file.jar'},
         {'maven': {'coordinates': 'com.org.name:package:0.1.0'}},
-        {'jar': 'dbfs:/pipelines/code/40bd001563085fc35165329ea1ff5c5ecbdbbeef.jar'},
-        {'jar': 'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar'},
-        {'jar': 'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar'},
-        {'jar': 'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18.jar'},
-        {'whl': 'dbfs:/pipelines/code/51eac6b471a284d3341d8c0c63d0f1a286262a18/wheel-name-conv.whl'}
+        # Unknown library type attributes are passed as is.
+        {'unknown': {'attr1': 'value1'}},
+        {'unknown': '/foo/bar'},
+        {'jar': 'dbfs:/pipelines/code/{}.jar'.format(hash123)},
+        {'jar': 'dbfs:/pipelines/code/{}.jar'.format(hash456)},
+        {'jar': 'dbfs:/pipelines/code/{}.jar'.format(hash456)},
+        {'jar': 'dbfs:/pipelines/code/{}.jar'.format(hash456)},
+        {'whl': 'dbfs:/pipelines/code/{}/wheel-name-conv.whl'.format(hash456)},
     ]
     expected_data['allow_duplicate_names'] = allow_duplicate_names
 
-    api_method(spec, allow_duplicate_names)
+    api_method(spec, tmpdir.strpath, allow_duplicate_names)
     assert dbfs_path_validate.call_count == 5
     assert put_file_mock.call_count == 4
     assert put_file_mock.call_args_list[0][0][0] == jar2
     assert put_file_mock.call_args_list[0][0][1].absolute_path == remote_path_456
-    assert put_file_mock.call_args_list[1][0][0] == jar3_relpath
+    assert put_file_mock.call_args_list[1][0][0] == jar3abspath
     assert put_file_mock.call_args_list[2][0][0] == jar4
     assert put_file_mock.call_args_list[3][0][0] == wheel1
     client_mock = pipelines_api.client.client.perform_query
@@ -161,13 +174,13 @@ def test_create(pipelines_api):
     spec = copy.deepcopy(SPEC_WITHOUT_ID)
     spec['libraries'] = []
 
-    pipelines_api.create(spec, allow_duplicate_names=False)
+    pipelines_api.create(spec, spec_dir='.', allow_duplicate_names=False)
     data = copy.deepcopy(spec)
     data['allow_duplicate_names'] = False
     client_mock.assert_called_with("POST", "/pipelines", data=data, headers=None)
     assert client_mock.call_count == 1
 
-    pipelines_api.create(spec, allow_duplicate_names=True, headers=HEADERS)
+    pipelines_api.create(spec, spec_dir='.', allow_duplicate_names=True, headers=HEADERS)
     data = copy.deepcopy(spec)
     data['allow_duplicate_names'] = True
     client_mock.assert_called_with("POST", "/pipelines", data=data, headers=HEADERS)
@@ -180,13 +193,13 @@ def test_deploy(pipelines_api):
     spec = copy.deepcopy(SPEC)
     spec['libraries'] = []
 
-    pipelines_api.deploy(spec, allow_duplicate_names=False)
+    pipelines_api.deploy(spec, spec_dir='.', allow_duplicate_names=False)
     data = copy.deepcopy(spec)
     data['allow_duplicate_names'] = False
     client_mock.assert_called_with("PUT", "/pipelines/" + PIPELINE_ID, data=data, headers=None)
     assert client_mock.call_count == 1
 
-    pipelines_api.deploy(spec, allow_duplicate_names=True, headers=HEADERS)
+    pipelines_api.deploy(spec, spec_dir='.', allow_duplicate_names=True, headers=HEADERS)
     data = copy.deepcopy(spec)
     data['allow_duplicate_names'] = True
     client_mock.assert_called_with("PUT", "/pipelines/" + PIPELINE_ID, data=data, headers=HEADERS)
@@ -398,3 +411,61 @@ def test_list_with_paginated_responses(pipelines_api):
         ], any_order=False)
 
     assert [status["pipeline_id"] for status in pipelines] == ["1", "2", "3", "4", "5", "6"]
+
+
+def test_list_with_no_returned_pipelines(pipelines_api):
+    client_mock = pipelines_api.client.client.perform_query
+    client_mock.side_effect = [
+        {'statuses': [{'pipeline_id': '1',
+                       'state': 'RUNNING',
+                       'cluster_id': '1024-161828-gram477',
+                       'name': 'windfarm-pipe-v2',
+                       'health': 'HEALTHY'},
+                      {'pipeline_id': '2',
+                       'state': 'RUNNING',
+                       'cluster_id': '1024-160918-tees475',
+                       'name': 'Wiki Pipeline',
+                       'health': 'HEALTHY'}],
+         'pagination': {'next_page_token': 'page2'}
+         },
+        {}
+    ]
+
+    pipelines = pipelines_api.list()
+
+    assert client_mock.call_count == 2
+    client_mock.assert_has_calls(
+        [
+            mock.call('GET', '/pipelines',
+                      data={},
+                      headers=None),
+            mock.call('GET', '/pipelines',
+                      data={"pagination.page_token": "page2"},
+                      headers=None)
+        ], any_order=False)
+
+    assert [status["pipeline_id"] for status in pipelines] == ["1", "2"]
+
+
+def test_list_without_pagination(pipelines_api):
+    client_mock = pipelines_api.client.client.perform_query
+    client_mock.side_effect = [
+        {'statuses': [{'pipeline_id': '1',
+                       'state': 'RUNNING',
+                       'cluster_id': '1024-161828-gram477',
+                       'name': 'windfarm-pipe-v2',
+                       'health': 'HEALTHY'}],
+         }
+    ]
+
+    pipelines = pipelines_api.list()
+
+    assert client_mock.call_count == 1
+    client_mock.assert_has_calls(
+        [
+            mock.call('GET', '/pipelines',
+                      data={},
+                      headers=None)
+        ], any_order=False)
+
+    assert [status["pipeline_id"] for status in pipelines] == ["1"]

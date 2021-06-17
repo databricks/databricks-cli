@@ -45,29 +45,37 @@ class ParseException(Exception):
 
 
 class FileInfo(object):
-    def __init__(self, dbfs_path, is_dir, file_size):
+    def __init__(self, dbfs_path, is_dir, file_size, modification_time):
         self.dbfs_path = dbfs_path
         self.is_dir = is_dir
         self.file_size = file_size
+        self.modification_time = modification_time
 
     def to_row(self, is_long_form, is_absolute):
         path = self.dbfs_path.absolute_path if is_absolute else self.dbfs_path.basename
         stylized_path = click.style(path, 'cyan') if self.is_dir else path
         if is_long_form:
             filetype = 'dir' if self.is_dir else 'file'
-            return [filetype, self.file_size, stylized_path]
+            row = [filetype, self.file_size, stylized_path]
+            # Add modification time if it is available.
+            if self.modification_time is not None:
+                row.append(self.modification_time)
+            return row
         return [stylized_path]
 
     @classmethod
     def from_json(cls, json):
         dbfs_path = DbfsPath.from_api_path(json['path'])
-        return cls(dbfs_path, json['is_dir'], json['file_size'])
+        # If JSON doesn't include modification_time data, replace it with None.
+        modification_time = json['modification_time'] if 'modification_time' in json else None
+        return cls(dbfs_path, json['is_dir'], json['file_size'], modification_time)
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             return self.dbfs_path == other.dbfs_path and \
                 self.is_dir == other.is_dir and \
-                self.file_size == other.file_size
+                self.file_size == other.file_size and \
+                self.modification_time == other.modification_time
         return False
 
 
@@ -78,6 +86,8 @@ class DbfsErrorCodes(object):
 
 
 class DbfsApi(object):
+    MULTIPART_UPLOAD_LIMIT = 2147483648
+
     def __init__(self, api_client):
         self.client = DbfsService(api_client)
 
@@ -105,16 +115,24 @@ class DbfsApi(object):
         json = self.client.get_status(dbfs_path.absolute_path, headers=headers)
         return FileInfo.from_json(json)
 
+    # Method makes multipart/form-data file upload for files <2GB.
+    # Otherwise uses create, add-block, close methods for streaming upload.
     def put_file(self, src_path, dbfs_path, overwrite, headers=None):
-        handle = self.client.create(dbfs_path.absolute_path, overwrite, headers=headers)['handle']
-        with open(src_path, 'rb') as local_file:
-            while True:
-                contents = local_file.read(BUFFER_SIZE_BYTES)
-                if len(contents) == 0:
-                    break
-                # add_block should not take a bytes object.
-                self.client.add_block(handle, b64encode(contents).decode(), headers=headers)
-            self.client.close(handle, headers=headers)
+        # If file size is >2Gb use streaming upload.
+        if os.path.getsize(src_path) < self.MULTIPART_UPLOAD_LIMIT:
+            self.client.put(dbfs_path.absolute_path, src_path=src_path,
+                            overwrite=overwrite, headers=headers)
+        else:
+            handle = self.client.create(dbfs_path.absolute_path, overwrite,
+                                        headers=headers)['handle']
+            with open(src_path, 'rb') as local_file:
+                while True:
+                    contents = local_file.read(BUFFER_SIZE_BYTES)
+                    if len(contents) == 0:
+                        break
+                    # add_block should not take a bytes object.
+                    self.client.add_block(handle, b64encode(contents).decode(), headers=headers)
+                self.client.close(handle, headers=headers)
 
     def get_file(self, dbfs_path, dst_path, overwrite, headers=None):
         if os.path.exists(dst_path) and not overwrite:

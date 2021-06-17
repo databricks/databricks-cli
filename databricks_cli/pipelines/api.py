@@ -33,7 +33,6 @@ from databricks_cli.dbfs.dbfs_path import DbfsPath
 
 BUFFER_SIZE = 1024 * 64
 base_pipelines_dir = 'dbfs:/pipelines/code'
-supported_lib_types = {'jar', 'whl', 'maven'}
 
 
 class PipelinesApi(object):
@@ -41,14 +40,14 @@ class PipelinesApi(object):
         self.client = DeltaPipelinesService(api_client)
         self.dbfs_client = DbfsApi(api_client)
 
-    def create(self, spec, allow_duplicate_names, headers=None):
-        data = self._upload_libraries_and_update_spec(spec)
+    def create(self, spec, spec_dir, allow_duplicate_names, headers=None):
+        data = self._upload_libraries_and_update_spec(spec, spec_dir)
         data['allow_duplicate_names'] = allow_duplicate_names
         return self.client.client.perform_query('POST', '/pipelines', data=data,
                                                 headers=headers)
 
-    def deploy(self, spec, allow_duplicate_names, headers=None):
-        data = self._upload_libraries_and_update_spec(spec)
+    def deploy(self, spec, spec_dir, allow_duplicate_names, headers=None):
+        data = self._upload_libraries_and_update_spec(spec, spec_dir)
         data['allow_duplicate_names'] = allow_duplicate_names
         pipeline_id = data['id']
         self.client.client.perform_query('PUT', '/pipelines/{}'.format(pipeline_id), data=data,
@@ -74,11 +73,11 @@ class PipelinesApi(object):
                 'GET', '/pipelines', data=_data, headers=headers)
 
         response = call()
-        pipelines = response["statuses"]
+        pipelines = response.get("statuses", [])
 
-        while "next_page_token" in response["pagination"]:
+        while "next_page_token" in response.get("pagination", {}):
             response = call(page_token=response["pagination"]["next_page_token"])
-            pipelines.extend(response["statuses"])
+            pipelines.extend(response.get("statuses", []))
         return pipelines
 
     def reset(self, pipeline_id, headers=None):
@@ -90,33 +89,35 @@ class PipelinesApi(object):
     def stop(self, pipeline_id, headers=None):
         self.client.stop(pipeline_id, headers)
 
-    def _upload_libraries_and_update_spec(self, spec):
+    def _upload_libraries_and_update_spec(self, spec, spec_dir):
         spec = copy.deepcopy(spec)
         lib_objects = LibraryObject.from_json(spec.get('libraries', []))
         local_lib_objects, external_lib_objects = self._identify_local_libraries(lib_objects)
 
-        spec['libraries'] = LibraryObject.to_json(external_lib_objects +
-                                                  self._upload_local_libraries(local_lib_objects))
+        spec['libraries'] = LibraryObject.to_json(
+            external_lib_objects + self._upload_local_libraries(spec_dir, local_lib_objects))
         return spec
 
     @staticmethod
     def _identify_local_libraries(lib_objects):
         """
-        Partitions the given set of libraries into local and those already present in dbfs/s3 etc.
-        Local libraries are (currently) jar files with a file scheme or no scheme at all.
-        All other libraries should be present in a supported external source.
+        Partitions the given set of libraries into local libraries i.e. libraries that should
+        be uploaded to DBFS, and non-local libraries. Jars or whls with a file scheme or no scheme
+        at all are (currently) considered local libraries.
+
         :param lib_objects: List[LibraryObject]
         :return: List[List[LibraryObject], List[LibraryObject]] ([Local, External])
         """
         local_lib_objects, external_lib_objects = [], []
         for lib_object in lib_objects:
-            if lib_object.lib_type == 'maven':
+            if lib_object.lib_type not in ['jar', 'whl']:
                 external_lib_objects.append(lib_object)
                 continue
+
             parsed_uri = urllib.parse.urlparse(lib_object.path)
-            if lib_object.lib_type in supported_lib_types and parsed_uri.scheme == '':
+            if parsed_uri.scheme == '':
                 local_lib_objects.append(lib_object)
-            elif lib_object.lib_type in supported_lib_types and parsed_uri.scheme.lower() == 'file':
+            elif parsed_uri.scheme.lower() == 'file':
                 # exactly 1 or 3
                 if parsed_uri.path.startswith('//') or parsed_uri.netloc != '':
                     raise RuntimeError('invalid file uri scheme, '
@@ -126,14 +127,15 @@ class PipelinesApi(object):
                 external_lib_objects.append(lib_object)
         return local_lib_objects, external_lib_objects
 
-    def _upload_local_libraries(self, local_lib_objects):
-        remote_lib_objects = [LibraryObject(llo.lib_type, self._get_hashed_path(llo.path))
-                              for llo in local_lib_objects]
-
+    def _upload_local_libraries(self, spec_dir, local_lib_objects):
+        relative_local_lib_objects = [LibraryObject(llo.lib_type, os.path.join(spec_dir, llo.path))
+                                      for llo in local_lib_objects]
+        remote_lib_objects = [LibraryObject(rllo.lib_type, self._get_hashed_path(rllo.path))
+                              for rllo in relative_local_lib_objects]
         transformed_remote_lib_objects = [LibraryObject(rlo.lib_type, DbfsPath(rlo.path))
                                           for rlo in remote_lib_objects]
         upload_files = [llo_tuple for llo_tuple in
-                        zip(local_lib_objects, transformed_remote_lib_objects)
+                        zip(relative_local_lib_objects, transformed_remote_lib_objects)
                         if not self.dbfs_client.file_exists(llo_tuple[1].path)]
 
         for llo, rlo in upload_files:

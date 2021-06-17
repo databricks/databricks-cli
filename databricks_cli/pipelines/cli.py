@@ -88,12 +88,13 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
     databricks pipelines deploy --pipeline-id 1234 --spec example.json
     """
     if bool(spec_arg) == bool(spec):
-        raise RuntimeError('The spec should be provided either by an option or argument')
+        raise ValueError('The spec should be provided either by an option or argument')
     src = spec_arg if bool(spec_arg) else spec
     spec_obj = _read_spec(src)
+    spec_dir = os.path.dirname(src)
     if not pipeline_id and 'id' not in spec_obj:
         try:
-            response = PipelinesApi(api_client).create(spec_obj, allow_duplicate_names)
+            response = PipelinesApi(api_client).create(spec_obj, spec_dir, allow_duplicate_names)
         except requests.exceptions.HTTPError as e:
             _handle_duplicate_name_exception(spec_obj, e)
 
@@ -106,17 +107,17 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
         if (pipeline_id and 'id' in spec_obj) and pipeline_id != spec_obj["id"]:
             raise ValueError(
                 "The ID provided in --pipeline_id '{}' is different from the id provided "
-                "the spec '{}'. Please resolve the conflict and try the command again. "
+                "in the spec '{}'. Please resolve the conflict and try the command again. "
                 "Because pipeline IDs are no longer persisted after being deleted, we "
                 "recommend removing the ID field from your spec."
-                .format(pipeline_id, spec["id"])
+                .format(pipeline_id, spec_obj["id"])
             )
 
         spec_obj['id'] = pipeline_id or spec_obj.get('id', None)
         _validate_pipeline_id(spec_obj['id'])
 
         try:
-            PipelinesApi(api_client).deploy(spec_obj, allow_duplicate_names)
+            PipelinesApi(api_client).deploy(spec_obj, spec_dir, allow_duplicate_names)
         except requests.exceptions.HTTPError as e:
             _handle_duplicate_name_exception(spec_obj, e)
         click.echo("Successfully deployed pipeline: {}".format(
@@ -254,7 +255,7 @@ def _read_spec(src):
         except json_parse_exception as e:
             error_and_quit("Invalid JSON provided in spec\n{}".format(e))
     else:
-        raise RuntimeError('The provided file extension for the spec is not supported')
+        raise ValueError('The provided file extension for the spec is not supported')
 
 
 def _get_pipeline_url(api_client, pipeline_id):
@@ -271,27 +272,11 @@ def _write_spec(src, spec):
         f.write(data)
 
 
-def _get_pipeline_id(spec_arg, spec, pipeline_id):
-    """
-    Ensures that the user has either specified a spec (either through argument or option) or a
-    pipeline ID directly, and returns the pipeline id to use.
-    """
-    # Only one out of spec/pipeline_id/spec_arg should be supplied
-    if bool(spec_arg) + bool(spec) + bool(pipeline_id) != 1:
-        raise RuntimeError('Either spec should be provided as an argument '
-                           'or option, or the pipeline-id should be provided')
-    if bool(spec_arg) or bool(spec):
-        src = spec_arg if bool(spec_arg) else spec
-        pipeline_id = _read_spec(src)["id"]
-    _validate_pipeline_id(pipeline_id)
-    return pipeline_id
-
-
 def _validate_pipeline_id(pipeline_id):
     """
-    Checks if the pipeline_id only contain -, _ and alphanumeric characters
+    Checks if the pipeline_id is not empty and only contains -, _ and alphanumeric characters
     """
-    if len(pipeline_id) == 0:
+    if pipeline_id is None or len(pipeline_id) == 0:
         error_and_quit(u'Empty pipeline id provided')
     if not set(pipeline_id) <= PIPELINE_ID_PERMITTED_CHARACTERS:
         message = u'Pipeline id {} has invalid character(s)\n'.format(pipeline_id)
@@ -308,7 +293,9 @@ def _handle_duplicate_name_exception(spec, exception):
 
     if error_code == 'RESOURCE_CONFLICT':
         raise ValueError("Pipeline with name '{}' already exists. ".format(spec['name']) +
-                         "You can use the --allow-duplicate-names option to skip this check.")
+                         "If you are updating an existing pipeline, provide the pipeline " +
+                         "id using --pipeline-id. Otherwise, " +
+                         "you can use the --allow-duplicate-names option to skip this check. ")
     raise exception
 
 

@@ -109,7 +109,7 @@ class ApiClient(object):
 
     # helper functions starting here
 
-    def perform_query(self, method, path, data = {}, headers = None):
+    def perform_query(self, method, path, data = {}, headers = None, files=None):
         """set up connection and perform query"""
         if headers is None:
             headers = self.default_headers
@@ -125,8 +125,13 @@ class ApiClient(object):
                 resp = self.session.request(method, self.url + path, params = translated_data,
                                             verify = self.verify, headers = headers)
             else:
-                resp = self.session.request(method, self.url + path, data = json.dumps(data),
-                                            verify = self.verify, headers = headers)
+                if files is None:
+                    resp = self.session.request(method, self.url + path, data = json.dumps(data),
+                                                verify = self.verify, headers = headers)
+                else:
+                    # Multipart file upload
+                    resp = self.session.request(method, self.url + path, files = files, data = data,
+                                                verify = self.verify, headers = headers)
         try:
             resp.raise_for_status()
         except requests.exceptions.HTTPError as e:
