@@ -1223,10 +1223,10 @@ class UnityCatalogService(object):
 
     def _get_perm_securable_name_and_type(self, catalog_name, schema_full_name, table_full_name):
         if (catalog_name):
-            return ('catalogs', catalog_name)
+            return ('catalog', catalog_name)
         elif (schema_full_name):
-            return ('schemas', schema_full_name)
-        return ('tables', table_full_name)
+            return ('schema', schema_full_name)
+        return ('table', table_full_name)
 
     def _permissions_url(self, sec_type, sec_name):
         return '/unity-catalog/permissions/%s/%s' % (sec_type, sec_name)

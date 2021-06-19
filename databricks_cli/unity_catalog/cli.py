@@ -269,7 +269,7 @@ def delete_catalog_cli(api_client, name):
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Create a new schema.')
-@click.option('--catalog', required=True, help='Parent catalog of new schema.')
+@click.option('--catalog-name', required=True, help='Parent catalog of new schema.')
 @click.option('--name', required=True,
               help='Name of new schema, relative to parent catalog.')
 @click.option('--comment', default=None, required=False,
@@ -278,7 +278,7 @@ def delete_catalog_cli(api_client, name):
 @profile_option
 @eat_exceptions
 @provide_api_client
-def create_schema_cli(api_client, catalog, name, comment):
+def create_schema_cli(api_client, catalog_name, name, comment):
     """
     Create a new schema in the specified catalog.
 
@@ -286,7 +286,7 @@ def create_schema_cli(api_client, catalog, name, comment):
     Returns the SchemaInfo for the newly-created schema.
 
     """
-    schema_json = UnityCatalogApi(api_client).create_schema(catalog, name, comment)
+    schema_json = UnityCatalogApi(api_client).create_schema(catalog_name, name, comment)
     click.echo(mc_pretty_format(schema_json))
 
 
