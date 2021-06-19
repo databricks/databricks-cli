@@ -97,7 +97,7 @@ def error_and_quit(message):
 
 def pretty_format(json, encode_utf8=False):
     if encode_utf8:
-        return json_dumps(json, indent=2, encoding="utf-8", ensure_ascii=False)
+        return json_dumps(json, indent=2, ensure_ascii=False)
     return json_dumps(json, indent=2)
 
 
