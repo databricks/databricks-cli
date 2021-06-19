@@ -26,7 +26,7 @@ import click
 from databricks_cli.click_types import MetastoreIdClickType, DacIdClickType, \
     JsonClickType, OneOfOption
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
-from databricks_cli.managed_catalog.api import ManagedCatalogApi
+from databricks_cli.unity_catalog.api import UnityCatalogApi
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base
 from databricks_cli.version import print_version_callback, version
 
@@ -52,11 +52,11 @@ def create_metastore_cli(api_client, name, storage_root):
     """
     Create new metastore specified by the JSON input.
 
-    Calls the 'createMetastore' RPC endpoint of the Managed Catalog service.
+    Calls the 'createMetastore' RPC endpoint of the Unity Catalog service.
     Returns the properties of the newly-created metastore.
 
     """
-    metastore_json = ManagedCatalogApi(api_client).create_metastore(name, storage_root)
+    metastore_json = UnityCatalogApi(api_client).create_metastore(name, storage_root)
     click.echo(mc_pretty_format(metastore_json))
 
 
@@ -70,11 +70,11 @@ def list_metastores_cli(api_client):
     """
     List metastores.
 
-    Calls the 'listMetastores' RPC endpoint of the Managed Catalog service.
+    Calls the 'listMetastores' RPC endpoint of the Unity Catalog service.
     Returns array of MetastoreInfos.
 
     """
-    metastores_json = ManagedCatalogApi(api_client).list_metastores()
+    metastores_json = UnityCatalogApi(api_client).list_metastores()
     click.echo(mc_pretty_format(metastores_json))
 
 
@@ -90,11 +90,11 @@ def get_metastore_cli(api_client, metastore_id):
     """
     Get a metastore.
 
-    Calls the 'getMetastore' RPC endpoint of the Managed Catalog service.
+    Calls the 'getMetastore' RPC endpoint of the Unity Catalog service.
     Returns nothing.
 
     """
-    metastore_json = ManagedCatalogApi(api_client).get_metastore(metastore_id)
+    metastore_json = UnityCatalogApi(api_client).get_metastore(metastore_id)
     click.echo(mc_pretty_format(metastore_json))
 
 
@@ -114,12 +114,12 @@ def update_metastore_cli(api_client, metastore_id, json_file, json):
     """
     Update a metastore.
 
-    Calls the 'updateMetastore' RPC endpoint of the Managed Catalog service.
+    Calls the 'updateMetastore' RPC endpoint of the Unity Catalog service.
     Returns nothing.
 
     """
     json_cli_base(json_file, json,
-                  lambda json: ManagedCatalogApi(api_client).update_metastore(metastore_id, json))
+                  lambda json: UnityCatalogApi(api_client).update_metastore(metastore_id, json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -134,11 +134,11 @@ def delete_metastore_cli(api_client, metastore_id):
     """
     Delete a metastore.
 
-    Calls the 'deleteMetastore' RPC endpoint of the Managed Catalog service.
+    Calls the 'deleteMetastore' RPC endpoint of the Unity Catalog service.
     Returns nothing.
 
     """
-    ManagedCatalogApi(api_client).delete_metastore(metastore_id)
+    UnityCatalogApi(api_client).delete_metastore(metastore_id)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -151,11 +151,11 @@ def metastore_summary_cli(api_client):
     """
     Get metastore summary.
 
-    Calls the 'getMetastoreSummary' RPC endpoint of the Managed Catalog service.
+    Calls the 'getMetastoreSummary' RPC endpoint of the Unity Catalog service.
     Returns nothing.
 
     """
-    summary_json = ManagedCatalogApi(api_client).get_metastore_summary()
+    summary_json = UnityCatalogApi(api_client).get_metastore_summary()
     click.echo(mc_pretty_format(summary_json))
 
 
@@ -175,11 +175,11 @@ def create_catalog_cli(api_client, name, comment):
     """
     Create a new catalog.
 
-    Calls the 'createCatalog' RPC endpoint of the Managed Catalog service.
+    Calls the 'createCatalog' RPC endpoint of the Unity Catalog service.
     Returns the CatalogInfo for the newly-created catalog.
 
     """
-    catalog_json = ManagedCatalogApi(api_client).create_catalog(name, comment)
+    catalog_json = UnityCatalogApi(api_client).create_catalog(name, comment)
     click.echo(mc_pretty_format(catalog_json))
 
 
@@ -193,11 +193,11 @@ def list_catalogs_cli(api_client):
     """
     List catalogs.
 
-    Calls the 'listCatalogs' RPC endpoint of the Managed Catalog service.
+    Calls the 'listCatalogs' RPC endpoint of the Unity Catalog service.
     Returns array of CatalogInfos.
 
     """
-    catalogs_json = ManagedCatalogApi(api_client).list_catalogs()
+    catalogs_json = UnityCatalogApi(api_client).list_catalogs()
     click.echo(mc_pretty_format(catalogs_json))
 
 
@@ -213,11 +213,11 @@ def get_catalog_cli(api_client, name):
     """
     Get a catalog.
 
-    Calls the 'getCatalog' RPC endpoint of the Managed Catalog service.
+    Calls the 'getCatalog' RPC endpoint of the Unity Catalog service.
     Returns nothing.
 
     """
-    catalog_json = ManagedCatalogApi(api_client).get_catalog(name)
+    catalog_json = UnityCatalogApi(api_client).get_catalog(name)
     click.echo(mc_pretty_format(catalog_json))
 
 
@@ -237,12 +237,12 @@ def update_catalog_cli(api_client, name, json_file, json):
     """
     Update a catalog.
 
-    Calls the 'updateCatalog' RPC endpoint of the Managed Catalog service.
+    Calls the 'updateCatalog' RPC endpoint of the Unity Catalog service.
     Returns nothing.
 
     """
     json_cli_base(json_file, json,
-                  lambda json: ManagedCatalogApi(api_client).update_catalog(name, json))
+                  lambda json: UnityCatalogApi(api_client).update_catalog(name, json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -257,11 +257,11 @@ def delete_catalog_cli(api_client, name):
     """
     Delete a catalog.
 
-    Calls the 'deleteCatalog' RPC endpoint of the Managed Catalog service.
+    Calls the 'deleteCatalog' RPC endpoint of the Unity Catalog service.
     Returns nothing.
 
     """
-    ManagedCatalogApi(api_client).delete_catalog(name)
+    UnityCatalogApi(api_client).delete_catalog(name)
 
 
 #############  Schema Commands ##############
@@ -282,11 +282,11 @@ def create_schema_cli(api_client, catalog, name, comment):
     """
     Create a new schema in the specified catalog.
 
-    Calls the 'createSchema' RPC endpoint of the Managed Catalog service.
+    Calls the 'createSchema' RPC endpoint of the Unity Catalog service.
     Returns the SchemaInfo for the newly-created schema.
 
     """
-    schema_json = ManagedCatalogApi(api_client).create_schema(catalog, name, comment)
+    schema_json = UnityCatalogApi(api_client).create_schema(catalog, name, comment)
     click.echo(mc_pretty_format(schema_json))
 
 
@@ -304,11 +304,11 @@ def list_schemas_cli(api_client, catalog_name, name_regex):
     """
     List schemas.
 
-    Calls the 'listSchemas' RPC endpoint of the Managed Catalog service.
+    Calls the 'listSchemas' RPC endpoint of the Unity Catalog service.
     Returns array of SchemaInfos.
 
     """
-    schemas_json = ManagedCatalogApi(api_client).list_schemas(catalog_name, name_regex)
+    schemas_json = UnityCatalogApi(api_client).list_schemas(catalog_name, name_regex)
     click.echo(mc_pretty_format(schemas_json))
 
 
@@ -324,11 +324,11 @@ def get_schema_cli(api_client, full_name):
     """
     Get a schema.
 
-    Calls the 'getSchema' RPC endpoint of the Managed Catalog service.
+    Calls the 'getSchema' RPC endpoint of the Unity Catalog service.
     Returns nothing.
 
     """
-    schema_json = ManagedCatalogApi(api_client).get_schema(full_name)
+    schema_json = UnityCatalogApi(api_client).get_schema(full_name)
     click.echo(mc_pretty_format(schema_json))
 
 
@@ -348,12 +348,12 @@ def update_schema_cli(api_client, full_name, json_file, json):
     """
     Update a schema.
 
-    Calls the 'updateSchema' RPC endpoint of the Managed Catalog service.
+    Calls the 'updateSchema' RPC endpoint of the Unity Catalog service.
     Returns nothing.
 
     """
     json_cli_base(json_file, json,
-                  lambda json: ManagedCatalogApi(api_client).update_schema(full_name, json))
+                  lambda json: UnityCatalogApi(api_client).update_schema(full_name, json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -368,11 +368,11 @@ def delete_schema_cli(api_client, full_name):
     """
     Delete a schema.
 
-    Calls the 'deleteSchema' RPC endpoint of the Managed Catalog service.
+    Calls the 'deleteSchema' RPC endpoint of the Unity Catalog service.
     Returns nothing.
 
     """
-    ManagedCatalogApi(api_client).delete_schema(full_name)
+    UnityCatalogApi(api_client).delete_schema(full_name)
 
 
 ##############  Table Commands  #################
@@ -383,7 +383,7 @@ def delete_schema_cli(api_client, full_name):
 @click.option('--json-file', default=None, type=click.Path(),
               help='File containing JSON request to POST.')
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/managed-catalog/tables'))
+              help=JsonClickType.help('/api/2.0/unity-catalog/tables'))
 @debug_option
 @profile_option
 @eat_exceptions
@@ -392,12 +392,12 @@ def create_table_cli(api_client, json_file, json):
     """
     Create new table specified by the JSON input.
 
-    Calls the 'createTable' RPC endpoint of the Managed Catalog service.
+    Calls the 'createTable' RPC endpoint of the Unity Catalog service.
     Returns the properties of the newly-created table.
 
     """
     json_cli_base(json_file, json,
-                  lambda json: ManagedCatalogApi(api_client).create_table(json),
+                  lambda json: UnityCatalogApi(api_client).create_table(json),
                   encode_utf8=True)
 
 
@@ -417,11 +417,11 @@ def list_tables_cli(api_client, catalog_name, schema_name, name_regex):
     """
     List tables.
 
-    Calls the 'listTables' RPC endpoint of the Managed Catalog service.
+    Calls the 'listTables' RPC endpoint of the Unity Catalog service.
     Returns array of TableInfos.
 
     """
-    tables_json = ManagedCatalogApi(api_client).list_tables(catalog_name, schema_name, name_regex)
+    tables_json = UnityCatalogApi(api_client).list_tables(catalog_name, schema_name, name_regex)
     click.echo(mc_pretty_format(tables_json))
 
 
@@ -437,11 +437,11 @@ def get_table_cli(api_client, full_name):
     """
     Get a table.
 
-    Calls the 'getTable' RPC endpoint of the Managed Catalog service.
+    Calls the 'getTable' RPC endpoint of the Unity Catalog service.
     Returns nothing.
 
     """
-    table_json = ManagedCatalogApi(api_client).get_table(full_name)
+    table_json = UnityCatalogApi(api_client).get_table(full_name)
     click.echo(mc_pretty_format(table_json))
 
 
@@ -461,12 +461,12 @@ def update_table_cli(api_client, full_name, json_file, json):
     """
     Update a table.
 
-    Calls the 'updateTable' RPC endpoint of the Managed Catalog service.
+    Calls the 'updateTable' RPC endpoint of the Unity Catalog service.
     Returns nothing.
 
     """
     json_cli_base(json_file, json,
-                  lambda json: ManagedCatalogApi(api_client).update_table(full_name, json),
+                  lambda json: UnityCatalogApi(api_client).update_table(full_name, json),
                   encode_utf8=True)
 
 
@@ -482,11 +482,11 @@ def delete_table_cli(api_client, full_name):
     """
     Delete a table.
 
-    Calls the 'deleteTable' RPC endpoint of the Managed Catalog service.
+    Calls the 'deleteTable' RPC endpoint of the Unity Catalog service.
     Returns nothing.
 
     """
-    ManagedCatalogApi(api_client).delete_table(full_name)
+    UnityCatalogApi(api_client).delete_table(full_name)
 
 
 #############  Data Access Configuration Commands  ############
@@ -499,7 +499,7 @@ def delete_table_cli(api_client, full_name):
 @click.option('--json-file', default=None, type=click.Path(),
               help='File containing JSON request to POST.')
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/managed-catalog/data-access-configurations'))
+              help=JsonClickType.help('/api/2.0/unity-catalog/data-access-configurations'))
 @debug_option
 @profile_option
 @eat_exceptions
@@ -508,13 +508,13 @@ def create_dac_cli(api_client, metastore_id, json_file, json):
     """
     Create new data access configuration.
 
-    Calls the 'createDataAccessConfiguration' RPC endpoint of the Managed Catalog service.
+    Calls the 'createDataAccessConfiguration' RPC endpoint of the Unity Catalog service.
     The specification for the request json can be found at <insert doc link here>.
     Returns the properties of the newly-created DAC.
 
     """
     json_cli_base(json_file, json,
-                  lambda json: ManagedCatalogApi(api_client).create_dac(metastore_id, json),
+                  lambda json: UnityCatalogApi(api_client).create_dac(metastore_id, json),
                   encode_utf8=True)
 
 
@@ -530,11 +530,11 @@ def list_dacs_cli(api_client, metastore_id):
     """
     List data access configurations.
 
-    Calls the 'listDataAccessConfigurations' RPC endpoint of the Managed Catalog service.
+    Calls the 'listDataAccessConfigurations' RPC endpoint of the Unity Catalog service.
     Returns array of DataAccessConfigurations.
 
     """
-    dacs_json = ManagedCatalogApi(api_client).list_dacs(metastore_id)
+    dacs_json = UnityCatalogApi(api_client).list_dacs(metastore_id)
     click.echo(mc_pretty_format(dacs_json))
 
 
@@ -552,11 +552,11 @@ def get_dac_cli(api_client, metastore_id, dac_id):
     """
     Get data access configuration details.
 
-    Calls the 'getDataAccessConfiguration' RPC endpoint of the Managed Catalog service.
+    Calls the 'getDataAccessConfiguration' RPC endpoint of the Unity Catalog service.
     Returns details of the DAC specified by its id (TODO: lookup by DAC name?).
 
     """
-    dac_json = ManagedCatalogApi(api_client).get_dac(metastore_id, dac_id)
+    dac_json = UnityCatalogApi(api_client).get_dac(metastore_id, dac_id)
     click.echo(mc_pretty_format(dac_json))
 
 
@@ -574,10 +574,10 @@ def delete_dac_cli(api_client, metastore_id, dac_id):
     """
     Delete data access configuration details.
 
-    Calls the 'deleteDataAccessConfiguration' RPC endpoint of the Managed Catalog service.
+    Calls the 'deleteDataAccessConfiguration' RPC endpoint of the Unity Catalog service.
 
     """
-    ManagedCatalogApi(api_client).delete_dac(metastore_id, dac_id)
+    UnityCatalogApi(api_client).delete_dac(metastore_id, dac_id)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -585,7 +585,7 @@ def delete_dac_cli(api_client, metastore_id, dac_id):
 @click.option('--json-file', default=None, type=click.Path(),
               help='File containing JSON request to POST.')
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/managed-catalog/root-credentials'))
+              help=JsonClickType.help('/api/2.0/unity-catalog/root-credentials'))
 @debug_option
 @profile_option
 @eat_exceptions
@@ -594,13 +594,13 @@ def create_root_credentials_cli(api_client, json_file, json):
     """
     Create new temporary credentials (token) for storage root access.
 
-    Calls the 'createRootCredentials' RPC endpoint of the Managed Catalog service.
+    Calls the 'createRootCredentials' RPC endpoint of the Unity Catalog service.
     The specification for the request json can be found at <insert doc link here>.
     Returns the newly-created temporary credentials.
 
     """
     json_cli_base(json_file, json,
-                  lambda json: ManagedCatalogApi(api_client).create_root_credentials(json),
+                  lambda json: UnityCatalogApi(api_client).create_root_credentials(json),
                   encode_utf8=True)
 
 
@@ -626,11 +626,11 @@ def get_permissions_cli(api_client, catalog, schema, table):
     """
     Get permissions on a securable.
 
-    Calls the 'getPermissions' RPC endpoint of the Managed Catalog service.
+    Calls the 'getPermissions' RPC endpoint of the Unity Catalog service.
     Returns PermissionsList for the requested securable.
 
     """
-    perm_json = ManagedCatalogApi(api_client).get_permissions(catalog, schema, table)
+    perm_json = UnityCatalogApi(api_client).get_permissions(catalog, schema, table)
     click.echo(mc_pretty_format(perm_json))
 
 
@@ -648,7 +648,7 @@ def get_permissions_cli(api_client, catalog, schema, table):
 @click.option('--json-file', default=None, type=click.Path(),
               help='File containing JSON of permissions change to PATCH.')
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/managed-catalog/permissions'))
+              help=JsonClickType.help('/api/2.0/unity-catalog/permissions'))
 @debug_option
 @profile_option
 @eat_exceptions
@@ -657,12 +657,12 @@ def update_permissions_cli(api_client, catalog, schema, table, json_file, json):
     """
     Update permissions on a securable.
 
-    Calls the 'updatePermissions' RPC endpoint of the Managed Catalog service.
+    Calls the 'updatePermissions' RPC endpoint of the Unity Catalog service.
     Returns updated PermissionsList for the requested securable.
 
     """
     json_cli_base(json_file, json,
-                  lambda json: ManagedCatalogApi(api_client).update_permissions(catalog, schema,
+                  lambda json: UnityCatalogApi(api_client).update_permissions(catalog, schema,
                                                                                 table, json),
                   encode_utf8=True)
 
@@ -681,7 +681,7 @@ def update_permissions_cli(api_client, catalog, schema, table, json_file, json):
 @click.option('--json-file', default=None, type=click.Path(),
               help='File containing JSON of permissions to PUT.')
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/managed-catalog/permissions'))
+              help=JsonClickType.help('/api/2.0/unity-catalog/permissions'))
 @debug_option
 @profile_option
 @eat_exceptions
@@ -690,18 +690,18 @@ def replace_permissions_cli(api_client, catalog, schema, table, json_file, json)
     """
     Replace permissions on a securable.
 
-    Calls the 'replacePermissions' RPC endpoint of the Managed Catalog service.
+    Calls the 'replacePermissions' RPC endpoint of the Unity Catalog service.
     Returns nothing.
 
     """
     json_cli_base(json_file, json,
-                  lambda json: ManagedCatalogApi(api_client).replace_permissions(catalog, schema,
+                  lambda json: UnityCatalogApi(api_client).replace_permissions(catalog, schema,
                                                                                  table, json),
                   encode_utf8=True)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
-             help='Utility to interact with Databricks managed-catalog.\n\n' +
+             help='Utility to interact with Databricks unity-catalog.\n\n' +
              '**********************************************************************\n' +
              'WARNING: these commands are EXPERIMENTAL and not officially supported.\n' +
              '**********************************************************************',
@@ -711,39 +711,39 @@ def replace_permissions_cli(api_client, catalog, schema, table, json_file, json)
 @debug_option
 @profile_option
 @eat_exceptions
-def managed_catalog_group():  # pragma: no cover
+def unity_catalog_group():  # pragma: no cover
     """
-    Utility to interact with Databricks managed-catalog.
+    Utility to interact with Databricks unity-catalog.
     """
     pass
 
 
-managed_catalog_group.add_command(create_metastore_cli, name='create-metastore')
-managed_catalog_group.add_command(list_metastores_cli, name='list-metastores')
-managed_catalog_group.add_command(get_metastore_cli, name='get-metastore')
-managed_catalog_group.add_command(update_metastore_cli, name='update-metastore')
-managed_catalog_group.add_command(delete_metastore_cli, name='delete-metastore')
-managed_catalog_group.add_command(metastore_summary_cli, name='metastore-summary')
-managed_catalog_group.add_command(create_catalog_cli, name='create-catalog')
-managed_catalog_group.add_command(list_catalogs_cli, name='list-catalogs')
-managed_catalog_group.add_command(get_catalog_cli, name='get-catalog')
-managed_catalog_group.add_command(update_catalog_cli, name='update-catalog')
-managed_catalog_group.add_command(delete_catalog_cli, name='delete-catalog')
-managed_catalog_group.add_command(create_schema_cli, name='create-schema')
-managed_catalog_group.add_command(list_schemas_cli, name='list-schemas')
-managed_catalog_group.add_command(get_schema_cli, name='get-schema')
-managed_catalog_group.add_command(update_schema_cli, name='update-schema')
-managed_catalog_group.add_command(delete_schema_cli, name='delete-schema')
-managed_catalog_group.add_command(create_table_cli, name='create-table')
-managed_catalog_group.add_command(list_tables_cli, name='list-tables')
-managed_catalog_group.add_command(get_table_cli, name='get-table')
-managed_catalog_group.add_command(update_table_cli, name='update-table')
-managed_catalog_group.add_command(delete_table_cli, name='delete-table')
-managed_catalog_group.add_command(create_dac_cli, name='create-dac')
-managed_catalog_group.add_command(list_dacs_cli, name='list-dacs')
-managed_catalog_group.add_command(get_dac_cli, name='get-dac')
-managed_catalog_group.add_command(delete_dac_cli, name='delete-dac')
-managed_catalog_group.add_command(get_permissions_cli, name='get-permissions')
-managed_catalog_group.add_command(update_permissions_cli, name='update-permissions')
-managed_catalog_group.add_command(replace_permissions_cli, name='replace-permissions')
-managed_catalog_group.add_command(create_root_credentials_cli, name='create-root-credentials')
+unity_catalog_group.add_command(create_metastore_cli, name='create-metastore')
+unity_catalog_group.add_command(list_metastores_cli, name='list-metastores')
+unity_catalog_group.add_command(get_metastore_cli, name='get-metastore')
+unity_catalog_group.add_command(update_metastore_cli, name='update-metastore')
+unity_catalog_group.add_command(delete_metastore_cli, name='delete-metastore')
+unity_catalog_group.add_command(metastore_summary_cli, name='metastore-summary')
+unity_catalog_group.add_command(create_catalog_cli, name='create-catalog')
+unity_catalog_group.add_command(list_catalogs_cli, name='list-catalogs')
+unity_catalog_group.add_command(get_catalog_cli, name='get-catalog')
+unity_catalog_group.add_command(update_catalog_cli, name='update-catalog')
+unity_catalog_group.add_command(delete_catalog_cli, name='delete-catalog')
+unity_catalog_group.add_command(create_schema_cli, name='create-schema')
+unity_catalog_group.add_command(list_schemas_cli, name='list-schemas')
+unity_catalog_group.add_command(get_schema_cli, name='get-schema')
+unity_catalog_group.add_command(update_schema_cli, name='update-schema')
+unity_catalog_group.add_command(delete_schema_cli, name='delete-schema')
+unity_catalog_group.add_command(create_table_cli, name='create-table')
+unity_catalog_group.add_command(list_tables_cli, name='list-tables')
+unity_catalog_group.add_command(get_table_cli, name='get-table')
+unity_catalog_group.add_command(update_table_cli, name='update-table')
+unity_catalog_group.add_command(delete_table_cli, name='delete-table')
+unity_catalog_group.add_command(create_dac_cli, name='create-dac')
+unity_catalog_group.add_command(list_dacs_cli, name='list-dacs')
+unity_catalog_group.add_command(get_dac_cli, name='get-dac')
+unity_catalog_group.add_command(delete_dac_cli, name='delete-dac')
+unity_catalog_group.add_command(get_permissions_cli, name='get-permissions')
+unity_catalog_group.add_command(update_permissions_cli, name='update-permissions')
+unity_catalog_group.add_command(replace_permissions_cli, name='replace-permissions')
+unity_catalog_group.add_command(create_root_credentials_cli, name='create-root-credentials')

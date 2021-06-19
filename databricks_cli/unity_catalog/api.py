@@ -20,12 +20,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from databricks_cli.sdk import ManagedCatalogService
+from databricks_cli.sdk import UnityCatalogService
 
 
-class ManagedCatalogApi(object):
+class UnityCatalogApi(object):
     def __init__(self, api_client):
-        self.client = ManagedCatalogService(api_client)
+        self.client = UnityCatalogService(api_client)
 
     # Metastore APIs
 

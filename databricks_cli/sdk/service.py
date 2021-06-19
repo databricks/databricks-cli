@@ -1051,7 +1051,7 @@ class DeltaPipelinesService(object):
         return self.client.perform_query('POST', '/pipelines/{pipeline_id}/stop'.format(pipeline_id=pipeline_id),
                                          data=_data, headers=headers)
 
-class ManagedCatalogService(object):
+class UnityCatalogService(object):
     def __init__(self, client):
         self.client = client
 
@@ -1062,32 +1062,32 @@ class ManagedCatalogService(object):
             'name': name,
             'storage_root': storage_root,
         }
-        return self.client.perform_query('POST', '/managed-catalog/metastores', data=_data, headers=headers)
+        return self.client.perform_query('POST', '/unity-catalog/metastores', data=_data, headers=headers)
 
     def list_metastores(self, headers=None):
         _data = {}
 
-        return self.client.perform_query('GET', '/managed-catalog/metastores', data=_data, headers=headers)
+        return self.client.perform_query('GET', '/unity-catalog/metastores', data=_data, headers=headers)
 
     def get_metastore(self, metastore_id, headers=None):
         _data = {}
 
-        return self.client.perform_query('GET', '/managed-catalog/metastores/%s' % (metastore_id),
+        return self.client.perform_query('GET', '/unity-catalog/metastores/%s' % (metastore_id),
                                          data=_data, headers=headers)
 
     def get_metastore_summary(self, headers=None):
         _data = {}
 
-        return self.client.perform_query('GET', '/managed-catalog/metastore_summary', data=_data, headers=headers)
+        return self.client.perform_query('GET', '/unity-catalog/metastore_summary', data=_data, headers=headers)
 
     def update_metastore(self, metastore_id, metastore_spec, headers=None):
-        return self.client.perform_query('PATCH', '/managed-catalog/metastores/%s' % (metastore_id),
+        return self.client.perform_query('PATCH', '/unity-catalog/metastores/%s' % (metastore_id),
                                          data=metastore_spec, headers=headers)
 
     def delete_metastore(self, metastore_id, headers=None):
         _data = {}
 
-        return self.client.perform_query('DELETE', '/managed-catalog/metastores/%s' % (metastore_id),
+        return self.client.perform_query('DELETE', '/unity-catalog/metastores/%s' % (metastore_id),
                                          data=_data, headers=headers)
 
     # Catalog Operations
@@ -1098,27 +1098,27 @@ class ManagedCatalogService(object):
         }
         if comment is not None:
             _data['comment'] = comment
-        return self.client.perform_query('POST', '/managed-catalog/catalogs', data=_data, headers=headers)
+        return self.client.perform_query('POST', '/unity-catalog/catalogs', data=_data, headers=headers)
 
     def list_catalogs(self, headers=None):
         _data = {}
 
-        return self.client.perform_query('GET', '/managed-catalog/catalogs', data=_data, headers=headers)
+        return self.client.perform_query('GET', '/unity-catalog/catalogs', data=_data, headers=headers)
 
     def get_catalog(self, name, headers=None):
         _data = {}
 
-        return self.client.perform_query('GET', '/managed-catalog/catalogs/%s' % (name),
+        return self.client.perform_query('GET', '/unity-catalog/catalogs/%s' % (name),
                                          data=_data, headers=headers)
 
     def update_catalog(self, name, catalog_spec, headers=None):
-        return self.client.perform_query('PATCH', '/managed-catalog/catalogs/%s' % (name),
+        return self.client.perform_query('PATCH', '/unity-catalog/catalogs/%s' % (name),
                                          data=catalog_spec, headers=headers)
 
     def delete_catalog(self, name, headers=None):
         _data = {}
 
-        return self.client.perform_query('DELETE', '/managed-catalog/catalogs/%s' % (name),
+        return self.client.perform_query('DELETE', '/unity-catalog/catalogs/%s' % (name),
                                          data=_data, headers=headers)
 
     # Schema Operations
@@ -1130,7 +1130,7 @@ class ManagedCatalogService(object):
         }
         if comment is not None:
             _data['comment'] = comment
-        return self.client.perform_query('POST', '/managed-catalog/schemas', data=_data, headers=headers)
+        return self.client.perform_query('POST', '/unity-catalog/schemas', data=_data, headers=headers)
 
     def list_schemas(self, catalog_name=None, name_regex=None, headers=None):
         _data = {}
@@ -1139,34 +1139,34 @@ class ManagedCatalogService(object):
         if name_regex is not None:
             _data['schema_name_regex'] = name_regex
 
-        return self.client.perform_query('GET', '/managed-catalog/schemas', data=_data, headers=headers)
+        return self.client.perform_query('GET', '/unity-catalog/schemas', data=_data, headers=headers)
 
     def get_schema(self, full_name, headers=None):
         _data = {}
 
-        return self.client.perform_query('GET', '/managed-catalog/schemas/%s' % (full_name),
+        return self.client.perform_query('GET', '/unity-catalog/schemas/%s' % (full_name),
                                          data=_data, headers=headers)
 
     def update_schema(self, full_name, schema_spec, headers=None):
-        return self.client.perform_query('PATCH', '/managed-catalog/schemas/%s' % (full_name),
+        return self.client.perform_query('PATCH', '/unity-catalog/schemas/%s' % (full_name),
                                          data=schema_spec, headers=headers)
 
     def delete_schema(self, full_name, headers=None):
         _data = {}
 
-        return self.client.perform_query('DELETE', '/managed-catalog/schemas/%s' % (full_name),
+        return self.client.perform_query('DELETE', '/unity-catalog/schemas/%s' % (full_name),
                                          data=_data, headers=headers)
     def delete_schema(self, full_name, headers=None):
         _data = {}
 
-        return self.client.perform_query('DELETE', '/managed-catalog/schemas/%s' % (full_name),
+        return self.client.perform_query('DELETE', '/unity-catalog/schemas/%s' % (full_name),
                                          data=_data, headers=headers)
 
     # Table Operations
 
     def create_table(self, table_spec, headers=None):
         _data = table_spec
-        return self.client.perform_query('POST', '/managed-catalog/tables', data=_data, headers=headers)
+        return self.client.perform_query('POST', '/unity-catalog/tables', data=_data, headers=headers)
 
     def list_tables(self, catalog_name, schema_name=None, name_regex=None, headers=None):
         _data = {
@@ -1177,47 +1177,47 @@ class ManagedCatalogService(object):
         if name_regex is not None:
             _data['table_name_regex'] = name_regex
 
-        return self.client.perform_query('GET', '/managed-catalog/tables', data=_data, headers=headers)
+        return self.client.perform_query('GET', '/unity-catalog/tables', data=_data, headers=headers)
 
     def get_table(self, full_name, headers=None):
         _data = {}
 
-        return self.client.perform_query('GET', '/managed-catalog/tables/%s' % (full_name),
+        return self.client.perform_query('GET', '/unity-catalog/tables/%s' % (full_name),
                                          data=_data, headers=headers)
 
     def update_table(self, full_name, table_spec, headers=None):
-        return self.client.perform_query('PATCH', '/managed-catalog/tables/%s' % (full_name),
+        return self.client.perform_query('PATCH', '/unity-catalog/tables/%s' % (full_name),
                                          data=table_spec, headers=headers)
 
     def delete_table(self, full_name, headers=None):
         _data = {}
 
-        return self.client.perform_query('DELETE', '/managed-catalog/tables/%s' % (full_name),
+        return self.client.perform_query('DELETE', '/unity-catalog/tables/%s' % (full_name),
                                          data=_data, headers=headers)
 
     # Data Access Configuration Operations
 
     def create_dac(self, metastore_id, dac_spec, headers=None):
         _data = dac_spec
-        url = '/managed-catalog/metastores/%s/data-access-configurations' % (metastore_id)
+        url = '/unity-catalog/metastores/%s/data-access-configurations' % (metastore_id)
         return self.client.perform_query('POST', url, data=_data, headers=headers)
 
     def list_dacs(self, metastore_id, headers=None):
         _data = {}
 
-        url = '/managed-catalog/metastores/%s/data-access-configurations' % (metastore_id)
+        url = '/unity-catalog/metastores/%s/data-access-configurations' % (metastore_id)
         return self.client.perform_query('GET', url, data=_data, headers=headers)
 
     def get_dac(self, metastore_id, dac_id, headers=None):
-        url = '/managed-catalog/metastores/%s/data-access-configurations/%s' % (metastore_id, dac_id)
+        url = '/unity-catalog/metastores/%s/data-access-configurations/%s' % (metastore_id, dac_id)
         return self.client.perform_query('GET', url, headers=headers)
 
     def delete_dac(self, metastore_id, dac_id, headers=None):
-        url = '/managed-catalog/metastores/%s/data-access-configurations/%s' % (metastore_id, dac_id)
+        url = '/unity-catalog/metastores/%s/data-access-configurations/%s' % (metastore_id, dac_id)
         return self.client.perform_query('DELETE', url, headers=headers)
 
     def create_root_credentials(self, root_creds_obj, headers=None):
-        return self.client.perform_query('POST', '/managed-catalog/pe/temporary-root-access-credentials',
+        return self.client.perform_query('POST', '/unity-catalog/pe/temporary-root-access-credentials',
                                          data=root_creds_obj, headers=headers)
     # Permissions Operations
 
@@ -1229,7 +1229,7 @@ class ManagedCatalogService(object):
         return ('tables', table_full_name)
 
     def _permissions_url(self, sec_type, sec_name):
-        return '/managed-catalog/permissions/%s/%s' % (sec_type, sec_name)
+        return '/unity-catalog/permissions/%s/%s' % (sec_type, sec_name)
 
     def get_permissions(self, catalog_name, schema_full_name, table_full_name, headers=None):
         sec_type, sec_name = self._get_perm_securable_name_and_type(catalog_name, schema_full_name, table_full_name)
