@@ -278,8 +278,11 @@ def _validate_pipeline_id(pipeline_id):
     """
     if pipeline_id is None or len(pipeline_id) == 0:
         error_and_quit(u'Empty pipeline id provided')
-    if not set(pipeline_id) <= PIPELINE_ID_PERMITTED_CHARACTERS:
-        message = u'Pipeline id {} has invalid character(s)\n'.format(pipeline_id)
+        pipeline_id_chars = set(pipeline_id)
+    if not pipeline_id_chars <= PIPELINE_ID_PERMITTED_CHARACTERS:
+        invalid_characters = pipeline_id_chars - PIPELINE_ID_PERMITTED_CHARACTERS
+        message = u'Pipeline id {} contains the following invalid character(s) {}\n'.format(pipeline_id,
+                                                                                            invalid_characters)
         message += u'Valid characters are: _ - a-z A-Z 0-9'
         error_and_quit(message)
 
