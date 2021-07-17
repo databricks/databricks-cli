@@ -699,6 +699,202 @@ def replace_permissions_cli(api_client, catalog, schema, table, json_file, json)
                                                                                  table, json),
                   encode_utf8=True)
 
+##############  Share Commands  ##############
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Create a new share.')
+@click.option('--name', required=True, help='Name of new share.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def create_share_cli(api_client, name):
+    """
+    Create a new share.
+
+    Calls the 'createShare' RPC endpoint of the Unity Catalog service.
+    Returns the ShareInfo for the newly-created share.
+
+    """
+    share_json = UnityCatalogApi(api_client).create_share(name)
+    click.echo(mc_pretty_format(share_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='List shares.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def list_shares_cli(api_client):
+    """
+    List shares.
+
+    Calls the 'listShares' RPC endpoint of the Unity Catalog service.
+    Returns array of ShareInfos.
+
+    """
+    shares_json = UnityCatalogApi(api_client).list_shares()
+    click.echo(mc_pretty_format(shares_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Get a share.')
+@click.option('--name', required=True,
+              help='Name of the share to get.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def get_share_cli(api_client, name):
+    """
+    Get a share.
+
+    Calls the 'getShare' RPC endpoint of the Unity Catalog service.
+    Returns nothing.
+
+    """
+    share_json = UnityCatalogApi(api_client).get_share(name)
+    click.echo(mc_pretty_format(share_json))
+
+def shared_data_object(name):
+    return { 'name': name, 'data_object_type': 'TABLE' }
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Update a share.')
+@click.option('--name', required=True,
+              help='Name of the share to update.')
+@click.option('--add-table', default=None, multiple=True,
+              help='Full name of table to add to share')
+@click.option('--remove-table', default=None, multiple=True,
+              help='Full name of table to remove from share')
+@click.option('--json-file', default=None, type=click.Path(),
+              help='File containing JSON request to PATCH.')
+@click.option('--json', default=None, type=JsonClickType(),
+              help=JsonClickType.help('/api/2.0/shares'))
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def update_share_cli(api_client, name, add_table, remove_table, json_file, json):
+    """
+    Update a share.
+
+    Calls the 'updateShare' RPC endpoint of the Unity Catalog service.
+    Returns nothing.
+
+    """
+    if len(add_table) > 0 or len(remove_table) > 0:
+        updates = []
+        for a in add_table:
+            updates.append({ 'action': 'ADD', 'data_object': shared_data_object(a) })
+        for r in remove_table:
+            updates.append({ 'action': 'REMOVE', 'data_object': shared_data_object(r) })
+        d = { 'updates': updates }
+        share_json = UnityCatalogApi(api_client).update_share(name, d)
+        click.echo(mc_pretty_format(share_json))
+    else:
+        json_cli_base(json_file, json,
+                      lambda json: UnityCatalogApi(api_client).update_share(name, json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Delete a share.')
+@click.option('--name', required=True,
+              help='Name of the share to delete.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def delete_share_cli(api_client, name):
+    """
+    Delete a share.
+
+    Calls the 'deleteShare' RPC endpoint of the Unity Catalog service.
+    Returns nothing.
+
+    """
+    UnityCatalogApi(api_client).delete_share(name)
+
+
+##############  Recipient Commands  ##############
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Create a new recipient.')
+@click.option('--name', required=True, help='Name of new recipient.')
+@click.option('--comment', default=None, required=False,
+              help='Free-form text description.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def create_recipient_cli(api_client, name, comment):
+    """
+    Create a new recipient.
+
+    Calls the 'createRecipient' RPC endpoint of the Unity Catalog service.
+    Returns the RecipientInfo for the newly-created recipient.
+
+    """
+    recipient_json = UnityCatalogApi(api_client).create_recipient(name, comment)
+    click.echo(mc_pretty_format(recipient_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='List recipients.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def list_recipients_cli(api_client):
+    """
+    List recipients.
+
+    Calls the 'listRecipients' RPC endpoint of the Unity Catalog service.
+    Returns array of RecipientInfos.
+
+    """
+    recipients_json = UnityCatalogApi(api_client).list_recipients()
+    click.echo(mc_pretty_format(recipients_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Get a recipient.')
+@click.option('--name', required=True,
+              help='Name of the recipient to get.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def get_recipient_cli(api_client, name):
+    """
+    Get a recipient.
+
+    Calls the 'getRecipient' RPC endpoint of the Unity Catalog service.
+    Returns nothing.
+
+    """
+    recipient_json = UnityCatalogApi(api_client).get_recipient(name)
+    click.echo(mc_pretty_format(recipient_json))
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Delete a recipient.')
+@click.option('--name', required=True,
+              help='Name of the recipient to delete.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def delete_recipient_cli(api_client, name):
+    """
+    Delete a recipient.
+
+    Calls the 'deleteRecipient' RPC endpoint of the Unity Catalog service.
+    Returns nothing.
+
+    """
+    UnityCatalogApi(api_client).delete_recipient(name)
+
 
 @click.group(context_settings=CONTEXT_SETTINGS,
              help='Utility to interact with Databricks unity-catalog.\n\n' +
@@ -718,32 +914,49 @@ def unity_catalog_group():  # pragma: no cover
     pass
 
 
+# Metastore cmds:
 unity_catalog_group.add_command(create_metastore_cli, name='create-metastore')
 unity_catalog_group.add_command(list_metastores_cli, name='list-metastores')
 unity_catalog_group.add_command(get_metastore_cli, name='get-metastore')
 unity_catalog_group.add_command(update_metastore_cli, name='update-metastore')
 unity_catalog_group.add_command(delete_metastore_cli, name='delete-metastore')
 unity_catalog_group.add_command(metastore_summary_cli, name='metastore-summary')
+# Catalogs cmds:
 unity_catalog_group.add_command(create_catalog_cli, name='create-catalog')
 unity_catalog_group.add_command(list_catalogs_cli, name='list-catalogs')
 unity_catalog_group.add_command(get_catalog_cli, name='get-catalog')
 unity_catalog_group.add_command(update_catalog_cli, name='update-catalog')
 unity_catalog_group.add_command(delete_catalog_cli, name='delete-catalog')
+# Schema cmds:
 unity_catalog_group.add_command(create_schema_cli, name='create-schema')
 unity_catalog_group.add_command(list_schemas_cli, name='list-schemas')
 unity_catalog_group.add_command(get_schema_cli, name='get-schema')
 unity_catalog_group.add_command(update_schema_cli, name='update-schema')
 unity_catalog_group.add_command(delete_schema_cli, name='delete-schema')
+# Table cmds:
 unity_catalog_group.add_command(create_table_cli, name='create-table')
 unity_catalog_group.add_command(list_tables_cli, name='list-tables')
 unity_catalog_group.add_command(get_table_cli, name='get-table')
 unity_catalog_group.add_command(update_table_cli, name='update-table')
 unity_catalog_group.add_command(delete_table_cli, name='delete-table')
+# DAC cmds:
 unity_catalog_group.add_command(create_dac_cli, name='create-dac')
 unity_catalog_group.add_command(list_dacs_cli, name='list-dacs')
 unity_catalog_group.add_command(get_dac_cli, name='get-dac')
 unity_catalog_group.add_command(delete_dac_cli, name='delete-dac')
+# Permissions cmds:
 unity_catalog_group.add_command(get_permissions_cli, name='get-permissions')
 unity_catalog_group.add_command(update_permissions_cli, name='update-permissions')
 unity_catalog_group.add_command(replace_permissions_cli, name='replace-permissions')
 unity_catalog_group.add_command(create_root_credentials_cli, name='create-root-credentials')
+# Share cmds:
+unity_catalog_group.add_command(create_share_cli, name='create-share')
+unity_catalog_group.add_command(list_shares_cli, name='list-shares')
+unity_catalog_group.add_command(get_share_cli, name='get-share')
+unity_catalog_group.add_command(update_share_cli, name='update-share')
+unity_catalog_group.add_command(delete_share_cli, name='delete-share')
+# Recipient cmds:
+unity_catalog_group.add_command(create_recipient_cli, name='create-recipient')
+unity_catalog_group.add_command(list_recipients_cli, name='list-recipients')
+unity_catalog_group.add_command(get_recipient_cli, name='get-recipient')
+unity_catalog_group.add_command(delete_recipient_cli, name='delete-recipient')

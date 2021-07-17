@@ -1245,3 +1245,59 @@ class UnityCatalogService(object):
         sec_type, sec_name = self._get_perm_securable_name_and_type(catalog_name, schema_full_name, table_full_name)
         _data = perm_spec
         return self.client.perform_query('PUT',  self._permissions_url(sec_type, sec_name), data=_data, headers=headers)
+
+    # Share Operations
+
+    def create_share(self, name, headers=None):
+        _data = {
+                'name': name
+        }
+        return self.client.perform_query('POST', '/unity-catalog/shares', data=_data, headers=headers)
+
+    def list_shares(self, headers=None):
+        _data = {}
+
+        return self.client.perform_query('GET', '/unity-catalog/shares', data=_data, headers=headers)
+
+    def get_share(self, name, headers=None):
+        _data = {}
+
+        return self.client.perform_query('GET', '/unity-catalog/shares/%s' % (name),
+                                         data=_data, headers=headers)
+
+    def update_share(self, name, share_spec, headers=None):
+        return self.client.perform_query('POST', '/unity-catalog/shares/%s' % (name),
+                                         data=share_spec, headers=headers)
+
+    def delete_share(self, name, headers=None):
+        _data = {}
+
+        return self.client.perform_query('DELETE', '/unity-catalog/shares/%s' % (name),
+                                         data=_data, headers=headers)
+
+    # Recipient Operations
+
+    def create_recipient(self, name, comment=None, headers=None):
+        _data = {
+            'name': name,
+        }
+        if comment is not None:
+            _data['comment'] = comment
+        return self.client.perform_query('POST', '/unity-catalog/recipients', data=_data, headers=headers)
+
+    def list_recipients(self, headers=None):
+        _data = {}
+
+        return self.client.perform_query('GET', '/unity-catalog/recipients', data=_data, headers=headers)
+
+    def get_recipient(self, name, headers=None):
+        _data = {}
+
+        return self.client.perform_query('GET', '/unity-catalog/recipients/%s' % (name),
+                                         data=_data, headers=headers)
+
+    def delete_recipient(self, name, headers=None):
+        _data = {}
+
+        return self.client.perform_query('DELETE', '/unity-catalog/recipients/%s' % (name),
+                                         data=_data, headers=headers)

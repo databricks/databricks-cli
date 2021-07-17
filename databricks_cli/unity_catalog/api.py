@@ -115,6 +115,8 @@ class UnityCatalogApi(object):
     def create_root_credentials(self, root_creds):
         return self.client.create_root_credentials(root_creds)
 
+    # Permissions APIs
+
     def get_permissions(self, catalog_name, schema_full_name, table_full_name):
         return self.client.get_permissions(catalog_name, schema_full_name, table_full_name)
 
@@ -125,3 +127,33 @@ class UnityCatalogApi(object):
     def replace_permissions(self, catalog_name, schema_full_name, table_full_name, perm_spec):
         return self.client.replace_permissions(catalog_name, schema_full_name, table_full_name,
                                                perm_spec)
+    # Share APIs
+
+    def create_share(self, name):
+        return self.client.create_share(name)
+
+    def list_shares(self):
+        return self.client.list_shares()
+
+    def get_share(self, name):
+        return self.client.get_share(name)
+
+    def update_share(self, name, share_spec):
+        return self.client.update_share(name, share_spec)
+
+    def delete_share(self, name):
+        return self.client.delete_share(name)
+
+    # Recipient APIs
+
+    def create_recipient(self, name, comment):
+        return self.client.create_recipient(name, comment)
+
+    def list_recipients(self):
+        return self.client.list_recipients()
+
+    def get_recipient(self, name):
+        return self.client.get_recipient(name)
+
+    def delete_recipient(self, name):
+        return self.client.delete_recipient(name)
