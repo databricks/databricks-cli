@@ -1,5 +1,5 @@
 {
-	"catalog_name": "default",
+	"catalog_name": "main",
 	"schema_name": "default",
 	"name": "CHANGE_ME",
 	"comment": "This a CSV table in UC, created in API endpoint",

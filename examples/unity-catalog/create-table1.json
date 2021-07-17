@@ -1,5 +1,5 @@
 {
-	"catalog_name": "default",
+	"catalog_name": "main",
 	"schema_name": "default",
 	"name": "my_table",
 	"comment": "something really insightful",
