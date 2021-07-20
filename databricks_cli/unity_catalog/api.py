@@ -117,13 +117,17 @@ class UnityCatalogApi(object):
 
     # Permissions APIs
 
-    def get_permissions(self, catalog_name, schema_full_name, table_full_name):
-        return self.client.get_permissions(catalog_name, schema_full_name, table_full_name)
+    def get_permissions(self, catalog_name, schema_full_name, table_full_name,
+                        share_name):
+        return self.client.get_permissions(catalog_name, schema_full_name,
+                                           table_full_name, share_name)
 
-    def update_permissions(self, catalog_name, schema_full_name, table_full_name, diff_spec):
+    def update_permissions(self, catalog_name, schema_full_name, table_full_name,
+                           share_name, diff_spec):
         return self.client.update_permissions(catalog_name, schema_full_name, table_full_name,
-                                              diff_spec)
+                                              share_name, diff_spec)
 
+    # Share not supported for replace_permissions API
     def replace_permissions(self, catalog_name, schema_full_name, table_full_name, perm_spec):
         return self.client.replace_permissions(catalog_name, schema_full_name, table_full_name,
                                                perm_spec)

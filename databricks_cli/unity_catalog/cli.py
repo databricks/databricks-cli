@@ -604,7 +604,7 @@ def create_root_credentials_cli(api_client, json_file, json):
                   encode_utf8=True)
 
 
-PERMISSIONS_OBJ_TYPES = ['catalog', 'schema', 'table']
+PERMISSIONS_OBJ_TYPES = ['catalog', 'schema', 'table', 'share']
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -618,11 +618,14 @@ PERMISSIONS_OBJ_TYPES = ['catalog', 'schema', 'table']
 @click.option('--table', cls=OneOfOption, default=None,
               one_of=PERMISSIONS_OBJ_TYPES,
               help='Full name of table of interest')
+@click.option('--share', cls=OneOfOption, default=None,
+              one_of=PERMISSIONS_OBJ_TYPES,
+              help='Name of the share of interest')
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def get_permissions_cli(api_client, catalog, schema, table):
+def get_permissions_cli(api_client, catalog, schema, share, table):
     """
     Get permissions on a securable.
 
@@ -630,7 +633,7 @@ def get_permissions_cli(api_client, catalog, schema, table):
     Returns PermissionsList for the requested securable.
 
     """
-    perm_json = UnityCatalogApi(api_client).get_permissions(catalog, schema, table)
+    perm_json = UnityCatalogApi(api_client).get_permissions(catalog, schema, table, share)
     click.echo(mc_pretty_format(perm_json))
 
 
@@ -645,6 +648,9 @@ def get_permissions_cli(api_client, catalog, schema, table):
 @click.option('--table', cls=OneOfOption, default=None,
               one_of=PERMISSIONS_OBJ_TYPES,
               help='Full name of table of interest')
+@click.option('--share', cls=OneOfOption, default=None,
+              one_of=PERMISSIONS_OBJ_TYPES,
+              help='Name of the share of interest')
 @click.option('--json-file', default=None, type=click.Path(),
               help='File containing JSON of permissions change to PATCH.')
 @click.option('--json', default=None, type=JsonClickType(),
@@ -653,7 +659,7 @@ def get_permissions_cli(api_client, catalog, schema, table):
 @profile_option
 @eat_exceptions
 @provide_api_client
-def update_permissions_cli(api_client, catalog, schema, table, json_file, json):
+def update_permissions_cli(api_client, catalog, schema, table, share, json_file, json):
     """
     Update permissions on a securable.
 
@@ -663,7 +669,7 @@ def update_permissions_cli(api_client, catalog, schema, table, json_file, json):
     """
     json_cli_base(json_file, json,
                   lambda json: UnityCatalogApi(api_client).update_permissions(catalog, schema,
-                                                                                table, json),
+                                                                                table, share, json),
                   encode_utf8=True)
 
 

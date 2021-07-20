@@ -1221,30 +1221,53 @@ class UnityCatalogService(object):
                                          data=root_creds_obj, headers=headers)
     # Permissions Operations
 
-    def _get_perm_securable_name_and_type(self, catalog_name, schema_full_name, table_full_name):
+    def _get_perm_securable_name_and_type(self, catalog_name, schema_full_name,
+                                          table_full_name, share_name):
         if (catalog_name):
             return ('catalog', catalog_name)
         elif (schema_full_name):
             return ('schema', schema_full_name)
-        return ('table', table_full_name)
+        elif (table_full_name):
+            return ('table', table_full_name)
+        else:
+            return ('share', share_name)
 
     def _permissions_url(self, sec_type, sec_name):
-        return '/unity-catalog/permissions/%s/%s' % (sec_type, sec_name)
+        if sec_type == 'share':
+            return '/unity-catalog/shares/%s/permissions' % (sec_name)
+        else:
+            return '/unity-catalog/permissions/%s/%s' % (sec_type, sec_name)
 
-    def get_permissions(self, catalog_name, schema_full_name, table_full_name, headers=None):
-        sec_type, sec_name = self._get_perm_securable_name_and_type(catalog_name, schema_full_name, table_full_name)
+    def _update_permissions_method(self, sec_type):
+        if sec_type == 'share':
+            return 'POST'
+        else:
+            return 'PATCH'
+
+    def get_permissions(self, catalog_name, schema_full_name, table_full_name,
+                        share_name, headers=None):
+        sec_type, sec_name = self._get_perm_securable_name_and_type(catalog_name, schema_full_name,
+                                                                    table_full_name, share_name)
         _data = {}
-        return self.client.perform_query('GET', self._permissions_url(sec_type, sec_name), data=_data, headers=headers)
+        return self.client.perform_query('GET', self._permissions_url(sec_type, sec_name),
+                                         data=_data, headers=headers)
 
-    def update_permissions(self, catalog_name, schema_full_name, table_full_name, perm_diff_spec, headers=None):
-        sec_type, sec_name = self._get_perm_securable_name_and_type(catalog_name, schema_full_name, table_full_name)
+    def update_permissions(self, catalog_name, schema_full_name, table_full_name, share_name,
+                           perm_diff_spec, headers=None):
+        sec_type, sec_name = self._get_perm_securable_name_and_type(catalog_name, schema_full_name,
+                                                                    table_full_name, share_name)
         _data = perm_diff_spec
-        return self.client.perform_query('PATCH',  self._permissions_url(sec_type, sec_name), data=_data, headers=headers)
+        method = self._update_permissions_method(sec_type)
+        return self.client.perform_query(method,  self._permissions_url(sec_type, sec_name),
+                                         data=_data, headers=headers)
 
-    def replace_permissions(self, catalog_name, schema_full_name, table_full_name, perm_spec, headers=None):
-        sec_type, sec_name = self._get_perm_securable_name_and_type(catalog_name, schema_full_name, table_full_name)
+    def replace_permissions(self, catalog_name, schema_full_name, table_full_name,
+                            perm_spec, headers=None):
+        sec_type, sec_name = self._get_perm_securable_name_and_type(catalog_name, schema_full_name,
+                                                                    table_full_name)
         _data = perm_spec
-        return self.client.perform_query('PUT',  self._permissions_url(sec_type, sec_name), data=_data, headers=headers)
+        return self.client.perform_query('PUT',  self._permissions_url(sec_type, sec_name),
+                                         data=_data, headers=headers)
 
     # Share Operations
 
