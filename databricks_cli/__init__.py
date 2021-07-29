@@ -36,4 +36,3 @@ try:
     initialize_cli_for_databricks_notebooks()
 except: # noqa
     pass
-
