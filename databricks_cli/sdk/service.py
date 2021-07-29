@@ -1050,3 +1050,42 @@ class DeltaPipelinesService(object):
 
         return self.client.perform_query('POST', '/pipelines/{pipeline_id}/stop'.format(pipeline_id=pipeline_id),
                                          data=_data, headers=headers)
+class ReposService(object):
+    def __init__(self, client):
+        self.client = client
+
+    def list_repos(self, path_prefix=None, next_page_token=None, headers=None):
+        _data = {}
+        if path_prefix is not None:
+            _data['path_prefix'] = path_prefix
+        if next_page_token is not None:
+            _data['next_page_token'] = next_page_token
+        return self.client.perform_query('GET', '/repos', data=_data, headers=headers)
+
+    def get_repo(self, id, headers=None):
+        _data = {}
+    
+        return self.client.perform_query('GET', '/repos/{id}'.format(id=id), data=_data, headers=headers)
+    
+    def update_repo(self, id, branch=None, tag=None, headers=None):
+        _data = {}
+        if branch is not None:
+            _data['branch'] = branch
+        if tag is not None:
+            _data['tag'] = tag
+        return self.client.perform_query('PATCH', '/repos/{id}'.format(id=id), data=_data, headers=headers)
+    
+    def create_repo(self, url, provider, path=None, headers=None):
+        _data = {}
+        if url is not None:
+            _data['url'] = url
+        if provider is not None:
+            _data['provider'] = provider
+        if path is not None:
+            _data['path'] = path
+        return self.client.perform_query('POST', '/repos', data=_data, headers=headers)
+
+    def delete_repo(self, id, headers=None):
+        _data = {}
+    
+        return self.client.perform_query('DELETE', '/repos/{id}'.format(id=id), data=_data, headers=headers)
