@@ -78,7 +78,3 @@ class ReposApi(object):
         Deletes the repo with the given ID.
         """
         return self.client.delete_repo(repo_id)
-
-
-
-
