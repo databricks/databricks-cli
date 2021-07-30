@@ -27,25 +27,43 @@ from databricks_cli.sdk import ReposService, WorkspaceService
 class ReposApi(object):
     def __init__(self, api_client):
         self.client = ReposService(api_client)
+        self.ws_client = WorkspaceService(api_client)
+
+    def get_repo_id(self, path):
+        if not path.startswith("/Repos/"):
+            raise ValueError("Path must start with /Repos/ !")
+
+        p = path
+        while p != "/Repos":
+            try:
+                status = self.ws_client.get_status(p)
+                if status['object_type'] == 'REPO':
+                    return status['object_id']
+            except requests.exceptions.HTTPError:
+                pass
+
+            p = os.path.dirname(p)
+
+        raise RuntimeError("Can't find repo ID for {path}".format(path=path))
 
     def list(self, path_prefix, next_page_token):
-    	"""
-    	List repos that the caller has Manage permissions on. Results are 
-    	paginated with each page containing twenty repos.
-    	"""
-    	return self.client.list_repos(path_prefix, next_page_token)
+        """
+        List repos that the caller has Manage permissions on. Results are 
+        paginated with each page containing twenty repos.
+        """
+        return self.client.list_repos(path_prefix, next_page_token)
 
     def create(self, url, provider, path):
-    	"""
-    	Creates a repo object and links it to the remote Git repo specified.
-    	"""
-    	return self.client.create_repo(url, provider, path)
+        """
+        Creates a repo object and links it to the remote Git repo specified.
+        """
+        return self.client.create_repo(url, provider, path)
 
-	def get(self, repo_id):
-		"""
-    	Gets the repo with the given ID.
-    	"""
-		return self.client.get_repo(repo_id)
+    def get(self, repo_id):
+        """
+        Gets the repo with the given ID.
+        """
+        return self.client.get_repo(repo_id)
 
     def update(self, repo_id, branch, tag):
         """
@@ -56,10 +74,10 @@ class ReposApi(object):
         return self.client.update_repo(repo_id, branch, tag)
 
     def delete(self, repo_id):
-    	"""
+        """
         Deletes the repo with the given ID.
         """
-    	return self.client.delete_repo(repo_id)
+        return self.client.delete_repo(repo_id)
 
 
 
