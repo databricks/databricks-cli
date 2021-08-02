@@ -137,6 +137,7 @@ def repos_group():  # pragma: no cover
     """Utility to interact with Repos."""
     pass
 
+
 repos_group.add_command(list_repos_cli, name='list')
 repos_group.add_command(get_repo_cli, name='get')
 repos_group.add_command(create_repo_cli, name='create')
