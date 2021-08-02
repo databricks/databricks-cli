@@ -32,6 +32,7 @@ from databricks_cli.version import print_version_callback, version
 UPDATE_OPTIONS = ['branch', 'tag']
 ID_OPTIONS = ['repo-id', 'path']
 
+
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='List repos that user has Manage permissions on')
 @click.option('--path-prefix', help="Path prefix to filter results by")
@@ -64,10 +65,12 @@ def create_repo_cli(api_client, url, provider, path):
     content = ReposApi(api_client).create(url, provider, path)
     click.echo(pretty_format(content))
 
+
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Get repo based on ID or path')
 @click.option('--repo-id', cls=OneOfOption, default=None, one_of=ID_OPTIONS, help="Repo ID")
-@click.option('--path', cls=OneOfOption, default=None, one_of=ID_OPTIONS, help="Workspace path of the repo object")
+@click.option('--path', cls=OneOfOption, default=None, one_of=ID_OPTIONS, 
+    help="Workspace path of the repo object")
 @debug_option
 @profile_option
 @eat_exceptions  # noqa
@@ -76,16 +79,19 @@ def get_repo_cli(api_client, repo_id, path):
     """
     Gets the repo.
     """
-    id_from_param_or_path = repo_id if repo_id is not None else ReposApi(api_client).get_repo_id(path)
+    id_from_param_or_path = (repo_id if repo_id is not None
+        else ReposApi(api_client).get_repo_id(path))
     content = ReposApi(api_client).get(id_from_param_or_path)
     click.echo(pretty_format(content))
+
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Checkout the repo to the given branch or tag')
 @click.option('--repo-id', cls=OneOfOption, default=None, one_of=ID_OPTIONS, help="Repo ID")
-@click.option('--path', cls=OneOfOption, default=None, one_of=ID_OPTIONS, help="Workspace path of the repo object")
-@click.option('--branch',  cls=OneOfOption, default=None, one_of=UPDATE_OPTIONS, help="Branch name")
-@click.option('--tag',  cls=OneOfOption, default=None, one_of=UPDATE_OPTIONS, help="Tag name")
+@click.option('--path', cls=OneOfOption, default=None, one_of=ID_OPTIONS,
+    help="Workspace path of the repo object")
+@click.option('--branch', cls=OneOfOption, default=None, one_of=UPDATE_OPTIONS, help="Branch name")
+@click.option('--tag', cls=OneOfOption, default=None, one_of=UPDATE_OPTIONS, help="Tag name")
 @debug_option
 @profile_option
 @eat_exceptions  # noqa
@@ -95,14 +101,17 @@ def update_repo_cli(api_client, repo_id, branch, tag, path):
     Checks out the repo to the given branch or tag. This call returns an error if the branch 
     or tag doesn't exist.
     """
-    id_from_param_or_path = repo_id if repo_id is not None else ReposApi(api_client).get_repo_id(path)
+    id_from_param_or_path = (repo_id if repo_id is not None
+        else ReposApi(api_client).get_repo_id(path))
     content = ReposApi(api_client).update(id_from_param_or_path, branch, tag)
     click.echo(pretty_format(content))
+
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Delete the repo based on ID or path')
 @click.option('--repo-id', cls=OneOfOption, default=None, one_of=ID_OPTIONS, help="Repo ID")
-@click.option('--path', cls=OneOfOption, default=None, one_of=ID_OPTIONS, help="Workspace path of the repo object")
+@click.option('--path', cls=OneOfOption, default=None, one_of=ID_OPTIONS,
+    help="Workspace path of the repo object")
 @debug_option
 @profile_option
 @eat_exceptions  # noqa
@@ -111,9 +120,11 @@ def delete_repo_cli(api_client, repo_id, path):
     """
     Deletes the repo.
     """
-    id_from_param_or_path = repo_id if repo_id is not None else ReposApi(api_client).get_repo_id(path)
+    id_from_param_or_path = (repo_id if repo_id is not None
+        else ReposApi(api_client).get_repo_id(path))
     content = ReposApi(api_client).delete(id_from_param_or_path)
     click.echo(pretty_format(content))
+
 
 @click.group(context_settings=CONTEXT_SETTINGS,
              short_help="Utility to interact with Repos.")
