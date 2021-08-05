@@ -40,6 +40,7 @@ from databricks_cli.groups.cli import groups_group
 from databricks_cli.tokens.cli import tokens_group
 from databricks_cli.instance_pools.cli import instance_pools_group
 from databricks_cli.pipelines.cli import pipelines_group
+from databricks_cli.repos.cli import repos_group
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
@@ -65,6 +66,7 @@ cli.add_command(groups_group, name='groups')
 cli.add_command(tokens_group, name='tokens')
 cli.add_command(instance_pools_group, name="instance-pools")
 cli.add_command(pipelines_group, name='pipelines')
+cli.add_command(repos_group, name='repos')
 
 if __name__ == "__main__":
     cli()

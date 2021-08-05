@@ -34,6 +34,7 @@ from databricks_cli.workspace.types import WorkspaceFormat, WorkspaceLanguage
 DIRECTORY = 'DIRECTORY'
 NOTEBOOK = 'NOTEBOOK'
 LIBRARY = 'LIBRARY'
+REPO = 'REPO'
 
 
 class WorkspaceFileInfo(object):
