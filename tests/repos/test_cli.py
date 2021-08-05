@@ -122,6 +122,17 @@ def test_update_tag_validation(repos_api_mock):
 
 
 @provide_conf
+def test_update_parameter_validation(repos_api_mock):
+    runner = CliRunner()
+    runner.invoke(cli.update_repo_cli,
+                  ["--repo-id", TEST_ID,
+                   "--branch", TEST_BRANCH,
+                   "--tag", TEST_TAG])
+    # not called because only one of branch or tag should be specified
+    assert repos_api_mock.update.call_count == 0
+
+
+@provide_conf
 def test_delete_validation(repos_api_mock):
     runner = CliRunner()
     runner.invoke(cli.delete_repo_cli,

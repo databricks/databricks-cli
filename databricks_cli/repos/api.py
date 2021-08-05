@@ -20,7 +20,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import os.path
 import requests
 from databricks_cli.sdk import ReposService, WorkspaceService
 
@@ -34,16 +33,15 @@ class ReposApi(object):
         if not path.startswith("/Repos/"):
             raise ValueError("Path must start with /Repos/ !")
 
-        p = path
-        while p != "/Repos":
-            try:
-                status = self.ws_client.get_status(p)
-                if status['object_type'] == 'REPO':
-                    return status['object_id']
-            except requests.exceptions.HTTPError:
-                pass
+        if not len([x for x in path.split("/") if x]) == 3:
+            raise ValueError("Repos paths must be in /Repos/{folder}/{repo} format!")
 
-            p = os.path.dirname(p)
+        try:
+            status = self.ws_client.get_status(path)
+            if status['object_type'] == 'REPO':
+                return status['object_id']
+        except requests.exceptions.HTTPError:
+            pass
 
         raise RuntimeError("Can't find repo ID for {path}".format(path=path))
 
