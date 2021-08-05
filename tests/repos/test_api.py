@@ -67,7 +67,7 @@ class TestGetRepoId(object):
     def test_get_id_path_not_in_repos(self, repos_api_with_ws_service):
         repos_api_with_ws_service.ws_client.get_status.return_value = TEST_JSON_RESPONSE
         with pytest.raises(ValueError):
-            repos_api_with_ws_service.get_repo_id("/Bad/Path")
+            repos_api_with_ws_service.get_repo_id("/Bad/Path/Repo")
 
     def test_get_id_not_a_repo(self, repos_api_with_ws_service):
         repos_api_with_ws_service.ws_client.get_status.return_value = TEST_NON_REPO_JSON_RESPONSE
