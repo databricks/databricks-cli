@@ -64,3 +64,81 @@ def test_list_jobs_by_name(jobs_api):
     assert len(res) == 2
     assert res[0]['settings']['name'] == test_job_name
     assert res[1]['settings']['name'] == test_job_name
+
+
+@provide_conf
+def test_delete_job():
+    with mock.patch('databricks_cli.sdk.ApiClient') as api_client_mock:
+        api = JobsApi(api_client_mock)
+        api.delete_job('1')
+        api_client_mock.perform_query.assert_called_with(
+            'POST', '/jobs/delete', data={'job_id': '1'}, headers=None, version=None
+        )
+        api.delete_job('1', version='3.0')
+        api_client_mock.perform_query.assert_called_with(
+            'POST', '/jobs/delete', data={'job_id': '1'}, headers=None, version='3.0'
+        )
+
+
+@provide_conf
+def test_get_job():
+    with mock.patch('databricks_cli.sdk.ApiClient') as api_client_mock:
+        api = JobsApi(api_client_mock)
+        api.get_job('1')
+        api_client_mock.perform_query.assert_called_with(
+            'GET', '/jobs/get', data={'job_id': '1'}, headers=None, version=None
+        )
+
+        api.get_job('1', version='3.0')
+        api_client_mock.perform_query.assert_called_with(
+            'GET', '/jobs/get', data={'job_id': '1'}, headers=None, version='3.0'
+        )
+
+
+@provide_conf
+def test_reset_job():
+    with mock.patch('databricks_cli.sdk.ApiClient') as api_client_mock:
+        api = JobsApi(api_client_mock)
+        api.reset_job({'job_id': '1', 'name': 'new_name'})
+        api_client_mock.perform_query.assert_called_with(
+            'POST', '/jobs/reset', data={'job_id': '1', 'name': 'new_name'},
+            headers=None, version=None
+        )
+
+        api.reset_job({'job_id': '1', 'name': 'new_name'}, version='3.0')
+        api_client_mock.perform_query.assert_called_with(
+            'POST', '/jobs/reset', data={'job_id': '1', 'name': 'new_name'},
+            headers=None, version='3.0'
+        )
+
+
+@provide_conf
+def test_list_jobs():
+    with mock.patch('databricks_cli.sdk.ApiClient') as api_client_mock:
+        api = JobsApi(api_client_mock)
+        api.list_jobs()
+        api_client_mock.perform_query.assert_called_with(
+            'GET', '/jobs/list', data={}, headers=None, version=None
+        )
+
+        api.list_jobs(version='3.0')
+        api_client_mock.perform_query.assert_called_with(
+            'GET', '/jobs/list', data={}, headers=None, version='3.0'
+        )
+
+
+@provide_conf
+def test_run_now():
+    with mock.patch('databricks_cli.sdk.ApiClient') as api_client_mock:
+        api = JobsApi(api_client_mock)
+        api.run_now('1', ['bla'], None, None, None)
+        api_client_mock.perform_query.assert_called_with(
+            'POST', '/jobs/run-now', data={'job_id': '1', 'jar_params': ['bla']},
+            headers=None, version=None
+        )
+
+        api.run_now('1', ['bla'], None, None, None, version='3.0')
+        api_client_mock.perform_query.assert_called_with(
+            'POST', '/jobs/run-now', data={'job_id': '1', 'jar_params': ['bla']},
+            headers=None, version='3.0'
+        )

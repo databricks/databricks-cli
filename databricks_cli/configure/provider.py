@@ -275,17 +275,13 @@ class DatabricksConfig(object):
         self.insecure = insecure
         self.jobs_api_version = jobs_api_version
 
-    def set_jobs_api_version(self, jobs_api_version):
-        self.jobs_api_version = jobs_api_version
-        return self
+    @classmethod
+    def from_token(cls, host, token, insecure=None, jobs_api_version=None):
+        return DatabricksConfig(host, None, None, token, insecure, jobs_api_version)
 
     @classmethod
-    def from_token(cls, host, token, insecure=None):
-        return DatabricksConfig(host, None, None, token, insecure, None)
-
-    @classmethod
-    def from_password(cls, host, username, password, insecure=None):
-        return DatabricksConfig(host, username, password, None, insecure, None)
+    def from_password(cls, host, username, password, insecure=None, jobs_api_version=None):
+        return DatabricksConfig(host, username, password, None, insecure, jobs_api_version)
 
     @classmethod
     def empty(cls):

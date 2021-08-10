@@ -105,6 +105,7 @@ def test_get_url():
     assert client.get_url('/') == 'https://databricks.com/api/2.0/'
     assert client.get_url('/endpoint') == 'https://databricks.com/api/2.0/endpoint'
     assert client.get_url('/jobs/list') == 'https://databricks.com/api/2.1/jobs/list'
+    assert client.get_url('/jobs/list', '3.0') == 'https://databricks.com/api/3.0/jobs/list'
 
 
 def test_api_client_url_parsing():

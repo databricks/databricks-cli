@@ -122,6 +122,7 @@ def test_list_jobs_output_json(jobs_api_mock):
         runner.invoke(cli.list_cli, ['--output', 'json'])
         assert echo_mock.call_args[0][0] == pretty_format(LIST_RETURN)
 
+
 LIST_21_RETURN = {
     'jobs': [{
         'job_id': 1,

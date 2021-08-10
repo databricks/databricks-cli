@@ -111,7 +111,7 @@ class ApiClient(object):
 
     # helper functions starting here
 
-    def perform_query(self, method, path, data = {}, headers = None, files=None):
+    def perform_query(self, method, path, data = {}, headers = None, files=None, version=None):
         """set up connection and perform query"""
         if headers is None:
             headers = self.default_headers
@@ -147,10 +147,14 @@ class ApiClient(object):
         return resp.json()
 
 
-    def get_url(self, path):
+    def get_url(self, path, version=None):
         if self.jobs_api_version and path and path.startswith('/jobs'):
-            return self.url + str(self.jobs_api_version) + path 
-        return self.url + str(self.api_version) + path
+            if version:
+                return self.url + version + path 
+            return self.url + self.jobs_api_version + path 
+        elif version:
+            return self.url + version + path
+        return self.url + self.api_version + path
 
 
 def _translate_boolean_to_query_param(value):
