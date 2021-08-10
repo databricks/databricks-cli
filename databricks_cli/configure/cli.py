@@ -106,6 +106,12 @@ def _configure_cli_password(profile, insecure, host):
     update_and_persist_config(profile, new_config)
 
 
+def _configure_cli_jobs_api_version(profile, jobs_api_version):
+    config = ProfileConfigProvider(profile).get_config() or DatabricksConfig.empty()
+    new_config = config.set_jobs_api_version(jobs_api_version)
+    update_and_persist_config(profile, new_config)
+
+
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Configures host and authentication info for the CLI.')
 @click.option('--token', '-t', 'token', show_default=True, is_flag=True, default=False)
@@ -117,14 +123,19 @@ def _configure_cli_password(profile, insecure, host):
 @click.option('--aad-token', show_default=True, is_flag=True, default=False)
 @click.option('--insecure', show_default=True, is_flag=True, default=None,
               help='DO NOT verify SSL Certificates')
+@click.option('--jobs-api-version', show_default=True, default='2.0',
+              help='API version to use for jobs.')
 @debug_option
 @profile_option
-def configure_cli(token, aad_token, insecure, host, token_file):
+def configure_cli(token, aad_token, insecure, host, token_file, jobs_api_version):
     """
-    Configures host and authentication info for the CLI.
+    Configures host, authentication, and jobs-api version for the CLI.
     """
     profile = get_profile_from_context()
     insecure_str = str(insecure) if insecure is not None else None
+
+    if jobs_api_version:
+        _configure_cli_jobs_api_version(profile=profile, jobs_api_version=jobs_api_version)
 
     if token:
         _configure_cli_token(profile=profile, insecure=insecure_str, host=host)

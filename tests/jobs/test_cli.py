@@ -122,6 +122,50 @@ def test_list_jobs_output_json(jobs_api_mock):
         runner.invoke(cli.list_cli, ['--output', 'json'])
         assert echo_mock.call_args[0][0] == pretty_format(LIST_RETURN)
 
+LIST_21_RETURN = {
+    'jobs': [{
+        'job_id': 1,
+        'settings': {
+            'name': 'b',
+            'tasks': [{'task_key': 'a'}]
+        }
+    }, {
+        'job_id': 2,
+        'settings': {
+            'name': 'a',
+            'tasks': [{'task_key': 'a'}]
+        }
+    }, {
+        'job_id': 30,
+        'settings': {
+            # Normally 'C' < 'a' < 'b' -- we should do case insensitive sorting though.
+            'name': 'C',
+            'tasks': [{'task_key': 'a'}]
+        }
+    }]
+}
+
+
+@provide_conf
+def test_list_jobs_api_21(jobs_api_mock):
+    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+        jobs_api_mock.list_jobs.return_value = LIST_21_RETURN
+        runner = CliRunner()
+        runner.invoke(cli.list_cli)
+        # Output should be sorted here.
+        rows = [(2, 'a'), (1, 'b'), (30, 'C')]
+        assert echo_mock.call_args[0][0] == \
+            tabulate(rows, tablefmt='plain', disable_numparse=True)
+
+
+@provide_conf
+def test_list_jobs_api_21_output_json(jobs_api_mock):
+    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+        jobs_api_mock.list_jobs.return_value = LIST_21_RETURN
+        runner = CliRunner()
+        runner.invoke(cli.list_cli, ['--output', 'json'])
+        assert echo_mock.call_args[0][0] == pretty_format(LIST_21_RETURN)
+
 
 RUN_NOW_RETURN = {
     "number_in_job": 1,

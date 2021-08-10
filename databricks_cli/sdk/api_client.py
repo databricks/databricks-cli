@@ -68,7 +68,7 @@ class ApiClient(object):
     to be used by different versions of the client.
     """
     def __init__(self, user=None, password=None, host=None, token=None,
-                 apiVersion=version.API_VERSION, default_headers={}, verify=True, command_name=""):
+                 apiVersion=version.API_VERSION, default_headers={}, verify=True, command_name="", jobsApiVersion=None):
         if host[-1] == "/":
             host = host[:-1]
 
@@ -86,7 +86,7 @@ class ApiClient(object):
         parsed_url = urlparse(host)
         scheme = parsed_url.scheme
         hostname = parsed_url.hostname
-        self.url = "%s://%s/api/%s" % (scheme, hostname, apiVersion)
+        self.url = "%s://%s/api/" % (scheme, hostname)
         if user is not None and password is not None:
             encoded_auth = (user + ":" + password).encode()
             user_header_data = "Basic " + base64.standard_b64encode(encoded_auth).decode()
@@ -102,6 +102,8 @@ class ApiClient(object):
         self.default_headers.update(default_headers)
         self.default_headers.update(user_agent)
         self.verify = verify
+        self.api_version = apiVersion
+        self.jobs_api_version = jobsApiVersion
 
     def close(self):
         """Close the client"""
@@ -122,15 +124,15 @@ class ApiClient(object):
             warnings.simplefilter("ignore", exceptions.InsecureRequestWarning)
             if method == 'GET':
                 translated_data = {k: _translate_boolean_to_query_param(data[k]) for k in data}
-                resp = self.session.request(method, self.url + path, params = translated_data,
+                resp = self.session.request(method, self.get_url(path), params = translated_data,
                                             verify = self.verify, headers = headers)
             else:
                 if files is None:
-                    resp = self.session.request(method, self.url + path, data = json.dumps(data),
+                    resp = self.session.request(method, self.get_url(path), data = json.dumps(data),
                                                 verify = self.verify, headers = headers)
                 else:
                     # Multipart file upload
-                    resp = self.session.request(method, self.url + path, files = files, data = data,
+                    resp = self.session.request(method, self.get_url(path), files = files, data = data,
                                                 verify = self.verify, headers = headers)
         try:
             resp.raise_for_status()
@@ -143,6 +145,12 @@ class ApiClient(object):
                 pass
             raise requests.exceptions.HTTPError(message, response=e.response)
         return resp.json()
+
+
+    def get_url(self, path):
+        if self.jobs_api_version and path and path.startswith('/jobs'):
+            return self.url + str(self.jobs_api_version) + path 
+        return self.url + str(self.api_version) + path
 
 
 def _translate_boolean_to_query_param(value):
