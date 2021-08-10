@@ -31,7 +31,11 @@ from databricks_cli.jobs.api import JobsApi
 from databricks_cli.sdk.version import API_VERSIONS
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base, \
     truncate_string
-from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
+
+from databricks_cli.configure.config import provide_api_client, profile_option, \
+    get_profile_from_context, debug_option, get_config
+from databricks_cli.configure.provider import DatabricksConfig, update_and_persist_config, \
+    ProfileConfigProvider
 from databricks_cli.version import print_version_callback, version as cli_version
 
 
@@ -53,6 +57,7 @@ def create_cli(api_client, json_file, json, version):
     The specification for the json option can be found
     https://docs.databricks.com/api/latest/jobs.html#create
     """
+    check_version(api_client, version)
     json_cli_base(json_file, json,
                   lambda json: JobsApi(api_client).create_job(json, version=version))
 
@@ -88,6 +93,7 @@ def reset_cli(api_client, json_file, json, job_id, version):
         'job_id': job_id,
         'new_settings': deser_json
     }
+    check_version(api_client, version)
     JobsApi(api_client).reset_job(request_body, version=version)
 
 
@@ -121,6 +127,7 @@ def list_cli(api_client, output, version):
 
     In table mode, the jobs are sorted by their name.
     """
+    check_version(api_client, version)
     jobs_api = JobsApi(api_client)
     jobs_json = jobs_api.list_jobs(version=version)
     if OutputClickType.is_json(output):
@@ -142,6 +149,7 @@ def delete_cli(api_client, job_id, version):
     """
     Deletes the specified job.
     """
+    check_version(api_client, version)
     JobsApi(api_client).delete_job(job_id, version)
 
 
@@ -157,6 +165,7 @@ def get_cli(api_client, job_id, version):
     """
     Describes the metadata for a job.
     """
+    check_version(api_client, version)
     click.echo(pretty_format(JobsApi(api_client).get_job(job_id, version)))
 
 
@@ -186,6 +195,7 @@ def run_now_cli(api_client, job_id, jar_params, notebook_params, python_params,
     Parameter options are specified in json and the format is documented in
     https://docs.databricks.com/api/latest/jobs.html#jobsrunnow.
     """
+    check_version(api_client, version)
     jar_params_json = json_loads(jar_params) if jar_params else None
     notebook_params_json = json_loads(notebook_params) if notebook_params else None
     python_params = json_loads(python_params) if python_params else None
@@ -193,6 +203,19 @@ def run_now_cli(api_client, job_id, jar_params, notebook_params, python_params,
     res = JobsApi(api_client).run_now(
         job_id, jar_params_json, notebook_params_json, python_params, spark_submit_params, version)
     click.echo(pretty_format(res))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS)
+@click.option('--version', show_default=True, default=None, type=click.Choice(API_VERSIONS),
+              help='API version to use for jobs.')
+@debug_option
+@profile_option
+def configure(version):
+    profile = get_profile_from_context()
+    config = ProfileConfigProvider(profile).get_config() if profile else get_config()
+    new_config = config or DatabricksConfig.empty()
+    new_config.jobs_api_version = version
+    update_and_persist_config(profile, new_config)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
@@ -218,3 +241,14 @@ jobs_group.add_command(delete_cli, name='delete')
 jobs_group.add_command(get_cli, name='get')
 jobs_group.add_command(reset_cli, name='reset')
 jobs_group.add_command(run_now_cli, name='run-now')
+jobs_group.add_command(configure, name='configure')
+
+
+def check_version(api_client, version):
+    if (version or api_client.jobs_api_version) == '2.0':
+        click.echo(click.style('WARN', fg='yellow') + ': Your CLI is configured ' +
+                   'to use Jobs API 2.0. In order to use the latest Jobs features ' +
+                   'please upgrade to 2.1: \'databricks jobs configure --version=2.1\'. ' +
+                   'Future versions of this CLI will default to the new Jobs API. ' +
+                   'Learn more at https://docs.databricks.com/dev-tools/cli/jobs-cli.html'
+                   )

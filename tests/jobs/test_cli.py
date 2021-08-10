@@ -30,6 +30,7 @@ from tabulate import tabulate
 from click.testing import CliRunner
 
 import databricks_cli.jobs.cli as cli
+from databricks_cli.configure.config import get_config
 from databricks_cli.utils import pretty_format
 from tests.utils import provide_conf
 
@@ -208,3 +209,10 @@ def test_run_now_with_params(jobs_api_mock):
         assert jobs_api_mock.run_now.call_args[0][3] == json.loads(PYTHON_PARAMS)
         assert jobs_api_mock.run_now.call_args[0][4] == json.loads(SPARK_SUBMIT_PARAMS)
         assert echo_mock.call_args[0][0] == pretty_format(RUN_NOW_RETURN)
+
+
+@provide_conf
+def test_configure():
+    runner = CliRunner()
+    runner.invoke(cli.configure, ['--version=2.1'])
+    assert get_config().jobs_api_version == '2.1'
