@@ -216,3 +216,59 @@ def test_configure():
     runner = CliRunner()
     runner.invoke(cli.configure, ['--version=2.1'])
     assert get_config().jobs_api_version == '2.1'
+
+
+@provide_conf
+def test_list_throws_if_invalid_option_for_version_20():
+    runner = CliRunner()
+    args = [['--all'], ['--expand-tasks'], ['--offset', '20'], ['--limit', '20']]
+
+    for arg in args:
+        result = runner.invoke(cli.configure, ['--version=2.0'] + arg)
+        assert result.exit_code == 2
+
+
+LIST_RETURN_1 = {'jobs': [{'job_id': '1', 'settings': {'name': 'a'}}], 'has_more': True}
+LIST_RETURN_2 = {'jobs': [{'job_id': '2', 'settings': {'name': 'b'}}], 'has_more': True}
+LIST_RETURN_3 = {'jobs': [{'job_id': '3', 'settings': {'name': 'c'}}], 'has_more': False}
+
+
+@provide_conf
+def test_list_all(jobs_api_mock):
+    jobs_api_mock.list_jobs.side_effect = iter([LIST_RETURN_1, LIST_RETURN_2, LIST_RETURN_3])
+    runner = CliRunner()
+    result = runner.invoke(cli.list_cli, ['--version=2.1', '--all'])
+    rows = [(1, 'a'), (2, 'b'), (3, 'c')]
+    assert result.exit_code == 0
+    assert result.output == \
+        tabulate(rows, tablefmt='plain', disable_numparse=True) + '\n'
+
+
+@provide_conf
+def test_list_expand_tasks(jobs_api_mock):
+    jobs_api_mock.list_jobs.return_value = LIST_RETURN_1
+    runner = CliRunner()
+    result = runner.invoke(cli.list_cli, ['--version=2.1', '--expand-tasks'])
+    assert result.exit_code == 0
+    assert jobs_api_mock.list_jobs.call_args[1]['expand_tasks']
+    assert jobs_api_mock.list_jobs.call_args[1]['version'] == '2.1'
+
+
+@provide_conf
+def test_list_offset(jobs_api_mock):
+    jobs_api_mock.list_jobs.return_value = LIST_RETURN_1
+    runner = CliRunner()
+    result = runner.invoke(cli.list_cli, ['--version=2.1', '--offset', '1'])
+    assert result.exit_code == 0
+    assert jobs_api_mock.list_jobs.call_args[1]['offset'] == 1
+    assert jobs_api_mock.list_jobs.call_args[1]['version'] == '2.1'
+
+
+@provide_conf
+def test_list_limit(jobs_api_mock):
+    jobs_api_mock.list_jobs.return_value = LIST_RETURN_1
+    runner = CliRunner()
+    result = runner.invoke(cli.list_cli, ['--version=2.1', '--limit', '1'])
+    assert result.exit_code == 0
+    assert jobs_api_mock.list_jobs.call_args[1]['limit'] == 1
+    assert jobs_api_mock.list_jobs.call_args[1]['version'] == '2.1'
