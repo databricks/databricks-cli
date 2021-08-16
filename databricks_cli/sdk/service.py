@@ -24,6 +24,7 @@
 # limitations under the License.
 #
 import os
+from six.moves.urllib.parse import urlparse
 
 
 class JobsService(object):
@@ -1075,9 +1076,29 @@ class DeltaPipelinesService(object):
 
         return self.client.perform_query('POST', '/pipelines/{pipeline_id}/stop'.format(pipeline_id=pipeline_id),
                                          data=_data, headers=headers)
+
 class ReposService(object):
+    __git_providers__ = {
+        "github.com":    "gitHub",
+	    "dev.azure.com": "azureDevOpsServices",
+	    "gitlab.com":    "gitLab",
+	    "bitbucket.org": "bitbucketCloud"
+     }
+
     def __init__(self, client):
         self.client = client
+
+    def __detect_repo_provider__(self, url):
+        provider = None
+        try:
+            netloc = urlparse(url).netloc
+            idx = netloc.rfind("@")
+            if idx != -1:
+                netloc = netloc[(idx+1):]
+            provider = ReposService.__git_providers__.get(netloc.lower())
+        except:
+            pass
+        return provider
 
     def list_repos(self, path_prefix=None, next_page_token=None, headers=None):
         _data = {}
@@ -1104,6 +1125,8 @@ class ReposService(object):
         _data = {}
         if url is not None:
             _data['url'] = url
+        if provider is None or provider.trim() == "":
+            provider = self.__detect_repo_provider__(url)
         if provider is not None:
             _data['provider'] = provider
         if path is not None:
