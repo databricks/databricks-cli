@@ -29,11 +29,14 @@ from databricks_cli.utils import CONTEXT_SETTINGS, eat_exceptions, pretty_format
 from databricks_cli.version import print_version_callback, version
 
 
+TOKEN_LIFETIME_SEC = 60 * 60 * 24 * 90
+
+
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Create a token.')
-@click.option('--lifetime-seconds', required=False, default=60 * 60 * 24 * 90,
-              help="Number of seconds for the token to live for. The default is 129600 seconds or "
-                   "90 days.")
+@click.option('--lifetime-seconds', required=False, default=TOKEN_LIFETIME_SEC,
+              help="Number of seconds for the token to live for. The default is %d seconds or "
+                   "%d days." % (TOKEN_LIFETIME_SEC, TOKEN_LIFETIME_SEC / 60 / 60 / 24))
 @click.option('--comment', required=True,
               help="String describing what the token is for.")
 @debug_option
