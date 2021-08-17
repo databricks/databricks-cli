@@ -148,7 +148,7 @@ def get_config_for_profile(profile):
     config = ProfileConfigProvider(profile).get_config()
     if config:
         return config
-    return DatabricksConfig(None, None, None, None, None, None)
+    return DatabricksConfig.empty()
 
 
 def set_config_provider(provider):

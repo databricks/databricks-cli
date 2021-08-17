@@ -139,27 +139,23 @@ def list_cli(api_client, output, version, expand_tasks, offset, limit, _all):
     if api_version != '2.1' and (expand_tasks or offset or limit or _all):
         click.echo(click.style('ERROR', fg='red') + ': the options --expand-tasks, ' +
                    '--offset, --limit, and --all are only available in API 2.1', err=True)
-    else:
-        jobs_api = JobsApi(api_client)
-        has_more = True
-        count = 0
-        jobs = []
-        jobs_json = {}
-        while has_more:
-            if count > 0:
-                offset = (offset or 0) + \
-                         (limit or (len(jobs_json['jobs']) if 'jobs' in jobs_json else 20))
-            jobs_json = jobs_api.list_jobs(expand_tasks=expand_tasks, offset=offset,
-                                           limit=limit, version=version)
-            jobs += jobs_json['jobs'] if 'jobs' in jobs_json else []
-            has_more = (_all and jobs_json['has_more']) if 'has_more' in jobs_json else False
-            count += 1
+        return
+    jobs_api = JobsApi(api_client)
+    has_more = True
+    jobs = []
+    while has_more:
+        jobs_json = jobs_api.list_jobs(expand_tasks=expand_tasks, offset=offset,
+                                       limit=limit, version=version)
+        jobs += jobs_json['jobs'] if 'jobs' in jobs_json else []
+        has_more = (_all and jobs_json['has_more']) if 'has_more' in jobs_json else False
+        offset = (offset or 0) + \
+                 (limit or (len(jobs_json['jobs']) if 'jobs' in jobs_json else 20))
 
-        out = {'jobs': jobs}
-        if OutputClickType.is_json(output):
-            click.echo(pretty_format(out))
-        else:
-            click.echo(tabulate(_jobs_to_table(out), tablefmt='plain', disable_numparse=True))
+    out = {'jobs': jobs}
+    if OutputClickType.is_json(output):
+        click.echo(pretty_format(out))
+    else:
+        click.echo(tabulate(_jobs_to_table(out), tablefmt='plain', disable_numparse=True))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
