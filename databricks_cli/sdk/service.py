@@ -1129,6 +1129,8 @@ class ReposService(object):
             provider = self.__detect_repo_provider__(url)
         if provider is not None:
             _data['provider'] = provider
+        else:
+            raise ValueError("The Git provider parameter wasn't specified and we can't detect it from URL. Please pass 'provider' option")
         if path is not None:
             _data['path'] = path
         return self.client.perform_query('POST', '/repos', data=_data, headers=headers)
