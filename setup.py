@@ -39,6 +39,8 @@ setup(
         'tabulate>=0.7.7',
         'six>=1.10.0',
         'configparser>=0.3.5;python_version < "3.6"',
+        'cron-schedule-triggers>=0.0.11',
+        'tenacity>=6.2.0'
     ],
     entry_points='''
         [console_scripts]
@@ -57,6 +59,7 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.6',
         'License :: OSI Approved :: Apache Software License',
+        'Development Status :: 5 - Production/Stable'
     ],
     keywords='databricks cli',
     url='https://github.com/databricks/databricks-cli'
