@@ -24,7 +24,7 @@
 import click
 
 from databricks_cli.click_types import MetastoreIdClickType, DacIdClickType, \
-    JsonClickType, OneOfOption
+    WorkspaceIdClickType, JsonClickType, OneOfOption
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.unity_catalog.api import UnityCatalogApi
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base
@@ -157,6 +157,34 @@ def metastore_summary_cli(api_client):
     """
     summary_json = UnityCatalogApi(api_client).get_metastore_summary()
     click.echo(mc_pretty_format(summary_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Assign a metastore to the current workspace.')
+@click.option('--workspace-id', 'workspace_id', required=True, type=WorkspaceIdClickType(),
+              help='Unique identifier of the metastore to assign.')
+@click.option('--metastore-id', 'metastore_id', required=True, type=MetastoreIdClickType(),
+              help='Unique identifier of the metastore to assign.')
+@click.option('--default-catalog-name', 'default_catalog_name', required=False, default='main',
+              help='Name of the default catalog to use with the metastore.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def assign_metastore_cli(api_client, workspace_id, metastore_id, default_catalog_name):
+    """
+    Assign a metastore to the current workspace.
+
+    Calls the 'createMetastoreAssignment' RPC endpoint of the Unity Catalog service.
+    If that fails due to the workspace already having a Metastore assigned, it calls
+    the 'updateMetastoreAssignment' endpoint.
+    Returns nothing.
+
+    """
+    resp = UnityCatalogApi(api_client).create_metastore_assignment(workspace_id, metastore_id,
+                                                                   default_catalog_name)
+    # resp will just be an empty object ('{}') but it's good to print *something*
+    click.echo(mc_pretty_format(resp))
 
 
 ##############  Catalog Commands  ##############
@@ -669,7 +697,7 @@ def update_permissions_cli(api_client, catalog, schema, table, share, json_file,
     """
     json_cli_base(json_file, json,
                   lambda json: UnityCatalogApi(api_client).update_permissions(catalog, schema,
-                                                                                table, share, json),
+                                                                              table, share, json),
                   encode_utf8=True)
 
 
@@ -702,10 +730,11 @@ def replace_permissions_cli(api_client, catalog, schema, table, json_file, json)
     """
     json_cli_base(json_file, json,
                   lambda json: UnityCatalogApi(api_client).replace_permissions(catalog, schema,
-                                                                                 table, json),
+                                                                               table, json),
                   encode_utf8=True)
 
 ##############  Share Commands  ##############
+
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Create a new share.')
@@ -763,8 +792,10 @@ def get_share_cli(api_client, name):
     share_json = UnityCatalogApi(api_client).get_share(name)
     click.echo(mc_pretty_format(share_json))
 
+
 def shared_data_object(name):
-    return { 'name': name, 'data_object_type': 'TABLE' }
+    return {'name': name, 'data_object_type': 'TABLE'}
+
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Update a share.')
@@ -793,10 +824,10 @@ def update_share_cli(api_client, name, add_table, remove_table, json_file, json)
     if len(add_table) > 0 or len(remove_table) > 0:
         updates = []
         for a in add_table:
-            updates.append({ 'action': 'ADD', 'data_object': shared_data_object(a) })
+            updates.append({'action': 'ADD', 'data_object': shared_data_object(a)})
         for r in remove_table:
-            updates.append({ 'action': 'REMOVE', 'data_object': shared_data_object(r) })
-        d = { 'updates': updates }
+            updates.append({'action': 'REMOVE', 'data_object': shared_data_object(r)})
+        d = {'updates': updates}
         share_json = UnityCatalogApi(api_client).update_share(name, d)
         click.echo(mc_pretty_format(share_json))
     else:
@@ -883,6 +914,7 @@ def get_recipient_cli(api_client, name):
     recipient_json = UnityCatalogApi(api_client).get_recipient(name)
     click.echo(mc_pretty_format(recipient_json))
 
+
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Delete a recipient.')
 @click.option('--name', required=True,
@@ -927,6 +959,7 @@ unity_catalog_group.add_command(get_metastore_cli, name='get-metastore')
 unity_catalog_group.add_command(update_metastore_cli, name='update-metastore')
 unity_catalog_group.add_command(delete_metastore_cli, name='delete-metastore')
 unity_catalog_group.add_command(metastore_summary_cli, name='metastore-summary')
+unity_catalog_group.add_command(assign_metastore_cli, name='assign-metastore')
 # Catalogs cmds:
 unity_catalog_group.add_command(create_catalog_cli, name='create-catalog')
 unity_catalog_group.add_command(list_catalogs_cli, name='list-catalogs')

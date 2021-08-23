@@ -1090,6 +1090,25 @@ class UnityCatalogService(object):
         return self.client.perform_query('DELETE', '/unity-catalog/metastores/%s' % (metastore_id),
                                          data=_data, headers=headers)
 
+    def create_metastore_assignment(self, workspace_id, metastore_id, default_catalog_name = None,
+                                    headers=None):
+        _data = {
+            'metastore_id': metastore_id
+        }
+        if default_catalog_name is not None:
+            _data['default_catalog_name'] = default_catalog_name
+        url = '/unity-catalog/workspaces/%s/metastore' % (workspace_id)
+        return self.client.perform_query('PUT', url, data=_data, headers=headers)
+
+    def update_metastore_assignment(self, workspace_id, metastore_id, default_catalog_name,
+                                    headers=None):
+        _data = {
+            'metastore_id': metastore_id,
+            'default_catalog_name': default_catalog_name
+        }
+        url = '/unity-catalog/workspaces/%s/metastore' % (workspace_id)
+        return self.client.perform_query('PATCH', url, data=_data, headers=headers)
+
     # Catalog Operations
 
     def create_catalog(self, name, comment=None, headers=None):

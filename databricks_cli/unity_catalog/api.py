@@ -47,6 +47,14 @@ class UnityCatalogApi(object):
     def get_metastore_summary(self):
         return self.client.get_metastore_summary()
 
+    def create_metastore_assignment(self, workspace_id, metastore_id, default_catalog_name):
+        return self.client.create_metastore_assignment(workspace_id, metastore_id,
+                                                       default_catalog_name)
+
+    def update_metastore_assignment(self, workspace_id, metastore_id, default_catalog_name):
+        return self.client.update_metastore_assignment(workspace_id, metastore_id,
+                                                       default_catalog_name)
+
     # Catalog APIs
 
     def create_catalog(self, catalog_name, comment):
