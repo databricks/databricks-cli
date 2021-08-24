@@ -126,11 +126,12 @@ def update_metastore_cli(api_client, metastore_id, json_file, json):
                short_help='Delete a metastore.')
 @click.option('--id', 'metastore_id', required=True, type=MetastoreIdClickType(),
               help='Unique identifier of the metastore to delete.')
+@click.option('--force', '-f', is_flag=True, default=False)
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def delete_metastore_cli(api_client, metastore_id):
+def delete_metastore_cli(api_client, metastore_id, force):
     """
     Delete a metastore.
 
@@ -138,7 +139,7 @@ def delete_metastore_cli(api_client, metastore_id):
     Returns nothing.
 
     """
-    UnityCatalogApi(api_client).delete_metastore(metastore_id)
+    UnityCatalogApi(api_client).delete_metastore(metastore_id, force)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -916,6 +917,26 @@ def get_recipient_cli(api_client, name):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Get share permissions of a recipient.')
+@click.option('--name', required=True,
+              help='Name of the recipient.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def get_recipient_share_permissions_cli(api_client, name):
+    """
+    Get a recipient's share permissions.
+
+    Calls the 'getRecipientSharePermissions' RPC endpoint of the Unity Catalog service.
+    Returns nothing.
+
+    """
+    recipient_json = UnityCatalogApi(api_client).get_recipient_share_permissions(name)
+    click.echo(mc_pretty_format(recipient_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Delete a recipient.')
 @click.option('--name', required=True,
               help='Name of the recipient to delete.')
@@ -998,4 +1019,6 @@ unity_catalog_group.add_command(delete_share_cli, name='delete-share')
 unity_catalog_group.add_command(create_recipient_cli, name='create-recipient')
 unity_catalog_group.add_command(list_recipients_cli, name='list-recipients')
 unity_catalog_group.add_command(get_recipient_cli, name='get-recipient')
+unity_catalog_group.add_command(get_recipient_share_permissions_cli,
+                                name='get-recipient-share-perms')
 unity_catalog_group.add_command(delete_recipient_cli, name='delete-recipient')

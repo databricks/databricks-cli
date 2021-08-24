@@ -1084,8 +1084,10 @@ class UnityCatalogService(object):
         return self.client.perform_query('PATCH', '/unity-catalog/metastores/%s' % (metastore_id),
                                          data=metastore_spec, headers=headers)
 
-    def delete_metastore(self, metastore_id, headers=None):
+    def delete_metastore(self, metastore_id, force=None, headers=None):
         _data = {}
+        if force is not None:
+            _data['force'] = force
 
         return self.client.perform_query('DELETE', '/unity-catalog/metastores/%s' % (metastore_id),
                                          data=_data, headers=headers)
@@ -1336,6 +1338,12 @@ class UnityCatalogService(object):
         _data = {}
 
         return self.client.perform_query('GET', '/unity-catalog/recipients/%s' % (name),
+                                         data=_data, headers=headers)
+
+    def get_recipient_share_permissions(self, name, headers=None):
+        _data = {}
+
+        return self.client.perform_query('GET', '/unity-catalog/recipients/%s/share-permissions' % (name),
                                          data=_data, headers=headers)
 
     def delete_recipient(self, name, headers=None):

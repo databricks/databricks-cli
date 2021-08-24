@@ -41,8 +41,8 @@ class UnityCatalogApi(object):
     def update_metastore(self, metastore_id, metastore_spec):
         return self.client.update_metastore(metastore_id, metastore_spec)
 
-    def delete_metastore(self, metastore_id):
-        return self.client.delete_metastore(metastore_id)
+    def delete_metastore(self, metastore_id, force):
+        return self.client.delete_metastore(metastore_id, force)
 
     def get_metastore_summary(self):
         return self.client.get_metastore_summary()
@@ -166,6 +166,9 @@ class UnityCatalogApi(object):
 
     def get_recipient(self, name):
         return self.client.get_recipient(name)
+
+    def get_recipient_share_permissions(self, name):
+        return self.client.get_recipient_share_permissions(name)
 
     def delete_recipient(self, name):
         return self.client.delete_recipient(name)
