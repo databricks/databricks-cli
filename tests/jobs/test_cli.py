@@ -123,6 +123,18 @@ def test_list_jobs_output_json(jobs_api_mock):
         assert echo_mock.call_args[0][0] == pretty_format(LIST_RETURN)
 
 
+@provide_conf
+def test_list_jobs_type_pipeline(jobs_api_mock):
+    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+        jobs_api_mock.list_jobs.return_value = LIST_RETURN
+        runner = CliRunner()
+        runner.invoke(cli.list_cli, ['--type', 'PIPELINE'])
+        assert jobs_api_mock.list_jobs.call_args[0][0] == 'PIPELINE'
+        rows = [(2, 'a'), (1, 'b'), (30, 'C')]
+        assert echo_mock.call_args[0][0] == \
+            tabulate(rows, tablefmt='plain', disable_numparse=True)
+
+
 RUN_NOW_RETURN = {
     "number_in_job": 1,
     "run_id": 1
