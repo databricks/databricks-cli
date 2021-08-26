@@ -95,7 +95,7 @@ def _jobs_to_table(jobs_json):
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Lists the jobs in the Databricks Job Service.')
 @click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
-@click.option('--type', 'job_type', default=None, help='The type of job to list', type=click.Choice(['PIPELINE', 'AIRFLOW']))
+@click.option('--type', 'job_type', default=None, help='The type of job to list', type=str)
 @debug_option
 @profile_option
 @eat_exceptions
