@@ -30,8 +30,8 @@ class JobsApi(object):
     def create_job(self, json, headers=None):
         return self.client.client.perform_query('POST', '/jobs/create', data=json, headers=headers)
 
-    def list_jobs(self, headers=None):
-        resp = self.client.list_jobs(headers=headers)
+    def list_jobs(self, job_type=None, headers=None):
+        resp = self.client.list_jobs(job_type, headers=headers)
         if 'jobs' not in resp:
             resp['jobs'] = []
         return resp

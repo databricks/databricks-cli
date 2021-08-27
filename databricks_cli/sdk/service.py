@@ -138,8 +138,11 @@ class JobsService(object):
             _data['job_id'] = job_id
         return self.client.perform_query('GET', '/jobs/get', data=_data, headers=headers)
 
-    def list_jobs(self, headers=None):
+    def list_jobs(self, job_type=None, headers=None):
         _data = {}
+
+        if job_type is not None:
+            _data['job_type'] = job_type
 
         return self.client.perform_query('GET', '/jobs/list', data=_data, headers=headers)
 

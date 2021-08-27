@@ -95,11 +95,12 @@ def _jobs_to_table(jobs_json):
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Lists the jobs in the Databricks Job Service.')
 @click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
+@click.option('--type', 'job_type', default=None, help='The type of job to list', type=str)
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def list_cli(api_client, output):
+def list_cli(api_client, output, job_type):
     """
     Lists the jobs in the Databricks Job Service.
 
@@ -114,7 +115,7 @@ def list_cli(api_client, output):
     In table mode, the jobs are sorted by their name.
     """
     jobs_api = JobsApi(api_client)
-    jobs_json = jobs_api.list_jobs()
+    jobs_json = jobs_api.list_jobs(job_type)
     if OutputClickType.is_json(output):
         click.echo(pretty_format(jobs_json))
     else:
