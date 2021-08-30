@@ -123,6 +123,34 @@ class UnityCatalogApi(object):
     def create_root_credentials(self, root_creds):
         return self.client.create_root_credentials(root_creds)
 
+    # Storage Credentials
+
+    def create_storage_credential(self, cred_spec):
+        return self.client.create_storage_credential(cred_spec)
+
+    def list_storage_credentials(self):
+        return self.client.list_storage_credentials()
+
+    def get_storage_credential(self, name):
+        return self.client.get_storage_credential(name)
+
+    def delete_storage_credential(self, name):
+        return self.client.delete_storage_credential(name)
+
+    # External Locations
+
+    def create_external_location(self, loc_spec):
+        return self.client.create_external_location(loc_spec)
+
+    def list_external_locations(self):
+        return self.client.list_external_locations()
+
+    def get_external_location(self, name):
+        return self.client.get_external_location(name)
+
+    def delete_external_location(self, name):
+        return self.client.delete_external_location(name)
+
     # Permissions APIs
 
     def get_permissions(self, catalog_name, schema_full_name, table_full_name,

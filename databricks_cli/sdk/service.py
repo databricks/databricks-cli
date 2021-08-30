@@ -1240,6 +1240,64 @@ class UnityCatalogService(object):
     def create_root_credentials(self, root_creds_obj, headers=None):
         return self.client.perform_query('POST', '/unity-catalog/pe/temporary-root-access-credentials',
                                          data=root_creds_obj, headers=headers)
+
+    # Storage Credential Operations
+
+    def create_storage_credential(self, cred_spec, headers=None):
+        _data = cred_spec
+        url = '/unity-catalog/storage-credentials'
+        return self.client.perform_query('POST', url, data=_data, headers=headers)
+
+    def list_storage_credentials(self, headers=None):
+        _data = {}
+
+        return self.client.perform_query('GET', '/unity-catalog/storage_credentials', data=_data, headers=headers)
+
+    def get_storage_credential(self, name, headers=None):
+        _data = {}
+
+        return self.client.perform_query('GET', '/unity-catalog/storage_credentials/%s' % (name),
+                                         data=_data, headers=headers)
+
+    def update_storage_credential(self, name, cred_spec, headers=None):
+        return self.client.perform_query('POST', '/unity-catalog/storage_credentials/%s' % (name),
+                                         data=cred_spec, headers=headers)
+
+    def delete_storage_credential(self, name, headers=None):
+        _data = {}
+
+        return self.client.perform_query('DELETE', '/unity-catalog/storage_credentials/%s' % (name),
+                                         data=_data, headers=headers)
+
+    # External Locations Operations
+
+    def create_external_location(self, loc_spec, headers=None):
+        _data = loc_spec
+        url = '/unity-catalog/external-locations'
+        return self.client.perform_query('POST', url, data=_data, headers=headers)
+
+    def list_external_locations(self, headers=None):
+        _data = {}
+
+        return self.client.perform_query('GET', '/unity-catalog/external_locations', data=_data, headers=headers)
+
+    def get_external_location(self, name, headers=None):
+        _data = {}
+
+        return self.client.perform_query('GET', '/unity-catalog/external_locations/%s' % (name),
+                                         data=_data, headers=headers)
+
+    def update_external_location(self, name, loc_spec, headers=None):
+        return self.client.perform_query('POST', '/unity-catalog/external_locations/%s' % (name),
+                                         data=loc_spec, headers=headers)
+
+    def delete_external_location(self, name, headers=None):
+        _data = {}
+
+        return self.client.perform_query('DELETE', '/unity-catalog/external_locations/%s' % (name),
+                                         data=_data, headers=headers)
+
+
     # Permissions Operations
 
     def _get_perm_securable_name_and_type(self, catalog_name, schema_full_name,

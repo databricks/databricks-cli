@@ -633,6 +633,233 @@ def create_root_credentials_cli(api_client, json_file, json):
                   encode_utf8=True)
 
 
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Create storage credential.')
+@click.option('--json-file', default=None, type=click.Path(),
+              help='File containing JSON request to POST.')
+@click.option('--json', default=None, type=JsonClickType(),
+              help=JsonClickType.help('/api/2.0/unity-catalog/storage-credentials'))
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def create_credential_cli(api_client, json_file, json):
+    """
+    Create new storage credential.
+
+    Calls the 'createStorageCredential' RPC endpoint of the Unity Catalog service.
+    The specification for the request json can be found at <insert doc link here>.
+    Returns the properties of the newly-created Storage Credential.
+
+    """
+    json_cli_base(json_file, json,
+                  lambda json: UnityCatalogApi(api_client).create_storage_credential(json),
+                  encode_utf8=True)
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='List storage credentials.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def list_credentials_cli(api_client, ):
+    """
+    List storage credentials.
+
+    Calls the 'listStorageCredentials' RPC endpoint of the Unity Catalog service.
+    Returns array of StorageCredentials.
+
+    """
+    creds_json = UnityCatalogApi(api_client).list_storage_credentials()
+    click.echo(mc_pretty_format(creds_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Get a storage credential.')
+@click.option('--name', required=True,
+              help='Name of the storage credential to get.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def get_credential_cli(api_client, name):
+    """
+    Get a storage credential.
+
+    Calls the 'getStorageCredential' RPC endpoint of the Unity Catalog service.
+    Returns an StorageCredential object.
+
+    """
+    cred_json = UnityCatalogApi(api_client).get_storage_credential(name)
+    click.echo(mc_pretty_format(cred_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Update a storage credential.')
+@click.option('--name', required=True,
+              help='Name of the storage credential to update.')
+@click.option('--json-file', default=None, type=click.Path(),
+              help='File containing JSON request to PATCH.')
+@click.option('--json', default=None, type=JsonClickType(),
+              help=JsonClickType.help('/api/2.0/storage-credentials'))
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def update_credential_cli(api_client, name, json_file, json):
+    """
+    Update a storage credential.
+
+    Calls the 'updateStorageCredential' RPC endpoint of the Unity Catalog service.
+    Returns nothing.
+
+    """
+    json_cli_base(json_file, json,
+                  lambda json: UnityCatalogApi(api_client).update_storage_credential(name, json),
+                  encode_utf8=True)
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Delete a storage credential.')
+@click.option('--name', required=True,
+              help='Name of the storage credential to delete.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def delete_credential_cli(api_client, name):
+    """
+    Delete a storage credential.
+
+    Calls the 'deleteStorageCredential' RPC endpoint of the Unity Catalog service.
+    Returns nothing.
+
+    """
+    UnityCatalogApi(api_client).delete_storage_credential(name)
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Create External Location.')
+@click.option('--name', default=None,
+              help='Name of new external location')
+@click.option('--url', default=None,
+              help='Path URL for the new external location')
+@click.option('--credential-name', default=None,
+              help='Name of credential to use with new external location')
+@click.option('--json-file', default=None, type=click.Path(),
+              help='File containing JSON request to POST.')
+@click.option('--json', default=None, type=JsonClickType(),
+              help=JsonClickType.help('/api/2.0/unity-catalog/external-locations'))
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def create_location_cli(api_client, name, url, credential_name, json_file, json):
+    """
+    Create new external location.
+
+    Calls the 'createExternalLocation' RPC endpoint of the Unity Catalog service.
+    The specification for the request json can be found at <insert doc link here>.
+    Returns the properties of the newly-created Storage Credential.
+
+    """
+    if (name is not None) and (url is not None) and (credential_name is not None):
+        if (json_file is not None) or (json is not None):
+            raise ValueError('Cannot specify JSON if both name and url are given')
+        data = {"name": name, "url": url, "credential_name": credential_name}
+        loc_json = UnityCatalogApi(api_client).create_external_location(data)
+        click.echo(mc_pretty_format(loc_json))
+    elif (json is None) and (json_file is None):
+        raise ValueError('Must provide name, url and credential-name or use JSON specification')
+    else:
+        json_cli_base(json_file, json,
+                      lambda json: UnityCatalogApi(api_client).create_external_location(json),
+                      encode_utf8=True)
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='List external locations.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def list_locations_cli(api_client, ):
+    """
+    List external locations.
+
+    Calls the 'listExternalLocations' RPC endpoint of the Unity Catalog service.
+    Returns array of ExternalLocations.
+
+    """
+    locs_json = UnityCatalogApi(api_client).list_external_locations()
+    click.echo(mc_pretty_format(locs_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Get an external location.')
+@click.option('--name', required=True,
+              help='Name of the external location to get.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def get_location_cli(api_client, name):
+    """
+    Get an external location.
+
+    Calls the 'getExternalLocation' RPC endpoint of the Unity Catalog service.
+    Returns an ExternalLocation object.
+
+    """
+    loc_json = UnityCatalogApi(api_client).get_external_location(name)
+    click.echo(mc_pretty_format(loc_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Update an external location.')
+@click.option('--name', required=True,
+              help='Name of the external location to update.')
+@click.option('--json-file', default=None, type=click.Path(),
+              help='File containing JSON request to PATCH.')
+@click.option('--json', default=None, type=JsonClickType(),
+              help=JsonClickType.help('/api/2.0/external-locations'))
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def update_location_cli(api_client, name, json_file, json):
+    """
+    Update an external location.
+
+    Calls the 'updateExternalLocation' RPC endpoint of the Unity Catalog service.
+    Returns nothing.
+
+    """
+    json_cli_base(json_file, json,
+                  lambda json: UnityCatalogApi(api_client).update_external_location(name, json),
+                  encode_utf8=True)
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Delete an external location.')
+@click.option('--name', required=True,
+              help='Name of the external location to delete.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def delete_location_cli(api_client, name):
+    """
+    Delete an external location.
+
+    Calls the 'deleteExternalLocation' RPC endpoint of the Unity Catalog service.
+    Returns nothing.
+
+    """
+    UnityCatalogApi(api_client).delete_external_location(name)
+
+
 PERMISSIONS_OBJ_TYPES = ['catalog', 'schema', 'table', 'share']
 
 
@@ -1004,6 +1231,18 @@ unity_catalog_group.add_command(create_dac_cli, name='create-dac')
 unity_catalog_group.add_command(list_dacs_cli, name='list-dacs')
 unity_catalog_group.add_command(get_dac_cli, name='get-dac')
 unity_catalog_group.add_command(delete_dac_cli, name='delete-dac')
+# Credential cmds:
+unity_catalog_group.add_command(create_credential_cli, name='create-credential')
+unity_catalog_group.add_command(list_credentials_cli, name='list-credentials')
+unity_catalog_group.add_command(get_credential_cli, name='get-credential')
+unity_catalog_group.add_command(update_credential_cli, name='update-credential')
+unity_catalog_group.add_command(delete_credential_cli, name='delete-credential')
+# Location cmds:
+unity_catalog_group.add_command(create_location_cli, name='create-location')
+unity_catalog_group.add_command(list_locations_cli, name='list-locations')
+unity_catalog_group.add_command(get_location_cli, name='get-location')
+unity_catalog_group.add_command(update_location_cli, name='update-location')
+unity_catalog_group.add_command(delete_location_cli, name='delete-location')
 # Permissions cmds:
 unity_catalog_group.add_command(get_permissions_cli, name='get-permissions')
 unity_catalog_group.add_command(update_permissions_cli, name='update-permissions')
