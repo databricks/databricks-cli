@@ -1248,8 +1248,10 @@ class UnityCatalogService(object):
         url = '/unity-catalog/storage-credentials'
         return self.client.perform_query('POST', url, data=_data, headers=headers)
 
-    def list_storage_credentials(self, headers=None):
+    def list_storage_credentials(self, name_pattern=None, headers=None):
         _data = {}
+        if name_pattern is not None:
+            _data['name_pattern'] = name_pattern
 
         return self.client.perform_query('GET', '/unity-catalog/storage_credentials', data=_data, headers=headers)
 
@@ -1300,17 +1302,6 @@ class UnityCatalogService(object):
 
     # Permissions Operations
 
-    def _get_perm_securable_name_and_type(self, catalog_name, schema_full_name,
-                                          table_full_name, share_name):
-        if (catalog_name):
-            return ('catalog', catalog_name)
-        elif (schema_full_name):
-            return ('schema', schema_full_name)
-        elif (table_full_name):
-            return ('table', table_full_name)
-        else:
-            return ('share', share_name)
-
     def _permissions_url(self, sec_type, sec_name):
         if sec_type == 'share':
             return '/unity-catalog/shares/%s/permissions' % (sec_name)
@@ -1323,27 +1314,18 @@ class UnityCatalogService(object):
         else:
             return 'PATCH'
 
-    def get_permissions(self, catalog_name, schema_full_name, table_full_name,
-                        share_name, headers=None):
-        sec_type, sec_name = self._get_perm_securable_name_and_type(catalog_name, schema_full_name,
-                                                                    table_full_name, share_name)
+    def get_permissions(self, sec_type, sec_name, headers=None):
         _data = {}
         return self.client.perform_query('GET', self._permissions_url(sec_type, sec_name),
                                          data=_data, headers=headers)
 
-    def update_permissions(self, catalog_name, schema_full_name, table_full_name, share_name,
-                           perm_diff_spec, headers=None):
-        sec_type, sec_name = self._get_perm_securable_name_and_type(catalog_name, schema_full_name,
-                                                                    table_full_name, share_name)
+    def update_permissions(self, sec_type, sec_name, perm_diff_spec, headers=None):
         _data = perm_diff_spec
         method = self._update_permissions_method(sec_type)
-        return self.client.perform_query(method,  self._permissions_url(sec_type, sec_name),
+        return self.client.perform_query(method, self._permissions_url(sec_type, sec_name),
                                          data=_data, headers=headers)
 
-    def replace_permissions(self, catalog_name, schema_full_name, table_full_name,
-                            perm_spec, headers=None):
-        sec_type, sec_name = self._get_perm_securable_name_and_type(catalog_name, schema_full_name,
-                                                                    table_full_name)
+    def replace_permissions(self, sec_type, sec_name, perm_spec, headers=None):
         _data = perm_spec
         return self.client.perform_query('PUT',  self._permissions_url(sec_type, sec_name),
                                          data=_data, headers=headers)

@@ -323,13 +323,13 @@ def create_schema_cli(api_client, catalog_name, name, comment):
                short_help='List schemas.')
 @click.option('--catalog-name', required=True,
               help='Name of the parent catalog for schemas of interest.')
-@click.option('--name-regex', default=None,
-              help='Regex that the schema name must match to be in list.')
+@click.option('--name-pattern', default=None,
+              help='SQL LIKE pattern that the schema name must match to be in list.')
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def list_schemas_cli(api_client, catalog_name, name_regex):
+def list_schemas_cli(api_client, catalog_name, name_pattern):
     """
     List schemas.
 
@@ -337,7 +337,7 @@ def list_schemas_cli(api_client, catalog_name, name_regex):
     Returns array of SchemaInfos.
 
     """
-    schemas_json = UnityCatalogApi(api_client).list_schemas(catalog_name, name_regex)
+    schemas_json = UnityCatalogApi(api_client).list_schemas(catalog_name, name_pattern)
     click.echo(mc_pretty_format(schemas_json))
 
 
@@ -436,13 +436,13 @@ def create_table_cli(api_client, json_file, json):
               help='Name of the parent catalog for tables of interest.')
 @click.option('--schema-name', required=True,
               help='Name of the parent schema for tables of interest.')
-@click.option('--name-regex', default=None,
-              help='Regex that the table name must match to be in list.')
+@click.option('--name-pattern', default=None,
+              help='SQL LIKE pattern that the table name must match to be in list.')
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def list_tables_cli(api_client, catalog_name, schema_name, name_regex):
+def list_tables_cli(api_client, catalog_name, schema_name, name_pattern):
     """
     List tables.
 
@@ -450,7 +450,7 @@ def list_tables_cli(api_client, catalog_name, schema_name, name_regex):
     Returns array of TableInfos.
 
     """
-    tables_json = UnityCatalogApi(api_client).list_tables(catalog_name, schema_name, name_regex)
+    tables_json = UnityCatalogApi(api_client).list_tables(catalog_name, schema_name, name_pattern)
     click.echo(mc_pretty_format(tables_json))
 
 
@@ -659,11 +659,13 @@ def create_credential_cli(api_client, json_file, json):
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='List storage credentials.')
+@click.option('--name-pattern', default=None,
+              help='SQL LIKE pattern that the credential name must match to be in list.')
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def list_credentials_cli(api_client, ):
+def list_credentials_cli(api_client, name_pattern):
     """
     List storage credentials.
 
@@ -671,7 +673,7 @@ def list_credentials_cli(api_client, ):
     Returns array of StorageCredentials.
 
     """
-    creds_json = UnityCatalogApi(api_client).list_storage_credentials()
+    creds_json = UnityCatalogApi(api_client).list_storage_credentials(name_pattern)
     click.echo(mc_pretty_format(creds_json))
 
 
@@ -860,7 +862,23 @@ def delete_location_cli(api_client, name):
     UnityCatalogApi(api_client).delete_external_location(name)
 
 
-PERMISSIONS_OBJ_TYPES = ['catalog', 'schema', 'table', 'share']
+PERMISSIONS_OBJ_TYPES = ['catalog', 'schema', 'table', 'share', 'credential', 'location']
+
+
+def _get_perm_securable_name_and_type(catalog_name, schema_full_name, table_full_name,
+                                      share_name, credential_name, location_name):
+    if catalog_name:
+        return ('catalog', catalog_name)
+    elif schema_full_name:
+        return ('schema', schema_full_name)
+    elif table_full_name:
+        return ('table', table_full_name)
+    elif share_name:
+        return ('share', share_name)
+    elif credential_name:
+        return ('storage-credential', credential_name)
+    else:
+        return ('external-location', location_name)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -877,11 +895,17 @@ PERMISSIONS_OBJ_TYPES = ['catalog', 'schema', 'table', 'share']
 @click.option('--share', cls=OneOfOption, default=None,
               one_of=PERMISSIONS_OBJ_TYPES,
               help='Name of the share of interest')
+@click.option('--credential', cls=OneOfOption, default=None,
+              one_of=PERMISSIONS_OBJ_TYPES,
+              help='Name of the storage credential of interest')
+@click.option('--location', cls=OneOfOption, default=None,
+              one_of=PERMISSIONS_OBJ_TYPES,
+              help='Name of the external location of interest')
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def get_permissions_cli(api_client, catalog, schema, share, table):
+def get_permissions_cli(api_client, catalog, schema, table, share, credential, location):
     """
     Get permissions on a securable.
 
@@ -889,7 +913,10 @@ def get_permissions_cli(api_client, catalog, schema, share, table):
     Returns PermissionsList for the requested securable.
 
     """
-    perm_json = UnityCatalogApi(api_client).get_permissions(catalog, schema, table, share)
+    sec_type, sec_name = _get_perm_securable_name_and_type(catalog, schema, table, share,
+                                                           credential, location)
+
+    perm_json = UnityCatalogApi(api_client).get_permissions(sec_type, sec_name)
     click.echo(mc_pretty_format(perm_json))
 
 
@@ -907,6 +934,12 @@ def get_permissions_cli(api_client, catalog, schema, share, table):
 @click.option('--share', cls=OneOfOption, default=None,
               one_of=PERMISSIONS_OBJ_TYPES,
               help='Name of the share of interest')
+@click.option('--credential', cls=OneOfOption, default=None,
+              one_of=PERMISSIONS_OBJ_TYPES,
+              help='Name of the storage credential of interest')
+@click.option('--location', cls=OneOfOption, default=None,
+              one_of=PERMISSIONS_OBJ_TYPES,
+              help='Name of the external location of interest')
 @click.option('--json-file', default=None, type=click.Path(),
               help='File containing JSON of permissions change to PATCH.')
 @click.option('--json', default=None, type=JsonClickType(),
@@ -915,7 +948,8 @@ def get_permissions_cli(api_client, catalog, schema, share, table):
 @profile_option
 @eat_exceptions
 @provide_api_client
-def update_permissions_cli(api_client, catalog, schema, table, share, json_file, json):
+def update_permissions_cli(api_client, catalog, schema, table, share, credential, location,
+                           json_file, json):
     """
     Update permissions on a securable.
 
@@ -923,9 +957,12 @@ def update_permissions_cli(api_client, catalog, schema, table, share, json_file,
     Returns updated PermissionsList for the requested securable.
 
     """
+    sec_type, sec_name = _get_perm_securable_name_and_type(catalog, schema, table, share,
+                                                           credential, location)
+
     json_cli_base(json_file, json,
-                  lambda json: UnityCatalogApi(api_client).update_permissions(catalog, schema,
-                                                                              table, share, json),
+                  lambda json: UnityCatalogApi(api_client).update_permissions(sec_type, sec_name,
+                                                                              json),
                   encode_utf8=True)
 
 
@@ -940,6 +977,13 @@ def update_permissions_cli(api_client, catalog, schema, table, share, json_file,
 @click.option('--table', cls=OneOfOption, default=None,
               one_of=PERMISSIONS_OBJ_TYPES,
               help='Full name of table of interest')
+# shares not supported for replace permissions
+@click.option('--credential', cls=OneOfOption, default=None,
+              one_of=PERMISSIONS_OBJ_TYPES,
+              help='Name of the storage credential of interest')
+@click.option('--location', cls=OneOfOption, default=None,
+              one_of=PERMISSIONS_OBJ_TYPES,
+              help='Name of the external location of interest')
 @click.option('--json-file', default=None, type=click.Path(),
               help='File containing JSON of permissions to PUT.')
 @click.option('--json', default=None, type=JsonClickType(),
@@ -948,7 +992,8 @@ def update_permissions_cli(api_client, catalog, schema, table, share, json_file,
 @profile_option
 @eat_exceptions
 @provide_api_client
-def replace_permissions_cli(api_client, catalog, schema, table, json_file, json):
+def replace_permissions_cli(api_client, catalog, schema, table, credential, location,
+                            json_file, json):
     """
     Replace permissions on a securable.
 
@@ -956,9 +1001,13 @@ def replace_permissions_cli(api_client, catalog, schema, table, json_file, json)
     Returns nothing.
 
     """
+    share = None  # shares not supported for replace permissions
+
+    sec_type, sec_name = _get_perm_securable_name_and_type(catalog, schema, table, share,
+                                                           credential, location)
     json_cli_base(json_file, json,
-                  lambda json: UnityCatalogApi(api_client).replace_permissions(catalog, schema,
-                                                                               table, json),
+                  lambda json: UnityCatalogApi(api_client).replace_permissions(sec_type, sec_name,
+                                                                               json),
                   encode_utf8=True)
 
 ##############  Share Commands  ##############
@@ -1246,7 +1295,8 @@ unity_catalog_group.add_command(delete_location_cli, name='delete-location')
 # Permissions cmds:
 unity_catalog_group.add_command(get_permissions_cli, name='get-permissions')
 unity_catalog_group.add_command(update_permissions_cli, name='update-permissions')
-unity_catalog_group.add_command(replace_permissions_cli, name='replace-permissions')
+# replacePermissions endpoint not implemented on MC yet
+# unity_catalog_group.add_command(replace_permissions_cli, name='replace-permissions')
 unity_catalog_group.add_command(create_root_credentials_cli, name='create-root-credentials')
 # Share cmds:
 unity_catalog_group.add_command(create_share_cli, name='create-share')

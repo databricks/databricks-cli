@@ -77,8 +77,8 @@ class UnityCatalogApi(object):
     def create_schema(self, catalog_name, schema_name, comment):
         return self.client.create_schema(catalog_name, schema_name, comment)
 
-    def list_schemas(self, catalog_name, name_regex):
-        return self.client.list_schemas(catalog_name, name_regex)
+    def list_schemas(self, catalog_name, name_pattern):
+        return self.client.list_schemas(catalog_name, name_pattern)
 
     def get_schema(self, full_name):
         return self.client.get_schema(full_name)
@@ -94,8 +94,8 @@ class UnityCatalogApi(object):
     def create_table(self, table_spec):
         return self.client.create_table(table_spec)
 
-    def list_tables(self, catalog_name, schema_name, name_regex):
-        return self.client.list_tables(catalog_name, schema_name, name_regex)
+    def list_tables(self, catalog_name, schema_name, name_pattern):
+        return self.client.list_tables(catalog_name, schema_name, name_pattern)
 
     def get_table(self, full_name):
         return self.client.get_table(full_name)
@@ -128,8 +128,8 @@ class UnityCatalogApi(object):
     def create_storage_credential(self, cred_spec):
         return self.client.create_storage_credential(cred_spec)
 
-    def list_storage_credentials(self):
-        return self.client.list_storage_credentials()
+    def list_storage_credentials(self, name_pattern):
+        return self.client.list_storage_credentials(name_pattern)
 
     def get_storage_credential(self, name):
         return self.client.get_storage_credential(name)
@@ -153,20 +153,15 @@ class UnityCatalogApi(object):
 
     # Permissions APIs
 
-    def get_permissions(self, catalog_name, schema_full_name, table_full_name,
-                        share_name):
-        return self.client.get_permissions(catalog_name, schema_full_name,
-                                           table_full_name, share_name)
+    def get_permissions(self, sec_type, sec_name):
+        return self.client.get_permissions(sec_type, sec_name)
 
-    def update_permissions(self, catalog_name, schema_full_name, table_full_name,
-                           share_name, diff_spec):
-        return self.client.update_permissions(catalog_name, schema_full_name, table_full_name,
-                                              share_name, diff_spec)
+    def update_permissions(self, sec_type, sec_name, diff_spec):
+        return self.client.update_permissions(sec_type, sec_name, diff_spec)
 
-    # Share not supported for replace_permissions API
-    def replace_permissions(self, catalog_name, schema_full_name, table_full_name, perm_spec):
-        return self.client.replace_permissions(catalog_name, schema_full_name, table_full_name,
-                                               perm_spec)
+    def replace_permissions(self, sec_type, sec_name, perm_spec):
+        return self.client.replace_permissions(sec_type, sec_name, perm_spec)
+
     # Share APIs
 
     def create_share(self, name):
