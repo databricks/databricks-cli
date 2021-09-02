@@ -747,8 +747,8 @@ def delete_credential_cli(api_client, name):
               help='Name of new external location')
 @click.option('--url', default=None,
               help='Path URL for the new external location')
-@click.option('--credential-name', default=None,
-              help='Name of credential to use with new external location')
+@click.option('--storage-credential-name', default=None,
+              help='Name of storage credential to use with new external location')
 @click.option('--json-file', default=None, type=click.Path(),
               help='File containing JSON request to POST.')
 @click.option('--json', default=None, type=JsonClickType(),
@@ -757,7 +757,7 @@ def delete_credential_cli(api_client, name):
 @profile_option
 @eat_exceptions
 @provide_api_client
-def create_location_cli(api_client, name, url, credential_name, json_file, json):
+def create_location_cli(api_client, name, url, storage_credential_name, json_file, json):
     """
     Create new external location.
 
@@ -766,14 +766,14 @@ def create_location_cli(api_client, name, url, credential_name, json_file, json)
     Returns the properties of the newly-created Storage Credential.
 
     """
-    if (name is not None) and (url is not None) and (credential_name is not None):
+    if (name is not None) and (url is not None) and (storage_credential_name is not None):
         if (json_file is not None) or (json is not None):
             raise ValueError('Cannot specify JSON if both name and url are given')
-        data = {"name": name, "url": url, "credential_name": credential_name}
+        data = {"name": name, "url": url, "credential_name": storage_credential_name}
         loc_json = UnityCatalogApi(api_client).create_external_location(data)
         click.echo(mc_pretty_format(loc_json))
     elif (json is None) and (json_file is None):
-        raise ValueError('Must provide name, url and credential-name or use JSON specification')
+        raise ValueError('Must provide name, url and storage-credential-name or use JSON specification')
     else:
         json_cli_base(json_file, json,
                       lambda json: UnityCatalogApi(api_client).create_external_location(json),
@@ -862,7 +862,9 @@ def delete_location_cli(api_client, name):
     UnityCatalogApi(api_client).delete_external_location(name)
 
 
-PERMISSIONS_OBJ_TYPES = ['catalog', 'schema', 'table', 'share', 'credential', 'location']
+PERMISSIONS_OBJ_TYPES = [
+    'catalog', 'schema', 'table', 'share', 'storage-credential', 'external-location'
+]
 
 
 def _get_perm_securable_name_and_type(catalog_name, schema_full_name, table_full_name,
@@ -895,17 +897,18 @@ def _get_perm_securable_name_and_type(catalog_name, schema_full_name, table_full
 @click.option('--share', cls=OneOfOption, default=None,
               one_of=PERMISSIONS_OBJ_TYPES,
               help='Name of the share of interest')
-@click.option('--credential', cls=OneOfOption, default=None,
+@click.option('--storage-credential', cls=OneOfOption, default=None,
               one_of=PERMISSIONS_OBJ_TYPES,
               help='Name of the storage credential of interest')
-@click.option('--location', cls=OneOfOption, default=None,
+@click.option('--external-location', cls=OneOfOption, default=None,
               one_of=PERMISSIONS_OBJ_TYPES,
               help='Name of the external location of interest')
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def get_permissions_cli(api_client, catalog, schema, table, share, credential, location):
+def get_permissions_cli(api_client, catalog, schema, table, share, storage_credential,
+                        external_location):
     """
     Get permissions on a securable.
 
@@ -914,7 +917,7 @@ def get_permissions_cli(api_client, catalog, schema, table, share, credential, l
 
     """
     sec_type, sec_name = _get_perm_securable_name_and_type(catalog, schema, table, share,
-                                                           credential, location)
+                                                           storage_credential, external_location)
 
     perm_json = UnityCatalogApi(api_client).get_permissions(sec_type, sec_name)
     click.echo(mc_pretty_format(perm_json))
@@ -934,10 +937,10 @@ def get_permissions_cli(api_client, catalog, schema, table, share, credential, l
 @click.option('--share', cls=OneOfOption, default=None,
               one_of=PERMISSIONS_OBJ_TYPES,
               help='Name of the share of interest')
-@click.option('--credential', cls=OneOfOption, default=None,
+@click.option('--storage-credential', cls=OneOfOption, default=None,
               one_of=PERMISSIONS_OBJ_TYPES,
               help='Name of the storage credential of interest')
-@click.option('--location', cls=OneOfOption, default=None,
+@click.option('--external-location', cls=OneOfOption, default=None,
               one_of=PERMISSIONS_OBJ_TYPES,
               help='Name of the external location of interest')
 @click.option('--json-file', default=None, type=click.Path(),
@@ -948,8 +951,8 @@ def get_permissions_cli(api_client, catalog, schema, table, share, credential, l
 @profile_option
 @eat_exceptions
 @provide_api_client
-def update_permissions_cli(api_client, catalog, schema, table, share, credential, location,
-                           json_file, json):
+def update_permissions_cli(api_client, catalog, schema, table, share, storage_credential,
+                           external_location, json_file, json):
     """
     Update permissions on a securable.
 
@@ -958,7 +961,7 @@ def update_permissions_cli(api_client, catalog, schema, table, share, credential
 
     """
     sec_type, sec_name = _get_perm_securable_name_and_type(catalog, schema, table, share,
-                                                           credential, location)
+                                                           storage_credential, external_location)
 
     json_cli_base(json_file, json,
                   lambda json: UnityCatalogApi(api_client).update_permissions(sec_type, sec_name,
@@ -1281,17 +1284,17 @@ unity_catalog_group.add_command(list_dacs_cli, name='list-dacs')
 unity_catalog_group.add_command(get_dac_cli, name='get-dac')
 unity_catalog_group.add_command(delete_dac_cli, name='delete-dac')
 # Credential cmds:
-unity_catalog_group.add_command(create_credential_cli, name='create-credential')
-unity_catalog_group.add_command(list_credentials_cli, name='list-credentials')
-unity_catalog_group.add_command(get_credential_cli, name='get-credential')
-unity_catalog_group.add_command(update_credential_cli, name='update-credential')
-unity_catalog_group.add_command(delete_credential_cli, name='delete-credential')
-# Location cmds:
-unity_catalog_group.add_command(create_location_cli, name='create-location')
-unity_catalog_group.add_command(list_locations_cli, name='list-locations')
-unity_catalog_group.add_command(get_location_cli, name='get-location')
-unity_catalog_group.add_command(update_location_cli, name='update-location')
-unity_catalog_group.add_command(delete_location_cli, name='delete-location')
+unity_catalog_group.add_command(create_credential_cli, name='create-storage-credential')
+unity_catalog_group.add_command(list_credentials_cli, name='list-storage-credentials')
+unity_catalog_group.add_command(get_credential_cli, name='get-storage-credential')
+unity_catalog_group.add_command(update_credential_cli, name='update-storage-credential')
+unity_catalog_group.add_command(delete_credential_cli, name='delete-storage-credential')
+# External Location cmds:
+unity_catalog_group.add_command(create_location_cli, name='create-external-location')
+unity_catalog_group.add_command(list_locations_cli, name='list-external-locations')
+unity_catalog_group.add_command(get_location_cli, name='get-external-location')
+unity_catalog_group.add_command(update_location_cli, name='update-external-location')
+unity_catalog_group.add_command(delete_location_cli, name='delete-external-location')
 # Permissions cmds:
 unity_catalog_group.add_command(get_permissions_cli, name='get-permissions')
 unity_catalog_group.add_command(update_permissions_cli, name='update-permissions')
