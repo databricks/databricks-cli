@@ -1262,7 +1262,7 @@ class UnityCatalogService(object):
                                          data=_data, headers=headers)
 
     def update_storage_credential(self, name, cred_spec, headers=None):
-        return self.client.perform_query('POST', '/unity-catalog/storage-credentials/%s' % (name),
+        return self.client.perform_query('PATCH', '/unity-catalog/storage-credentials/%s' % (name),
                                          data=cred_spec, headers=headers)
 
     def delete_storage_credential(self, name, headers=None):
@@ -1290,7 +1290,7 @@ class UnityCatalogService(object):
                                          data=_data, headers=headers)
 
     def update_external_location(self, name, loc_spec, headers=None):
-        return self.client.perform_query('POST', '/unity-catalog/external-locations/%s' % (name),
+        return self.client.perform_query('PATCH', '/unity-catalog/external-locations/%s' % (name),
                                          data=loc_spec, headers=headers)
 
     def delete_external_location(self, name, headers=None):

@@ -134,6 +134,9 @@ class UnityCatalogApi(object):
     def get_storage_credential(self, name):
         return self.client.get_storage_credential(name)
 
+    def update_storage_credential(self, name, cred_spec):
+        return self.client.update_storage_credential(name, cred_spec)
+
     def delete_storage_credential(self, name):
         return self.client.delete_storage_credential(name)
 
@@ -147,6 +150,9 @@ class UnityCatalogApi(object):
 
     def get_external_location(self, name):
         return self.client.get_external_location(name)
+
+    def update_external_location(self, name, loc_spec):
+        return self.client.update_external_location(name, loc_spec)
 
     def delete_external_location(self, name):
         return self.client.delete_external_location(name)
