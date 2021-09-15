@@ -107,6 +107,7 @@ def _jobs_to_table(jobs_json):
 @click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
 @click.option('--version', required=False, default=None, type=click.Choice(API_VERSIONS),
               help='Override the API version used to call jobs.')
+@click.option('--type', 'job_type', default=None, help='The type of job to list', type=str)
 @click.option('--expand-tasks', is_flag=True,
               help='Expands the tasks array (only available in API 2.1).')
 @click.option('--offset', default=None, type=int,
@@ -121,7 +122,7 @@ def _jobs_to_table(jobs_json):
 @profile_option
 @eat_exceptions
 @provide_api_client
-def list_cli(api_client, output, version, expand_tasks, offset, limit, _all):
+def list_cli(api_client, output, job_type, version, expand_tasks, offset, limit, _all):
     """
     Lists the jobs in the Databricks Job Service.
 
@@ -144,8 +145,8 @@ def list_cli(api_client, output, version, expand_tasks, offset, limit, _all):
     has_more = True
     jobs = []
     while has_more:
-        jobs_json = jobs_api.list_jobs(expand_tasks=expand_tasks, offset=offset,
-                                       limit=limit, version=version)
+        jobs_json = jobs_api.list_jobs(job_type=job_type, expand_tasks=expand_tasks,
+                                       offset=offset, limit=limit, version=version)
         jobs += jobs_json['jobs'] if 'jobs' in jobs_json else []
         has_more = (_all and jobs_json['has_more']) if 'has_more' in jobs_json else False
         offset = (offset or 0) + \
