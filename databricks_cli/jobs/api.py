@@ -31,9 +31,10 @@ class JobsApi(object):
         return self.client.client.perform_query('POST', '/jobs/create', data=json, headers=headers,
                                                 version=version)
 
-    def list_jobs(self, expand_tasks=None, offset=None, limit=None, headers=None, version=None):
-        resp = self.client.list_jobs(expand_tasks=expand_tasks, offset=offset, limit=limit,
-                                     headers=headers, version=version)
+    def list_jobs(self, job_type=None, expand_tasks=None, offset=None, limit=None, headers=None,
+                  version=None):
+        resp = self.client.list_jobs(job_type=job_type, expand_tasks=expand_tasks, offset=offset,
+                                     limit=limit, headers=headers, version=version)
         if 'jobs' not in resp:
             resp['jobs'] = []
         return resp

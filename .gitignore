@@ -9,6 +9,7 @@ dist
 build
 databricks_cli.egg-info
 .idea
+.databrickscfg
 *.iml
 venv
 .DS_Store
