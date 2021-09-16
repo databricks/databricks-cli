@@ -32,6 +32,7 @@ from click.testing import CliRunner
 import databricks_cli.jobs.cli as cli
 from databricks_cli.configure.config import get_config
 from databricks_cli.utils import pretty_format
+from databricks_cli.sdk.api_client import ApiClient
 from tests.utils import provide_conf
 
 CREATE_RETURN = {'job_id': 5}
@@ -168,6 +169,7 @@ def test_list_jobs_api_21_output_json(jobs_api_mock):
         runner.invoke(cli.list_cli, ['--output', 'json'])
         assert echo_mock.call_args[0][0] == pretty_format(LIST_21_RETURN)
 
+
 @provide_conf
 def test_list_jobs_type_pipeline(jobs_api_mock):
     with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
@@ -282,3 +284,69 @@ def test_list_limit(jobs_api_mock):
     assert result.exit_code == 0
     assert jobs_api_mock.list_jobs.call_args[1]['limit'] == 1
     assert jobs_api_mock.list_jobs.call_args[1]['version'] == '2.1'
+
+
+@provide_conf
+def test_check_version():
+    # Without calling `databricks jobs configure --version=2.1`
+    api_client = ApiClient(
+        user='apple',
+        password='banana',
+        host='https://databricks.com',
+        jobsApiVersion=None
+    )
+
+    # databricks jobs list
+    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+        cli.check_version(api_client, None)
+        assert echo_mock.called
+        assert 'Your CLI is configured to use Jobs API 2.0' in echo_mock.call_args[0][0]
+    # databricks jobs list --version=2.0
+    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+        cli.check_version(api_client, "2.0")
+        assert not echo_mock.called
+    # databricks jobs list --version=2.1
+    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+        cli.check_version(api_client, "2.1")
+        assert not echo_mock.called
+
+    # After calling `databricks jobs configure --version=2.1`
+    api_client = ApiClient(
+        user='apple',
+        password='banana',
+        host='https://databricks.com',
+        jobsApiVersion="2.1"
+    )
+    # databricks jobs list
+    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+        cli.check_version(api_client, None)
+        assert not echo_mock.called
+    # databricks jobs list --version=2.0
+    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+        cli.check_version(api_client, "2.0")
+        assert not echo_mock.called
+    # databricks jobs list --version=2.1
+    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+        cli.check_version(api_client, "2.1")
+        assert not echo_mock.called
+
+    # After calling `databricks jobs configure --version=2.0`
+    api_client = ApiClient(
+        user='apple',
+        password='banana',
+        host='https://databricks.com',
+        jobsApiVersion="2.0"
+    )
+    # databricks jobs list
+    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+        cli.check_version(api_client, None)
+        assert echo_mock.called
+        assert 'Your CLI is configured to use Jobs API 2.0' in echo_mock.call_args[0][0]
+    # databricks jobs list --version=2.0
+    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+        cli.check_version(api_client, "2.0")
+        assert not echo_mock.called
+    # databricks jobs list --version=2.1
+    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+        cli.check_version(api_client, "2.1")
+        assert not echo_mock.called
