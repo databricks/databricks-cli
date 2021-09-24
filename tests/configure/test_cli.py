@@ -35,6 +35,7 @@ TEST_HOST = 'https://test.cloud.databricks.com'
 TEST_USER = 'monkey@databricks.com'
 TEST_PASSWORD = 'banana' # NOQA
 TEST_TOKEN = 'dapiTESTING'
+TEST_SCOPE = 'offline_access'
 
 TEST_PROFILE = 'dev'
 TEST_HOST_2 = 'https://test2.cloud.databricks.com'
@@ -120,3 +121,11 @@ def test_configure_cli_jobs_api_version_password():
     assert get_config().host == TEST_HOST
     assert get_config().username == TEST_USER
     assert get_config().password == TEST_PASSWORD
+
+
+def test_configure_cli_oauth():
+    runner = CliRunner()
+    runner.invoke(cli.configure_cli, ['--oauth'],
+                  input=(TEST_HOST + '\n' + TEST_SCOPE + '\n'))
+    # This is expected to error because the host doesn't exist and is not
+    # configured for OAuth
