@@ -1380,6 +1380,15 @@ class UnityCatalogService(object):
         return self.client.perform_query('GET', '/unity-catalog/recipients/%s' % (name),
                                          data=_data, headers=headers)
 
+    def rotate_recipient_token(self, name, existing_token_expire_in_seconds=None):
+        _data = {
+            'name': name,
+        }
+        if existing_token_expire_in_seconds is not None:
+            _data['existing_token_expire_in_seconds'] = existing_token_expire_in_seconds
+        return self.client.perform_query('POST', '/unity-catalog/recipients/%s/rotate-token' % (name),
+	                                 data=_data, headers=headers)
+
     def get_recipient_share_permissions(self, name, headers=None):
         _data = {}
 

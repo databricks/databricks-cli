@@ -1194,6 +1194,25 @@ def get_recipient_cli(api_client, name):
     recipient_json = UnityCatalogApi(api_client).get_recipient(name)
     click.echo(mc_pretty_format(recipient_json))
 
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Rotate token for the recipient.')
+@click.option('--name', required=True, help='Name of new recipient.')
+@click.option('--existing_token_expire_in_seconds', default=None, required=False,
+              help='Expire the existing token in number of seconds from now, 0 to expire it immediately.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def rotate_recipient_token_cli(api_client, name, existing_token_expire_in_seconds):
+    """
+    Rotate recipient token.
+
+    Calls the 'rotateRecipientToken' RPC endpoint of the Unity Catalog service.
+    Returns the RecipientInfo for the recipient with rotated tokens.
+
+    """
+    recipient_json = UnityCatalogApi(api_client).rotate_recipient_token(name, existing_token_expire_in_seconds)
+    click.echo(mc_pretty_format(recipient_json))
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Get share permissions of a recipient.')
@@ -1311,6 +1330,7 @@ unity_catalog_group.add_command(delete_share_cli, name='delete-share')
 unity_catalog_group.add_command(create_recipient_cli, name='create-recipient')
 unity_catalog_group.add_command(list_recipients_cli, name='list-recipients')
 unity_catalog_group.add_command(get_recipient_cli, name='get-recipient')
+unity_catalog_group.add_command(rotate_recipient_token_cli, name='rotate-recipient-token')
 unity_catalog_group.add_command(get_recipient_share_permissions_cli,
                                 name='get-recipient-share-perms')
 unity_catalog_group.add_command(delete_recipient_cli, name='delete-recipient')

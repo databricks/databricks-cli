@@ -196,6 +196,9 @@ class UnityCatalogApi(object):
     def get_recipient(self, name):
         return self.client.get_recipient(name)
 
+    def rotate_recipient_token(self, name, existing_token_expire_in_seconds):
+        return self.client.rotate_recipient_token(name, existing_token_expire_in_seconds)
+
     def get_recipient_share_permissions(self, name):
         return self.client.get_recipient_share_permissions(name)
 
