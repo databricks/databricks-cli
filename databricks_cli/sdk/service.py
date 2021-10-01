@@ -1380,7 +1380,7 @@ class UnityCatalogService(object):
         return self.client.perform_query('GET', '/unity-catalog/recipients/%s' % (name),
                                          data=_data, headers=headers)
 
-    def rotate_recipient_token(self, name, existing_token_expire_in_seconds=None):
+    def rotate_recipient_token(self, name, existing_token_expire_in_seconds=None, headers=None):
         _data = {
             'name': name,
         }
