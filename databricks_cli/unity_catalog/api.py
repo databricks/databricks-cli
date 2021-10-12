@@ -97,6 +97,9 @@ class UnityCatalogApi(object):
     def list_tables(self, catalog_name, schema_name, name_pattern):
         return self.client.list_tables(catalog_name, schema_name, name_pattern)
 
+    def list_tables_bulk(self, catalog_name):
+        return self.client.list_tables_bulk(catalog_name)
+
     def get_table(self, full_name):
         return self.client.get_table(full_name)
 

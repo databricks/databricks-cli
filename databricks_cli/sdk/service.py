@@ -1200,6 +1200,13 @@ class UnityCatalogService(object):
 
         return self.client.perform_query('GET', '/unity-catalog/tables', data=_data, headers=headers)
 
+    def list_tables_bulk(self, catalog_name, headers=None):
+        _data = {
+            'catalog_name': catalog_name
+        }
+
+        return self.client.perform_query('GET', '/unity-catalog/table-summaries', data=_data, headers=headers)
+
     def get_table(self, full_name, headers=None):
         _data = {}
 

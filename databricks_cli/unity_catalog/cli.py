@@ -453,6 +453,25 @@ def list_tables_cli(api_client, catalog_name, schema_name, name_pattern):
     tables_json = UnityCatalogApi(api_client).list_tables(catalog_name, schema_name, name_pattern)
     click.echo(mc_pretty_format(tables_json))
 
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='List tables bulk.')
+@click.option('--catalog-name', required=True,
+              help='Name of the parent catalog for tables of interest.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def list_tables_bulk_cli(api_client, catalog_name):
+    """
+    List tables bulk.
+
+    Calls the 'listTablesBulk' RPC endpoint of the Unity Catalog service.
+    Returns array of TableSummarys.
+
+    """
+    tables_json = UnityCatalogApi(api_client).list_tables_bulk(catalog_name)
+    click.echo(mc_pretty_format(tables_json))
+
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Get a table.')
@@ -1294,6 +1313,7 @@ unity_catalog_group.add_command(delete_schema_cli, name='delete-schema')
 # Table cmds:
 unity_catalog_group.add_command(create_table_cli, name='create-table')
 unity_catalog_group.add_command(list_tables_cli, name='list-tables')
+unity_catalog_group.add_command(list_tables_bulk_cli, name='list-tables-bulk')
 unity_catalog_group.add_command(get_table_cli, name='get-table')
 unity_catalog_group.add_command(update_table_cli, name='update-table')
 unity_catalog_group.add_command(delete_table_cli, name='delete-table')
