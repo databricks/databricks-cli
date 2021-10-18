@@ -147,7 +147,7 @@ def list_cli(api_client, output, job_type, version, expand_tasks, offset, limit,
     jobs_api = JobsApi(api_client)
     has_more = True
     jobs = []
-    if (_all):
+    if _all:
         offset = 0
         limit = 20
     while has_more:
@@ -278,7 +278,7 @@ def check_version(api_client, version):
         # If the user explicitly passed --version=2.x for this invocation it means
         # they really really want that version, let's not show any warnings
         return
-    
+
     if api_client.jobs_api_version == '2.1':
         # If the user is globally configured to use 2.1 we don't show the warning
         return
