@@ -176,7 +176,7 @@ def test_list_jobs_type_pipeline(jobs_api_mock):
         jobs_api_mock.list_jobs.return_value = LIST_RETURN
         runner = CliRunner()
         runner.invoke(cli.list_cli, ['--type', 'PIPELINE'])
-        assert jobs_api_mock.list_jobs.call_args[0][0] == 'PIPELINE'
+        assert jobs_api_mock.list_jobs.call_args[1]['job_type'] == 'PIPELINE'
         rows = [(2, 'a'), (1, 'b'), (30, 'C')]
         assert echo_mock.call_args[0][0] == \
             tabulate(rows, tablefmt='plain', disable_numparse=True)
