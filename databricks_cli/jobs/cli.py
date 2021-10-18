@@ -147,13 +147,16 @@ def list_cli(api_client, output, job_type, version, expand_tasks, offset, limit,
     jobs_api = JobsApi(api_client)
     has_more = True
     jobs = []
+    if (_all):
+        offset = 0
+        limit = 20
     while has_more:
         jobs_json = jobs_api.list_jobs(job_type=job_type, expand_tasks=expand_tasks,
                                        offset=offset, limit=limit, version=version)
         jobs += jobs_json['jobs'] if 'jobs' in jobs_json else []
-        has_more = (_all and jobs_json['has_more']) if 'has_more' in jobs_json else False
-        offset = (offset or 0) + \
-                 (limit or (len(jobs_json['jobs']) if 'jobs' in jobs_json else 20))
+        has_more = jobs_json.get('has_more', False) and _all
+        if has_more:
+            offset = offset + (len(jobs_json['jobs']) if 'jobs' in jobs_json else 20)
 
     out = {'jobs': jobs}
     if OutputClickType.is_json(output):

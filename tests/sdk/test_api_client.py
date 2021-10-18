@@ -100,7 +100,7 @@ def test_get_request_with_list_param(m):
 
 
 def test_get_url():
-    client = ApiClient(host='https://databricks.com', jobsApiVersion = '2.1')
+    client = ApiClient(host='https://databricks.com', jobs_api_version = '2.1')
     assert client.get_url('') == 'https://databricks.com/api/2.0'
     assert client.get_url('/') == 'https://databricks.com/api/2.0/'
     assert client.get_url('/endpoint') == 'https://databricks.com/api/2.0/endpoint'

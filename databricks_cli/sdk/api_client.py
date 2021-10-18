@@ -68,7 +68,7 @@ class ApiClient(object):
     to be used by different versions of the client.
     """
     def __init__(self, user=None, password=None, host=None, token=None,
-                 apiVersion=version.API_VERSION, default_headers={}, verify=True, command_name="", jobsApiVersion=None):
+                 api_version=version.API_VERSION, default_headers={}, verify=True, command_name="", jobs_api_version=None):
         if host[-1] == "/":
             host = host[:-1]
 
@@ -102,8 +102,8 @@ class ApiClient(object):
         self.default_headers.update(default_headers)
         self.default_headers.update(user_agent)
         self.verify = verify
-        self.api_version = apiVersion
-        self.jobs_api_version = jobsApiVersion
+        self.api_version = api_version
+        self.jobs_api_version = jobs_api_version
 
     def close(self):
         """Close the client"""
@@ -148,12 +148,10 @@ class ApiClient(object):
 
 
     def get_url(self, path, version=None):
-        if self.jobs_api_version and path and path.startswith('/jobs'):
-            if version:
-                return self.url + version + path 
-            return self.url + self.jobs_api_version + path 
-        elif version:
+        if version:
             return self.url + version + path
+        elif self.jobs_api_version and path and path.startswith('/jobs'):
+            return self.url + self.jobs_api_version + path 
         return self.url + self.api_version + path
 
 

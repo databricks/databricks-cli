@@ -293,7 +293,7 @@ def test_check_version():
         user='apple',
         password='banana',
         host='https://databricks.com',
-        jobsApiVersion=None
+        jobs_api_version=None
     )
 
     # databricks jobs list
@@ -315,7 +315,7 @@ def test_check_version():
         user='apple',
         password='banana',
         host='https://databricks.com',
-        jobsApiVersion="2.1"
+        jobs_api_version="2.1"
     )
     # databricks jobs list
     with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
@@ -335,7 +335,7 @@ def test_check_version():
         user='apple',
         password='banana',
         host='https://databricks.com',
-        jobsApiVersion="2.0"
+        jobs_api_version="2.0"
     )
     # databricks jobs list
     with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
