@@ -181,6 +181,7 @@ def test_list_jobs_type_pipeline(jobs_api_mock):
         assert echo_mock.call_args[0][0] == \
             tabulate(rows, tablefmt='plain', disable_numparse=True)
 
+
 RUN_NOW_RETURN = {
     "number_in_job": 1,
     "run_id": 1
