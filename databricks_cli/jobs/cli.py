@@ -28,50 +28,62 @@ from tabulate import tabulate
 
 from databricks_cli.click_types import OutputClickType, JsonClickType, JobIdClickType
 from databricks_cli.jobs.api import JobsApi
+from databricks_cli.sdk.version import API_VERSIONS
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base, \
     truncate_string
-from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
-from databricks_cli.version import print_version_callback, version
+
+from databricks_cli.configure.config import provide_api_client, profile_option, \
+    get_profile_from_context, debug_option, get_config
+from databricks_cli.configure.provider import DatabricksConfig, update_and_persist_config, \
+    ProfileConfigProvider
+from databricks_cli.version import print_version_callback, version as cli_version
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--json-file', default=None, type=click.Path(),
-              help='File containing JSON request to POST to /api/2.0/jobs/create.')
+              help='File containing JSON request to POST to /api/2.*/jobs/create.')
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/jobs/create'))
+              help=JsonClickType.help('/api/2.*/jobs/create'))
+@click.option('--version', required=False, default=None, type=click.Choice(API_VERSIONS),
+              help='Override the API version used to call jobs.')
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def create_cli(api_client, json_file, json):
+def create_cli(api_client, json_file, json, version):
     """
     Creates a job.
 
     The specification for the json option can be found
     https://docs.databricks.com/api/latest/jobs.html#create
     """
-    json_cli_base(json_file, json, lambda json: JobsApi(api_client).create_job(json))
+    check_version(api_client, version)
+    json_cli_base(json_file, json,
+                  lambda json: JobsApi(api_client).create_job(json, version=version))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--job-id', required=True, type=JobIdClickType(), help=JobIdClickType.help)
 @click.option('--json-file', default=None, type=click.Path(),
-              help='File containing partial JSON request to POST to /api/2.0/jobs/reset. '
+              help='File containing partial JSON request to POST to /api/2.*/jobs/reset. '
                    'For more, read full help message.')
 @click.option('--json', default=None, type=JsonClickType(),
-              help='Partial JSON string to POST to /api/2.0/jobs/reset. '
+              help='Partial JSON string to POST to /api/2.*/jobs/reset. '
                    'For more, read full help message.')
+@click.option('--version', required=False, default=None, type=click.Choice(API_VERSIONS),
+              help='Override the API version used to call jobs.')
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def reset_cli(api_client, json_file, json, job_id):
+def reset_cli(api_client, json_file, json, job_id, version):
     """
     Resets (edits) the definition of a job.
 
     The specification for the json option can be found
     https://docs.databricks.com/api/latest/jobs.html#jobsjobsettings
     """
+    check_version(api_client, version)
     if not bool(json_file) ^ bool(json):
         raise RuntimeError('Either --json-file or --json should be provided')
     if json_file:
@@ -82,7 +94,7 @@ def reset_cli(api_client, json_file, json, job_id):
         'job_id': job_id,
         'new_settings': deser_json
     }
-    JobsApi(api_client).reset_job(request_body)
+    JobsApi(api_client).reset_job(request_body, version=version)
 
 
 def _jobs_to_table(jobs_json):
@@ -95,12 +107,24 @@ def _jobs_to_table(jobs_json):
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Lists the jobs in the Databricks Job Service.')
 @click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
+@click.option('--version', required=False, default=None, type=click.Choice(API_VERSIONS),
+              help='Override the API version used to call jobs.')
 @click.option('--type', 'job_type', default=None, help='The type of job to list', type=str)
+@click.option('--expand-tasks', is_flag=True,
+              help='Expands the tasks array (only available in API 2.1).')
+@click.option('--offset', default=None, type=int,
+              help='The offset to use when listing jobs (only available in API 2.1).')
+@click.option('--limit', default=None, type=int,
+              help='The maximum number of jobs to fetch in a single call ' +
+                   '(only available in API 2.1).')
+@click.option('--all', '_all', is_flag=True,
+              help='Lists all jobs by executing sequential calls to the API ' +
+                   '(only available in API 2.1).')
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def list_cli(api_client, output, job_type):
+def list_cli(api_client, output, job_type, version, expand_tasks, offset, limit, _all):
     """
     Lists the jobs in the Databricks Job Service.
 
@@ -114,39 +138,64 @@ def list_cli(api_client, output, job_type):
 
     In table mode, the jobs are sorted by their name.
     """
+    check_version(api_client, version)
+    api_version = version or api_client.jobs_api_version
+    if api_version != '2.1' and (expand_tasks or offset or limit or _all):
+        click.echo(click.style('ERROR', fg='red') + ': the options --expand-tasks, ' +
+                   '--offset, --limit, and --all are only available in API 2.1', err=True)
+        return
     jobs_api = JobsApi(api_client)
-    jobs_json = jobs_api.list_jobs(job_type)
+    has_more = True
+    jobs = []
+    if _all:
+        offset = 0
+        limit = 20
+    while has_more:
+        jobs_json = jobs_api.list_jobs(job_type=job_type, expand_tasks=expand_tasks,
+                                       offset=offset, limit=limit, version=version)
+        jobs += jobs_json['jobs'] if 'jobs' in jobs_json else []
+        has_more = jobs_json.get('has_more', False) and _all
+        if has_more:
+            offset = offset + (len(jobs_json['jobs']) if 'jobs' in jobs_json else 20)
+
+    out = {'jobs': jobs}
     if OutputClickType.is_json(output):
-        click.echo(pretty_format(jobs_json))
+        click.echo(pretty_format(out))
     else:
-        click.echo(tabulate(_jobs_to_table(jobs_json), tablefmt='plain', disable_numparse=True))
+        click.echo(tabulate(_jobs_to_table(out), tablefmt='plain', disable_numparse=True))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Deletes the specified job.')
 @click.option('--job-id', required=True, type=JobIdClickType(), help=JobIdClickType.help)
+@click.option('--version', required=False, default=None, type=click.Choice(API_VERSIONS),
+              help='Override the API version used to call jobs.')
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def delete_cli(api_client, job_id):
+def delete_cli(api_client, job_id, version):
     """
     Deletes the specified job.
     """
-    JobsApi(api_client).delete_job(job_id)
+    check_version(api_client, version)
+    JobsApi(api_client).delete_job(job_id, version)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--job-id', required=True, type=JobIdClickType(), help=JobIdClickType.help)
+@click.option('--version', required=False, default=None, type=click.Choice(API_VERSIONS),
+              help='Override the API version used to call jobs.')
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def get_cli(api_client, job_id):
+def get_cli(api_client, job_id, version):
     """
     Describes the metadata for a job.
     """
-    click.echo(pretty_format(JobsApi(api_client).get_job(job_id)))
+    check_version(api_client, version)
+    click.echo(pretty_format(JobsApi(api_client).get_job(job_id, version)))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
@@ -161,31 +210,47 @@ def get_cli(api_client, job_id):
 @click.option('--spark-submit-params', default=None, type=JsonClickType(),
               help='JSON string specifying an array of parameters. i.e. '
                    '["--class", "org.apache.spark.examples.SparkPi"]')
+@click.option('--version', required=False, default=None, type=click.Choice(API_VERSIONS),
+              help='Override the API version used to call jobs.')
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
 def run_now_cli(api_client, job_id, jar_params, notebook_params, python_params,
-                spark_submit_params):
+                spark_submit_params, version):
     """
     Runs a job with optional per-run parameters.
 
     Parameter options are specified in json and the format is documented in
     https://docs.databricks.com/api/latest/jobs.html#jobsrunnow.
     """
+    check_version(api_client, version)
     jar_params_json = json_loads(jar_params) if jar_params else None
     notebook_params_json = json_loads(notebook_params) if notebook_params else None
     python_params = json_loads(python_params) if python_params else None
     spark_submit_params = json_loads(spark_submit_params) if spark_submit_params else None
     res = JobsApi(api_client).run_now(
-        job_id, jar_params_json, notebook_params_json, python_params, spark_submit_params)
+        job_id, jar_params_json, notebook_params_json, python_params, spark_submit_params, version)
     click.echo(pretty_format(res))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS)
+@click.option('--version', show_default=True, default=None, type=click.Choice(API_VERSIONS),
+              help='API version to use for jobs.')
+@debug_option
+@profile_option
+def configure(version):
+    profile = get_profile_from_context()
+    config = ProfileConfigProvider(profile).get_config() if profile else get_config()
+    new_config = config or DatabricksConfig.empty()
+    new_config.jobs_api_version = version
+    update_and_persist_config(profile, new_config)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
              short_help='Utility to interact with jobs.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
-              expose_value=False, is_eager=True, help=version)
+              expose_value=False, is_eager=True, help=cli_version)
 @debug_option
 @profile_option
 @eat_exceptions
@@ -205,3 +270,22 @@ jobs_group.add_command(delete_cli, name='delete')
 jobs_group.add_command(get_cli, name='get')
 jobs_group.add_command(reset_cli, name='reset')
 jobs_group.add_command(run_now_cli, name='run-now')
+jobs_group.add_command(configure, name='configure')
+
+
+def check_version(api_client, version):
+    if version is not None:
+        # If the user explicitly passed --version=2.x for this invocation it means
+        # they really really want that version, let's not show any warnings
+        return
+
+    if api_client.jobs_api_version == '2.1':
+        # If the user is globally configured to use 2.1 we don't show the warning
+        return
+
+    click.echo(click.style('WARN', fg='yellow') + ': Your CLI is configured ' +
+               'to use Jobs API 2.0. In order to use the latest Jobs features ' +
+               'please upgrade to 2.1: \'databricks jobs configure --version=2.1\'. ' +
+               'Future versions of this CLI will default to the new Jobs API. ' +
+               'Learn more at https://docs.databricks.com/dev-tools/api/latest/jobs.html'
+               )

@@ -30,6 +30,7 @@ from click import ParamType
 from databricks_cli.configure.config import profile_option, get_profile_from_context, debug_option
 from databricks_cli.configure.provider import DatabricksConfig, update_and_persist_config, \
     ProfileConfigProvider
+from databricks_cli.sdk.version import API_VERSION, API_VERSIONS
 from databricks_cli.utils import CONTEXT_SETTINGS
 
 PROMPT_HOST = 'Databricks Host (should begin with https://)'
@@ -39,7 +40,7 @@ PROMPT_TOKEN = 'Token'  # NOQA
 ENV_AAD_TOKEN = 'DATABRICKS_AAD_TOKEN'
 
 
-def _configure_cli_token_file(profile, token_file, host, insecure):
+def _configure_cli_token_file(profile, token_file, host, insecure, jobs_api_version):
     if not path.exists(token_file):
         raise RuntimeError('Unable to read token from "{}"'.format(token_file))
 
@@ -50,22 +51,22 @@ def _configure_cli_token_file(profile, token_file, host, insecure):
     if not host:
         host = click.prompt(PROMPT_HOST, default=config.host, type=_DbfsHost())
 
-    new_config = DatabricksConfig.from_token(host, token, insecure)
+    new_config = DatabricksConfig.from_token(host, token, insecure, jobs_api_version)
     update_and_persist_config(profile, new_config)
 
 
-def _configure_cli_token(profile, insecure, host=None):
+def _configure_cli_token(profile, insecure, host, jobs_api_version):
     config = ProfileConfigProvider(profile).get_config() or DatabricksConfig.empty()
 
     if not host:
         host = click.prompt(PROMPT_HOST, default=config.host, type=_DbfsHost())
 
     token = click.prompt(PROMPT_TOKEN, default=config.token, hide_input=True)
-    new_config = DatabricksConfig.from_token(host, token, insecure)
+    new_config = DatabricksConfig.from_token(host, token, insecure, jobs_api_version)
     update_and_persist_config(profile, new_config)
 
 
-def _configure_cli_aad_token(profile, insecure, host=None):
+def _configure_cli_aad_token(profile, insecure, host, jobs_api_version):
     config = ProfileConfigProvider(profile).get_config() or DatabricksConfig.empty()
 
     if ENV_AAD_TOKEN not in os.environ:
@@ -83,11 +84,11 @@ def _configure_cli_aad_token(profile, insecure, host=None):
         host = click.prompt(PROMPT_HOST, default=config.host, type=_DbfsHost())
 
     aad_token = os.environ.get(ENV_AAD_TOKEN)
-    new_config = DatabricksConfig.from_token(host, aad_token, insecure)
+    new_config = DatabricksConfig.from_token(host, aad_token, insecure, jobs_api_version)
     update_and_persist_config(profile, new_config)
 
 
-def _configure_cli_password(profile, insecure, host):
+def _configure_cli_password(profile, insecure, host, jobs_api_version):
     config = ProfileConfigProvider(profile).get_config() or DatabricksConfig.empty()
     if config.password:
         default_password = '*' * len(config.password)
@@ -102,7 +103,8 @@ def _configure_cli_password(profile, insecure, host):
                             confirmation_prompt=True)
     if password == default_password:
         password = config.password
-    new_config = DatabricksConfig.from_password(host, username, password, insecure)
+    new_config = DatabricksConfig.from_password(host, username, password, insecure,
+                                                jobs_api_version)
     update_and_persist_config(profile, new_config)
 
 
@@ -117,24 +119,29 @@ def _configure_cli_password(profile, insecure, host):
 @click.option('--aad-token', show_default=True, is_flag=True, default=False)
 @click.option('--insecure', show_default=True, is_flag=True, default=None,
               help='DO NOT verify SSL Certificates')
+@click.option('--jobs-api-version', show_default=True, default=API_VERSION,
+              type=click.Choice(API_VERSIONS), help='API version to use for jobs.')
 @debug_option
 @profile_option
-def configure_cli(token, aad_token, insecure, host, token_file):
+def configure_cli(token, aad_token, insecure, host, token_file, jobs_api_version):
     """
-    Configures host and authentication info for the CLI.
+    Configures host, authentication, and jobs-api version for the CLI.
     """
     profile = get_profile_from_context()
     insecure_str = str(insecure) if insecure is not None else None
 
     if token:
-        _configure_cli_token(profile=profile, insecure=insecure_str, host=host)
+        _configure_cli_token(profile=profile, insecure=insecure_str, host=host,
+                             jobs_api_version=jobs_api_version)
     elif token_file:
         _configure_cli_token_file(profile=profile, insecure=insecure_str, host=host,
-                                  token_file=token_file)
+                                  token_file=token_file, jobs_api_version=jobs_api_version)
     elif aad_token:
-        _configure_cli_aad_token(profile=profile, insecure=insecure_str, host=host)
+        _configure_cli_aad_token(profile=profile, insecure=insecure_str, host=host,
+                                 jobs_api_version=jobs_api_version)
     else:
-        _configure_cli_password(profile=profile, insecure=insecure_str, host=host)
+        _configure_cli_password(profile=profile, insecure=insecure_str, host=host,
+                                jobs_api_version=jobs_api_version)
 
 
 class _DbfsHost(ParamType):

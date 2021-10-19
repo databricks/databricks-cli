@@ -99,17 +99,26 @@ def test_get_request_with_list_param(m):
         client.perform_query('GET', '/endpoint', {'job_id': ['a','b']})
 
 
+def test_get_url():
+    client = ApiClient(host='https://databricks.com', jobs_api_version = '2.1')
+    assert client.get_url('') == 'https://databricks.com/api/2.0'
+    assert client.get_url('/') == 'https://databricks.com/api/2.0/'
+    assert client.get_url('/endpoint') == 'https://databricks.com/api/2.0/endpoint'
+    assert client.get_url('/jobs/list') == 'https://databricks.com/api/2.1/jobs/list'
+    assert client.get_url('/jobs/list', '3.0') == 'https://databricks.com/api/3.0/jobs/list'
+
+
 def test_api_client_url_parsing():
     client = ApiClient(host='https://databricks.com')
-    assert client.url == 'https://databricks.com/api/2.0'
+    assert client.get_url('') == 'https://databricks.com/api/2.0'
 
     client = ApiClient(host='https://databricks.com/?o=123')
-    assert client.url == 'https://databricks.com/api/2.0'
+    assert client.get_url('') == 'https://databricks.com/api/2.0'
 
     client = ApiClient(host='https://databricks.com?o=123')
-    assert client.url == 'https://databricks.com/api/2.0'
+    assert client.get_url('') == 'https://databricks.com/api/2.0'
 
     # NOTE: this technically is not possible since we validate that the "host" has a prefix of https:// in
     # databricks_cli.configure.cli
     client = ApiClient(host='http://databricks.com')
-    assert client.url == 'http://databricks.com/api/2.0'
+    assert client.get_url('') == 'http://databricks.com/api/2.0'

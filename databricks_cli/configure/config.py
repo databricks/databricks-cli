@@ -85,6 +85,7 @@ def _get_api_client(config, command_name=""):
     verify = config.insecure is None
     if config.is_valid_with_token:
         return ApiClient(host=config.host, token=config.token, verify=verify,
-                         command_name=command_name)
+                         command_name=command_name, jobs_api_version=config.jobs_api_version)
     return ApiClient(user=config.username, password=config.password,
-                     host=config.host, verify=verify, command_name=command_name)
+                     host=config.host, verify=verify, command_name=command_name,
+                     jobs_api_version=config.jobs_api_version)

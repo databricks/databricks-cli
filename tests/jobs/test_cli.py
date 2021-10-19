@@ -30,7 +30,9 @@ from tabulate import tabulate
 from click.testing import CliRunner
 
 import databricks_cli.jobs.cli as cli
+from databricks_cli.configure.config import get_config
 from databricks_cli.utils import pretty_format
+from databricks_cli.sdk.api_client import ApiClient
 from tests.utils import provide_conf
 
 CREATE_RETURN = {'job_id': 5}
@@ -123,13 +125,58 @@ def test_list_jobs_output_json(jobs_api_mock):
         assert echo_mock.call_args[0][0] == pretty_format(LIST_RETURN)
 
 
+LIST_21_RETURN = {
+    'jobs': [{
+        'job_id': 1,
+        'settings': {
+            'name': 'b',
+            'tasks': [{'task_key': 'a'}]
+        }
+    }, {
+        'job_id': 2,
+        'settings': {
+            'name': 'a',
+            'tasks': [{'task_key': 'a'}]
+        }
+    }, {
+        'job_id': 30,
+        'settings': {
+            # Normally 'C' < 'a' < 'b' -- we should do case insensitive sorting though.
+            'name': 'C',
+            'tasks': [{'task_key': 'a'}]
+        }
+    }]
+}
+
+
+@provide_conf
+def test_list_jobs_api_21(jobs_api_mock):
+    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+        jobs_api_mock.list_jobs.return_value = LIST_21_RETURN
+        runner = CliRunner()
+        runner.invoke(cli.list_cli)
+        # Output should be sorted here.
+        rows = [(2, 'a'), (1, 'b'), (30, 'C')]
+        assert echo_mock.call_args[0][0] == \
+            tabulate(rows, tablefmt='plain', disable_numparse=True)
+
+
+@provide_conf
+def test_list_jobs_api_21_output_json(jobs_api_mock):
+    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+        jobs_api_mock.list_jobs.return_value = LIST_21_RETURN
+        runner = CliRunner()
+        runner.invoke(cli.list_cli, ['--output', 'json'])
+        assert echo_mock.call_args[0][0] == pretty_format(LIST_21_RETURN)
+
+
 @provide_conf
 def test_list_jobs_type_pipeline(jobs_api_mock):
     with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
         jobs_api_mock.list_jobs.return_value = LIST_RETURN
         runner = CliRunner()
         runner.invoke(cli.list_cli, ['--type', 'PIPELINE'])
-        assert jobs_api_mock.list_jobs.call_args[0][0] == 'PIPELINE'
+        assert jobs_api_mock.list_jobs.call_args[1]['job_type'] == 'PIPELINE'
         rows = [(2, 'a'), (1, 'b'), (30, 'C')]
         assert echo_mock.call_args[0][0] == \
             tabulate(rows, tablefmt='plain', disable_numparse=True)
@@ -175,3 +222,132 @@ def test_run_now_with_params(jobs_api_mock):
         assert jobs_api_mock.run_now.call_args[0][3] == json.loads(PYTHON_PARAMS)
         assert jobs_api_mock.run_now.call_args[0][4] == json.loads(SPARK_SUBMIT_PARAMS)
         assert echo_mock.call_args[0][0] == pretty_format(RUN_NOW_RETURN)
+
+
+@provide_conf
+def test_configure():
+    runner = CliRunner()
+    runner.invoke(cli.configure, ['--version=2.1'])
+    assert get_config().jobs_api_version == '2.1'
+
+
+@provide_conf
+def test_list_throws_if_invalid_option_for_version_20():
+    runner = CliRunner()
+    args = [['--all'], ['--expand-tasks'], ['--offset', '20'], ['--limit', '20']]
+
+    for arg in args:
+        result = runner.invoke(cli.configure, ['--version=2.0'] + arg)
+        assert result.exit_code == 2
+
+
+LIST_RETURN_1 = {'jobs': [{'job_id': '1', 'settings': {'name': 'a'}}], 'has_more': True}
+LIST_RETURN_2 = {'jobs': [{'job_id': '2', 'settings': {'name': 'b'}}], 'has_more': True}
+LIST_RETURN_3 = {'jobs': [{'job_id': '3', 'settings': {'name': 'c'}}], 'has_more': False}
+
+
+@provide_conf
+def test_list_all(jobs_api_mock):
+    jobs_api_mock.list_jobs.side_effect = iter([LIST_RETURN_1, LIST_RETURN_2, LIST_RETURN_3])
+    runner = CliRunner()
+    result = runner.invoke(cli.list_cli, ['--version=2.1', '--all'])
+    rows = [(1, 'a'), (2, 'b'), (3, 'c')]
+    assert result.exit_code == 0
+    assert result.output == \
+        tabulate(rows, tablefmt='plain', disable_numparse=True) + '\n'
+
+
+@provide_conf
+def test_list_expand_tasks(jobs_api_mock):
+    jobs_api_mock.list_jobs.return_value = LIST_RETURN_1
+    runner = CliRunner()
+    result = runner.invoke(cli.list_cli, ['--version=2.1', '--expand-tasks'])
+    assert result.exit_code == 0
+    assert jobs_api_mock.list_jobs.call_args[1]['expand_tasks']
+    assert jobs_api_mock.list_jobs.call_args[1]['version'] == '2.1'
+
+
+@provide_conf
+def test_list_offset(jobs_api_mock):
+    jobs_api_mock.list_jobs.return_value = LIST_RETURN_1
+    runner = CliRunner()
+    result = runner.invoke(cli.list_cli, ['--version=2.1', '--offset', '1'])
+    assert result.exit_code == 0
+    assert jobs_api_mock.list_jobs.call_args[1]['offset'] == 1
+    assert jobs_api_mock.list_jobs.call_args[1]['version'] == '2.1'
+
+
+@provide_conf
+def test_list_limit(jobs_api_mock):
+    jobs_api_mock.list_jobs.return_value = LIST_RETURN_1
+    runner = CliRunner()
+    result = runner.invoke(cli.list_cli, ['--version=2.1', '--limit', '1'])
+    assert result.exit_code == 0
+    assert jobs_api_mock.list_jobs.call_args[1]['limit'] == 1
+    assert jobs_api_mock.list_jobs.call_args[1]['version'] == '2.1'
+
+
+@provide_conf
+def test_check_version():
+    # Without calling `databricks jobs configure --version=2.1`
+    api_client = ApiClient(
+        user='apple',
+        password='banana',
+        host='https://databricks.com',
+        jobs_api_version=None
+    )
+
+    # databricks jobs list
+    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+        cli.check_version(api_client, None)
+        assert echo_mock.called
+        assert 'Your CLI is configured to use Jobs API 2.0' in echo_mock.call_args[0][0]
+    # databricks jobs list --version=2.0
+    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+        cli.check_version(api_client, "2.0")
+        assert not echo_mock.called
+    # databricks jobs list --version=2.1
+    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+        cli.check_version(api_client, "2.1")
+        assert not echo_mock.called
+
+    # After calling `databricks jobs configure --version=2.1`
+    api_client = ApiClient(
+        user='apple',
+        password='banana',
+        host='https://databricks.com',
+        jobs_api_version="2.1"
+    )
+    # databricks jobs list
+    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+        cli.check_version(api_client, None)
+        assert not echo_mock.called
+    # databricks jobs list --version=2.0
+    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+        cli.check_version(api_client, "2.0")
+        assert not echo_mock.called
+    # databricks jobs list --version=2.1
+    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+        cli.check_version(api_client, "2.1")
+        assert not echo_mock.called
+
+    # After calling `databricks jobs configure --version=2.0`
+    api_client = ApiClient(
+        user='apple',
+        password='banana',
+        host='https://databricks.com',
+        jobs_api_version="2.0"
+    )
+    # databricks jobs list
+    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+        cli.check_version(api_client, None)
+        assert echo_mock.called
+        assert 'Your CLI is configured to use Jobs API 2.0' in echo_mock.call_args[0][0]
+    # databricks jobs list --version=2.0
+    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+        cli.check_version(api_client, "2.0")
+        assert not echo_mock.called
+    # databricks jobs list --version=2.1
+    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+        cli.check_version(api_client, "2.1")
+        assert not echo_mock.called

@@ -23,9 +23,12 @@
 
 # pylint:disable=protected-access
 
+import tempfile
+from mock import patch
 from click.testing import CliRunner
 
 import databricks_cli.configure.cli as cli
+from databricks_cli.configure.cli import ENV_AAD_TOKEN
 from databricks_cli.configure.provider import get_config, ProfileConfigProvider
 
 TEST_HOST = 'https://test.cloud.databricks.com'
@@ -77,3 +80,43 @@ def test_configure_cli_insecure():
     assert get_config().host == TEST_HOST
     assert get_config().token == TEST_TOKEN
     assert get_config().insecure == 'True'
+
+
+def test_configure_cli_jobs_api_version():
+    runner = CliRunner()
+    runner.invoke(cli.configure_cli, ['--jobs-api-version', '2.1', '--token'],
+                  input=(TEST_HOST + '\n' + TEST_TOKEN + '\n'))
+    assert get_config().jobs_api_version == '2.1'
+
+
+def test_configure_cli_jobs_api_version_aad_token():
+    with patch.dict('os.environ', {ENV_AAD_TOKEN: 'token'}):
+        runner = CliRunner()
+        runner.invoke(cli.configure_cli, ['--jobs-api-version', '2.1', '--aad-token'],
+                      input=(TEST_HOST + '\n'))
+        assert get_config().jobs_api_version == '2.1'
+
+
+def test_configure_cli_jobs_api_version_file():
+    with tempfile.NamedTemporaryFile() as fp:
+        fp.write(TEST_TOKEN.encode('utf-8'))
+        fp.seek(0)
+
+        runner = CliRunner()
+        runner.invoke(cli.configure_cli, ['--jobs-api-version', '2.1', '--token-file', fp.name],
+                      input=(TEST_HOST + '\n'))
+        assert get_config().jobs_api_version == '2.1'
+        assert get_config().token == TEST_TOKEN
+
+
+def test_configure_cli_jobs_api_version_password():
+    runner = CliRunner()
+    runner.invoke(cli.configure_cli, ['--jobs-api-version', '2.1'],
+                  input=(TEST_HOST + '\n' +
+                         TEST_USER + '\n' +
+                         TEST_PASSWORD + '\n' +
+                         TEST_PASSWORD + '\n'))
+    assert get_config().jobs_api_version == '2.1'
+    assert get_config().host == TEST_HOST
+    assert get_config().username == TEST_USER
+    assert get_config().password == TEST_PASSWORD

@@ -68,7 +68,7 @@ class ApiClient(object):
     to be used by different versions of the client.
     """
     def __init__(self, user=None, password=None, host=None, token=None,
-                 apiVersion=version.API_VERSION, default_headers={}, verify=True, command_name=""):
+                 api_version=version.API_VERSION, default_headers={}, verify=True, command_name="", jobs_api_version=None):
         if host[-1] == "/":
             host = host[:-1]
 
@@ -86,7 +86,7 @@ class ApiClient(object):
         parsed_url = urlparse(host)
         scheme = parsed_url.scheme
         hostname = parsed_url.hostname
-        self.url = "%s://%s/api/%s" % (scheme, hostname, apiVersion)
+        self.url = "%s://%s/api/" % (scheme, hostname)
         if user is not None and password is not None:
             encoded_auth = (user + ":" + password).encode()
             user_header_data = "Basic " + base64.standard_b64encode(encoded_auth).decode()
@@ -102,6 +102,8 @@ class ApiClient(object):
         self.default_headers.update(default_headers)
         self.default_headers.update(user_agent)
         self.verify = verify
+        self.api_version = api_version
+        self.jobs_api_version = jobs_api_version
 
     def close(self):
         """Close the client"""
@@ -109,7 +111,7 @@ class ApiClient(object):
 
     # helper functions starting here
 
-    def perform_query(self, method, path, data = {}, headers = None, files=None):
+    def perform_query(self, method, path, data = {}, headers = None, files=None, version=None):
         """set up connection and perform query"""
         if headers is None:
             headers = self.default_headers
@@ -122,15 +124,15 @@ class ApiClient(object):
             warnings.simplefilter("ignore", exceptions.InsecureRequestWarning)
             if method == 'GET':
                 translated_data = {k: _translate_boolean_to_query_param(data[k]) for k in data}
-                resp = self.session.request(method, self.url + path, params = translated_data,
+                resp = self.session.request(method, self.get_url(path), params = translated_data,
                                             verify = self.verify, headers = headers)
             else:
                 if files is None:
-                    resp = self.session.request(method, self.url + path, data = json.dumps(data),
+                    resp = self.session.request(method, self.get_url(path), data = json.dumps(data),
                                                 verify = self.verify, headers = headers)
                 else:
                     # Multipart file upload
-                    resp = self.session.request(method, self.url + path, files = files, data = data,
+                    resp = self.session.request(method, self.get_url(path), files = files, data = data,
                                                 verify = self.verify, headers = headers)
         try:
             resp.raise_for_status()
@@ -143,6 +145,14 @@ class ApiClient(object):
                 pass
             raise requests.exceptions.HTTPError(message, response=e.response)
         return resp.json()
+
+
+    def get_url(self, path, version=None):
+        if version:
+            return self.url + version + path
+        elif self.jobs_api_version and path and path.startswith('/jobs'):
+            return self.url + self.jobs_api_version + path 
+        return self.url + self.api_version + path
 
 
 def _translate_boolean_to_query_param(value):

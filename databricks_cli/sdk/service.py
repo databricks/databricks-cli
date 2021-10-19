@@ -34,7 +34,7 @@ class JobsService(object):
                    email_notifications=None, timeout_seconds=None, max_retries=None,
                    min_retry_interval_millis=None, retry_on_timeout=None, schedule=None,
                    notebook_task=None, spark_jar_task=None, spark_python_task=None,
-                   spark_submit_task=None, max_concurrent_runs=None, headers=None):
+                   spark_submit_task=None, max_concurrent_runs=None, tasks=None, headers=None, version=None):
         _data = {}
         if name is not None:
             _data['name'] = name
@@ -80,11 +80,13 @@ class JobsService(object):
                 raise TypeError('Expected databricks.SparkSubmitTask() or dict for field spark_submit_task')
         if max_concurrent_runs is not None:
             _data['max_concurrent_runs'] = max_concurrent_runs
-        return self.client.perform_query('POST', '/jobs/create', data=_data, headers=headers)
+        if tasks is not None:
+            _data['tasks'] = tasks
+        return self.client.perform_query('POST', '/jobs/create', data=_data, headers=headers, version=version)
 
     def submit_run(self, run_name=None, existing_cluster_id=None, new_cluster=None, libraries=None,
                    notebook_task=None, spark_jar_task=None, spark_python_task=None,
-                   spark_submit_task=None, timeout_seconds=None, headers=None):
+                   spark_submit_task=None, timeout_seconds=None, tasks=None, headers=None, version=None):
         _data = {}
         if run_name is not None:
             _data['run_name'] = run_name
@@ -114,9 +116,11 @@ class JobsService(object):
                 raise TypeError('Expected databricks.SparkSubmitTask() or dict for field spark_submit_task')
         if timeout_seconds is not None:
             _data['timeout_seconds'] = timeout_seconds
-        return self.client.perform_query('POST', '/jobs/runs/submit', data=_data, headers=headers)
+        if tasks is not None:
+            _data['tasks'] = tasks
+        return self.client.perform_query('POST', '/jobs/runs/submit', data=_data, headers=headers, version=version)
 
-    def reset_job(self, job_id, new_settings, headers=None):
+    def reset_job(self, job_id, new_settings, headers=None, version=None):
         _data = {}
         if job_id is not None:
             _data['job_id'] = job_id
@@ -124,30 +128,36 @@ class JobsService(object):
             _data['new_settings'] = new_settings
             if not isinstance(new_settings, dict):
                 raise TypeError('Expected databricks.JobSettings() or dict for field new_settings')
-        return self.client.perform_query('POST', '/jobs/reset', data=_data, headers=headers)
+        return self.client.perform_query('POST', '/jobs/reset', data=_data, headers=headers, version=version)
 
-    def delete_job(self, job_id, headers=None):
+    def delete_job(self, job_id, headers=None, version=None):
         _data = {}
         if job_id is not None:
             _data['job_id'] = job_id
-        return self.client.perform_query('POST', '/jobs/delete', data=_data, headers=headers)
+        return self.client.perform_query('POST', '/jobs/delete', data=_data, headers=headers, version=version)
 
-    def get_job(self, job_id, headers=None):
+    def get_job(self, job_id, headers=None, version=None):
         _data = {}
         if job_id is not None:
             _data['job_id'] = job_id
-        return self.client.perform_query('GET', '/jobs/get', data=_data, headers=headers)
+        return self.client.perform_query('GET', '/jobs/get', data=_data, headers=headers, version=version)
 
-    def list_jobs(self, job_type=None, headers=None):
+    def list_jobs(self, job_type=None, expand_tasks=None, limit=None, offset=None, headers=None, version=None):
         _data = {}
 
         if job_type is not None:
             _data['job_type'] = job_type
+        if expand_tasks is not None:
+            _data['expand_tasks'] = expand_tasks
+        if limit is not None:
+            _data['limit'] = limit
+        if offset is not None:
+            _data['offset'] = offset
 
-        return self.client.perform_query('GET', '/jobs/list', data=_data, headers=headers)
+        return self.client.perform_query('GET', '/jobs/list', data=_data, headers=headers, version=version)
 
     def run_now(self, job_id=None, jar_params=None, notebook_params=None, python_params=None,
-                spark_submit_params=None, headers=None):
+                spark_submit_params=None, headers=None, version=None):
         _data = {}
         if job_id is not None:
             _data['job_id'] = job_id
@@ -159,10 +169,10 @@ class JobsService(object):
             _data['python_params'] = python_params
         if spark_submit_params is not None:
             _data['spark_submit_params'] = spark_submit_params
-        return self.client.perform_query('POST', '/jobs/run-now', data=_data, headers=headers)
+        return self.client.perform_query('POST', '/jobs/run-now', data=_data, headers=headers, version=version)
 
     def list_runs(self, job_id=None, active_only=None, completed_only=None, offset=None,
-                  limit=None, headers=None):
+                  limit=None, headers=None, version=None):
         _data = {}
         if job_id is not None:
             _data['job_id'] = job_id
@@ -174,39 +184,39 @@ class JobsService(object):
             _data['offset'] = offset
         if limit is not None:
             _data['limit'] = limit
-        return self.client.perform_query('GET', '/jobs/runs/list', data=_data, headers=headers)
+        return self.client.perform_query('GET', '/jobs/runs/list', data=_data, headers=headers, version=version)
 
-    def get_run(self, run_id=None, headers=None):
+    def get_run(self, run_id=None, headers=None, version=None):
         _data = {}
         if run_id is not None:
             _data['run_id'] = run_id
-        return self.client.perform_query('GET', '/jobs/runs/get', data=_data, headers=headers)
+        return self.client.perform_query('GET', '/jobs/runs/get', data=_data, headers=headers, version=version)
 
-    def delete_run(self, run_id=None, headers=None):
+    def delete_run(self, run_id=None, headers=None, version=None):
         _data = {}
         if run_id is not None:
             _data['run_id'] = run_id
-        return self.client.perform_query('POST', '/jobs/runs/delete', data=_data, headers=headers)
+        return self.client.perform_query('POST', '/jobs/runs/delete', data=_data, headers=headers, version=version)
 
-    def cancel_run(self, run_id, headers=None):
+    def cancel_run(self, run_id, headers=None, version=None):
         _data = {}
         if run_id is not None:
             _data['run_id'] = run_id
-        return self.client.perform_query('POST', '/jobs/runs/cancel', data=_data, headers=headers)
+        return self.client.perform_query('POST', '/jobs/runs/cancel', data=_data, headers=headers, version=version)
 
-    def get_run_output(self, run_id, headers=None):
+    def get_run_output(self, run_id, headers=None, version=None):
         _data = {}
         if run_id is not None:
             _data['run_id'] = run_id
-        return self.client.perform_query('GET', '/jobs/runs/get-output', data=_data, headers=headers)
+        return self.client.perform_query('GET', '/jobs/runs/get-output', data=_data, headers=headers, version=version)
 
-    def export_run(self, run_id, views_to_export=None, headers=None):
+    def export_run(self, run_id, views_to_export=None, headers=None, version=None):
         _data = {}
         if run_id is not None:
             _data['run_id'] = run_id
         if views_to_export is not None:
             _data['views_to_export'] = views_to_export
-        return self.client.perform_query('GET', '/jobs/runs/export', data=_data, headers=headers)
+        return self.client.perform_query('GET', '/jobs/runs/export', data=_data, headers=headers, version=version)
 
 
 class ClusterService(object):
