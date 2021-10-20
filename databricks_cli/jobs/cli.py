@@ -179,7 +179,7 @@ def delete_cli(api_client, job_id, version):
     Deletes the specified job.
     """
     check_version(api_client, version)
-    JobsApi(api_client).delete_job(job_id, version)
+    JobsApi(api_client).delete_job(job_id, version=version)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
@@ -195,7 +195,7 @@ def get_cli(api_client, job_id, version):
     Describes the metadata for a job.
     """
     check_version(api_client, version)
-    click.echo(pretty_format(JobsApi(api_client).get_job(job_id, version)))
+    click.echo(pretty_format(JobsApi(api_client).get_job(job_id, version=version)))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
@@ -230,7 +230,7 @@ def run_now_cli(api_client, job_id, jar_params, notebook_params, python_params,
     python_params = json_loads(python_params) if python_params else None
     spark_submit_params = json_loads(spark_submit_params) if spark_submit_params else None
     res = JobsApi(api_client).run_now(
-        job_id, jar_params_json, notebook_params_json, python_params, spark_submit_params, version)
+        job_id, jar_params_json, notebook_params_json, python_params, spark_submit_params, version=version)
     click.echo(pretty_format(res))
 
 

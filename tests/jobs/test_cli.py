@@ -298,6 +298,23 @@ def test_list_limit(jobs_api_mock):
 
 
 @provide_conf
+def test_get_job_21(jobs_api_mock):
+    with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
+        jobs_api_mock.get_job.return_value = LIST_21_RETURN['jobs'][0]
+        runner = CliRunner()
+        runner.invoke(cli.get_cli, ['--job-id', '1', '--version', '2.1'])
+        assert jobs_api_mock.get_job.call_args == mock.call('1', version='2.1')
+        assert echo_mock.call_args[0][0] == pretty_format(LIST_21_RETURN['jobs'][0])
+
+
+@provide_conf
+def test_delete_job_21(jobs_api_mock):
+    runner = CliRunner()
+    runner.invoke(cli.delete_cli, ['--job-id', '1', '--version', '2.1'])
+    assert jobs_api_mock.delete_job.call_args == mock.call('1', version='2.1')
+
+
+@provide_conf
 def test_check_version():
     # Without calling `databricks jobs configure --version=2.1`
     api_client = ApiClient(
