@@ -124,15 +124,15 @@ class ApiClient(object):
             warnings.simplefilter("ignore", exceptions.InsecureRequestWarning)
             if method == 'GET':
                 translated_data = {k: _translate_boolean_to_query_param(data[k]) for k in data}
-                resp = self.session.request(method, self.get_url(path), params = translated_data,
+                resp = self.session.request(method, self.get_url(path, version=version), params = translated_data,
                                             verify = self.verify, headers = headers)
             else:
                 if files is None:
-                    resp = self.session.request(method, self.get_url(path), data = json.dumps(data),
+                    resp = self.session.request(method, self.get_url(path, version=version), data = json.dumps(data),
                                                 verify = self.verify, headers = headers)
                 else:
                     # Multipart file upload
-                    resp = self.session.request(method, self.get_url(path), files = files, data = data,
+                    resp = self.session.request(method, self.get_url(path, version=version), files = files, data = data,
                                                 verify = self.verify, headers = headers)
         try:
             resp.raise_for_status()
