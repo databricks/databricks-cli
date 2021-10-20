@@ -53,7 +53,8 @@ def test_create_cli_json(jobs_api_mock):
         jobs_api_mock.create_job.return_value = CREATE_RETURN
         runner = CliRunner()
         runner.invoke(cli.create_cli, ['--json', CREATE_JSON])
-        assert jobs_api_mock.create_job.call_args[0][0] == json.loads(CREATE_JSON)
+        assert jobs_api_mock.create_job.call_args[0][0] == json.loads(
+            CREATE_JSON)
         assert echo_mock.call_args[0][0] == pretty_format(CREATE_RETURN)
 
 
@@ -66,7 +67,8 @@ def test_create_cli_json_file(jobs_api_mock, tmpdir):
         jobs_api_mock.create_job.return_value = CREATE_RETURN
         runner = CliRunner()
         runner.invoke(cli.create_cli, ['--json-file', path])
-        assert jobs_api_mock.create_job.call_args[0][0] == json.loads(CREATE_JSON)
+        assert jobs_api_mock.create_job.call_args[0][0] == json.loads(
+            CREATE_JSON)
         assert echo_mock.call_args[0][0] == pretty_format(CREATE_RETURN)
 
 
@@ -218,9 +220,12 @@ def test_run_now_with_params(jobs_api_mock):
                                         '--spark-submit-params', SPARK_SUBMIT_PARAMS])
         assert jobs_api_mock.run_now.call_args[0][0] == 1
         assert jobs_api_mock.run_now.call_args[0][1] == json.loads(JAR_PARAMS)
-        assert jobs_api_mock.run_now.call_args[0][2] == json.loads(NOTEBOOK_PARAMS)
-        assert jobs_api_mock.run_now.call_args[0][3] == json.loads(PYTHON_PARAMS)
-        assert jobs_api_mock.run_now.call_args[0][4] == json.loads(SPARK_SUBMIT_PARAMS)
+        assert jobs_api_mock.run_now.call_args[0][2] == json.loads(
+            NOTEBOOK_PARAMS)
+        assert jobs_api_mock.run_now.call_args[0][3] == json.loads(
+            PYTHON_PARAMS)
+        assert jobs_api_mock.run_now.call_args[0][4] == json.loads(
+            SPARK_SUBMIT_PARAMS)
         assert echo_mock.call_args[0][0] == pretty_format(RUN_NOW_RETURN)
 
 
@@ -234,21 +239,26 @@ def test_configure():
 @provide_conf
 def test_list_throws_if_invalid_option_for_version_20():
     runner = CliRunner()
-    args = [['--all'], ['--expand-tasks'], ['--offset', '20'], ['--limit', '20']]
+    args = [['--all'], ['--expand-tasks'],
+            ['--offset', '20'], ['--limit', '20']]
 
     for arg in args:
         result = runner.invoke(cli.configure, ['--version=2.0'] + arg)
         assert result.exit_code == 2
 
 
-LIST_RETURN_1 = {'jobs': [{'job_id': '1', 'settings': {'name': 'a'}}], 'has_more': True}
-LIST_RETURN_2 = {'jobs': [{'job_id': '2', 'settings': {'name': 'b'}}], 'has_more': True}
-LIST_RETURN_3 = {'jobs': [{'job_id': '3', 'settings': {'name': 'c'}}], 'has_more': False}
+LIST_RETURN_1 = {
+    'jobs': [{'job_id': '1', 'settings': {'name': 'a'}}], 'has_more': True}
+LIST_RETURN_2 = {
+    'jobs': [{'job_id': '2', 'settings': {'name': 'b'}}], 'has_more': True}
+LIST_RETURN_3 = {
+    'jobs': [{'job_id': '3', 'settings': {'name': 'c'}}], 'has_more': False}
 
 
 @provide_conf
 def test_list_all(jobs_api_mock):
-    jobs_api_mock.list_jobs.side_effect = iter([LIST_RETURN_1, LIST_RETURN_2, LIST_RETURN_3])
+    jobs_api_mock.list_jobs.side_effect = iter(
+        [LIST_RETURN_1, LIST_RETURN_2, LIST_RETURN_3])
     runner = CliRunner()
     result = runner.invoke(cli.list_cli, ['--version=2.1', '--all'])
     rows = [(1, 'a'), (2, 'b'), (3, 'c')]
@@ -302,6 +312,7 @@ def test_check_version():
         cli.check_version(api_client, None)
         assert echo_mock.called
         assert 'Your CLI is configured to use Jobs API 2.0' in echo_mock.call_args[0][0]
+        assert echo_mock.call_args_list[0][1]['err'] is True
     # databricks jobs list --version=2.0
     with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
         cli.check_version(api_client, "2.0")
