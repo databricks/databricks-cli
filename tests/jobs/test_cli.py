@@ -302,6 +302,7 @@ def test_check_version():
         cli.check_version(api_client, None)
         assert echo_mock.called
         assert 'Your CLI is configured to use Jobs API 2.0' in echo_mock.call_args[0][0]
+        assert echo_mock.call_args_list[0][1]['err'] == True
     # databricks jobs list --version=2.0
     with mock.patch('databricks_cli.jobs.cli.click.echo') as echo_mock:
         cli.check_version(api_client, "2.0")
