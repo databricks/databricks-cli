@@ -245,4 +245,4 @@ def test_mlflow_config_constructor():
     assert conf.username == TEST_USER
     assert conf.password == TEST_PASSWORD
     assert conf.token == TEST_TOKEN
-    assert conf.insecure == False
+    assert conf.insecure is False
