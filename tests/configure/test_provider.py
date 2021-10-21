@@ -233,3 +233,16 @@ def test_get_config_override_custom():
 def test_get_config_bad_override():
     with pytest.raises(Exception):
         set_config_provider("NotAConfigProvider")
+
+
+def test_mlflow_config_constructor():
+    """
+    Verifies the public constructor of DatabricksConfig. No variables should be added here.
+    All new properties should be optional.
+    """
+    conf = DatabricksConfig(TEST_HOST, TEST_USER, TEST_PASSWORD, TEST_TOKEN, False)
+    assert conf.host == TEST_HOST
+    assert conf.username == TEST_USER
+    assert conf.password == TEST_PASSWORD
+    assert conf.token == TEST_TOKEN
+    assert conf.insecure is False

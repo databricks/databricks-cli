@@ -230,7 +230,8 @@ def run_now_cli(api_client, job_id, jar_params, notebook_params, python_params,
     python_params = json_loads(python_params) if python_params else None
     spark_submit_params = json_loads(spark_submit_params) if spark_submit_params else None
     res = JobsApi(api_client).run_now(
-        job_id, jar_params_json, notebook_params_json, python_params, spark_submit_params, version=version)
+        job_id, jar_params_json, notebook_params_json, python_params, spark_submit_params,
+        version=version)
     click.echo(pretty_format(res))
 
 
