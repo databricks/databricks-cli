@@ -1076,7 +1076,7 @@ def list_shares_cli(api_client):
                short_help='Get a share.')
 @click.option('--name', required=True,
               help='Name of the share to get.')
-@click.option('--include_shared_data', default=True,
+@click.option('--include-shared-data', default=True,
               help='Whether to include shared data in the response.')
 @debug_option
 @profile_option
@@ -1218,7 +1218,7 @@ def get_recipient_cli(api_client, name):
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Rotate token for the recipient.')
 @click.option('--name', required=True, help='Name of new recipient.')
-@click.option('--existing_token_expire_in_seconds', default=None, required=False,
+@click.option('--existing-token-expire-in-seconds', default=None, required=False,
               help='Expire the existing token in number of seconds from now, 0 to expire it immediately.')
 @debug_option
 @profile_option
