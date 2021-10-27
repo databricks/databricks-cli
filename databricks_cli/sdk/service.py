@@ -1350,8 +1350,8 @@ class UnityCatalogService(object):
 
         return self.client.perform_query('GET', '/unity-catalog/shares', data=_data, headers=headers)
 
-    def get_share(self, name, headers=None):
-        _data = {}
+    def get_share(self, name, include_shared_data, headers=None):
+        _data = {'include_shared_data': include_shared_data}
 
         return self.client.perform_query('GET', '/unity-catalog/shares/%s' % (name),
                                          data=_data, headers=headers)

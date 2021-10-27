@@ -1076,11 +1076,13 @@ def list_shares_cli(api_client):
                short_help='Get a share.')
 @click.option('--name', required=True,
               help='Name of the share to get.')
+@click.option('--include_shared_data', default=True,
+              help='Whether to include shared data in the response.')
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def get_share_cli(api_client, name):
+def get_share_cli(api_client, name, include_shared_data):
     """
     Get a share.
 
@@ -1088,7 +1090,7 @@ def get_share_cli(api_client, name):
     Returns nothing.
 
     """
-    share_json = UnityCatalogApi(api_client).get_share(name)
+    share_json = UnityCatalogApi(api_client).get_share(name, include_shared_data)
     click.echo(mc_pretty_format(share_json))
 
 

@@ -179,8 +179,8 @@ class UnityCatalogApi(object):
     def list_shares(self):
         return self.client.list_shares()
 
-    def get_share(self, name):
-        return self.client.get_share(name)
+    def get_share(self, name, include_shared_data):
+        return self.client.get_share(name, include_shared_data)
 
     def update_share(self, name, share_spec):
         return self.client.update_share(name, share_spec)
