@@ -288,6 +288,6 @@ def check_version(api_client, version):
                'to use Jobs API 2.0. In order to use the latest Jobs features ' +
                'please upgrade to 2.1: \'databricks jobs configure --version=2.1\'. ' +
                'Future versions of this CLI will default to the new Jobs API. ' +
-               'Learn more at https://docs.databricks.com/dev-tools/api/latest/jobs.html',
+               'Learn more at https://docs.databricks.com/dev-tools/cli/jobs-cli.html',
                err=True
                )
