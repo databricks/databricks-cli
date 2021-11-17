@@ -1274,6 +1274,131 @@ def delete_recipient_cli(api_client, name):
     UnityCatalogApi(api_client).delete_recipient(name)
 
 
+##############  Provider Commands  ##############
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Create a provider.')
+@click.option('--name', 'provider name', required=True, help='Name of the new provider.')
+@click.option('--json-file', default=None, type=click.Path(),
+              help='File containing JSON provider profile.')
+@click.option('--json', default=None, type=JsonClickType(),
+              help=JsonClickType.help('/api/2.0/unity-catalog/provider_info'))
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def create_provider_cli(api_client, name, json_file, json):
+    """
+    Create a provider.
+
+    Calls the 'createProvider' RPC endpoint of the Unity Catalog service.
+    Returns the created provider info.
+
+    """
+    json_cli_base(json_file, json,
+                  lambda json: UnityCatalogApi(api_client).create_provider(name, json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='List providers.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def list_providers_cli(api_client):
+    """
+    List providers.
+
+    Calls the 'listProviders' RPC endpoint of the Unity Catalog service.
+    Returns array of ProviderInfos.
+
+    """
+    proviers_json = UnityCatalogApi(api_client).list_providers()
+    click.echo(mc_pretty_format(proviers_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Get a provider.')
+@click.option('--name', required=True,
+              help='Name of the provider to get.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def get_provider_cli(api_client, name):
+    """
+    Get a provider.
+
+    Calls the 'getProvider' RPC endpoint of the Unity Catalog service.
+    Returns ProviderInfo.
+
+    """
+    provier_json = UnityCatalogApi(api_client).get_provider(name)
+    click.echo(mc_pretty_format(provier_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Update a provider.')
+@click.option('--name', 'provider name', required=True, help='Name of the provider to update.')
+@click.option('--json-file', default=None, type=click.Path(),
+              help='File containing JSON provider profile.')
+@click.option('--json', default=None, type=JsonClickType(),
+              help=JsonClickType.help('/api/2.0/unity-catalog/provider_info'))
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def update_provider_cli(api_client, name, json_file, json):
+    """
+    Update a provider.
+
+    Calls the 'updateProvider' RPC endpoint of the Unity Catalog service.
+    Returns the updated provider info.
+
+    """
+    json_cli_base(json_file, json,
+                  lambda json: UnityCatalogApi(api_client).create_provider(name, json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Get shares of a provider.')
+@click.option('--name', required=True,
+              help='Name of the provider.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def get_provider_shares_cli(api_client, name):
+    """
+    Get a provider's shares.
+
+    Calls the 'getProviderShares' RPC endpoint of the Unity Catalog service.
+    Returns array of ProviderShare.
+
+    """
+    shares_json = UnityCatalogApi(api_client).get_provider_shares(name)
+    click.echo(mc_pretty_format(shares_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Delete a provider.')
+@click.option('--name', required=True,
+              help='Name of the provider to delete.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def delete_provider_cli(api_client, name):
+    """
+    Delete a provider.
+
+    Calls the 'deleteProvider' RPC endpoint of the Unity Catalog service.
+    Returns nothing.
+
+    """
+    UnityCatalogApi(api_client).delete_provider(name)
+
+
 @click.group(context_settings=CONTEXT_SETTINGS,
              help='Utility to interact with Databricks unity-catalog.\n\n' +
              '**********************************************************************\n' +
@@ -1356,3 +1481,10 @@ unity_catalog_group.add_command(rotate_recipient_token_cli, name='rotate-recipie
 unity_catalog_group.add_command(get_recipient_share_permissions_cli,
                                 name='get-recipient-share-perms')
 unity_catalog_group.add_command(delete_recipient_cli, name='delete-recipient')
+# Provider cmds:
+unity_catalog_group.add_command(create_provider_cli, name='create-provider')
+unity_catalog_group.add_command(list_providers_cli, name='list-providers')
+unity_catalog_group.add_command(get_provider_cli, name='get-provider')
+unity_catalog_group.add_command(update_provider_cli, name='update-provider')
+unity_catalog_group.add_command(delete_provider_cli, name='delete-provider')
+unity_catalog_group.add_command(list_provider_shares_cli, name='list-provider-shares')

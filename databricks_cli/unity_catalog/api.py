@@ -207,3 +207,23 @@ class UnityCatalogApi(object):
 
     def delete_recipient(self, name):
         return self.client.delete_recipient(name)
+
+    # Provider APIs
+
+    def create_provider(self, name, provider_profile):
+        return self.client.create_provider(name, provider_profile)
+
+    def list_providers(self):
+        return self.client.list_providers()
+
+    def get_provider(self, name):
+        return self.client.get_provider(name)
+
+    def update_provider(self, name, provider_profile):
+        return self.client.update_provider(name, provider_profile)
+
+    def delete_provider(self, name):
+        return self.client.delete_provider(name)
+
+    def list_provider_shares(self, name):
+        return self.client.list_provider_shares(name)

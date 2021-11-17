@@ -1407,3 +1407,28 @@ class UnityCatalogService(object):
 
         return self.client.perform_query('DELETE', '/unity-catalog/recipients/%s' % (name),
                                          data=_data, headers=headers)
+
+    # Provider Operations
+
+    def create_provider(self, name, provider_profile, headers=None):
+        return self.client.perform_query('POST', '/unity-catalog/providers/%s' % (name),
+                                          data=provider_profile, headers=headers)
+
+    def list_providers(self, headers=None):
+        return self.client.perform_query('GET', '/unity-catalog/providers', data={}, headers=headers)
+
+    def get_provider(self, name, headers=None):
+        return self.client.perform_query('GET', '/unity-catalog/providers/%s' % (name),
+                                         data={}, headers=headers)
+
+    def update_provider(self, name, provider_profile, headers=None):
+        return self.client.perform_query('PATCH', '/unity-catalog/providers/%s' % (name),
+                                         data=provider_profile, headers=headers)
+
+    def delete_providers(self, name, headers=None):
+        return self.client.perform_query('DELETE', '/unity-catalog/providers/%s' % (name),
+                                         data={}, headers=headers)
+
+    def list_provider_shares(self, name, headers=None):
+        return self.client.perform_query('GET', '/unity-catalog/providers/%s/shares' % (name),
+                                         data={}, headers=headers)
