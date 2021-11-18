@@ -453,6 +453,7 @@ def list_tables_cli(api_client, catalog_name, schema_name, name_pattern):
     tables_json = UnityCatalogApi(api_client).list_tables(catalog_name, schema_name, name_pattern)
     click.echo(mc_pretty_format(tables_json))
 
+
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='List tables bulk.')
 @click.option('--catalog-name', required=True,
@@ -841,6 +842,8 @@ def get_location_cli(api_client, name):
                short_help='Update an external location.')
 @click.option('--name', required=True,
               help='Name of the external location to update.')
+@click.option('--force', '-f', is_flag=True, default=False,
+              help='Force update even if location has dependent tables/mounts')
 @click.option('--json-file', default=None, type=click.Path(),
               help='File containing JSON request to PATCH.')
 @click.option('--json', default=None, type=JsonClickType(),
@@ -849,7 +852,7 @@ def get_location_cli(api_client, name):
 @profile_option
 @eat_exceptions
 @provide_api_client
-def update_location_cli(api_client, name, json_file, json):
+def update_location_cli(api_client, name, force, json_file, json):
     """
     Update an external location.
 
@@ -858,7 +861,7 @@ def update_location_cli(api_client, name, json_file, json):
 
     """
     json_cli_base(json_file, json,
-                  lambda json: UnityCatalogApi(api_client).update_external_location(name, json),
+                  lambda json: UnityCatalogApi(api_client).update_external_location(name, force, json),
                   encode_utf8=True)
 
 
@@ -866,11 +869,13 @@ def update_location_cli(api_client, name, json_file, json):
                short_help='Delete an external location.')
 @click.option('--name', required=True,
               help='Name of the external location to delete.')
+@click.option('--force', '-f', is_flag=True, default=False,
+              help='Force deletion even if location has dependent tables/mounts')
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def delete_location_cli(api_client, name):
+def delete_location_cli(api_client, name, force):
     """
     Delete an external location.
 
@@ -878,7 +883,7 @@ def delete_location_cli(api_client, name):
     Returns nothing.
 
     """
-    UnityCatalogApi(api_client).delete_external_location(name)
+    UnityCatalogApi(api_client).delete_external_location(name, force)
 
 
 PERMISSIONS_OBJ_TYPES = [
@@ -1215,6 +1220,7 @@ def get_recipient_cli(api_client, name):
     recipient_json = UnityCatalogApi(api_client).get_recipient(name)
     click.echo(mc_pretty_format(recipient_json))
 
+
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Rotate token for the recipient.')
 @click.option('--name', required=True, help='Name of new recipient.')
@@ -1234,6 +1240,7 @@ def rotate_recipient_token_cli(api_client, name, existing_token_expire_in_second
     """
     recipient_json = UnityCatalogApi(api_client).rotate_recipient_token(name, existing_token_expire_in_seconds)
     click.echo(mc_pretty_format(recipient_json))
+
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Get share permissions of a recipient.')
@@ -1362,7 +1369,8 @@ def update_provider_cli(api_client, name, new_name, comment, json_file, json):
 
     """
     json_cli_base(json_file, json,
-                  lambda json: UnityCatalogApi(api_client).update_provider(name, new_name, comment, json))
+                  lambda json: UnityCatalogApi(api_client).update_provider(name, new_name,
+                                                                           comment, json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,

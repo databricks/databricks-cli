@@ -1296,12 +1296,19 @@ class UnityCatalogService(object):
         return self.client.perform_query('GET', '/unity-catalog/external-locations/%s' % (name),
                                          data=_data, headers=headers)
 
-    def update_external_location(self, name, loc_spec, headers=None):
-        return self.client.perform_query('PATCH', '/unity-catalog/external-locations/%s' % (name),
-                                         data=loc_spec, headers=headers)
+    def update_external_location(self, name, force, loc_spec, headers=None):
+        _data = {
+            "force": force,
+            "external_location_info": loc_spec
+        }
 
-    def delete_external_location(self, name, headers=None):
-        _data = {}
+        return self.client.perform_query('PATCH', '/unity-catalog/external-locations/%s' % (name),
+                                         data=_data, headers=headers)
+
+    def delete_external_location(self, name, force, headers=None):
+        _data = {
+            "force": force
+        }
 
         return self.client.perform_query('DELETE', '/unity-catalog/external-locations/%s' % (name),
                                          data=_data, headers=headers)

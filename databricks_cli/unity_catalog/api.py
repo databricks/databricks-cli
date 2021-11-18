@@ -154,11 +154,11 @@ class UnityCatalogApi(object):
     def get_external_location(self, name):
         return self.client.get_external_location(name)
 
-    def update_external_location(self, name, loc_spec):
-        return self.client.update_external_location(name, loc_spec)
+    def update_external_location(self, name, force, loc_spec):
+        return self.client.update_external_location(name, force, loc_spec)
 
-    def delete_external_location(self, name):
-        return self.client.delete_external_location(name)
+    def delete_external_location(self, name, force):
+        return self.client.delete_external_location(name, force)
 
     # Permissions APIs
 
