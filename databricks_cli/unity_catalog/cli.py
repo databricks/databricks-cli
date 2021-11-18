@@ -1368,8 +1368,12 @@ def update_provider_cli(api_client, name, new_name, comment, json_file, json):
     Returns the updated provider info.
 
     """
-    json_cli_base(json_file, json,
-                  lambda json: UnityCatalogApi(api_client).update_provider(name, new_name,
+    if json is None and json_file is None:
+        updated_provider = UnityCatalogApi(api_client).update_provider(name, new_name, comment)
+        click.echo(mc_pretty_format(updated_provider))
+    else:
+        json_cli_base(json_file, json,
+                      lambda json: UnityCatalogApi(api_client).update_provider(name, new_name,
                                                                            comment, json))
 
 
