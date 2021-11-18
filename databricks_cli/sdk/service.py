@@ -1410,9 +1410,15 @@ class UnityCatalogService(object):
 
     # Provider Operations
 
-    def create_provider(self, name, provider_profile, headers=None):
-        return self.client.perform_query('POST', '/unity-catalog/providers/%s' % (name),
-                                          data=provider_profile, headers=headers)
+    def create_provider(self, name, comment, provider_profile, headers=None):
+        _data = {
+            'name': name,
+            'recipient_profile': provider_profile
+        }
+        if comment is not None:
+            _data['comment'] = comment
+        return self.client.perform_query('POST', '/unity-catalog/providers/',
+                                          data=_data, headers=headers)
 
     def list_providers(self, headers=None):
         return self.client.perform_query('GET', '/unity-catalog/providers', data={}, headers=headers)
@@ -1421,11 +1427,19 @@ class UnityCatalogService(object):
         return self.client.perform_query('GET', '/unity-catalog/providers/%s' % (name),
                                          data={}, headers=headers)
 
-    def update_provider(self, name, provider_profile, headers=None):
-        return self.client.perform_query('PATCH', '/unity-catalog/providers/%s' % (name),
-                                         data=provider_profile, headers=headers)
+    def update_provider(self, name, new_name, comment, provider_profile, headers=None):
+        _data = {}
+        if new_name is not None:
+            _data['name'] = new_name
+        if provider_profile is not None:
+            _data['recipient_profile'] = provider_profile
+        if comment is not None:
+            _data['comment'] = comment
 
-    def delete_providers(self, name, headers=None):
+        return self.client.perform_query('PATCH', '/unity-catalog/providers/%s' % (name),
+                                         data=_data, headers=headers)
+
+    def delete_provider(self, name, headers=None):
         return self.client.perform_query('DELETE', '/unity-catalog/providers/%s' % (name),
                                          data={}, headers=headers)
 

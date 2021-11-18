@@ -210,8 +210,8 @@ class UnityCatalogApi(object):
 
     # Provider APIs
 
-    def create_provider(self, name, provider_profile):
-        return self.client.create_provider(name, provider_profile)
+    def create_provider(self, name, comment, provider_profile):
+        return self.client.create_provider(name, comment, provider_profile)
 
     def list_providers(self):
         return self.client.list_providers()
@@ -219,8 +219,8 @@ class UnityCatalogApi(object):
     def get_provider(self, name):
         return self.client.get_provider(name)
 
-    def update_provider(self, name, provider_profile):
-        return self.client.update_provider(name, provider_profile)
+    def update_provider(self, name, new_name=None, comment=None, provider_profile=None):
+        return self.client.update_provider(name, new_name, comment, provider_profile)
 
     def delete_provider(self, name):
         return self.client.delete_provider(name)

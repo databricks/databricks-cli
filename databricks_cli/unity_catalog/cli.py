@@ -1278,16 +1278,18 @@ def delete_recipient_cli(api_client, name):
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Create a provider.')
-@click.option('--name', 'provider name', required=True, help='Name of the new provider.')
+@click.option('--name', required=True, help='Name of the new provider.')
+@click.option('--comment', default=None, required=False,
+              help='Free-form text description.')
 @click.option('--json-file', default=None, type=click.Path(),
               help='File containing JSON provider profile.')
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/unity-catalog/provider_info'))
+              help=JsonClickType.help('/api/2.0/unity-catalog/providers'))
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def create_provider_cli(api_client, name, json_file, json):
+def create_provider_cli(api_client, name, comment, json_file, json):
     """
     Create a provider.
 
@@ -1296,7 +1298,7 @@ def create_provider_cli(api_client, name, json_file, json):
 
     """
     json_cli_base(json_file, json,
-                  lambda json: UnityCatalogApi(api_client).create_provider(name, json))
+                  lambda json: UnityCatalogApi(api_client).create_provider(name, comment, json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -1339,16 +1341,19 @@ def get_provider_cli(api_client, name):
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Update a provider.')
-@click.option('--name', 'provider name', required=True, help='Name of the provider to update.')
+@click.option('--name', required=True, help='Name of the provider to update.')
+@click.option('--new_name', default=None, help='New name of the provider.')
+@click.option('--comment', default=None, required=False,
+              help='Free-form text description.')
 @click.option('--json-file', default=None, type=click.Path(),
               help='File containing JSON provider profile.')
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/unity-catalog/provider_info'))
+              help=JsonClickType.help('/api/2.0/unity-catalog/providers'))
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def update_provider_cli(api_client, name, json_file, json):
+def update_provider_cli(api_client, name, new_name, comment, json_file, json):
     """
     Update a provider.
 
@@ -1357,26 +1362,26 @@ def update_provider_cli(api_client, name, json_file, json):
 
     """
     json_cli_base(json_file, json,
-                  lambda json: UnityCatalogApi(api_client).create_provider(name, json))
+                  lambda json: UnityCatalogApi(api_client).update_provider(name, new_name, comment, json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Get shares of a provider.')
+               short_help='List shares of a provider.')
 @click.option('--name', required=True,
               help='Name of the provider.')
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def get_provider_shares_cli(api_client, name):
+def list_provider_shares_cli(api_client, name):
     """
-    Get a provider's shares.
+    List a provider's shares.
 
-    Calls the 'getProviderShares' RPC endpoint of the Unity Catalog service.
+    Calls the 'listProviderShares' RPC endpoint of the Unity Catalog service.
     Returns array of ProviderShare.
 
     """
-    shares_json = UnityCatalogApi(api_client).get_provider_shares(name)
+    shares_json = UnityCatalogApi(api_client).list_provider_shares(name)
     click.echo(mc_pretty_format(shares_json))
 
 
