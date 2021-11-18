@@ -20,18 +20,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import click
+import socket
 import time
+
+from contextlib import closing
 from datetime import datetime
 from json import loads as json_loads
-
-import click
 from tabulate import tabulate
 
 from databricks_cli.click_types import OutputClickType, JsonClickType, ClusterIdClickType, \
     OneOfOption
 from databricks_cli.clusters.api import ClusterApi
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
+from databricks_cli.tunnel.api import TunnelApi
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base, \
     truncate_string, CLUSTER_OPTIONS
 from databricks_cli.version import print_version_callback, version
@@ -331,6 +333,30 @@ def cluster_events_cli(api_client, cluster_id, start_time, end_time, order, even
         click.echo(tabulate(_cluster_events_to_table(events_json), tablefmt='plain'))
 
 
+def find_free_port():
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+        s.bind(('', 0))
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        return s.getsockname()[1]
+
+
+@click.command(context_settings=CONTEXT_SETTINGS)
+@click.option('--cluster-id', required=True, type=ClusterIdClickType(), help=ClusterIdClickType.help)
+@click.option('--local-port', type=click.INT, help="the local port")
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def tunnel_cli(api_client, cluster_id, local_port):
+    """
+    Start a secure TCP tunnel.
+    """
+    print(f"start a tunnel on {cluster_id}")
+    if local_port is None:
+        local_port = find_free_port()
+    TunnelApi(api_client).start_tunneling(cluster_id, local_port)
+
+
 @click.group(context_settings=CONTEXT_SETTINGS,
              short_help='Utility to interact with Databricks clusters.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
@@ -358,3 +384,4 @@ clusters_group.add_command(list_node_types_cli, name='list-node-types')
 clusters_group.add_command(spark_versions_cli, name='spark-versions')
 clusters_group.add_command(permanent_delete_cli, name='permanent-delete')
 clusters_group.add_command(cluster_events_cli, name='events')
+clusters_group.add_command(tunnel_cli, name='tunnel')

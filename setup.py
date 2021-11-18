@@ -39,6 +39,12 @@ setup(
         'tabulate>=0.7.7',
         'six>=1.10.0',
         'configparser>=0.3.5;python_version < "3.6"',
+        # additional deps for tunneling
+        'aiohttp>=3.7.4',
+        'cryptography>=3.4.6',
+        'python-socketio>=5.0.4',
+        'tenacity>=8.0.1',
+        "tornado>=5.0.4",
     ],
     entry_points='''
         [console_scripts]

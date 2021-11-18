@@ -31,6 +31,19 @@ from databricks_cli.utils import InvalidConfigurationError
 from databricks_cli.sdk import ApiClient
 
 
+def get_api_config():
+    profile = get_profile_from_context()
+    if profile:
+        # If we request a specific profile, only get credentials from there.
+        config = ProfileConfigProvider(profile).get_config()
+    else:
+        # If unspecified, use the default provider, or allow for user overrides.
+        config = get_config()
+    if not config or not config.is_valid:
+        raise InvalidConfigurationError.for_profile(profile)
+    return config
+
+
 def provide_api_client(function):
     """
     Injects the api_client keyword argument to the wrapped function.
@@ -41,15 +54,7 @@ def provide_api_client(function):
         ctx = click.get_current_context()
         command_name = "-".join(ctx.command_path.split(" ")[1:])
         command_name += "-" + str(uuid.uuid1())
-        profile = get_profile_from_context()
-        if profile:
-            # If we request a specific profile, only get credentials from tere.
-            config = ProfileConfigProvider(profile).get_config()
-        else:
-            # If unspecified, use the default provider, or allow for user overrides.
-            config = get_config()
-        if not config or not config.is_valid:
-            raise InvalidConfigurationError.for_profile(profile)
+        config = get_api_config()
         kwargs['api_client'] = _get_api_client(config, command_name)
 
         return function(*args, **kwargs)
