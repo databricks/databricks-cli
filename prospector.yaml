@@ -5,6 +5,7 @@ doc-warnings: false
 ignore-paths:
   - sdk
   - build
+  - env
 
 max-line-length: 100
 

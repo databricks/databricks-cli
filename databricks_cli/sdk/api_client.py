@@ -68,7 +68,8 @@ class ApiClient(object):
     to be used by different versions of the client.
     """
     def __init__(self, user=None, password=None, host=None, token=None,
-                 api_version=version.API_VERSION, default_headers={}, verify=True, command_name="", jobs_api_version=None):
+                 api_version=version.API_VERSION, default_headers={}, verify=True, command_name="",
+                 jobs_api_version=None, config=None):
         if host[-1] == "/":
             host = host[:-1]
 
@@ -104,6 +105,7 @@ class ApiClient(object):
         self.verify = verify
         self.api_version = api_version
         self.jobs_api_version = jobs_api_version
+        self.config = config
 
     def close(self):
         """Close the client"""

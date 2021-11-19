@@ -31,19 +31,6 @@ from databricks_cli.utils import InvalidConfigurationError
 from databricks_cli.sdk import ApiClient
 
 
-def get_api_config():
-    profile = get_profile_from_context()
-    if profile:
-        # If we request a specific profile, only get credentials from there.
-        config = ProfileConfigProvider(profile).get_config()
-    else:
-        # If unspecified, use the default provider, or allow for user overrides.
-        config = get_config()
-    if not config or not config.is_valid:
-        raise InvalidConfigurationError.for_profile(profile)
-    return config
-
-
 def provide_api_client(function):
     """
     Injects the api_client keyword argument to the wrapped function.
@@ -54,7 +41,15 @@ def provide_api_client(function):
         ctx = click.get_current_context()
         command_name = "-".join(ctx.command_path.split(" ")[1:])
         command_name += "-" + str(uuid.uuid1())
-        config = get_api_config()
+        profile = get_profile_from_context()
+        if profile:
+            # If we request a specific profile, only get credentials from tere.
+            config = ProfileConfigProvider(profile).get_config()
+        else:
+            # If unspecified, use the default provider, or allow for user overrides.
+            config = get_config()
+        if not config or not config.is_valid:
+            raise InvalidConfigurationError.for_profile(profile)
         kwargs['api_client'] = _get_api_client(config, command_name)
 
         return function(*args, **kwargs)
@@ -90,7 +85,8 @@ def _get_api_client(config, command_name=""):
     verify = config.insecure is None
     if config.is_valid_with_token:
         return ApiClient(host=config.host, token=config.token, verify=verify,
-                         command_name=command_name, jobs_api_version=config.jobs_api_version)
+                         command_name=command_name, jobs_api_version=config.jobs_api_version,
+                         config=config)
     return ApiClient(user=config.username, password=config.password,
                      host=config.host, verify=verify, command_name=command_name,
-                     jobs_api_version=config.jobs_api_version)
+                     jobs_api_version=config.jobs_api_version, config=config)

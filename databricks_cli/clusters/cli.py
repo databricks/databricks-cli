@@ -20,14 +20,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import click
 import socket
+import sys
 import time
 
 from contextlib import closing
 from datetime import datetime
 from json import loads as json_loads
 from tabulate import tabulate
+
+import click
 
 from databricks_cli.click_types import OutputClickType, JsonClickType, ClusterIdClickType, \
     OneOfOption
@@ -341,19 +343,34 @@ def find_free_port():
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
-@click.option('--cluster-id', required=True, type=ClusterIdClickType(), help=ClusterIdClickType.help)
+@click.option('--cluster-id', cls=OneOfOption, one_of=CLUSTER_OPTIONS,
+              type=ClusterIdClickType(), default=None, help=ClusterIdClickType.help)
+@click.option('--cluster-name', cls=OneOfOption, one_of=CLUSTER_OPTIONS,
+              type=ClusterIdClickType(), default=None, help=ClusterIdClickType.help)
 @click.option('--local-port', type=click.INT, help="the local port")
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def tunnel_cli(api_client, cluster_id, local_port):
+def tunnel_cli(api_client, cluster_id, cluster_name, local_port):
     """
     Start a secure TCP tunnel.
     """
+    if sys.version_info < (3, 6):
+        raise RuntimeError("This util is not supported on Python version < 3.6")
+
+    if cluster_id:
+        pass
+    elif cluster_name:
+        cluster = ClusterApi(api_client).get_cluster_by_name(cluster_name)
+        cluster_id = cluster["cluster_id"]
+    else:
+        raise RuntimeError('cluster_name and cluster_id must not be empty!')
     print(f"start a tunnel on {cluster_id}")
     if local_port is None:
         local_port = find_free_port()
+
+    assert api_client.config is not None and cluster_id is not None and local_port is not None
     TunnelApi(api_client).start_tunneling(cluster_id, local_port)
 
 
