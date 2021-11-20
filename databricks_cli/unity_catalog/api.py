@@ -1,5 +1,5 @@
 # Databricks CLI
-# Copyright 2017 Databricks, Inc.
+# Copyright 2021 Databricks, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"), except
 # that the use of services to which certain application programming
@@ -20,7 +20,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from databricks_cli.sdk import UnityCatalogService
+
+from databricks_cli.unity_catalog.uc_service import UnityCatalogService
 
 
 class UnityCatalogApi(object):
@@ -55,10 +56,61 @@ class UnityCatalogApi(object):
         return self.client.update_metastore_assignment(workspace_id, metastore_id,
                                                        default_catalog_name)
 
+    def delete_metastore_assignment(self, workspace_id, metastore_id):
+        return self.client.delete_metastore_assignment(workspace_id, metastore_id)
+
+    # External Location APIs
+
+    def create_external_location(self, loc_spec):
+        return self.client.create_external_location(loc_spec)
+
+    def list_external_locations(self):
+        return self.client.list_external_locations()
+
+    def get_external_location(self, name):
+        return self.client.get_external_location(name)
+
+    def update_external_location(self, name, force, loc_spec):
+        return self.client.update_external_location(name, force, loc_spec)
+
+    def delete_external_location(self, name, force):
+        return self.client.delete_external_location(name, force)
+
+    # Data Access Configuration APIs
+
+    def create_dac(self, metastore_id, dac):
+        return self.client.create_dac(metastore_id, dac)
+
+    def list_dacs(self, metastore_id):
+        return self.client.list_dacs(metastore_id)
+
+    def get_dac(self, metastore_id, dac_id):
+        return self.client.get_dac(metastore_id, dac_id)
+
+    def delete_dac(self, metastore_id, dac_id):
+        return self.client.delete_dac(metastore_id, dac_id)
+
+    # Storage Credentials
+
+    def create_storage_credential(self, cred_spec):
+        return self.client.create_storage_credential(cred_spec)
+
+    def list_storage_credentials(self, name_pattern):
+        return self.client.list_storage_credentials(name_pattern)
+
+    def get_storage_credential(self, name):
+        return self.client.get_storage_credential(name)
+
+    def update_storage_credential(self, name, cred_spec):
+        return self.client.update_storage_credential(name, cred_spec)
+
+    def delete_storage_credential(self, name):
+        return self.client.delete_storage_credential(name)
+
     # Catalog APIs
 
-    def create_catalog(self, catalog_name, comment):
-        return self.client.create_catalog(catalog_name, comment)
+    def create_catalog(self, catalog_name, comment, provider, share):
+        return self.client.create_catalog(catalog_name, comment, provider, share)
 
     def list_catalogs(self):
         return self.client.list_catalogs()
@@ -97,8 +149,8 @@ class UnityCatalogApi(object):
     def list_tables(self, catalog_name, schema_name, name_pattern):
         return self.client.list_tables(catalog_name, schema_name, name_pattern)
 
-    def list_tables_bulk(self, catalog_name):
-        return self.client.list_tables_bulk(catalog_name)
+    def list_table_summaries(self, catalog_name):
+        return self.client.list_table_summaries(catalog_name)
 
     def get_table(self, full_name):
         return self.client.get_table(full_name)
@@ -108,68 +160,6 @@ class UnityCatalogApi(object):
 
     def delete_table(self, table_full_name):
         return self.client.delete_table(table_full_name)
-
-    # Data Access Configuration APIs
-
-    def create_dac(self, metastore_id, dac):
-        return self.client.create_dac(metastore_id, dac)
-
-    def list_dacs(self, metastore_id):
-        return self.client.list_dacs(metastore_id)
-
-    def get_dac(self, metastore_id, dac_id):
-        return self.client.get_dac(metastore_id, dac_id)
-
-    def delete_dac(self, metastore_id, dac_id):
-        return self.client.delete_dac(metastore_id, dac_id)
-
-    def create_root_credentials(self, root_creds):
-        return self.client.create_root_credentials(root_creds)
-
-    # Storage Credentials
-
-    def create_storage_credential(self, cred_spec):
-        return self.client.create_storage_credential(cred_spec)
-
-    def list_storage_credentials(self, name_pattern):
-        return self.client.list_storage_credentials(name_pattern)
-
-    def get_storage_credential(self, name):
-        return self.client.get_storage_credential(name)
-
-    def update_storage_credential(self, name, cred_spec):
-        return self.client.update_storage_credential(name, cred_spec)
-
-    def delete_storage_credential(self, name):
-        return self.client.delete_storage_credential(name)
-
-    # External Locations
-
-    def create_external_location(self, loc_spec):
-        return self.client.create_external_location(loc_spec)
-
-    def list_external_locations(self):
-        return self.client.list_external_locations()
-
-    def get_external_location(self, name):
-        return self.client.get_external_location(name)
-
-    def update_external_location(self, name, force, loc_spec):
-        return self.client.update_external_location(name, force, loc_spec)
-
-    def delete_external_location(self, name, force):
-        return self.client.delete_external_location(name, force)
-
-    # Permissions APIs
-
-    def get_permissions(self, sec_type, sec_name):
-        return self.client.get_permissions(sec_type, sec_name)
-
-    def update_permissions(self, sec_type, sec_name, diff_spec):
-        return self.client.update_permissions(sec_type, sec_name, diff_spec)
-
-    def replace_permissions(self, sec_type, sec_name, perm_spec):
-        return self.client.replace_permissions(sec_type, sec_name, perm_spec)
 
     # Share APIs
 
@@ -187,6 +177,12 @@ class UnityCatalogApi(object):
 
     def delete_share(self, name):
         return self.client.delete_share(name)
+
+    def list_share_permissions(self, name):
+        return self.client.list_share_permissions(name)
+
+    def update_share_permissions(self, name, perm_spec):
+        return self.client.update_share_permissions(name, perm_spec)
 
     # Recipient APIs
 
@@ -210,8 +206,8 @@ class UnityCatalogApi(object):
 
     # Provider APIs
 
-    def create_provider(self, name, comment, provider_profile):
-        return self.client.create_provider(name, comment, provider_profile)
+    def create_provider(self, name, comment, recipient_profile):
+        return self.client.create_provider(name, comment, recipient_profile)
 
     def list_providers(self):
         return self.client.list_providers()
@@ -219,11 +215,22 @@ class UnityCatalogApi(object):
     def get_provider(self, name):
         return self.client.get_provider(name)
 
-    def update_provider(self, name, new_name=None, comment=None, provider_profile=None):
-        return self.client.update_provider(name, new_name, comment, provider_profile)
+    def update_provider(self, name, new_name=None, comment=None, recipient_profile=None):
+        return self.client.update_provider(name, new_name, comment, recipient_profile)
 
     def delete_provider(self, name):
         return self.client.delete_provider(name)
 
     def list_provider_shares(self, name):
         return self.client.list_provider_shares(name)
+
+    # Permissions APIs
+
+    def get_permissions(self, sec_type, sec_name):
+        return self.client.get_permissions(sec_type, sec_name)
+
+    def update_permissions(self, sec_type, sec_name, diff_spec):
+        return self.client.update_permissions(sec_type, sec_name, diff_spec)
+
+    def replace_permissions(self, sec_type, sec_name, perm_spec):
+        return self.client.replace_permissions(sec_type, sec_name, perm_spec)
