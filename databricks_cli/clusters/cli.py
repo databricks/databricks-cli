@@ -35,7 +35,6 @@ from databricks_cli.click_types import OutputClickType, JsonClickType, ClusterId
     OneOfOption
 from databricks_cli.clusters.api import ClusterApi
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
-from databricks_cli.tunnel.api import TunnelApi
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base, \
     truncate_string, CLUSTER_OPTIONS
 from databricks_cli.version import print_version_callback, version
@@ -366,11 +365,13 @@ def tunnel_cli(api_client, cluster_id, cluster_name, local_port):
         cluster_id = cluster["cluster_id"]
     else:
         raise RuntimeError('cluster_name and cluster_id must not be empty!')
-    print(f"start a tunnel on {cluster_id}")
+    print("start a tunnel on {}".format(cluster_id))
     if local_port is None:
         local_port = find_free_port()
 
     assert api_client.config is not None and cluster_id is not None and local_port is not None
+    # TODO(ML-17779): move this up once we support python3 only.
+    from databricks_cli.tunnel.api import TunnelApi
     TunnelApi(api_client).start_tunneling(cluster_id, local_port)
 
 

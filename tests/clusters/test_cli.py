@@ -24,6 +24,8 @@
 # pylint:disable=redefined-outer-name
 
 import json
+import sys
+
 import mock
 import pytest
 from click.testing import CliRunner
@@ -56,7 +58,7 @@ def cluster_api_mock():
 
 @pytest.fixture
 def tunnel_api_mock():
-    with mock.patch('databricks_cli.clusters.cli.TunnelApi') as TunnelApiMock:
+    with mock.patch('databricks_cli.tunnel.api.TunnelApi') as TunnelApiMock:
         _tunnel_api_mock = mock.MagicMock()
         TunnelApiMock.return_value = _tunnel_api_mock
         yield _tunnel_api_mock
@@ -138,6 +140,7 @@ def test_get_cli(cluster_api_mock):
     assert cluster_api_mock.get_cluster.call_args[0][0] == CLUSTER_ID
 
 
+@pytest.mark.skipif(sys.version_info < (3, 6), reason="python version must be >= 3.6")
 class TestTunnelCli(object):
     @classmethod
     def setup_class(cls):

@@ -43,10 +43,9 @@ async def test_connect_success(endpoint_url, tunnel_client):
     # pylint: disable=unused-argument
     def set_io_conn(*args, **kwargs):
         tunnel_client.io.connected = True
-        # TODO(ML-17999): mock connect event
         tunnel_client.connection_established = True
 
-    tunnel_client.io.connect = AsyncMock(spec=tunnel_client.io.connect, side_effect=set_io_conn)
+    tunnel_client.io.connect = AsyncMock(side_effect=set_io_conn)
     await tunnel_client.connect()
 
     assert tunnel_client.io.connect.call_count == 1
@@ -55,3 +54,4 @@ async def test_connect_success(endpoint_url, tunnel_client):
                                                 headers={'Content-Type': 'application/json'},
                                                 socketio_path=SOCKET_PATH,
                                                 transports=['websocket'])
+    await tunnel_client.disconnect()

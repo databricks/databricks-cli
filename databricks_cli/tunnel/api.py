@@ -6,7 +6,8 @@ import requests
 from cryptography.hazmat.primitives.asymmetric import rsa
 from tornado.ioloop import IOLoop
 
-from databricks_cli.sdk import ClusterService, CommandExecutionService
+from databricks_cli.sdk import ClusterService
+from databricks_cli.sdk.v1_service import CommandExecutionService
 from databricks_cli.tunnel.server import TunnelConfig, StreamingServer
 
 

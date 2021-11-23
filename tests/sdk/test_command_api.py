@@ -3,7 +3,7 @@ import pytest
 
 from mock import ANY
 
-from databricks_cli.sdk import CommandExecutionService
+from databricks_cli.sdk.v1_service import CommandExecutionService
 from tests.utils import provide_conf
 
 

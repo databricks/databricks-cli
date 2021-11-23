@@ -46,7 +46,7 @@ else:
         'aiohttp>=3.7.4',
         'cryptography>=3.4.6',
         'python-socketio>=5.0.4',
-        'tenacity>=8.0.1',
+        'tenacity>=7.0.0',
         'tornado>=5.0.4',
     ]
 
