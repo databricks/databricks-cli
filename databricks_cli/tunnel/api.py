@@ -34,7 +34,7 @@ def generate_key_pair() -> Tuple[bytes, bytes]:
 
 
 class TunnelApi(object):
-    def __init__(self, api_client):
+    def __init__(self, api_client, debug=False):
         self.cluster_client = ClusterService(api_client)
         self.command_client = CommandExecutionService(api_client)
         self._config = api_client.config
@@ -44,6 +44,7 @@ class TunnelApi(object):
         self.org_id = None
         self.tunnel_config = None
         self._default_ssh_dir = "~/.ssh"
+        self.debug = debug
 
     def _init_params(self):
         self.cluster_id = None
@@ -62,24 +63,22 @@ class TunnelApi(object):
         resp = self.cluster_client.client.perform_query("GET", "/clusters/get",
                                                         data={"cluster_id": self.cluster_id},
                                                         return_raw_response=True)
-        # TODO(ML-17779): this assumes a multitenant workspace,
-        #  will need to confirm if this is true for st workspace
+        # TODO(tunneling-cli): this assumes a multitenant workspace, we will need to confirm if
+        #  this exists for st workspace
         return resp.headers["x-databricks-org-id"]
 
     def create_context(self):
         response = self.command_client.create_context(language=self.default_language,
                                                       cluster_id=self.cluster_id)
-        print(f"create context response: {response}")
         return response["id"]
 
     def destroy_context(self):
         if self.context_id and self.cluster_id:
-            response = self.command_client.destroy_context(cluster_id=self.cluster_id,
-                                                           context_id=self.context_id)
-            print(f"destroy context response: {response}")
+            self.command_client.destroy_context(cluster_id=self.cluster_id,
+                                                context_id=self.context_id)
 
     def send_public_key_to_driver(self, public_key):
-        print("send public key to the driver...")
+        print("Sending public key to the driver...")
         public_key_str = public_key.decode('utf-8')
         install_keys_on_driver_cmd = f"""
 from pathlib import Path
@@ -87,7 +86,7 @@ from pathlib import Path
 Path("~/.ssh").expanduser().mkdir(exist_ok=True)
 Path("~/.ssh/id_rsa.pub").expanduser().write_text("{public_key_str}")
 Path("~/.ssh/authorized_keys").expanduser().write_text("{public_key_str}")
-"""
+""".strip()
         return self.command_client.\
             execute_command_until_terminated(language=self.default_language,
                                              cluster_id=self.cluster_id,
@@ -113,14 +112,10 @@ Path("~/.ssh/authorized_keys").expanduser().write_text("{public_key_str}")
     def setup_ssh_keys(self):
         print("Setting up SSH keys...")
 
-        # 3.1) generate key pairs
         private_key, public_key = generate_key_pair()
-        # 3.2) share ssh key to the cluster
         resp = self.send_public_key_to_driver(public_key)
-        # only proceed if resp is finished
-        assert resp["status"] == "Finished", \
-            f"Sending public key to driver is not successful: {resp.text}"
-        # 3.3) set ssh key on local machine
+        if resp["status"] != "Finished":
+            raise RuntimeError(f"Sending public key to driver was not successful: {resp.text}")
         self.setup_local_keys(private_key, public_key)
 
     def setup_local_keys(self, private_key, public_key):
@@ -138,7 +133,7 @@ Path("~/.ssh/authorized_keys").expanduser().write_text("{public_key_str}")
         public_key_path.write_bytes(public_key)
         os.chmod(public_key_path, 0o600)
 
-    def ping_remote_tunnel(self):
+    def is_remote_tunnel_alive(self):
         print("Ping the remote tunnel server...")
         headers = {
             'Content-Type': 'application/json',
@@ -161,36 +156,29 @@ Path("~/.ssh/authorized_keys").expanduser().write_text("{public_key_str}")
         self.cluster_id = cluster_id
 
         try:
-            # 1) check if cluster exist and running
+            # check prerequisites:
+            # - running cluster
+            # - tunnel server is alive
             assert self.is_cluster_running(), "Cluster must be running!"
             self.org_id = self.get_org_id()
-
-            # 2) health check
             self.tunnel_config = TunnelConfig(self._config, self.org_id, self.cluster_id)
-            self.ping_remote_tunnel()
-
-            # 3) generate context id
+            self.is_remote_tunnel_alive()
+            # setup prerequisites:
+            # - exec context
+            # - setup ssh keys
             if self.context_id is not None:
                 self.destroy_context()
-
             self.context_id = self.create_context()
-
-            if self.context_id is None:
-                raise RuntimeError("Unable to setup the tunnel: empty context")
-
-            # 4) setup keys
             self.setup_ssh_keys()
 
-            # 5) Run the local tunneling server
             self.start_local_server(local_port)
         finally:
-            # cleanup
             self.cleanup()
 
     def start_local_server(self, local_port):
-        print(f"Starting local SSH server on port localhost:{local_port}")
+        print(f"Starting local tunneling on localhost:{local_port}")
         print("Please use the following command for ssh connection:")
         print(f"ssh root@localhost -p {local_port} -i {self.local_private_key_path}")
-        server = StreamingServer(self.tunnel_config)
+        server = StreamingServer(self.tunnel_config, debug=self.debug)
         server.listen(local_port)
         IOLoop.current().start()

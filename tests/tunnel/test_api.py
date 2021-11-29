@@ -94,19 +94,20 @@ def test_ping_remote_tunnel(tunnel_api):
     # status code is not 200
     with pytest.raises(RuntimeError, match=r".*502.*"):
         tunnel_api.tunnel_config = mock.MagicMock()
-        tunnel_api.ping_remote_tunnel()
+        tunnel_api.is_remote_tunnel_alive()
 
     # status isn't working
     with pytest.raises(RuntimeError, match=r".*not working.*"):
-        tunnel_api.ping_remote_tunnel()
+        tunnel_api.is_remote_tunnel_alive()
 
     # status code == 200 and status is working
-    assert tunnel_api.ping_remote_tunnel()
+    assert tunnel_api.is_remote_tunnel_alive()
 
 
 def test_start_local_server(tunnel_api, unused_tcp_port):
     with mock.patch.object(StreamingServer, 'listen') as listen_mock:
-        with mock.patch("databricks_cli.tunnel.api.IOLoop"):
+        with mock.patch("databricks_cli.tunnel.api.IOLoop.current") as il_current:
             tunnel_api.start_local_server(unused_tcp_port)
             assert listen_mock.call_count == 1
+            il_current.return_value.start.assert_called()
             listen_mock.assert_called_with(unused_tcp_port)

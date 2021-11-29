@@ -112,7 +112,9 @@ class ApiClient(object):
         pass
 
     # helper functions starting here
-    def perform_query(self, method, path, data = {}, headers = None, files=None, version=None, return_raw_response=False):
+
+    def perform_query(self, method, path, data = {}, headers = None, files=None, version=None,
+                      return_raw_response=False):
         """set up connection and perform query"""
         if headers is None:
             headers = self.default_headers

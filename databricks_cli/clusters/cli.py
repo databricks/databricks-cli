@@ -23,16 +23,15 @@
 import socket
 import sys
 import time
-
 from contextlib import closing
 from datetime import datetime
 from json import loads as json_loads
-from tabulate import tabulate
 
 import click
+from tabulate import tabulate
 
 from databricks_cli.click_types import OutputClickType, JsonClickType, ClusterIdClickType, \
-    OneOfOption
+    OneOfOption, ContextObject
 from databricks_cli.clusters.api import ClusterApi
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base, \
@@ -353,10 +352,13 @@ def find_free_port():
 @provide_api_client
 def tunnel_cli(api_client, cluster_id, cluster_name, local_port):
     """
-    Start a secure TCP tunnel.
+    Start a secure TCP tunnel to a cluster over Databricks' identity proxy.
     """
     if sys.version_info < (3, 6):
-        raise RuntimeError("This util is not supported on Python version < 3.6")
+        raise RuntimeError("The tunneling command is not supported on Python version < 3.6")
+    if not api_client.config:
+        raise RuntimeError("Unable to initialize client."
+                           "Please check if the credentials are configured properly.")
 
     if cluster_id:
         pass
@@ -364,15 +366,21 @@ def tunnel_cli(api_client, cluster_id, cluster_name, local_port):
         cluster = ClusterApi(api_client).get_cluster_by_name(cluster_name)
         cluster_id = cluster["cluster_id"]
     else:
-        raise RuntimeError('cluster_name and cluster_id must not be empty!')
-    print("start a tunnel on {}".format(cluster_id))
+        raise RuntimeError('cluster_name and cluster_id cannot be empty!')
+
     if local_port is None:
         local_port = find_free_port()
+        if local_port is None:
+            raise RuntimeError("Cannot find a free port.")
 
-    assert api_client.config is not None and cluster_id is not None and local_port is not None
-    # TODO(ML-17779): move this up once we support python3 only.
+    # TODO(tunneling-cli): move this up once we support python3 only
     from databricks_cli.tunnel.api import TunnelApi
-    TunnelApi(api_client).start_tunneling(cluster_id, local_port)
+
+    ctx = click.get_current_context()
+    ctx_obj = ctx.ensure_object(ContextObject)
+
+    print("Starts a secure tunnel to cluster with id: {}...".format(cluster_id))
+    TunnelApi(api_client, ctx_obj.debug_mode).start_tunneling(cluster_id, local_port)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
