@@ -68,8 +68,7 @@ class ApiClient(object):
     to be used by different versions of the client.
     """
     def __init__(self, user=None, password=None, host=None, token=None,
-                 api_version=version.API_VERSION, default_headers={}, verify=True, command_name="",
-                 jobs_api_version=None, config=None):
+                 api_version=version.API_VERSION, default_headers={}, verify=True, command_name="", jobs_api_version=None):
         if host[-1] == "/":
             host = host[:-1]
 
@@ -105,7 +104,8 @@ class ApiClient(object):
         self.verify = verify
         self.api_version = api_version
         self.jobs_api_version = jobs_api_version
-        self.config = config
+        self.host = host
+        self.token = token
 
     def close(self):
         """Close the client"""
@@ -113,7 +113,7 @@ class ApiClient(object):
 
     # helper functions starting here
 
-    def perform_query(self, method, path, data = {}, headers = None, files=None, version=None,
+    def perform_query(self, method, path, data={}, headers=None, files=None, version=None,
                       return_raw_response=False):
         """set up connection and perform query"""
         if headers is None:
@@ -156,7 +156,7 @@ class ApiClient(object):
         if version:
             return self.url + version + path
         elif self.jobs_api_version and path and path.startswith('/jobs'):
-            return self.url + self.jobs_api_version + path 
+            return self.url + self.jobs_api_version + path
         return self.url + self.api_version + path
 
 

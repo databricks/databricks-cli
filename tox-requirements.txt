@@ -13,3 +13,4 @@ codecov
 requests_mock==1.5.2
 pytest-asyncio==0.16.0
 pytest-tornado==0.8.1
+pytest-aiohttp==0.3.0

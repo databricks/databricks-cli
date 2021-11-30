@@ -1,3 +1,25 @@
+# Databricks CLI
+# Copyright 2021 Databricks, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"), except
+# that the use of services to which certain application programming
+# interfaces (each, an "API") connect requires that the user first obtain
+# a license for the use of the APIs from Databricks, Inc. ("Databricks"),
+# by creating an account at www.databricks.com and agreeing to either (a)
+# the Community Edition Terms of Service, (b) the Databricks Terms of
+# Service, or (c) another written agreement between Licensee and Databricks
+# for the use of the APIs.
+#
+# You may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import logging
 import asyncio
 
@@ -19,9 +41,9 @@ logger = logging.getLogger(__name__)
 
 
 class TunnelConfig:
-    def __init__(self, databricks_config, org_id, cluster_id):
-        self.host = databricks_config.host
-        self.token = databricks_config.token
+    def __init__(self, host, token, org_id, cluster_id):
+        self.host = host
+        self.token = token
         self.org_id = org_id
         self.cluster_id = cluster_id
         self.remote_port = DBX_TUNNEL_SERVER_PORT
@@ -56,6 +78,11 @@ class TunnelClient:
             self.connection_established = True
             logger.info("Connection to socket.io server established with id %s", self.io.sid)
 
+        @self.io.event
+        def disconnect():  # pylint: disable=unused-variable
+            self.connection_established = False
+            logger.info("Disconnect from socket.io server with id %s", self.io.sid)
+
         @self.io.on("response")
         def response(msg):  # pylint: disable=unused-variable
             data = msg.get("data")
@@ -67,7 +94,7 @@ class TunnelClient:
 
     async def connect(self):
         while not self.io.connected:
-            logger.info("initializing socket.io connection")
+            logger.info("Initializing socket.io connection")
             try:
                 headers = {
                     'Content-Type': 'application/json'
@@ -78,8 +105,7 @@ class TunnelClient:
                                       socketio_path=self.tunnel_config.socket_path,
                                       headers=headers)
             except socketio.exceptions.ConnectionError as e:
-                logger.error("Connection exception:")
-                logger.error(e)
+                logger.exception("ConnectionError from socket.io")
                 raise e
 
         while not self.connection_established:
@@ -123,11 +149,10 @@ class StreamingServer(TCPServer):
             try:
                 # read input stream from the client and emit this to socketio server
                 data = await stream.read_bytes(1024 * 50, partial=True)
-                await asyncio.sleep(0.05)
                 await self.client.send_data(data)
             except StreamClosedError:
-                logger.info("Stream is gracefully closed")
                 await self.client.disconnect()
+                logger.info("Stream is gracefully closed")
                 break
             except KeyboardInterrupt:
                 await self.client.disconnect()
@@ -136,7 +161,6 @@ class StreamingServer(TCPServer):
             except BadNamespaceError:
                 if not self.client.is_connected():
                     await self.client.connect()
-            except socketio.exceptions.ConnectionError as e:
-                logger.error("Connection error:")
-                logger.error(e)
+            except socketio.exceptions.ConnectionError:
+                logger.exception("Connection error:")
                 break

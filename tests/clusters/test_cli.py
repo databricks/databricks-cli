@@ -148,7 +148,6 @@ class TestTunnelCli(object):
 
     @provide_conf
     def test_tunnel_cli_with_cluster_id(self, tunnel_api_mock):
-        # with cluster id
         self.runner.invoke(cli.tunnel_cli, ['--cluster-id', CLUSTER_ID])
         assert tunnel_api_mock.start_tunneling.call_count == 1
 

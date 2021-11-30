@@ -20,10 +20,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import socket
 import sys
 import time
-from contextlib import closing
 from datetime import datetime
 from json import loads as json_loads
 
@@ -333,19 +331,13 @@ def cluster_events_cli(api_client, cluster_id, start_time, end_time, order, even
         click.echo(tabulate(_cluster_events_to_table(events_json), tablefmt='plain'))
 
 
-def find_free_port():
-    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
-        s.bind(('', 0))
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        return s.getsockname()[1]
-
-
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--cluster-id', cls=OneOfOption, one_of=CLUSTER_OPTIONS,
               type=ClusterIdClickType(), default=None, help=ClusterIdClickType.help)
 @click.option('--cluster-name', cls=OneOfOption, one_of=CLUSTER_OPTIONS,
               type=ClusterIdClickType(), default=None, help=ClusterIdClickType.help)
-@click.option('--local-port', type=click.INT, help="the local port")
+@click.option('--local-port', type=click.INT,
+              help="The local port to use for the local tunneling server")
 @debug_option
 @profile_option
 @eat_exceptions
@@ -356,9 +348,8 @@ def tunnel_cli(api_client, cluster_id, cluster_name, local_port):
     """
     if sys.version_info < (3, 6):
         raise RuntimeError("The tunneling command is not supported on Python version < 3.6")
-    if not api_client.config:
-        raise RuntimeError("Unable to initialize client."
-                           "Please check if the credentials are configured properly.")
+    if not api_client.token:
+        raise RuntimeError("The tunneling cli only supports personal token authentication.")
 
     if cluster_id:
         pass
@@ -366,12 +357,7 @@ def tunnel_cli(api_client, cluster_id, cluster_name, local_port):
         cluster = ClusterApi(api_client).get_cluster_by_name(cluster_name)
         cluster_id = cluster["cluster_id"]
     else:
-        raise RuntimeError('cluster_name and cluster_id cannot be empty!')
-
-    if local_port is None:
-        local_port = find_free_port()
-        if local_port is None:
-            raise RuntimeError("Cannot find a free port.")
+        raise RuntimeError('cluster_name and cluster_id must not be empty!')
 
     # TODO(tunneling-cli): move this up once we support python3 only
     from databricks_cli.tunnel.api import TunnelApi
@@ -379,7 +365,7 @@ def tunnel_cli(api_client, cluster_id, cluster_name, local_port):
     ctx = click.get_current_context()
     ctx_obj = ctx.ensure_object(ContextObject)
 
-    print("Starts a secure tunnel to cluster with id: {}...".format(cluster_id))
+    print("Starting a secure tunnel to cluster with ID: {}...".format(cluster_id))
     TunnelApi(api_client, ctx_obj.debug_mode).start_tunneling(cluster_id, local_port)
 
 
