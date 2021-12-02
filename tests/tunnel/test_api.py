@@ -39,17 +39,20 @@ from tests.tunnel.conftest import ORG_ID
 
 @pytest.fixture(name="tunnel_api")
 def tunnel_api_fixture():
-    with mock.patch('databricks_cli.tunnel.api.ClusterService') as ClusterServiceMock:
+    with mock.patch('databricks_cli.tunnel.api.ClusterApi') as ClusterServiceMock:
         ClusterServiceMock.return_value = mock.MagicMock()
-        with mock.patch('databricks_cli.tunnel.api.CommandExecutionService', autospec=True) \
-                as CmdExecServiceMock:
-            CmdExecServiceMock.return_value = mock.MagicMock()
-            _tunnel_api = TunnelApi(mock.MagicMock())
-            _tunnel_api.cluster_client = ClusterServiceMock
-            _tunnel_api.command_client = CmdExecServiceMock
-            _tunnel_api.cluster_id = CLUSTER_ID
-            _tunnel_api.org_id = ORG_ID
-            yield _tunnel_api
+        with mock.patch('databricks_cli.tunnel.api.CommandApi', autospec=True) as CmdApiMock:
+            CmdApiMock.return_value = mock.MagicMock()
+            with mock.patch('databricks_cli.tunnel.api.ExecutionContextApi', autospec=True) as \
+                    ExecCtxApiMock:
+                ExecCtxApiMock.return_value = mock.MagicMock()
+                _tunnel_api = TunnelApi(mock.MagicMock())
+                _tunnel_api.cluster_client = ClusterServiceMock
+                _tunnel_api.command_client = CmdApiMock
+                _tunnel_api.exec_ctx_client = ExecCtxApiMock
+                _tunnel_api.cluster_id = CLUSTER_ID
+                _tunnel_api.org_id = ORG_ID
+                yield _tunnel_api
 
 
 @pytest.fixture(name="default_ssh_dir")
@@ -86,7 +89,7 @@ class MockResponse(requests.Response):
 
 def test_get_org_id(tunnel_api):
     resp = MockResponse(status_code=200, headers={"x-databricks-org-id": ORG_ID})
-    tunnel_api.cluster_client.client.perform_query.return_value = resp
+    tunnel_api.cluster_client.client.client.perform_query.return_value = resp
     assert tunnel_api.get_org_id() == ORG_ID
 
 

@@ -7,6 +7,7 @@ ignore-paths:
   - build
   - env
   - tunnel
+  - commands
 
 max-line-length: 100
 

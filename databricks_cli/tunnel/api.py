@@ -28,8 +28,8 @@ import tornado
 from cryptography.hazmat.primitives.asymmetric import rsa
 from tornado.ioloop import IOLoop
 
-from databricks_cli.sdk import ClusterService
-from databricks_cli.sdk.v1_service import CommandExecutionService
+from databricks_cli.clusters.api import ClusterApi
+from databricks_cli.commands.api import CommandApi, ExecutionContextApi
 from databricks_cli.tunnel.server import TunnelConfig, StreamingServer
 
 
@@ -57,8 +57,9 @@ def generate_key_pair():
 
 class TunnelApi:
     def __init__(self, api_client, debug=False):
-        self.cluster_client = ClusterService(api_client)
-        self.command_client = CommandExecutionService(api_client)
+        self.cluster_client = ClusterApi(api_client)
+        self.command_client = CommandApi(api_client)
+        self.exec_ctx_client = ExecutionContextApi(api_client)
         self._api_client = api_client
         self._default_local_ssh_dir = "~/.ssh"
         self._default_remote_ssh_dir = "~/.ssh"
@@ -82,22 +83,22 @@ class TunnelApi:
         return True
 
     def get_org_id(self):
-        resp = self.cluster_client.client.perform_query("GET", "/clusters/get",
-                                                        data={"cluster_id": self.cluster_id},
-                                                        return_raw_response=True)
+        resp = self.cluster_client.client.client.perform_query("GET", "/clusters/get",
+                                                               data={"cluster_id": self.cluster_id},
+                                                               return_raw_response=True)
         # TODO(tunneling-cli): this assumes a multitenant workspace, we will need to confirm if
         #  this exists for st workspace
         return resp.headers["x-databricks-org-id"]
 
     def create_context(self):
-        response = self.command_client.create_context(language="python",
-                                                      cluster_id=self.cluster_id)
+        response = self.exec_ctx_client.create_context(language="python",
+                                                       cluster_id=self.cluster_id)
         return response["id"]
 
     def destroy_context(self):
         if self.context_id and self.cluster_id:
-            self.command_client.destroy_context(cluster_id=self.cluster_id,
-                                                context_id=self.context_id)
+            self.exec_ctx_client.destroy_context(cluster_id=self.cluster_id,
+                                                 context_id=self.context_id)
 
     def send_public_key_to_driver(self, public_key):
         print("Sending public key to the driver...")
@@ -120,10 +121,10 @@ with Path("{self.default_remote_ssh_dir}/authorized_keys").expanduser().open("a+
                                              context_id=self.context_id,
                                              command=install_keys_on_driver_cmd)
         if resp["status"] != "Finished":
-            err_data = resp.get('results', {}).get('data', '')
+            err_data = resp.get("results", {}).get("data", "")
             raise RuntimeError(f"Sending public key to driver was not successful: {err_data}")
         if resp["results"]["resultType"] == "error":
-            err_data = resp.get("results", {}).get("cause", '')
+            err_data = resp.get("results", {}).get("cause", "")
             raise RuntimeError(f"Sending public key to driver was not successful: {err_data})")
 
     @property
