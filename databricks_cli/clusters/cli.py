@@ -29,7 +29,7 @@ import click
 from tabulate import tabulate
 
 from databricks_cli.click_types import OutputClickType, JsonClickType, ClusterIdClickType, \
-    OneOfOption, ContextObject
+    OneOfOption
 from databricks_cli.clusters.api import ClusterApi
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base, \
@@ -338,11 +338,11 @@ def cluster_events_cli(api_client, cluster_id, start_time, end_time, order, even
               type=ClusterIdClickType(), default=None, help=ClusterIdClickType.help)
 @click.option('--local-port', type=click.INT,
               help="The local port to use for the local tunneling server")
-@debug_option
+@click.option('--debug', '-d', is_flag=True, help="Run the tunnel in debug mode")
 @profile_option
 @eat_exceptions
 @provide_api_client
-def tunnel_cli(api_client, cluster_id, cluster_name, local_port):
+def tunnel_cli(api_client, cluster_id, cluster_name, local_port, debug):
     """
     Start a secure TCP tunnel to a cluster over Databricks' identity proxy.
     """
@@ -362,11 +362,8 @@ def tunnel_cli(api_client, cluster_id, cluster_name, local_port):
     # TODO(tunneling-cli): move this up once we support python3 only
     from databricks_cli.tunnel.api import TunnelApi
 
-    ctx = click.get_current_context()
-    ctx_obj = ctx.ensure_object(ContextObject)
-
     print("Starting a secure tunnel to cluster with ID: {}...".format(cluster_id))
-    TunnelApi(api_client, ctx_obj.debug_mode).start_tunneling(cluster_id, local_port)
+    TunnelApi(api_client, debug).start_tunneling(cluster_id, local_port)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,

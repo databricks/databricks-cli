@@ -45,9 +45,9 @@ else:
         # additional deps for tunneling
         'aiohttp>=3.7.4',
         'cryptography>=3.4.6',
-        'python-socketio>=5.0',
+        'python-socketio>=5.4',
         'tenacity>=5.0',
-        'tornado>=6.0',
+        'tornado>=6.1',
     ]
 
 setup(

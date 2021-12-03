@@ -34,6 +34,7 @@ from databricks_cli.tunnel.server import TunnelConfig, StreamingServer
 
 
 def generate_key_pair():
+    # TODO(tunneling-cli): support customer-supplied key / passphrase encryption
     from cryptography.hazmat.primitives import serialization
 
     key = rsa.generate_private_key(
@@ -230,6 +231,6 @@ with Path("{self.default_remote_ssh_dir}/authorized_keys").expanduser().open("a+
             if local_port is None:
                 raise RuntimeError("Could not find a free port")
         print(f"Starting local tunneling on localhost:{local_port}")
-        print("Please use the following command for ssh connection:")
+        print("Please use the following command for SSH connection:")
         print(f"ssh root@localhost -p {local_port} -i {self.local_private_key_path}")
         IOLoop.current().start()
