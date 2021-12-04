@@ -34,6 +34,11 @@ from databricks_cli.tunnel.server import TunnelConfig, StreamingServer
 
 
 def generate_key_pair():
+    """
+    Generate the private and public key pairs and serialize them into bytes using OpenSSH formats.
+
+    :return: (private_key, public_key) tuples.
+    """
     # TODO(tunneling-cli): support customer-supplied key / passphrase encryption
     from cryptography.hazmat.primitives import serialization
 
@@ -126,7 +131,7 @@ with Path("{self.default_remote_ssh_dir}/authorized_keys").expanduser().open("a+
             raise RuntimeError(f"Sending public key to driver was not successful: {err_data}")
         if resp["results"]["resultType"] == "error":
             err_data = resp.get("results", {}).get("cause", "")
-            raise RuntimeError(f"Sending public key to driver was not successful: {err_data})")
+            raise RuntimeError(f"Sending public key to driver was not successful: {err_data}")
 
     @property
     def default_remote_ssh_dir(self):
@@ -160,7 +165,7 @@ with Path("{self.default_remote_ssh_dir}/authorized_keys").expanduser().open("a+
         self.setup_local_keys(private_key, public_key)
 
     def setup_local_keys(self, private_key, public_key):
-        private_key_path = Path(f"{self.local_private_key_path}").expanduser()
+        private_key_path = Path(self.local_private_key_path).expanduser()
         private_key_path.parent.mkdir(parents=True, exist_ok=True)
 
         if private_key_path.exists():
@@ -168,7 +173,7 @@ with Path("{self.default_remote_ssh_dir}/authorized_keys").expanduser().open("a+
         private_key_path.write_bytes(private_key)
         os.chmod(private_key_path, 0o600)
 
-        public_key_path = Path(f"{self.local_public_key_path}").expanduser()
+        public_key_path = Path(self.local_public_key_path).expanduser()
         if public_key_path.exists():
             public_key_path.unlink()
         public_key_path.write_bytes(public_key)
@@ -221,6 +226,7 @@ with Path("{self.default_remote_ssh_dir}/authorized_keys").expanduser().open("a+
         if local_port:
             server.listen(local_port)
         else:
+            # find a random free port
             sockets = tornado.netutil.bind_sockets(0, '')
             if sockets:
                 server.add_sockets(sockets)
