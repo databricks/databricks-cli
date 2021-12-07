@@ -23,6 +23,7 @@
 import os
 from pathlib import Path
 
+import click
 import requests
 import tornado
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -61,32 +62,25 @@ def generate_key_pair():
     return private_key, public_key
 
 
-class TunnelApi:
-    def __init__(self, api_client, debug=False):
+class TunnelApi(object):
+    def __init__(self, api_client, cluster_id, debug=False):
         self.cluster_client = ClusterApi(api_client)
         self.command_client = CommandApi(api_client)
         self.exec_ctx_client = ExecutionContextApi(api_client)
+        self.cluster_id = cluster_id
         self._api_client = api_client
         self._default_local_ssh_dir = "~/.ssh"
         self._default_remote_ssh_dir = "~/.ssh"
-        self.cluster_id = None
         self.context_id = None
         self.org_id = None
         self.tunnel_config = None
         self.debug = debug
-
-    def _init_params(self):
-        self.cluster_id = None
-        self.context_id = None
-        self.org_id = None
-        self.tunnel_config = None
 
     def check_cluster(self):
         # check if cluster exist and running
         cluster_info = self.cluster_client.get_cluster(self.cluster_id)
         if cluster_info["state"] not in ["RUNNING", "RESIZING"]:
             raise RuntimeError(f'Cluster with ID: {self.cluster_id} is not RUNNING.')
-        return True
 
     def get_org_id(self):
         resp = self.cluster_client.client.client.perform_query("GET", "/clusters/get",
@@ -107,7 +101,7 @@ class TunnelApi:
                                                  context_id=self.context_id)
 
     def send_public_key_to_driver(self, public_key):
-        print("Sending public key to the driver...")
+        click.echo("Sending public key to the driver...")
         public_key_str = public_key.decode("utf-8")
         install_keys_on_driver_cmd = f"""
 from pathlib import Path
@@ -158,7 +152,7 @@ with Path("{self.default_remote_ssh_dir}/authorized_keys").expanduser().open("a+
         return f"{self.local_private_key_path}.pub"
 
     def setup_ssh_keys(self):
-        print("Setting up SSH keys...")
+        click.echo("Setting up SSH keys...")
 
         private_key, public_key = generate_key_pair()
         self.send_public_key_to_driver(public_key)
@@ -180,7 +174,7 @@ with Path("{self.default_remote_ssh_dir}/authorized_keys").expanduser().open("a+
         os.chmod(public_key_path, 0o600)
 
     def check_remote_tunnel(self):
-        print("Ping the remote tunnel server...")
+        click.echo("Ping the remote tunnel server...")
         resp = requests.get(f"{self.tunnel_config.healthcheck_url}",
                             headers=self._api_client.default_headers)
         if resp.status_code != 200:
@@ -189,15 +183,10 @@ with Path("{self.default_remote_ssh_dir}/authorized_keys").expanduser().open("a+
         if status != "working":
             raise RuntimeError(f"Unexpected remote tunnel server status: {status}")
 
-        return True
-
     def cleanup(self):
         self.destroy_context()
-        self._init_params()
 
-    def start_tunneling(self, cluster_id, local_port=None):
-        self.cluster_id = cluster_id
-
+    def start_tunneling(self, local_port=None):
         try:
             # check prerequisites:
             # - running cluster
@@ -217,7 +206,7 @@ with Path("{self.default_remote_ssh_dir}/authorized_keys").expanduser().open("a+
             self.context_id = self.create_context()
             self.setup_ssh_keys()
 
-            self.start_local_server(local_port)
+            self.start_local_server(local_port=local_port)
         finally:
             self.cleanup()
 
@@ -236,7 +225,7 @@ with Path("{self.default_remote_ssh_dir}/authorized_keys").expanduser().open("a+
                         break
             if local_port is None:
                 raise RuntimeError("Could not find a free port")
-        print(f"Starting local tunneling on localhost:{local_port}")
-        print("Please use the following command for SSH connection:")
-        print(f"ssh root@localhost -p {local_port} -i {self.local_private_key_path}")
+        click.echo(f"Starting local tunneling on localhost:{local_port}")
+        click.echo("Please use the following command for SSH connection:")
+        click.echo(f"ssh root@localhost -p {local_port} -i {self.local_private_key_path}")
         IOLoop.current().start()

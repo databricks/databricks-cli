@@ -46,7 +46,7 @@ def tunnel_api_fixture():
             with mock.patch('databricks_cli.tunnel.api.ExecutionContextApi', autospec=True) as \
                     ExecCtxApiMock:
                 ExecCtxApiMock.return_value = mock.MagicMock()
-                _tunnel_api = TunnelApi(mock.MagicMock())
+                _tunnel_api = TunnelApi(mock.MagicMock(), cluster_id=CLUSTER_ID)
                 _tunnel_api.cluster_client = ClusterServiceMock
                 _tunnel_api.command_client = CmdApiMock
                 _tunnel_api.exec_ctx_client = ExecCtxApiMock
@@ -72,7 +72,7 @@ def test_is_cluster_running(tunnel_api):
         tunnel_api.check_cluster()
 
     tunnel_api.cluster_client.get_cluster.return_value = {"state": "RUNNING"}
-    assert tunnel_api.check_cluster()
+    tunnel_api.check_cluster()
 
 
 class MockResponse(requests.Response):
@@ -180,7 +180,7 @@ def test_ping_remote_tunnel(tunnel_api):
         tunnel_api.check_remote_tunnel()
 
     # status code == 200 and status is working
-    assert tunnel_api.check_remote_tunnel()
+    tunnel_api.check_remote_tunnel()
 
 
 class TestStartLocalServer:

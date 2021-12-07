@@ -344,7 +344,7 @@ def cluster_events_cli(api_client, cluster_id, start_time, end_time, order, even
 @provide_api_client
 def tunnel_cli(api_client, cluster_id, cluster_name, local_port, debug):
     """
-    [Beta] Start a secure TCP tunnel to a cluster over Databricks' identity proxy.
+    [Alpha] Start a secure TCP tunnel to a cluster over Databricks' identity proxy.
     """
     if sys.version_info < (3, 6):
         raise RuntimeError("The tunneling command is not supported on Python version < 3.6")
@@ -362,8 +362,8 @@ def tunnel_cli(api_client, cluster_id, cluster_name, local_port, debug):
     # TODO(tunneling-cli): move this up once we support python3 only
     from databricks_cli.tunnel.api import TunnelApi
 
-    print("Starting a secure tunnel to cluster with ID: {}...".format(cluster_id))
-    TunnelApi(api_client, debug).start_tunneling(cluster_id, local_port)
+    click.echo("Starting a secure tunnel to cluster with ID: {}...".format(cluster_id))
+    TunnelApi(api_client, cluster_id, debug=debug).start_tunneling(local_port=local_port)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,

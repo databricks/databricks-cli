@@ -25,7 +25,7 @@ import copy
 from databricks_cli.sdk.version import OLD_API_VERSION
 
 
-class APIV1Client:
+class APIV1Client(object):
     def __init__(self, client):
         self.v1_client = copy.deepcopy(client)
         self.v1_client.api_version = OLD_API_VERSION
