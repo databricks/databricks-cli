@@ -23,12 +23,20 @@
 import subprocess
 import uuid
 import click
+import requests
 import six
 
 from databricks_cli.click_types import ContextObject
 from databricks_cli.configure.provider import get_config, ProfileConfigProvider
 from databricks_cli.utils import InvalidConfigurationError
 from databricks_cli.sdk import ApiClient
+
+AZURE_METADATA_SERVICE_TOKEN_URL = "http://169.254.169.254/metadata/identity/oauth2/token"
+AZURE_METADATA_SERVICE_INSTANCE_URL = "http://169.254.169.254/metadata/instance"
+AZURE_MANAGEMENT_ENDPOINT = "https://management.core.windows.net/"
+AZURE_TOKEN_SERVICE_URL = "{}/{}/oauth2/token"
+DEFAULT_DATABRICKS_SCOPE = "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d"
+AAD_TIMEOUT_SECONDS = 10
 
 
 def provide_api_client(function):
@@ -90,7 +98,16 @@ def azure_cli_auth_option(f):
                         expose_value=False, help='Obtain Azure AD token via azure-cli')(f)
 
 
-def get_aad_token_az_cli():
+def azure_msi_auth_option(f):
+    def callback(ctx, param, value): #  NOQA
+        if value is not None:
+            context_object = ctx.ensure_object(ContextObject)
+            context_object.set_azure_msi_auth(value)
+    return click.option('--azure-msi-auth', is_flag=True, callback=callback,
+                        expose_value=False, help='Obtain Azure AD token via managed identity')(f)
+
+
+def _get_aad_token_az_cli():
     cmd_line = ["az", "account", "get-access-token", "-o", "tsv", "--query", "accessToken",
                 "--resource", "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d"]
 
@@ -106,13 +123,78 @@ def get_aad_token_az_cli():
         raise RuntimeError('[ERROR] Timeout executing az-cli\n')
 
 
+def _create_aad_token(config, resource):
+    if config.use_azure_msi_auth:
+        params = {
+            "api-version": "2018-02-01",
+            "resource": resource,
+        }
+        response = requests.get(
+            AZURE_METADATA_SERVICE_TOKEN_URL,
+            params=params,
+            headers={"Metadata": "true"},
+            timeout=AAD_TIMEOUT_SECONDS)
+    else:
+        params = {
+            "grant_type": "client_credentials",
+            "client_id": config.azure_client_id,
+            "resource": resource,
+            "client_secret": config.azure_client_secret,
+        }
+        response = requests.post(
+            AZURE_TOKEN_SERVICE_URL.format(config.azure_environment, config.azure_tenant_id),
+            data=params,
+            headers={'Content-Type': 'application/x-www-form-urlencoded'},
+            timeout=AAD_TIMEOUT_SECONDS)
+
+    response.raise_for_status()
+    jsn = response.json()
+    if 'access_token' not in jsn or jsn.get('token_type') != 'Bearer' or 'expires_on' not in jsn:
+        raise RuntimeError("Can't get necessary data from AAD token: " + jsn)
+
+    return jsn['access_token']
+
+
+def _get_aad_token_and_headers(config):
+    headers = {}
+    if config.azure_resource_id:
+        headers['X-Databricks-Azure-Workspace-Resource-Id'] = config.azure_resource_id
+        headers['X-Databricks-Azure-SP-Management-Token'] = _create_aad_token(config, AZURE_MANAGEMENT_ENDPOINT)
+
+    return _create_aad_token(config, DEFAULT_DATABRICKS_SCOPE), headers
+
+
 def _get_api_client(ctx, config, command_name=""):
     verify = config.insecure is None
     context_object = ctx.ensure_object(ContextObject)
     if context_object.use_azure_cli_auth or config.is_valid_with_azure_cli_auth:
-        return ApiClient(host=config.host, token=get_aad_token_az_cli(), verify=verify,
+        # print("Using Azure CLI authentication")
+        return ApiClient(host=config.host, token=_get_aad_token_az_cli(), verify=verify,
                          command_name=command_name, jobs_api_version=config.jobs_api_version)
-    if config.is_valid_with_token:
+    elif context_object.use_azure_msi_auth or config.is_valid_with_azure_msi_auth:
+        # print("Using Azure MSI authentication")
+        config.use_azure_msi_auth = True
+        try:
+            jsn = requests.get(
+                AZURE_METADATA_SERVICE_INSTANCE_URL,  params={"api-version": "2021-02-01"},
+                headers={"Metadata": "true"}, timeout=2).json()
+            if 'compute' not in jsn or 'azEnvironment' not in jsn['compute']:
+                raise RuntimeError(
+                    "Was able to fetch some metadata, but it doesn't look like Azure Metadata: " + str(jsn)
+                )
+        except (requests.RequestException, ValueError) as e:
+            raise RuntimeError("Can't reach Azure Metadata Service: " + str(e))
+
+        aad_token, headers = _get_aad_token_and_headers(config)
+        return ApiClient(host=config.host, token=aad_token, verify=verify, default_headers=headers,
+                         command_name=command_name, jobs_api_version=config.jobs_api_version)
+    elif config.is_valid_with_azure_client_auth:
+        # print("Using Azure SPN authentication")
+        aad_token, headers = _get_aad_token_and_headers(config)
+        return ApiClient(host=config.host, token=aad_token, verify=verify, default_headers=headers,
+                         command_name=command_name, jobs_api_version=config.jobs_api_version)
+    elif config.is_valid_with_token:
+        # print("Using host/token auth")
         return ApiClient(host=config.host, token=config.token, verify=verify,
                          command_name=command_name, jobs_api_version=config.jobs_api_version)
     return ApiClient(user=config.username, password=config.password,

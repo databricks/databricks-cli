@@ -137,6 +137,7 @@ class ContextObject(object):
         self._profile = None
         self._debug = False
         self._azure_cli_auth = False
+        self._azure_msi_auth = False
 
     def set_debug(self, debug=False):
         self._debug = debug
@@ -177,6 +178,12 @@ class ContextObject(object):
     def set_azure_cli_auth(self, use_azure_cli = False):
         self._azure_cli_auth = use_azure_cli
 
+    @property
+    def use_azure_msi_auth(self):
+        return self._azure_msi_auth
+
+    def set_azure_msi_auth(self, use_azure_msi = False):
+        self._azure_msi_auth = use_azure_msi
 
 class RequiredOptions(Option):
     def __init__(self, *args, **kwargs):
