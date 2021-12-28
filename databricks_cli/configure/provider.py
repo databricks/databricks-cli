@@ -37,6 +37,7 @@ PASSWORD = 'password' # NOQA
 TOKEN = 'token'
 INSECURE = 'insecure'
 JOBS_API_VERSION = 'jobs-api-version'
+USE_AZURE_CLI_AUTH = 'azure-cli-auth'
 DEFAULT_SECTION = 'DEFAULT'
 
 # User-provided override for the DatabricksConfigProvider
@@ -99,6 +100,7 @@ def update_and_persist_config(profile, databricks_config):
     _set_option(raw_config, profile, TOKEN, databricks_config.token)
     _set_option(raw_config, profile, INSECURE, databricks_config.insecure)
     _set_option(raw_config, profile, JOBS_API_VERSION, databricks_config.jobs_api_version)
+    _set_option(raw_config, profile, USE_AZURE_CLI_AUTH, databricks_config.use_azure_cli_auth)
     _overwrite_config(raw_config)
 
 
@@ -241,7 +243,8 @@ class EnvironmentVariableConfigProvider(DatabricksConfigProvider):
         token = os.environ.get('DATABRICKS_TOKEN')
         insecure = os.environ.get('DATABRICKS_INSECURE')
         jobs_api_version = os.environ.get('DATABRICKS_JOBS_API_VERSION')
-        config = DatabricksConfig(host, username, password, token, insecure, jobs_api_version)
+        use_azure_cli_auth = os.environ.get('DATABRICKS_USE_AZURE_CLI_AUTH') is not None
+        config = DatabricksConfig(host, username, password, token, insecure, jobs_api_version, use_azure_cli_auth)
         if config.is_valid:
             return config
         return None
@@ -260,24 +263,31 @@ class ProfileConfigProvider(DatabricksConfigProvider):
         token = _get_option_if_exists(raw_config, self.profile, TOKEN)
         insecure = _get_option_if_exists(raw_config, self.profile, INSECURE)
         jobs_api_version = _get_option_if_exists(raw_config, self.profile, JOBS_API_VERSION)
-        config = DatabricksConfig(host, username, password, token, insecure, jobs_api_version)
+        use_azure_cli_auth = _get_option_if_exists(raw_config, self.profile, USE_AZURE_CLI_AUTH)
+        config = DatabricksConfig(host, username, password, token, insecure, jobs_api_version, use_azure_cli_auth)
         if config.is_valid:
             return config
         return None
 
 
 class DatabricksConfig(object):
-    def __init__(self, host, username, password, token, insecure, jobs_api_version=None):  # noqa
+    def __init__(self, host, username, password, token, insecure,
+                 jobs_api_version=None, use_azure_cli_auth=False):  # noqa
         self.host = host
         self.username = username
         self.password = password
         self.token = token
         self.insecure = insecure
         self.jobs_api_version = jobs_api_version
+        self.use_azure_cli_auth = use_azure_cli_auth
 
     @classmethod
     def from_token(cls, host, token, insecure=None, jobs_api_version=None):
         return DatabricksConfig(host, None, None, token, insecure, jobs_api_version)
+
+    @classmethod
+    def using_azure_cli_auth(cls, host, insecure=None, jobs_api_version=None):
+        return DatabricksConfig(host, None, None, None, insecure, jobs_api_version, True)
 
     @classmethod
     def from_password(cls, host, username, password, insecure=None, jobs_api_version=None):
@@ -296,5 +306,10 @@ class DatabricksConfig(object):
         return self.host is not None and self.username is not None and self.password is not None
 
     @property
+    def is_valid_with_azure_cli_auth(self):
+        return self.host is not None and self.use_azure_cli_auth is not None
+
+    @property
     def is_valid(self):
-        return self.is_valid_with_token or self.is_valid_with_password
+        return self.is_valid_with_token or self.is_valid_with_password or self.is_valid_with_azure_cli_auth
+

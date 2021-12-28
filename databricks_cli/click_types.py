@@ -136,6 +136,7 @@ class ContextObject(object):
     def __init__(self):
         self._profile = None
         self._debug = False
+        self._azure_cli_auth = False
 
     def set_debug(self, debug=False):
         self._debug = debug
@@ -168,6 +169,13 @@ class ContextObject(object):
 
     def get_profile(self):
         return self._profile
+
+    @property
+    def use_azure_cli_auth(self):
+        return self._azure_cli_auth
+
+    def set_azure_cli_auth(self, use_azure_cli = False):
+        self._azure_cli_auth = use_azure_cli
 
 
 class RequiredOptions(Option):

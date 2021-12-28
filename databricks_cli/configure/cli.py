@@ -22,6 +22,7 @@
 # limitations under the License.
 import io
 import os
+import subprocess
 from os import path
 
 import click
@@ -74,9 +75,8 @@ def _configure_cli_aad_token(profile, insecure, host, jobs_api_version):
                    'AAD Token and run again.\n' % ENV_AAD_TOKEN)
         click.echo('Commands to run to get your AAD token:\n'
                    '\t az login\n'
-                   '\t token_response=$(az account get-access-token '
-                   '--resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d)\n'
-                   '\t export %s=$(jq .accessToken -r <<< "$token_response")\n' % ENV_AAD_TOKEN
+                   '\t export %s=$(az account get-access-token -o tsv --query accessToken'
+                   '--resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d)\n' % ENV_AAD_TOKEN
                    )
         return
 
@@ -123,7 +123,7 @@ def _configure_cli_password(profile, insecure, host, jobs_api_version):
               type=click.Choice(API_VERSIONS), help='API version to use for jobs.')
 @debug_option
 @profile_option
-def configure_cli(token, aad_token, insecure, host, token_file, jobs_api_version):
+def configure_cli(token, aad_token, azure_cli, insecure, host, token_file, jobs_api_version):
     """
     Configures host, authentication, and jobs-api version for the CLI.
     """

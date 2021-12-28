@@ -20,7 +20,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import subprocess
 import uuid
 import click
 import six
@@ -50,7 +50,7 @@ def provide_api_client(function):
             config = get_config()
         if not config or not config.is_valid:
             raise InvalidConfigurationError.for_profile(profile)
-        kwargs['api_client'] = _get_api_client(config, command_name)
+        kwargs['api_client'] = _get_api_client(ctx, config, command_name)
 
         return function(*args, **kwargs)
     decorator.__doc__ = function.__doc__
@@ -81,8 +81,37 @@ def profile_option(f):
                         help='CLI connection profile to use. The default profile is "DEFAULT".')(f)
 
 
-def _get_api_client(config, command_name=""):
+def azure_cli_auth_option(f):
+    def callback(ctx, param, value): #  NOQA
+        if value is not None:
+            context_object = ctx.ensure_object(ContextObject)
+            context_object.set_azure_cli_auth(value)
+    return click.option('--azure-cli-auth', is_flag=True, callback=callback,
+                        expose_value=False, help='Obtain Azure AD token via azure-cli')(f)
+
+
+def get_aad_token_az_cli():
+    cmd_line = ["az", "account", "get-access-token", "-o", "tsv", "--query", "accessToken",
+                "--resource", "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d"]
+
+    proc = subprocess.Popen(cmd_line, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    try:
+        outs, errs = proc.communicate(timeout=15)
+        if proc.returncode != 0:
+            raise RuntimeError('[ERROR] Error executing az-cli. Code: %d. Message: \'%s\'\n' %
+                               proc.returncode, errs.decode())
+        return outs.decode().strip()
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        raise RuntimeError('[ERROR] Timeout executing az-cli\n')
+
+
+def _get_api_client(ctx, config, command_name=""):
     verify = config.insecure is None
+    context_object = ctx.ensure_object(ContextObject)
+    if context_object.use_azure_cli_auth or config.is_valid_with_azure_cli_auth:
+        return ApiClient(host=config.host, token=get_aad_token_az_cli(), verify=verify,
+                         command_name=command_name, jobs_api_version=config.jobs_api_version)
     if config.is_valid_with_token:
         return ApiClient(host=config.host, token=config.token, verify=verify,
                          command_name=command_name, jobs_api_version=config.jobs_api_version)

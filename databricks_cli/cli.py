@@ -23,7 +23,7 @@
 
 import click
 
-from databricks_cli.configure.config import profile_option, debug_option
+from databricks_cli.configure.config import profile_option, debug_option, azure_cli_auth_option
 from databricks_cli.libraries.cli import libraries_group
 from databricks_cli.version import print_version_callback, version
 from databricks_cli.utils import CONTEXT_SETTINGS
@@ -48,6 +48,7 @@ from databricks_cli.repos.cli import repos_group
               expose_value=False, is_eager=True, help=version)
 @debug_option
 @profile_option
+@azure_cli_auth_option
 def cli():
     pass
 
