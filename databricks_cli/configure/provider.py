@@ -108,12 +108,9 @@ def update_and_persist_config(profile, databricks_config):
     raw_config = _fetch_from_fs()
     _create_section_if_absent(raw_config, profile)
     _set_option(raw_config, profile, HOST, databricks_config.host)
-    if databricks_config.username:
-        _set_option(raw_config, profile, USERNAME, databricks_config.username)
-    if databricks_config.password:
-        _set_option(raw_config, profile, PASSWORD, databricks_config.password)
-    if databricks_config.token:
-        _set_option(raw_config, profile, TOKEN, databricks_config.token)
+    _set_option(raw_config, profile, USERNAME, databricks_config.username)
+    _set_option(raw_config, profile, PASSWORD, databricks_config.password)
+    _set_option(raw_config, profile, TOKEN, databricks_config.token)
     _set_option(raw_config, profile, INSECURE, databricks_config.insecure)
     _set_option(raw_config, profile, JOBS_API_VERSION, databricks_config.jobs_api_version)
     if databricks_config.use_azure_cli_auth:
