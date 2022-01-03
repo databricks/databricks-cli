@@ -47,6 +47,7 @@ AZURE_DATABRICKS_RESOURCE_ID = 'azure-resource-id'
 AZURE_DEFAULT_AD_ENDPOINT = "https://login.microsoftonline.com"
 DEFAULT_SECTION = 'DEFAULT'
 AZURE_ENVIRONMENTS = {
+    'public': "https://login.microsoftonline.com",
     'china': 'https://login.chinacloudapi.cn',
     'usgovernment': 'https://login.microsoftonline.us',
     'german': 'https://login.microsoftonline.de',
@@ -107,12 +108,30 @@ def update_and_persist_config(profile, databricks_config):
     raw_config = _fetch_from_fs()
     _create_section_if_absent(raw_config, profile)
     _set_option(raw_config, profile, HOST, databricks_config.host)
-    _set_option(raw_config, profile, USERNAME, databricks_config.username)
-    _set_option(raw_config, profile, PASSWORD, databricks_config.password)
-    _set_option(raw_config, profile, TOKEN, databricks_config.token)
+    if databricks_config.username:
+        _set_option(raw_config, profile, USERNAME, databricks_config.username)
+    if databricks_config.password:
+        _set_option(raw_config, profile, PASSWORD, databricks_config.password)
+    if databricks_config.token:
+        _set_option(raw_config, profile, TOKEN, databricks_config.token)
     _set_option(raw_config, profile, INSECURE, databricks_config.insecure)
     _set_option(raw_config, profile, JOBS_API_VERSION, databricks_config.jobs_api_version)
-    _set_option(raw_config, profile, USE_AZURE_CLI_AUTH, databricks_config.use_azure_cli_auth)
+    if databricks_config.use_azure_cli_auth:
+        _set_option(raw_config, profile, USE_AZURE_CLI_AUTH, "true")
+    if databricks_config.use_azure_msi_auth:
+        _set_option(raw_config, profile, USE_AZURE_MSI_AUTH, "true")
+        if databricks_config.azure_resource_id:
+            _set_option(raw_config, profile, AZURE_DATABRICKS_RESOURCE_ID, databricks_config.azure_resource_id)
+    if databricks_config.azure_client_id and databricks_config.azure_client_secret \
+            and databricks_config.azure_tenant_id:
+        _set_option(raw_config, profile, AZURE_CLIENT_ID, databricks_config.azure_client_id)
+        _set_option(raw_config, profile, AZURE_CLIENT_SECRET, databricks_config.azure_client_secret)
+        _set_option(raw_config, profile, AZURE_TENANT_ID, databricks_config.azure_tenant_id)
+        if databricks_config.azure_resource_id:
+            _set_option(raw_config, profile, AZURE_DATABRICKS_RESOURCE_ID, databricks_config.azure_resource_id)
+        if databricks_config.azure_environment:
+            _set_option(raw_config, profile, AZURE_ENVIRONMENT, databricks_config.azure_environment)
+
     _overwrite_config(raw_config)
 
 
@@ -311,8 +330,7 @@ class DatabricksConfig(object):
         self.jobs_api_version = jobs_api_version
         self.use_azure_cli_auth = use_azure_cli_auth
         self.use_azure_msi_auth = use_azure_msi_auth
-        self.azure_environment = AZURE_ENVIRONMENTS.get((azure_environment or "").lower(),
-                                                        AZURE_DEFAULT_AD_ENDPOINT)
+        self.azure_environment = (azure_environment or "public").lower()
         self.azure_tenant_id = azure_tenant_id
         self.azure_client_id = azure_client_id
         self.azure_client_secret = azure_client_secret
@@ -324,11 +342,24 @@ class DatabricksConfig(object):
 
     @classmethod
     def using_azure_cli_auth(cls, host, insecure=None, jobs_api_version=None):
-        return DatabricksConfig(host, None, None, None, insecure, jobs_api_version, True)
+        return DatabricksConfig(host, None, None, None, insecure, jobs_api_version, use_azure_cli_auth=True)
+
+    @classmethod
+    def using_azure_msi_auth(cls, host, resource_id=None, insecure=None, jobs_api_version=None):
+        return DatabricksConfig(host, None, None, None, insecure, jobs_api_version, use_azure_msi_auth=True,
+                                azure_resource_id=resource_id)
 
     @classmethod
     def from_password(cls, host, username, password, insecure=None, jobs_api_version=None):
         return DatabricksConfig(host, username, password, None, insecure, jobs_api_version)
+
+    @classmethod
+    def for_azure_spn(cls, host, client_id, client_secret, tenant_id, resource_id=None,
+                      azure_env=None, insecure=None, jobs_api_version=None):
+        return DatabricksConfig(host, None, None, None, insecure, jobs_api_version,
+                                azure_client_id=client_id, azure_client_secret=client_secret,
+                                azure_tenant_id=tenant_id, azure_resource_id=resource_id,
+                                azure_environment=azure_env)
 
     @classmethod
     def empty(cls):

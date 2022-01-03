@@ -27,7 +27,8 @@ import requests
 import six
 
 from databricks_cli.click_types import ContextObject
-from databricks_cli.configure.provider import get_config, ProfileConfigProvider
+from databricks_cli.configure.provider import get_config, ProfileConfigProvider, AZURE_ENVIRONMENTS, \
+    AZURE_DEFAULT_AD_ENDPOINT
 from databricks_cli.utils import InvalidConfigurationError
 from databricks_cli.sdk import ApiClient
 
@@ -58,7 +59,7 @@ def provide_api_client(function):
             config = get_config()
         if not config or not config.is_valid:
             raise InvalidConfigurationError.for_profile(profile)
-        kwargs['api_client'] = _get_api_client(ctx, config, command_name)
+        kwargs['api_client'] = _get_api_client(config, command_name)
 
         return function(*args, **kwargs)
     decorator.__doc__ = function.__doc__
@@ -87,24 +88,6 @@ def profile_option(f):
     return click.option('--profile', required=False, default=None, callback=callback,
                         expose_value=False,
                         help='CLI connection profile to use. The default profile is "DEFAULT".')(f)
-
-
-def azure_cli_auth_option(f):
-    def callback(ctx, param, value): #  NOQA
-        if value is not None:
-            context_object = ctx.ensure_object(ContextObject)
-            context_object.set_azure_cli_auth(value)
-    return click.option('--azure-cli-auth', is_flag=True, callback=callback,
-                        expose_value=False, help='Obtain Azure AD token via azure-cli')(f)
-
-
-def azure_msi_auth_option(f):
-    def callback(ctx, param, value): #  NOQA
-        if value is not None:
-            context_object = ctx.ensure_object(ContextObject)
-            context_object.set_azure_msi_auth(value)
-    return click.option('--azure-msi-auth', is_flag=True, callback=callback,
-                        expose_value=False, help='Obtain Azure AD token via managed identity')(f)
 
 
 def _get_aad_token_az_cli():
@@ -141,8 +124,9 @@ def _create_aad_token(config, resource):
             "resource": resource,
             "client_secret": config.azure_client_secret,
         }
+        azure_host = AZURE_ENVIRONMENTS.get((config.azure_environment or "").lower(), AZURE_DEFAULT_AD_ENDPOINT)
         response = requests.post(
-            AZURE_TOKEN_SERVICE_URL.format(config.azure_environment, config.azure_tenant_id),
+            AZURE_TOKEN_SERVICE_URL.format(azure_host, config.azure_tenant_id),
             data=params,
             headers={'Content-Type': 'application/x-www-form-urlencoded'},
             timeout=AAD_TIMEOUT_SECONDS)
@@ -164,14 +148,13 @@ def _get_aad_token_and_headers(config):
     return _create_aad_token(config, DEFAULT_DATABRICKS_SCOPE), headers
 
 
-def _get_api_client(ctx, config, command_name=""):
+def _get_api_client(config, command_name=""):
     verify = config.insecure is None
-    context_object = ctx.ensure_object(ContextObject)
-    if context_object.use_azure_cli_auth or config.is_valid_with_azure_cli_auth:
+    if config.is_valid_with_azure_cli_auth:
         # print("Using Azure CLI authentication")
         return ApiClient(host=config.host, token=_get_aad_token_az_cli(), verify=verify,
                          command_name=command_name, jobs_api_version=config.jobs_api_version)
-    elif context_object.use_azure_msi_auth or config.is_valid_with_azure_msi_auth:
+    elif config.is_valid_with_azure_msi_auth:
         # print("Using Azure MSI authentication")
         config.use_azure_msi_auth = True
         try:
