@@ -22,7 +22,6 @@
 # limitations under the License.
 import io
 import os
-import subprocess
 from os import path
 
 import click
@@ -38,12 +37,12 @@ PROMPT_HOST = 'Databricks Host (should begin with https://)'
 PROMPT_USERNAME = 'Username'
 PROMPT_PASSWORD = 'Password'  # NOQA
 PROMPT_TOKEN = 'Token'  # NOQA
-PROMPT_CLIENT_ID = 'Client ID'
-PROMPT_CLIENT_SECRET = 'Client secret'
-PROMPT_TENANT_ID = 'Tenant ID'
+PROMPT_CLIENT_ID = 'Azure Client ID'
+PROMPT_CLIENT_SECRET = 'Azure Client secret'  # NOQA
+PROMPT_TENANT_ID = 'Azure Tenant ID'
 PROMPT_AZURE_RESOURCE_ID = 'Azure Resource ID (optional)'
 PROMPT_AZURE_ENVIRONMENT = 'Azure Environment name'
-ENV_AAD_TOKEN = 'DATABRICKS_AAD_TOKEN'
+ENV_AAD_TOKEN = 'DATABRICKS_AAD_TOKEN'  # NOQA
 
 
 def _configure_cli_token_file(profile, token_file, host, insecure, jobs_api_version):
@@ -112,11 +111,13 @@ def _configure_cli_azure_msi_auth(profile, insecure, host, jobs_api_version):
     if 'DATABRICKS_AZURE_RESOURCE_ID' in os.environ:
         azure_resource_id = os.environ['DATABRICKS_AZURE_RESOURCE_ID']
     else:
-        azure_resource_id = click.prompt(PROMPT_AZURE_RESOURCE_ID, default=(config.azure_resource_id or ""))
+        azure_resource_id = click.prompt(PROMPT_AZURE_RESOURCE_ID,
+                                         default=(config.azure_resource_id or ""))
     if azure_resource_id == "":
         azure_resource_id = None
 
-    new_config = DatabricksConfig.using_azure_msi_auth(host, azure_resource_id, insecure, jobs_api_version)
+    new_config = DatabricksConfig.using_azure_msi_auth(host, azure_resource_id,
+                                                       insecure, jobs_api_version)
     update_and_persist_config(profile, new_config)
 
 
@@ -131,19 +132,22 @@ def _configure_cli_azure_spn_auth(profile, insecure, host, jobs_api_version):
         host = click.prompt(PROMPT_HOST, default=config.host, type=_DbfsHost())
 
     azure_client_id = click.prompt(PROMPT_CLIENT_ID, default=config.azure_client_id)
-    azure_client_secret = click.prompt(PROMPT_CLIENT_SECRET, default=default_password, hide_input=True,
-                                       confirmation_prompt=True)
+    azure_client_secret = click.prompt(PROMPT_CLIENT_SECRET, default=default_password,
+                                       hide_input=True, confirmation_prompt=True)
     azure_tenant_id = click.prompt(PROMPT_TENANT_ID, default=config.azure_tenant_id)
-    azure_resource_id = click.prompt(PROMPT_AZURE_RESOURCE_ID, default=(config.azure_resource_id or ""))
-    azure_env = click.prompt(PROMPT_AZURE_ENVIRONMENT, default=(config.azure_environment or 'public'),
+    azure_resource_id = click.prompt(PROMPT_AZURE_RESOURCE_ID,
+                                     default=(config.azure_resource_id or ""))
+    azure_env = click.prompt(PROMPT_AZURE_ENVIRONMENT,
+                             default=(config.azure_environment or 'public'),
                              type=click.Choice(AZURE_ENVIRONMENTS.keys()))
     if azure_resource_id == "":
         azure_resource_id = None
     if azure_client_secret == default_password:
         azure_client_secret = config.azure_client_secret
-    new_config = DatabricksConfig.for_azure_spn(host, azure_client_id, azure_client_secret, azure_tenant_id,
-                                                azure_resource_id, azure_env,
-                                                insecure=insecure, jobs_api_version=jobs_api_version)
+    new_config = DatabricksConfig.for_azure_spn(host, azure_client_id, azure_client_secret,
+                                                azure_tenant_id, azure_resource_id, azure_env,
+                                                insecure=insecure,
+                                                jobs_api_version=jobs_api_version)
     update_and_persist_config(profile, new_config)
 
 

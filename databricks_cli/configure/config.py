@@ -27,8 +27,8 @@ import requests
 import six
 
 from databricks_cli.click_types import ContextObject
-from databricks_cli.configure.provider import get_config, ProfileConfigProvider, AZURE_ENVIRONMENTS, \
-    AZURE_DEFAULT_AD_ENDPOINT
+from databricks_cli.configure.provider import get_config, ProfileConfigProvider, \
+    AZURE_ENVIRONMENTS, AZURE_DEFAULT_AD_ENDPOINT
 from databricks_cli.utils import InvalidConfigurationError
 from databricks_cli.sdk import ApiClient
 
@@ -96,7 +96,10 @@ def _get_aad_token_az_cli():
 
     proc = subprocess.Popen(cmd_line, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     try:
-        outs, errs = proc.communicate(timeout=15)
+        if six.PY2:
+            outs, errs = proc.communicate()
+        else:
+            outs, errs = proc.communicate(timeout=15)  # NOQA
         if proc.returncode != 0:
             raise RuntimeError('[ERROR] Error executing az-cli. Code: %d. Message: \'%s\'\n' %
                                proc.returncode, errs.decode())
@@ -124,7 +127,8 @@ def _create_aad_token(config, resource):
             "resource": resource,
             "client_secret": config.azure_client_secret,
         }
-        azure_host = AZURE_ENVIRONMENTS.get((config.azure_environment or "").lower(), AZURE_DEFAULT_AD_ENDPOINT)
+        azure_host = AZURE_ENVIRONMENTS.get((config.azure_environment or "").lower(),
+                                            AZURE_DEFAULT_AD_ENDPOINT)
         response = requests.post(
             AZURE_TOKEN_SERVICE_URL.format(azure_host, config.azure_tenant_id),
             data=params,
@@ -143,7 +147,8 @@ def _get_aad_token_and_headers(config):
     headers = {}
     if config.azure_resource_id:
         headers['X-Databricks-Azure-Workspace-Resource-Id'] = config.azure_resource_id
-        headers['X-Databricks-Azure-SP-Management-Token'] = _create_aad_token(config, AZURE_MANAGEMENT_ENDPOINT)
+        mgmt_token = _create_aad_token(config, AZURE_MANAGEMENT_ENDPOINT)
+        headers['X-Databricks-Azure-SP-Management-Token'] = mgmt_token
 
     return _create_aad_token(config, DEFAULT_DATABRICKS_SCOPE), headers
 
@@ -159,11 +164,12 @@ def _get_api_client(config, command_name=""):
         config.use_azure_msi_auth = True
         try:
             jsn = requests.get(
-                AZURE_METADATA_SERVICE_INSTANCE_URL,  params={"api-version": "2021-02-01"},
+                AZURE_METADATA_SERVICE_INSTANCE_URL, params={"api-version": "2021-02-01"},
                 headers={"Metadata": "true"}, timeout=2).json()
             if 'compute' not in jsn or 'azEnvironment' not in jsn['compute']:
                 raise RuntimeError(
-                    "Was able to fetch some metadata, but it doesn't look like Azure Metadata: " + str(jsn)
+                    "Was able to fetch some metadata, but it doesn't look like Azure Metadata: "
+                    + str(jsn)
                 )
         except (requests.RequestException, ValueError) as e:
             raise RuntimeError("Can't reach Azure Metadata Service: " + str(e))
