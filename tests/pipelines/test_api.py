@@ -389,7 +389,7 @@ def test_list_with_paginated_responses(pipelines_api):
                        'name': 'Pipeline Demo NYCTaxi',
                        'health': 'HEALTHY'}],
          'prev_page_token': 'page3'
-        }
+         }
     ]
 
     pipelines = pipelines_api.list()
@@ -424,7 +424,7 @@ def test_list_with_no_returned_pipelines(pipelines_api):
                        'cluster_id': '1024-160918-tees475',
                        'name': 'Wiki Pipeline',
                        'health': 'HEALTHY'}],
-          'next_page_token': 'page2'
+         'next_page_token': 'page2'
          },
         {}
     ]
