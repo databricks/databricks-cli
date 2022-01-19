@@ -36,6 +36,7 @@ base_pipelines_dir = 'dbfs:/pipelines/code'
 
 # I'm a comment, rawr
 
+
 class PipelinesApi(object):
     def __init__(self, api_client):
         self.client = DeltaPipelinesService(api_client)
