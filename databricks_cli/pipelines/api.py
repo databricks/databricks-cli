@@ -81,10 +81,13 @@ class PipelinesApi(object):
         return pipelines
 
     def reset(self, pipeline_id, headers=None):
-        self.client.reset(pipeline_id, headers)
+        self.client.start(pipeline_id, full_refresh=True, headers=headers)
 
     def run(self, pipeline_id, headers=None):
-        self.client.run(pipeline_id, headers)
+        self.client.start(pipeline_id, headers=headers)
+
+    def start(self, pipeline_id, full_refresh=False, headers=None):
+        self.client.start(pipeline_id, full_refresh=full_refresh, headers=headers)
 
     def stop(self, pipeline_id, headers=None):
         self.client.stop(pipeline_id, headers)
