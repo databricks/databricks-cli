@@ -203,8 +203,6 @@ def test_cli_id(pipelines_api_mock):
     runner.invoke(cli.start_cli, ['--pipeline-id', PIPELINE_ID])
     runner.invoke(cli.start_cli, ['--pipeline-id', PIPELINE_ID, "--full-refresh", "true"])
 
-    print(f"pipelines_api_mock.start.call_args: {pipelines_api_mock.start.call_args_list}")
-
     assert pipelines_api_mock.start.call_args_list[0] == mock.call(PIPELINE_ID, full_refresh=True)
     assert pipelines_api_mock.start.call_args_list[1] == mock.call(PIPELINE_ID, full_refresh=False)
     assert pipelines_api_mock.start.call_args_list[2] == mock.call(PIPELINE_ID, full_refresh=False)
