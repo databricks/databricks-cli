@@ -24,37 +24,22 @@
 import imp
 import io
 import os
-import sys
-
 from setuptools import setup, find_packages
 
 version = imp.load_source(
     'databricks_cli.version', os.path.join('databricks_cli', 'version.py')).version
 
-install_requires = [
-    'click>=6.7',
-    'requests>=2.17.3',
-    'tabulate>=0.7.7',
-    'six>=1.10.0'
-]
-
-if sys.version_info < (3, 6):
-    install_requires += ['configparser>=0.3.5;python_version < "3.6"']
-else:
-    install_requires += [
-        # additional deps for tunneling
-        'aiohttp>=3.7.4',
-        'cryptography>=3.4.6',
-        'python-socketio>=5.4',
-        'tenacity>=5.0',
-        'tornado>=6.1',
-    ]
-
 setup(
     name='databricks-cli',
     version=version,
     packages=find_packages(exclude=['tests', 'tests.*']),
-    install_requires=install_requires,
+    install_requires=[
+        'click>=6.7',
+        'requests>=2.17.3',
+        'tabulate>=0.7.7',
+        'six>=1.10.0',
+        'configparser>=0.3.5;python_version < "3.6"',
+    ],
     entry_points='''
         [console_scripts]
         databricks=databricks_cli.cli:cli

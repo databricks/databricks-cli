@@ -21,8 +21,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-API_VERSION = '2.0'
-OLD_API_VERSION = '1.2'
+API_VERSION='2.0'
 
 # Available API versions
-API_VERSIONS = ['2.0', '2.1']
+API_VERSIONS=['2.0', '2.1']
