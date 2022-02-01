@@ -197,15 +197,23 @@ def test_deploy_with_invalid_spec_extension(pipelines_api_mock):
 
 @provide_conf
 def test_cli_id(pipelines_api_mock):
-    for command in [cli.reset_cli, cli.stop_cli, cli.run_cli]:
-        runner = CliRunner()
-        runner.invoke(command, ['--pipeline-id', PIPELINE_ID])
-        assert pipelines_api_mock.reset.call_args[0][0] == PIPELINE_ID
+    runner = CliRunner()
+    runner.invoke(cli.reset_cli, ['--pipeline-id', PIPELINE_ID])
+    runner.invoke(cli.run_cli, ['--pipeline-id', PIPELINE_ID])
+    runner.invoke(cli.start_cli, ['--pipeline-id', PIPELINE_ID])
+    runner.invoke(cli.start_cli, ['--pipeline-id', PIPELINE_ID, "--full-refresh", "true"])
+
+    print(f"pipelines_api_mock.start.call_args: {pipelines_api_mock.start.call_args_list}")
+
+    assert pipelines_api_mock.start.call_args_list[0] == mock.call(PIPELINE_ID, full_refresh=True)
+    assert pipelines_api_mock.start.call_args_list[1] == mock.call(PIPELINE_ID, full_refresh=False)
+    assert pipelines_api_mock.start.call_args_list[2] == mock.call(PIPELINE_ID, full_refresh=False)
+    assert pipelines_api_mock.start.call_args_list[3] == mock.call(PIPELINE_ID, full_refresh=True)
 
 
 @provide_conf
 def test_cli_no_id(pipelines_api_mock):
-    for command in [cli.reset_cli, cli.stop_cli, cli.run_cli]:
+    for command in [cli.reset_cli, cli.stop_cli, cli.run_cli, cli.start_cli]:
         runner = CliRunner()
         result = runner.invoke(command, [])
         assert result.exit_code == 1

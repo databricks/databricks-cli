@@ -177,7 +177,8 @@ def list_cli(api_client):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='(Deprecated) Resets a delta pipeline so data can be reprocessed from scratch')
+               short_help='(Deprecated) Resets a delta pipeline so' +
+                          'data can be reprocessed from scratch')
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
@@ -195,10 +196,10 @@ def reset_cli(api_client, pipeline_id):
 
     databricks pipelines reset --pipeline-id 1234
     """
-    click.echo(
-        "DeprecationWarning: \"reset\" command is deprecated, please use \"start --full-refresh\" command instead")
+    click.echo("DeprecationWarning: \"reset\" command is deprecated, " +
+               "please use \"start --full-refresh\" command instead")
     _validate_pipeline_id(pipeline_id)
-    PipelinesApi(api_client).reset(pipeline_id)
+    PipelinesApi(api_client).start(pipeline_id, full_refresh=True)
     click.echo("Reset triggered for pipeline {}".format(pipeline_id))
 
 
@@ -220,7 +221,8 @@ def run_cli(api_client, pipeline_id):
 
     databricks pipelines run --pipeline-id 1234
     """
-    click.echo("DeprecationWarning: \"run\" command is deprecated, please use \"start\" command instead")
+    click.echo("DeprecationWarning: \"run\" command is deprecated," +
+               " please use \"start\" command instead")
     _validate_pipeline_id(pipeline_id)
     PipelinesApi(api_client).start(pipeline_id, full_refresh=False)
     click.echo("Run triggered for pipeline {}".format(pipeline_id))
@@ -231,7 +233,8 @@ def run_cli(api_client, pipeline_id):
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @click.option('--full-refresh', default=False, type=bool,
-              help="If true, truncates tables and creates new checkpoint folders so data is reprocessed from scratch")
+              help='If true, truncates tables and creates new checkpoint' +
+                   ' folders so data is reprocessed from scratch')
 @debug_option
 @profile_option
 @pipelines_exception_eater
@@ -247,6 +250,7 @@ def start_cli(api_client, pipeline_id, full_refresh):
     _validate_pipeline_id(pipeline_id)
     PipelinesApi(api_client).start(pipeline_id, full_refresh=full_refresh)
     click.echo("Update triggered for pipeline {}".format(pipeline_id))
+
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Stops the execution of a delta pipeline run')
