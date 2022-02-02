@@ -80,8 +80,8 @@ class PipelinesApi(object):
             pipelines.extend(response.get("statuses", []))
         return pipelines
 
-    def start(self, pipeline_id, full_refresh=False, headers=None):
-        self.client.start(pipeline_id, full_refresh=full_refresh, headers=headers)
+    def start_update(self, pipeline_id, full_refresh=False, headers=None):
+        self.client.start_update(pipeline_id, full_refresh=full_refresh, headers=headers)
 
     def stop(self, pipeline_id, headers=None):
         self.client.stop(pipeline_id, headers)

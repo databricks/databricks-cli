@@ -200,18 +200,19 @@ def test_cli_id(pipelines_api_mock):
     runner = CliRunner()
     runner.invoke(cli.reset_cli, ['--pipeline-id', PIPELINE_ID])
     runner.invoke(cli.run_cli, ['--pipeline-id', PIPELINE_ID])
-    runner.invoke(cli.start_cli, ['--pipeline-id', PIPELINE_ID])
-    runner.invoke(cli.start_cli, ['--pipeline-id', PIPELINE_ID, "--full-refresh", "true"])
+    runner.invoke(cli.update_cli, ['--pipeline-id', PIPELINE_ID])
+    runner.invoke(cli.update_cli, ['--pipeline-id', PIPELINE_ID, "--full-refresh", "true"])
 
-    assert pipelines_api_mock.start.call_args_list[0] == mock.call(PIPELINE_ID, full_refresh=True)
-    assert pipelines_api_mock.start.call_args_list[1] == mock.call(PIPELINE_ID, full_refresh=False)
-    assert pipelines_api_mock.start.call_args_list[2] == mock.call(PIPELINE_ID, full_refresh=False)
-    assert pipelines_api_mock.start.call_args_list[3] == mock.call(PIPELINE_ID, full_refresh=True)
+    start_update_call_args_list = pipelines_api_mock.start_update.call_args_list
+    assert start_update_call_args_list[0] == mock.call(PIPELINE_ID, full_refresh=True)
+    assert start_update_call_args_list[1] == mock.call(PIPELINE_ID, full_refresh=False)
+    assert start_update_call_args_list[2] == mock.call(PIPELINE_ID, full_refresh=False)
+    assert start_update_call_args_list[3] == mock.call(PIPELINE_ID, full_refresh=True)
 
 
 @provide_conf
 def test_cli_no_id(pipelines_api_mock):
-    for command in [cli.reset_cli, cli.stop_cli, cli.run_cli, cli.start_cli]:
+    for command in [cli.reset_cli, cli.stop_cli, cli.run_cli, cli.update_cli]:
         runner = CliRunner()
         result = runner.invoke(command, [])
         assert result.exit_code == 1

@@ -227,22 +227,22 @@ def test_get(pipelines_api):
 
 
 def test_start_without_refresh(pipelines_api):
-    pipelines_api.start(PIPELINE_ID)
+    pipelines_api.start_update(PIPELINE_ID)
     client_mock = pipelines_api.client.client.perform_query
     assert client_mock.call_count == 1
     expected_data = {
-        "cause": "API_CALL"
+        "cause": "USER_ACTION"
     }
     client_mock.assert_called_with('POST', '/pipelines/{}/start'.format(PIPELINE_ID),
                                    data=expected_data, headers=None)
 
 
 def test_start_with_refresh(pipelines_api):
-    pipelines_api.start(PIPELINE_ID, full_refresh=True)
+    pipelines_api.start_update(PIPELINE_ID, full_refresh=True)
     client_mock = pipelines_api.client.client.perform_query
     assert client_mock.call_count == 1
     expected_data = {
-        "cause": "API_CALL",
+        "cause": "USER_ACTION",
         "full_refresh": True,
     }
     client_mock.assert_called_with('POST', '/pipelines/{}/start'.format(PIPELINE_ID),

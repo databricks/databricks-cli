@@ -49,7 +49,7 @@ PIPELINE_ID_PERMITTED_CHARACTERS = set(string.ascii_letters + string.digits + '-
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Deploys a delta pipeline according to the pipeline specification')
+               short_help='Deploys a pipeline according to the pipeline specification')
 @click.argument('spec_arg', default=None, required=False)
 @click.option('--spec', default=None, type=PipelineSpecClickType(), help=PipelineSpecClickType.help)
 @click.option('--allow-duplicate-names', is_flag=True,
@@ -62,9 +62,9 @@ PIPELINE_ID_PERMITTED_CHARACTERS = set(string.ascii_letters + string.digits + '-
 @provide_api_client
 def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
     """
-    Deploys a delta pipeline according to the pipeline specification. The pipeline spec is a
-    specification that explains how to run a Delta Pipeline on Databricks. All local libraries
-    referenced in the spec are uploaded to DBFS.
+    Deploys a pipeline according to the pipeline specification. The pipeline spec is a
+    specification that explains how to run a Delta Live Tables pipeline on Databricks.
+    All local libraries referenced in the spec are uploaded to DBFS.
 
     If the pipeline spec contains an "id" field, or if a pipeline id is specified directly
     (using the  --pipeline-id argument), attempts to update an existing pipeline
@@ -125,7 +125,7 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Stops a delta pipeline and deletes its associated Databricks resources')
+               short_help='Stops a pipeline and deletes its associated Databricks resources')
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
@@ -134,7 +134,7 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
 @provide_api_client
 def delete_cli(api_client, pipeline_id):
     """
-    Stops a delta pipeline and deletes its associated Databricks resources. The pipeline can be
+    Stops a pipeline and deletes its associated Databricks resources. The pipeline can be
     resumed by deploying it again.
 
     Usage:
@@ -147,7 +147,7 @@ def delete_cli(api_client, pipeline_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Gets a delta pipeline\'s current spec and status')
+               short_help='Gets a pipeline\'s current spec and status')
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
@@ -156,7 +156,7 @@ def delete_cli(api_client, pipeline_id):
 @provide_api_client
 def get_cli(api_client, pipeline_id):
     """
-    Gets a delta pipeline's current spec and status.
+    Gets a pipeline's current spec and status.
 
     Usage:
 
@@ -167,7 +167,7 @@ def get_cli(api_client, pipeline_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Gets a delta pipeline\'s current spec and status')
+               short_help='Gets a pipeline\'s current spec and status')
 @debug_option
 @profile_option
 @pipelines_exception_eater
@@ -177,8 +177,7 @@ def list_cli(api_client):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='(Deprecated) Resets a delta pipeline so' +
-                          'data can be reprocessed from scratch')
+               short_help='[Deprecated] Resets a pipeline so data can be reprocessed from scratch')
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
@@ -187,9 +186,9 @@ def list_cli(api_client):
 @provide_api_client
 def reset_cli(api_client, pipeline_id):
     """
-    (Deprecated) "reset" command is deprecated, please use "start --full-refresh" command instead.
+    [Deprecated] Use the "update --full-refresh" command instead.
 
-    Resets a delta pipeline by truncating tables and creating new checkpoint folders so data is
+    Resets a pipeline by truncating tables and creating new checkpoint folders so data is
     reprocessed from scratch.
 
     Usage:
@@ -199,12 +198,12 @@ def reset_cli(api_client, pipeline_id):
     click.echo("DeprecationWarning: \"reset\" command is deprecated, " +
                "please use \"start --full-refresh\" command instead")
     _validate_pipeline_id(pipeline_id)
-    PipelinesApi(api_client).start(pipeline_id, full_refresh=True)
+    PipelinesApi(api_client).start_update(pipeline_id, full_refresh=True)
     click.echo("Reset triggered for pipeline {}".format(pipeline_id))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='(Deprecated) Starts the execution of a delta pipeline run')
+               short_help='[Deprecated] Starts the execution of a pipeline run')
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
@@ -213,9 +212,9 @@ def reset_cli(api_client, pipeline_id):
 @provide_api_client
 def run_cli(api_client, pipeline_id):
     """
-    (Deprecated) "run" command is deprecated, please use "start" command instead.
+    [Deprecated] Use the "update" command instead.
 
-    Starts the execution of a delta pipelines run by starting the cluster and processing data.
+    Starts the execution of a pipeline run by starting the cluster and processing data.
 
     Usage:
 
@@ -224,12 +223,12 @@ def run_cli(api_client, pipeline_id):
     click.echo("DeprecationWarning: \"run\" command is deprecated," +
                " please use \"start\" command instead")
     _validate_pipeline_id(pipeline_id)
-    PipelinesApi(api_client).start(pipeline_id, full_refresh=False)
+    PipelinesApi(api_client).start_update(pipeline_id, full_refresh=False)
     click.echo("Run triggered for pipeline {}".format(pipeline_id))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Starts the execution of a delta pipeline run')
+               short_help='Starts the execution of a pipeline run')
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @click.option('--full-refresh', default=False, type=bool,
@@ -239,21 +238,21 @@ def run_cli(api_client, pipeline_id):
 @profile_option
 @pipelines_exception_eater
 @provide_api_client
-def start_cli(api_client, pipeline_id, full_refresh):
+def update_cli(api_client, pipeline_id, full_refresh):
     """
-    Starts the execution of a delta pipelines run by starting the cluster and processing data.
+    Starts the execution of a pipelines run by starting the cluster and processing data.
 
     Usage:
 
-    databricks pipelines start --pipeline-id 1234 --full-refresh=(false|true)
+    databricks pipelines update --pipeline-id 1234 --full-refresh=(false|true)
     """
     _validate_pipeline_id(pipeline_id)
-    PipelinesApi(api_client).start(pipeline_id, full_refresh=full_refresh)
-    click.echo("Update triggered for pipeline {}".format(pipeline_id))
+    PipelinesApi(api_client).start_update(pipeline_id, full_refresh=full_refresh)
+    click.echo("Started an update for pipeline {}".format(pipeline_id))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Stops the execution of a delta pipeline run')
+               short_help='Stops the execution of a pipeline run')
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
@@ -262,7 +261,7 @@ def start_cli(api_client, pipeline_id, full_refresh):
 @provide_api_client
 def stop_cli(api_client, pipeline_id):
     """
-    Stops the execution of a delta pipelines run by terminating the cluster. Processing of data can
+    Stops the execution of a pipeline run by terminating the cluster. Processing of data can
     be resumed by calling `run`.
 
     Usage:
@@ -349,7 +348,7 @@ pipelines_group.add_command(deploy_cli, name='deploy')
 pipelines_group.add_command(delete_cli, name='delete')
 pipelines_group.add_command(get_cli, name='get')
 pipelines_group.add_command(list_cli, name='list')
-pipelines_group.add_command(start_cli, name='start')
+pipelines_group.add_command(update_cli, name='update')
 pipelines_group.add_command(stop_cli, name='stop')
 
 # DEPRECATED and will be removed in future versions.
