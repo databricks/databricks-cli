@@ -49,11 +49,11 @@ PIPELINE_ID_PERMITTED_CHARACTERS = set(string.ascii_letters + string.digits + '-
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Deploys a pipeline according to the pipeline specification')
+               short_help='Deploys a pipeline according to the pipeline specification.')
 @click.argument('spec_arg', default=None, required=False)
 @click.option('--spec', default=None, type=PipelineSpecClickType(), help=PipelineSpecClickType.help)
 @click.option('--allow-duplicate-names', is_flag=True,
-              help="Skip duplicate name check while deploying pipeline")
+              help="Skip duplicate name check while deploying pipeline.")
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
@@ -107,7 +107,7 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
         if (pipeline_id and 'id' in spec_obj) and pipeline_id != spec_obj["id"]:
             raise ValueError(
                 "The ID provided in --pipeline_id '{}' is different from the id provided "
-                "in the spec '{}'. Please resolve the conflict and try the command again. "
+                "in the spec '{}'. Resolve the conflict and try the command again. "
                 "Because pipeline IDs are no longer persisted after being deleted, we "
                 "recommend removing the ID field from your spec."
                 .format(pipeline_id, spec_obj["id"])
@@ -125,7 +125,7 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Stops a pipeline and deletes its associated Databricks resources')
+               short_help='Stops the pipeline and deletes its associated Databricks resources.')
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
@@ -134,7 +134,7 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
 @provide_api_client
 def delete_cli(api_client, pipeline_id):
     """
-    Stops a pipeline and deletes its associated Databricks resources. The pipeline can be
+    Stops the pipeline and deletes its associated Databricks resources. The pipeline can be
     resumed by deploying it again.
 
     Usage:
@@ -147,7 +147,7 @@ def delete_cli(api_client, pipeline_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Gets a pipeline\'s current spec and status')
+               short_help='Gets a pipeline\'s current spec and status.')
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
@@ -167,7 +167,7 @@ def get_cli(api_client, pipeline_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Gets a pipeline\'s current spec and status')
+               short_help='Gets a pipeline\'s current spec and status.')
 @debug_option
 @profile_option
 @pipelines_exception_eater
@@ -177,7 +177,8 @@ def list_cli(api_client):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='[Deprecated] Resets a pipeline so data can be reprocessed from scratch')
+               short_help='[Deprecated] Resets a pipeline so that data can' +
+                          ' be reprocessed from the beginning.')
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
@@ -188,22 +189,22 @@ def reset_cli(api_client, pipeline_id):
     """
     [Deprecated] Use the "update --full-refresh" command instead.
 
-    Resets a pipeline by truncating tables and creating new checkpoint folders so data is
-    reprocessed from scratch.
+    Resets a pipeline by truncating tables and creating new checkpoint folders so that data is
+    reprocessed from the beginning.
 
     Usage:
 
     databricks pipelines reset --pipeline-id 1234
     """
-    click.echo("DeprecationWarning: \"reset\" command is deprecated, " +
-               "please use \"start --full-refresh\" command instead")
+    click.echo("DeprecationWarning: the \"reset\" command is deprecated, " +
+               "use the \"start --full-refresh\" command instead.")
     _validate_pipeline_id(pipeline_id)
     PipelinesApi(api_client).start_update(pipeline_id, full_refresh=True)
-    click.echo("Reset triggered for pipeline {}".format(pipeline_id))
+    click.echo("Reset triggered for pipeline {}.".format(pipeline_id))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='[Deprecated] Starts the execution of a pipeline run')
+               short_help='[Deprecated] Starts a pipeline run.')
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
@@ -214,33 +215,33 @@ def run_cli(api_client, pipeline_id):
     """
     [Deprecated] Use the "update" command instead.
 
-    Starts the execution of a pipeline run by starting the cluster and processing data.
+    Starts a pipeline run by starting the cluster and processing data.
 
     Usage:
 
     databricks pipelines run --pipeline-id 1234
     """
-    click.echo("DeprecationWarning: \"run\" command is deprecated," +
-               " please use \"start\" command instead")
+    click.echo("DeprecationWarning: the \"run\" command is deprecated," +
+               " use the \"start\" command instead.")
     _validate_pipeline_id(pipeline_id)
     PipelinesApi(api_client).start_update(pipeline_id, full_refresh=False)
-    click.echo("Run triggered for pipeline {}".format(pipeline_id))
+    click.echo("Run triggered for pipeline {}.".format(pipeline_id))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Starts the execution of a pipeline run')
+               short_help='Starts a pipeline run.')
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @click.option('--full-refresh', default=False, type=bool,
               help='If true, truncates tables and creates new checkpoint' +
-                   ' folders so data is reprocessed from scratch')
+                   ' folders so that data is reprocessed from the beginning.')
 @debug_option
 @profile_option
 @pipelines_exception_eater
 @provide_api_client
 def update_cli(api_client, pipeline_id, full_refresh):
     """
-    Starts the execution of a pipelines run by starting the cluster and processing data.
+    Starts a pipelines run by starting the cluster and processing data.
 
     Usage:
 
@@ -248,11 +249,11 @@ def update_cli(api_client, pipeline_id, full_refresh):
     """
     _validate_pipeline_id(pipeline_id)
     PipelinesApi(api_client).start_update(pipeline_id, full_refresh=full_refresh)
-    click.echo("Started an update for pipeline {}".format(pipeline_id))
+    click.echo("Started an update for pipeline {}.".format(pipeline_id))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Stops the execution of a pipeline run')
+               short_help='Stops the pipeline run.')
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
@@ -261,7 +262,7 @@ def update_cli(api_client, pipeline_id, full_refresh):
 @provide_api_client
 def stop_cli(api_client, pipeline_id):
     """
-    Stops the execution of a pipeline run by terminating the cluster. Processing of data can
+    Stops the pipeline run by terminating the cluster. Processing of data can
     be resumed by calling `run`.
 
     Usage:
@@ -270,7 +271,7 @@ def stop_cli(api_client, pipeline_id):
     """
     _validate_pipeline_id(pipeline_id)
     PipelinesApi(api_client).stop(pipeline_id)
-    click.echo("Stopped pipeline {}".format(pipeline_id))
+    click.echo("Stopped pipeline {}.".format(pipeline_id))
 
 
 def _read_spec(src):
@@ -287,7 +288,7 @@ def _read_spec(src):
         except json_parse_exception as e:
             error_and_quit("Invalid JSON provided in spec\n{}".format(e))
     else:
-        raise ValueError('The provided file extension for the spec is not supported')
+        raise ValueError('The provided file extension for the spec is not supported.')
 
 
 def _get_pipeline_url(api_client, pipeline_id):
@@ -306,7 +307,7 @@ def _write_spec(src, spec):
 
 def _validate_pipeline_id(pipeline_id):
     """
-    Checks if the pipeline_id is not empty and only contains -, _ and alphanumeric characters
+    Checks if the pipeline_id is not empty and only contains -, _ and alphanumeric characters.
     """
     if pipeline_id is None or len(pipeline_id) == 0:
         error_and_quit(u'Empty pipeline id provided')
