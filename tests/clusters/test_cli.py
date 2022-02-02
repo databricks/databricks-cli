@@ -24,8 +24,6 @@
 # pylint:disable=redefined-outer-name
 
 import json
-import sys
-
 import mock
 import pytest
 from click.testing import CliRunner
@@ -54,14 +52,6 @@ def cluster_api_mock():
         _cluster_api_mock.get_cluster = mock.MagicMock(return_value=rv)
 
         yield _cluster_api_mock
-
-
-@pytest.fixture
-def tunnel_api_mock():
-    with mock.patch('databricks_cli.tunnel.api.TunnelApi') as TunnelApiMock:
-        _tunnel_api_mock = mock.MagicMock()
-        TunnelApiMock.return_value = _tunnel_api_mock
-        yield _tunnel_api_mock
 
 
 @provide_conf
@@ -138,24 +128,6 @@ def test_get_cli(cluster_api_mock):
     runner = CliRunner()
     runner.invoke(cli.get_cli, ['--cluster-id', CLUSTER_ID])
     assert cluster_api_mock.get_cluster.call_args[0][0] == CLUSTER_ID
-
-
-@pytest.mark.skipif(sys.version_info < (3, 6), reason="python version must be >= 3.6")
-class TestTunnelCli(object):
-    @classmethod
-    def setup_class(cls):
-        cls.runner = CliRunner()
-
-    @provide_conf
-    def test_tunnel_cli_with_cluster_id(self, tunnel_api_mock):
-        self.runner.invoke(cli.tunnel_cli, ['--cluster-id', CLUSTER_ID])
-        assert tunnel_api_mock.start_tunneling.call_count == 1
-
-    def test_tunnel_cli_without_required_args(self):
-        res = self.runner.invoke(cli.tunnel_cli, [])
-        assert_cli_output(res.output,
-                          "Error: Missing None. One of ['cluster-id', 'cluster-name'] must be "
-                          "provided.")
 
 
 @pytest.fixture()

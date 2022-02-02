@@ -22,7 +22,6 @@
 # limitations under the License.
 
 API_VERSION = '2.0'
-OLD_API_VERSION = '1.2'
 
 # Available API versions
 API_VERSIONS = ['2.0', '2.1']
