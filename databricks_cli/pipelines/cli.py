@@ -63,7 +63,7 @@ PIPELINE_ID_PERMITTED_CHARACTERS = set(string.ascii_letters + string.digits + '-
 def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
     """
     Deploys a pipeline according to the pipeline specification. The pipeline spec is a
-    specification that explains how to run a Delta Live Tables pipeline on Databricks.
+    JSON document that defines the required settings to run a Delta Live Tables pipeline on Databricks.
     All local libraries referenced in the spec are uploaded to DBFS.
 
     If the pipeline spec contains an "id" field, or if a pipeline id is specified directly
