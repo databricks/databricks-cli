@@ -207,6 +207,9 @@ def get_cli(api_client, job_id, version):
                    'i.e. {"name": "john doe", "age": 35}')
 @click.option('--python-params', default=None, type=JsonClickType(),
               help='JSON string specifying an array of parameters. i.e. ["param1", "param2"]')
+@click.option('--python-named-params', default=None, type=JsonClickType(),
+              help='JSON string specifying a map of key-value pairs. '
+                   'i.e. {"name": "john doe", "age": 35}')
 @click.option('--spark-submit-params', default=None, type=JsonClickType(),
               help='JSON string specifying an array of parameters. i.e. '
                    '["--class", "org.apache.spark.examples.SparkPi"]')
@@ -217,7 +220,7 @@ def get_cli(api_client, job_id, version):
 @eat_exceptions
 @provide_api_client
 def run_now_cli(api_client, job_id, jar_params, notebook_params, python_params,
-                spark_submit_params, version):
+                python_named_params, spark_submit_params, version):
     """
     Runs a job with optional per-run parameters.
 
@@ -228,10 +231,11 @@ def run_now_cli(api_client, job_id, jar_params, notebook_params, python_params,
     jar_params_json = json_loads(jar_params) if jar_params else None
     notebook_params_json = json_loads(notebook_params) if notebook_params else None
     python_params = json_loads(python_params) if python_params else None
+    python_named_params = json_loads(python_named_params) if python_named_params else None
     spark_submit_params = json_loads(spark_submit_params) if spark_submit_params else None
     res = JobsApi(api_client).run_now(
-        job_id, jar_params_json, notebook_params_json, python_params, spark_submit_params,
-        version=version)
+        job_id, jar_params_json, notebook_params_json, python_params,
+        python_named_params, spark_submit_params, version=version)
     click.echo(pretty_format(res))
 
 
