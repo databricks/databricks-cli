@@ -22,10 +22,12 @@
 # limitations under the License.
 
 # pylint:disable=redefined-outer-name
+import json
 
 import mock
 
 import pytest
+import requests
 
 import databricks_cli.repos.api as api
 import databricks_cli.workspace.api as workspace_api
@@ -43,6 +45,10 @@ TEST_NON_REPO_JSON_RESPONSE = {
     'object_type': workspace_api.DIRECTORY,
     'created_at': 124,
     'object_id': TEST_ID,
+}
+TEST_ERROR_JSON_RESPONSE = {
+    'error': "Permission Denied",
+    'message': "Unauthorized access to Org: 123456",
 }
 
 
@@ -71,5 +77,14 @@ class TestGetRepoId(object):
 
     def test_get_id_not_a_repo(self, repos_api_with_ws_service):
         repos_api_with_ws_service.ws_client.get_status.return_value = TEST_NON_REPO_JSON_RESPONSE
+        with pytest.raises(RuntimeError):
+            repos_api_with_ws_service.get_repo_id(TEST_PATH)
+
+    def test_get_id_other_error(self, repos_api_with_ws_service):
+        response = requests.Response()
+        response.status_code = 403
+        response._content = json.dumps(TEST_ERROR_JSON_RESPONSE).encode() #  NOQA
+        repos_api_with_ws_service.ws_client.get_status.side_effect = mock.Mock(
+            side_effect=requests.exceptions.HTTPError(response=response))
         with pytest.raises(RuntimeError):
             repos_api_with_ws_service.get_repo_id(TEST_PATH)
