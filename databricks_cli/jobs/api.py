@@ -57,6 +57,5 @@ class JobsApi(object):
 
     def _list_jobs_by_name(self, name, headers=None):
         jobs = self.list_jobs(headers=headers)['jobs']
-        result = list(
-            filter(lambda job: job['settings']['name'] == name, jobs))
+        result = list(filter(lambda job: job['settings']['name'] == name, jobs))
         return result
