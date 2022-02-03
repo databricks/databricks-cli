@@ -131,13 +131,13 @@ def test_list_jobs():
 def test_run_now():
     with mock.patch('databricks_cli.sdk.ApiClient') as api_client_mock:
         api = JobsApi(api_client_mock)
-        api.run_now('1', ['bla'], None, None, None)
+        api.run_now('1', ['bla'], None, None, None, None)
         api_client_mock.perform_query.assert_called_with(
             'POST', '/jobs/run-now', data={'job_id': '1', 'jar_params': ['bla']},
             headers=None, version=None
         )
 
-        api.run_now('1', ['bla'], None, None, None, version='3.0')
+        api.run_now('1', ['bla'], None, None, None, None, version='3.0')
         api_client_mock.perform_query.assert_called_with(
             'POST', '/jobs/run-now', data={'job_id': '1', 'jar_params': ['bla']},
             headers=None, version='3.0'

@@ -191,6 +191,7 @@ RUN_NOW_RETURN = {
 NOTEBOOK_PARAMS = '{"a": 1}'
 JAR_PARAMS = '[1, 2, 3]'
 PYTHON_PARAMS = '["python", "params"]'
+PYTHON_NAMED_PARAMS = '{"python": "named", "params": 1}'
 SPARK_SUBMIT_PARAMS = '["--class", "org.apache.spark.examples.SparkPi"]'
 
 
@@ -217,6 +218,7 @@ def test_run_now_with_params(jobs_api_mock):
                                         '--jar-params', JAR_PARAMS,
                                         '--notebook-params', NOTEBOOK_PARAMS,
                                         '--python-params', PYTHON_PARAMS,
+                                        '--python-named-params', PYTHON_NAMED_PARAMS,
                                         '--spark-submit-params', SPARK_SUBMIT_PARAMS])
         assert jobs_api_mock.run_now.call_args[0][0] == 1
         assert jobs_api_mock.run_now.call_args[0][1] == json.loads(JAR_PARAMS)
@@ -225,6 +227,8 @@ def test_run_now_with_params(jobs_api_mock):
         assert jobs_api_mock.run_now.call_args[0][3] == json.loads(
             PYTHON_PARAMS)
         assert jobs_api_mock.run_now.call_args[0][4] == json.loads(
+            PYTHON_NAMED_PARAMS)
+        assert jobs_api_mock.run_now.call_args[0][5] == json.loads(
             SPARK_SUBMIT_PARAMS)
         assert echo_mock.call_args[0][0] == pretty_format(RUN_NOW_RETURN)
 
