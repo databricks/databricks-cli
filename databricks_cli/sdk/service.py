@@ -43,15 +43,13 @@ class JobsService(object):
         if new_cluster is not None:
             _data['new_cluster'] = new_cluster
             if not isinstance(new_cluster, dict):
-                raise TypeError(
-                    'Expected databricks.NewCluster() or dict for field new_cluster')
+                raise TypeError('Expected databricks.NewCluster() or dict for field new_cluster')
         if libraries is not None:
             _data['libraries'] = libraries
         if email_notifications is not None:
             _data['email_notifications'] = email_notifications
             if not isinstance(email_notifications, dict):
-                raise TypeError(
-                    'Expected databricks.JobEmailNotifications() or dict for field email_notifications')
+                raise TypeError('Expected databricks.JobEmailNotifications() or dict for field email_notifications')
         if timeout_seconds is not None:
             _data['timeout_seconds'] = timeout_seconds
         if max_retries is not None:
@@ -63,28 +61,23 @@ class JobsService(object):
         if schedule is not None:
             _data['schedule'] = schedule
             if not isinstance(schedule, dict):
-                raise TypeError(
-                    'Expected databricks.CronSchedule() or dict for field schedule')
+                raise TypeError('Expected databricks.CronSchedule() or dict for field schedule')
         if notebook_task is not None:
             _data['notebook_task'] = notebook_task
             if not isinstance(notebook_task, dict):
-                raise TypeError(
-                    'Expected databricks.NotebookTask() or dict for field notebook_task')
+                raise TypeError('Expected databricks.NotebookTask() or dict for field notebook_task')
         if spark_jar_task is not None:
             _data['spark_jar_task'] = spark_jar_task
             if not isinstance(spark_jar_task, dict):
-                raise TypeError(
-                    'Expected databricks.SparkJarTask() or dict for field spark_jar_task')
+                raise TypeError('Expected databricks.SparkJarTask() or dict for field spark_jar_task')
         if spark_python_task is not None:
             _data['spark_python_task'] = spark_python_task
             if not isinstance(spark_python_task, dict):
-                raise TypeError(
-                    'Expected databricks.SparkPythonTask() or dict for field spark_python_task')
+                raise TypeError('Expected databricks.SparkPythonTask() or dict for field spark_python_task')
         if spark_submit_task is not None:
             _data['spark_submit_task'] = spark_submit_task
             if not isinstance(spark_submit_task, dict):
-                raise TypeError(
-                    'Expected databricks.SparkSubmitTask() or dict for field spark_submit_task')
+                raise TypeError('Expected databricks.SparkSubmitTask() or dict for field spark_submit_task')
         if max_concurrent_runs is not None:
             _data['max_concurrent_runs'] = max_concurrent_runs
         if tasks is not None:
@@ -102,30 +95,25 @@ class JobsService(object):
         if new_cluster is not None:
             _data['new_cluster'] = new_cluster
             if not isinstance(new_cluster, dict):
-                raise TypeError(
-                    'Expected databricks.NewCluster() or dict for field new_cluster')
+                raise TypeError('Expected databricks.NewCluster() or dict for field new_cluster')
         if libraries is not None:
             _data['libraries'] = libraries
         if notebook_task is not None:
             _data['notebook_task'] = notebook_task
             if not isinstance(notebook_task, dict):
-                raise TypeError(
-                    'Expected databricks.NotebookTask() or dict for field notebook_task')
+                raise TypeError('Expected databricks.NotebookTask() or dict for field notebook_task')
         if spark_jar_task is not None:
             _data['spark_jar_task'] = spark_jar_task
             if not isinstance(spark_jar_task, dict):
-                raise TypeError(
-                    'Expected databricks.SparkJarTask() or dict for field spark_jar_task')
+                raise TypeError('Expected databricks.SparkJarTask() or dict for field spark_jar_task')
         if spark_python_task is not None:
             _data['spark_python_task'] = spark_python_task
             if not isinstance(spark_python_task, dict):
-                raise TypeError(
-                    'Expected databricks.SparkPythonTask() or dict for field spark_python_task')
+                raise TypeError('Expected databricks.SparkPythonTask() or dict for field spark_python_task')
         if spark_submit_task is not None:
             _data['spark_submit_task'] = spark_submit_task
             if not isinstance(spark_submit_task, dict):
-                raise TypeError(
-                    'Expected databricks.SparkSubmitTask() or dict for field spark_submit_task')
+                raise TypeError('Expected databricks.SparkSubmitTask() or dict for field spark_submit_task')
         if timeout_seconds is not None:
             _data['timeout_seconds'] = timeout_seconds
         if tasks is not None:
@@ -139,8 +127,7 @@ class JobsService(object):
         if new_settings is not None:
             _data['new_settings'] = new_settings
             if not isinstance(new_settings, dict):
-                raise TypeError(
-                    'Expected databricks.JobSettings() or dict for field new_settings')
+                raise TypeError('Expected databricks.JobSettings() or dict for field new_settings')
         return self.client.perform_query('POST', '/jobs/reset', data=_data, headers=headers, version=version)
 
     def delete_job(self, job_id, headers=None, version=None):
@@ -255,8 +242,7 @@ class ClusterService(object):
         if autoscale is not None:
             _data['autoscale'] = autoscale
             if not isinstance(autoscale, dict):
-                raise TypeError(
-                    'Expected databricks.AutoScale() or dict for field autoscale')
+                raise TypeError('Expected databricks.AutoScale() or dict for field autoscale')
         if cluster_name is not None:
             _data['cluster_name'] = cluster_name
         if spark_version is not None:
@@ -266,8 +252,7 @@ class ClusterService(object):
         if aws_attributes is not None:
             _data['aws_attributes'] = aws_attributes
             if not isinstance(aws_attributes, dict):
-                raise TypeError(
-                    'Expected databricks.AwsAttributes() or dict for field aws_attributes')
+                raise TypeError('Expected databricks.AwsAttributes() or dict for field aws_attributes')
         if node_type_id is not None:
             _data['node_type_id'] = node_type_id
         if driver_node_type_id is not None:
@@ -279,8 +264,7 @@ class ClusterService(object):
         if cluster_log_conf is not None:
             _data['cluster_log_conf'] = cluster_log_conf
             if not isinstance(cluster_log_conf, dict):
-                raise TypeError(
-                    'Expected databricks.ClusterLogConf() or dict for field cluster_log_conf')
+                raise TypeError('Expected databricks.ClusterLogConf() or dict for field cluster_log_conf')
         if spark_env_vars is not None:
             _data['spark_env_vars'] = spark_env_vars
         if autotermination_minutes is not None:
@@ -331,8 +315,7 @@ class ClusterService(object):
         if autoscale is not None:
             _data['autoscale'] = autoscale
             if not isinstance(autoscale, dict):
-                raise TypeError(
-                    'Expected databricks.AutoScale() or dict for field autoscale')
+                raise TypeError('Expected databricks.AutoScale() or dict for field autoscale')
         return self.client.perform_query('POST', '/clusters/resize', data=_data, headers=headers)
 
     def edit_cluster(self, cluster_id, num_workers=None, autoscale=None, cluster_name=None,
@@ -349,8 +332,7 @@ class ClusterService(object):
         if autoscale is not None:
             _data['autoscale'] = autoscale
             if not isinstance(autoscale, dict):
-                raise TypeError(
-                    'Expected databricks.AutoScale() or dict for field autoscale')
+                raise TypeError('Expected databricks.AutoScale() or dict for field autoscale')
         if cluster_name is not None:
             _data['cluster_name'] = cluster_name
         if spark_version is not None:
@@ -360,8 +342,7 @@ class ClusterService(object):
         if aws_attributes is not None:
             _data['aws_attributes'] = aws_attributes
             if not isinstance(aws_attributes, dict):
-                raise TypeError(
-                    'Expected databricks.AwsAttributes() or dict for field aws_attributes')
+                raise TypeError('Expected databricks.AwsAttributes() or dict for field aws_attributes')
         if node_type_id is not None:
             _data['node_type_id'] = node_type_id
         if driver_node_type_id is not None:
@@ -373,8 +354,7 @@ class ClusterService(object):
         if cluster_log_conf is not None:
             _data['cluster_log_conf'] = cluster_log_conf
             if not isinstance(cluster_log_conf, dict):
-                raise TypeError(
-                    'Expected databricks.ClusterLogConf() or dict for field cluster_log_conf')
+                raise TypeError('Expected databricks.ClusterLogConf() or dict for field cluster_log_conf')
         if spark_env_vars is not None:
             _data['spark_env_vars'] = spark_env_vars
         if autotermination_minutes is not None:
@@ -569,8 +549,7 @@ class DbfsService(object):
         if src_path is not None:
             headers = {'Content-Type': None}
             filename = os.path.basename(src_path)
-            _files = {'file': (filename, open(
-                src_path, 'rb'), 'multipart/form-data')}
+            _files = {'file': (filename, open(src_path, 'rb'), 'multipart/form-data')}
         return self.client.perform_query('POST', '/dbfs/put', data=_data, headers=headers, files=_files)
 
     def put_test(self, path, contents=None, overwrite=None, headers=None, src_path=None):
@@ -585,8 +564,7 @@ class DbfsService(object):
         if src_path is not None:
             headers = {'Content-Type': None}
             filename = os.path.basename(src_path)
-            _files = {'file': (filename, open(
-                src_path, 'rb'), 'multipart/form-data')}
+            _files = {'file': (filename, open(src_path, 'rb'), 'multipart/form-data')}
         return self.client.perform_query('POST', '/dbfs/put', data=_data, headers=headers, files=_files)
 
     def mkdirs(self, path, headers=None):
@@ -922,8 +900,7 @@ class InstancePoolService(object):
         if aws_attributes is not None:
             _data['aws_attributes'] = aws_attributes
             if not isinstance(aws_attributes, dict):
-                raise TypeError(
-                    'Expected databricks.InstancePoolAwsAttributes() or dict for field aws_attributes')
+                raise TypeError('Expected databricks.InstancePoolAwsAttributes() or dict for field aws_attributes')
         if node_type_id is not None:
             _data['node_type_id'] = node_type_id
         if custom_tags is not None:
@@ -935,8 +912,7 @@ class InstancePoolService(object):
         if disk_spec is not None:
             _data['disk_spec'] = disk_spec
             if not isinstance(disk_spec, dict):
-                raise TypeError(
-                    'Expected databricks.DiskSpec() or dict for field disk_spec')
+                raise TypeError('Expected databricks.DiskSpec() or dict for field disk_spec')
         if preloaded_spark_versions is not None:
             _data['preloaded_spark_versions'] = preloaded_spark_versions
         return self.client.perform_query('POST', '/instance-pools/create', data=_data, headers=headers)
@@ -963,8 +939,7 @@ class InstancePoolService(object):
         if aws_attributes is not None:
             _data['aws_attributes'] = aws_attributes
             if not isinstance(aws_attributes, dict):
-                raise TypeError(
-                    'Expected databricks.InstancePoolAwsAttributes() or dict for field aws_attributes')
+                raise TypeError('Expected databricks.InstancePoolAwsAttributes() or dict for field aws_attributes')
         if node_type_id is not None:
             _data['node_type_id'] = node_type_id
         if custom_tags is not None:
@@ -976,8 +951,7 @@ class InstancePoolService(object):
         if disk_spec is not None:
             _data['disk_spec'] = disk_spec
             if not isinstance(disk_spec, dict):
-                raise TypeError(
-                    'Expected databricks.DiskSpec() or dict for field disk_spec')
+                raise TypeError('Expected databricks.DiskSpec() or dict for field disk_spec')
         if preloaded_spark_versions is not None:
             _data['preloaded_spark_versions'] = preloaded_spark_versions
         return self.client.perform_query('POST', '/instance-pools/edit', data=_data, headers=headers)
@@ -1016,13 +990,11 @@ class DeltaPipelinesService(object):
         if trigger is not None:
             _data['trigger'] = trigger
             if not isinstance(trigger, dict):
-                raise TypeError(
-                    'Expected databricks.PipelineTrigger() or dict for field trigger')
+                raise TypeError('Expected databricks.PipelineTrigger() or dict for field trigger')
         if filters is not None:
             _data['filters'] = filters
             if not isinstance(filters, dict):
-                raise TypeError(
-                    'Expected databricks.Filters() or dict for field filters')
+                raise TypeError('Expected databricks.Filters() or dict for field filters')
         if allow_duplicate_names is not None:
             _data['allow_duplicate_names'] = allow_duplicate_names
         return self.client.perform_query('POST', '/pipelines', data=_data, headers=headers)
@@ -1046,13 +1018,11 @@ class DeltaPipelinesService(object):
         if trigger is not None:
             _data['trigger'] = trigger
             if not isinstance(trigger, dict):
-                raise TypeError(
-                    'Expected databricks.PipelineTrigger() or dict for field trigger')
+                raise TypeError('Expected databricks.PipelineTrigger() or dict for field trigger')
         if filters is not None:
             _data['filters'] = filters
             if not isinstance(filters, dict):
-                raise TypeError(
-                    'Expected databricks.Filters() or dict for field filters')
+                raise TypeError('Expected databricks.Filters() or dict for field filters')
         if allow_duplicate_names is not None:
             _data['allow_duplicate_names'] = allow_duplicate_names
         return self.client.perform_query('PUT', '/pipelines/{pipeline_id}'.format(pipeline_id=pipeline_id), data=_data,
@@ -1075,8 +1045,7 @@ class DeltaPipelinesService(object):
         if pagination is not None:
             _data['pagination'] = pagination
             if not isinstance(pagination, dict):
-                raise TypeError(
-                    'Expected databricks.Pagination() or dict for field pagination')
+                raise TypeError('Expected databricks.Pagination() or dict for field pagination')
         return self.client.perform_query('GET', '/pipelines', data=_data, headers=headers)
 
     def reset(self, pipeline_id=None, headers=None):
@@ -1096,8 +1065,6 @@ class DeltaPipelinesService(object):
 
         return self.client.perform_query('POST', '/pipelines/{pipeline_id}/stop'.format(pipeline_id=pipeline_id),
                                          data=_data, headers=headers)
-
-
 class ReposService(object):
     def __init__(self, client):
         self.client = client
@@ -1112,9 +1079,9 @@ class ReposService(object):
 
     def get_repo(self, id, headers=None):
         _data = {}
-
+    
         return self.client.perform_query('GET', '/repos/{id}'.format(id=id), data=_data, headers=headers)
-
+    
     def update_repo(self, id, branch=None, tag=None, headers=None):
         _data = {}
         if branch is not None:
@@ -1122,7 +1089,7 @@ class ReposService(object):
         if tag is not None:
             _data['tag'] = tag
         return self.client.perform_query('PATCH', '/repos/{id}'.format(id=id), data=_data, headers=headers)
-
+    
     def create_repo(self, url, provider, path=None, headers=None):
         _data = {}
         if url is not None:
@@ -1135,5 +1102,5 @@ class ReposService(object):
 
     def delete_repo(self, id, headers=None):
         _data = {}
-
+    
         return self.client.perform_query('DELETE', '/repos/{id}'.format(id=id), data=_data, headers=headers)

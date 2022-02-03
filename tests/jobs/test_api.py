@@ -59,8 +59,7 @@ def test_list_jobs_by_name(jobs_api):
     assert len(res) == 1
     assert res[0]['settings']['name'] == test_job_name
 
-    jobs_api.list_jobs.return_value = {
-        'jobs': [test_job, test_job_alt, test_job]}
+    jobs_api.list_jobs.return_value = {'jobs': [test_job, test_job_alt, test_job]}
     res = jobs_api._list_jobs_by_name(test_job_name)
     assert len(res) == 2
     assert res[0]['settings']['name'] == test_job_name
