@@ -330,7 +330,7 @@ def test_library_object_serialization_deserialization():
 
 def test_list(pipelines_api):
     client_mock = pipelines_api.client.client.perform_query
-    client_mock.side_effect = [{"statuses": [], "pagination": {}}]
+    client_mock.side_effect = [{"statuses": []}]
 
     pipelines_api.list()
     assert client_mock.call_count == 1
@@ -341,13 +341,13 @@ def test_list(pipelines_api):
 
 def test_list_with_page_token(pipelines_api):
     client_mock = pipelines_api.client.client.perform_query
-    client_mock.side_effect = [{"statuses": [], "pagination": {"next_page_token": "a"}},
-                               {"statuses": [], "pagination": {}}]
+    client_mock.side_effect = [{"statuses": [], "next_page_token": "a"},
+                               {"statuses": []}]
 
     pipelines_api.list()
     assert client_mock.call_count == 2
     client_mock.assert_called_with('GET', '/pipelines',
-                                   data={"pagination.page_token": "a"}, headers=None)
+                                   data={"page_token": "a"}, headers=None)
 
 
 def test_list_with_paginated_responses(pipelines_api):
@@ -363,7 +363,7 @@ def test_list_with_paginated_responses(pipelines_api):
                        'cluster_id': '1024-160918-tees475',
                        'name': 'Wiki Pipeline',
                        'health': 'HEALTHY'}],
-         'pagination': {'next_page_token': 'page2'}
+         'next_page_token': 'page2'
          },
         {'statuses': [{'pipeline_id': '3',
                        'state': 'RUNNING',
@@ -375,9 +375,8 @@ def test_list_with_paginated_responses(pipelines_api):
                        'cluster_id': '1023-093505-corm4',
                        'name': 'Jira Automation Staging',
                        'health': 'HEALTHY'}],
-         'pagination': {
-             'next_page_token': 'page3',
-             'prev_page_token': 'page2'}
+         'next_page_token': 'page3',
+         'prev_page_token': 'page2'
          },
         {'statuses': [{'pipeline_id': '5',
                        'state': 'FAILED',
@@ -389,8 +388,7 @@ def test_list_with_paginated_responses(pipelines_api):
                        'cluster_id': '1027-061023-clasp844',
                        'name': 'Pipeline Demo NYCTaxi',
                        'health': 'HEALTHY'}],
-         'pagination': {
-             'prev_page_token': 'page3'}
+         'prev_page_token': 'page3'
          }
     ]
 
@@ -403,10 +401,10 @@ def test_list_with_paginated_responses(pipelines_api):
                       data={},
                       headers=None),
             mock.call('GET', '/pipelines',
-                      data={"pagination.page_token": "page2"},
+                      data={"page_token": "page2"},
                       headers=None),
             mock.call('GET', '/pipelines',
-                      data={"pagination.page_token": "page3"},
+                      data={"page_token": "page3"},
                       headers=None)
         ], any_order=False)
 
@@ -426,7 +424,7 @@ def test_list_with_no_returned_pipelines(pipelines_api):
                        'cluster_id': '1024-160918-tees475',
                        'name': 'Wiki Pipeline',
                        'health': 'HEALTHY'}],
-         'pagination': {'next_page_token': 'page2'}
+         'next_page_token': 'page2'
          },
         {}
     ]
@@ -440,7 +438,7 @@ def test_list_with_no_returned_pipelines(pipelines_api):
                       data={},
                       headers=None),
             mock.call('GET', '/pipelines',
-                      data={"pagination.page_token": "page2"},
+                      data={"page_token": "page2"},
                       headers=None)
         ], any_order=False)
 

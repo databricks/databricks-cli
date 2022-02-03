@@ -6,6 +6,8 @@ ignore-paths:
   - sdk
   - build
   - env
+  - tunnel
+  - commands
 
 max-line-length: 100
 
@@ -24,6 +26,8 @@ pylint:
     - consider-using-set-comprehension
     - useless-object-inheritance
     - unnecessary-pass
+    - superfluous-parens
+    - import-error
 
 mccabe:
   disable:

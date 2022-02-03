@@ -95,8 +95,9 @@ def test_get_request_with_float_param(m):
 
 def test_get_request_with_list_param(m):
     client = ApiClient(user='apple', password='banana', host='https://databricks.com')
-    with pytest.raises(AssertionError, message='cannot pass list of objects'):
+    with pytest.raises(AssertionError) as ex_info:
         client.perform_query('GET', '/endpoint', {'job_id': ['a','b']})
+        assert str(ex_info.value) == 'cannot pass list of objects'
 
 
 def test_get_url():

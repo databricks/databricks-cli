@@ -151,7 +151,7 @@ class ApiClient(object):
         if version:
             return self.url + version + path
         elif self.jobs_api_version and path and path.startswith('/jobs'):
-            return self.url + self.jobs_api_version + path 
+            return self.url + self.jobs_api_version + path
         return self.url + self.api_version + path
 
 
