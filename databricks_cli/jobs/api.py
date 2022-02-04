@@ -49,10 +49,10 @@ class JobsApi(object):
         return self.client.client.perform_query('POST', '/jobs/reset', data=json, headers=headers,
                                                 version=version)
 
-    def run_now(self, job_id, jar_params, notebook_params, python_params, python_named_params,
-                spark_submit_params, headers=None, version=None):
+    def run_now(self, job_id, jar_params, notebook_params, python_params, spark_submit_params,
+                python_named_params=None, headers=None, version=None):
         return self.client.run_now(job_id, jar_params, notebook_params, python_params,
-                                   python_named_params, spark_submit_params, headers=headers,
+                                   spark_submit_params, python_named_params, headers=headers,
                                    version=version)
 
     def _list_jobs_by_name(self, name, headers=None):
