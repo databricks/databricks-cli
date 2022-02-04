@@ -227,9 +227,9 @@ def test_run_now_with_params(jobs_api_mock):
         assert jobs_api_mock.run_now.call_args[0][3] == json.loads(
             PYTHON_PARAMS)
         assert jobs_api_mock.run_now.call_args[0][4] == json.loads(
-            PYTHON_NAMED_PARAMS)
-        assert jobs_api_mock.run_now.call_args[0][5] == json.loads(
             SPARK_SUBMIT_PARAMS)
+        assert jobs_api_mock.run_now.call_args[0][5] == json.loads(
+            PYTHON_NAMED_PARAMS)
         assert echo_mock.call_args[0][0] == pretty_format(RUN_NOW_RETURN)
 
 

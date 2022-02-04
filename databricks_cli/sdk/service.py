@@ -156,8 +156,8 @@ class JobsService(object):
 
         return self.client.perform_query('GET', '/jobs/list', data=_data, headers=headers, version=version)
 
-    def run_now(self, job_id=None, jar_params=None, notebook_params=None, python_params=None, python_named_params=None,
-                spark_submit_params=None, headers=None, version=None):
+    def run_now(self, job_id=None, jar_params=None, notebook_params=None, python_params=None, spark_submit_params=None,
+                python_named_params=None, headers=None, version=None):
         _data = {}
         if job_id is not None:
             _data['job_id'] = job_id
