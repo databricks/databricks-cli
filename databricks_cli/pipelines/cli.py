@@ -187,7 +187,7 @@ def list_cli(api_client):
 @provide_api_client
 def reset_cli(api_client, pipeline_id):
     """
-    [Deprecated] Use the "update --full-refresh" command instead.
+    [Deprecated] Use the "start --full-refresh" command instead.
 
     Resets a pipeline by truncating tables and creating new checkpoint folders so that data is
     reprocessed from the beginning.
@@ -213,7 +213,7 @@ def reset_cli(api_client, pipeline_id):
 @provide_api_client
 def run_cli(api_client, pipeline_id):
     """
-    [Deprecated] Use the "update" command instead.
+    [Deprecated] Use the "start" command instead.
 
     Starts a pipeline run by starting the cluster and processing data.
 
@@ -239,13 +239,13 @@ def run_cli(api_client, pipeline_id):
 @profile_option
 @pipelines_exception_eater
 @provide_api_client
-def update_cli(api_client, pipeline_id, full_refresh):
+def start_cli(api_client, pipeline_id, full_refresh):
     """
     Starts a pipelines run by starting the cluster and processing data.
 
     Usage:
 
-    databricks pipelines update --pipeline-id 1234 --full-refresh=(false|true)
+    databricks pipelines start --pipeline-id 1234 --full-refresh=(false|true)
     """
     _validate_pipeline_id(pipeline_id)
     PipelinesApi(api_client).start_update(pipeline_id, full_refresh=full_refresh)
@@ -349,7 +349,7 @@ pipelines_group.add_command(deploy_cli, name='deploy')
 pipelines_group.add_command(delete_cli, name='delete')
 pipelines_group.add_command(get_cli, name='get')
 pipelines_group.add_command(list_cli, name='list')
-pipelines_group.add_command(update_cli, name='update')
+pipelines_group.add_command(start_cli, name='start')
 pipelines_group.add_command(stop_cli, name='stop')
 
 # DEPRECATED and will be removed in future versions.
