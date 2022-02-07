@@ -177,8 +177,9 @@ def list_cli(api_client):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='[Deprecated] Resets a pipeline so that data can' +
-                          ' be reprocessed from the beginning.')
+               short_help='[Deprecated] Use the "start --full-refresh" command instead. ' +
+                          'Resets a pipeline so that data can be reprocessed ' +
+                          'from the beginning.')
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
@@ -204,7 +205,8 @@ def reset_cli(api_client, pipeline_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='[Deprecated] Starts a pipeline run.')
+               short_help='[Deprecated] Use the "start" command instead. ' +
+                          'Starts a pipeline run.')
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
@@ -245,7 +247,7 @@ def start_cli(api_client, pipeline_id, full_refresh):
 
     Usage:
 
-    databricks pipelines start --pipeline-id 1234 --full-refresh=(false|true)
+    databricks pipelines start --pipeline-id 1234 --full-refresh=true
     """
     _validate_pipeline_id(pipeline_id)
     PipelinesApi(api_client).start_update(pipeline_id, full_refresh=full_refresh)
