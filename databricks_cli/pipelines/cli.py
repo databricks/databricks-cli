@@ -53,7 +53,7 @@ PIPELINE_ID_PERMITTED_CHARACTERS = set(string.ascii_letters + string.digits + '-
 @click.argument('spec_arg', default=None, required=False)
 @click.option('--spec', default=None, type=PipelineSpecClickType(), help=PipelineSpecClickType.help)
 @click.option('--allow-duplicate-names', is_flag=True,
-              help="Skip duplicate name check while deploying pipeline.")
+              help="If true, skips duplicate name checking while deploying the pipeline.")
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
@@ -63,7 +63,7 @@ PIPELINE_ID_PERMITTED_CHARACTERS = set(string.ascii_letters + string.digits + '-
 def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
     """
     Deploys a pipeline according to the pipeline specification. The pipeline spec is a
-    JSON document that defines the required settings to run a Delta Live Tables pipeline
+    JSON document that defines the required settings to run a Delta Live Tables pipelines
     on Databricks. All local libraries referenced in the spec are uploaded to DBFS.
 
     If the pipeline spec contains an "id" field, or if a pipeline id is specified directly
@@ -106,10 +106,10 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
     else:
         if (pipeline_id and 'id' in spec_obj) and pipeline_id != spec_obj["id"]:
             raise ValueError(
-                "The ID provided in --pipeline_id '{}' is different from the id provided "
+                "The ID provided in --pipeline_id '{}' is different from the ID provided "
                 "in the spec '{}'. Resolve the conflict and try the command again. "
-                "Because pipeline IDs are no longer persisted after being deleted, we "
-                "recommend removing the ID field from your spec."
+                "Because pipeline IDs are no longer persisted after being deleted, Databricks "
+                "recommends removing the ID field from your spec."
                 .format(pipeline_id, spec_obj["id"])
             )
 
@@ -221,8 +221,8 @@ def run_cli(api_client, pipeline_id):
 
     databricks pipelines run --pipeline-id 1234
     """
-    click.echo("DeprecationWarning: the \"run\" command is deprecated," +
-               " use the \"start\" command instead.")
+    click.echo("Deprecation warning: the \"run\" command is deprecated." +
+               " Use the \"start\" command instead.")
     _validate_pipeline_id(pipeline_id)
     PipelinesApi(api_client).start_update(pipeline_id, full_refresh=False)
     click.echo("Run triggered for pipeline {}.".format(pipeline_id))
