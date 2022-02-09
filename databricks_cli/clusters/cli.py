@@ -20,7 +20,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import sys
 import time
 from datetime import datetime
 from json import loads as json_loads
@@ -331,41 +330,6 @@ def cluster_events_cli(api_client, cluster_id, start_time, end_time, order, even
         click.echo(tabulate(_cluster_events_to_table(events_json), tablefmt='plain'))
 
 
-@click.command(context_settings=CONTEXT_SETTINGS)
-@click.option('--cluster-id', cls=OneOfOption, one_of=CLUSTER_OPTIONS,
-              type=ClusterIdClickType(), default=None, help=ClusterIdClickType.help)
-@click.option('--cluster-name', cls=OneOfOption, one_of=CLUSTER_OPTIONS,
-              type=ClusterIdClickType(), default=None, help=ClusterIdClickType.help)
-@click.option('--local-port', type=click.INT,
-              help="The local port to use for the local tunneling server")
-@click.option('--debug', '-d', is_flag=True, help="Run the tunnel in debug mode")
-@profile_option
-@eat_exceptions
-@provide_api_client
-def tunnel_cli(api_client, cluster_id, cluster_name, local_port, debug):
-    """
-    [Alpha] Start a secure TCP tunnel to a cluster over Databricks' identity proxy.
-    """
-    if sys.version_info < (3, 6):
-        raise RuntimeError("The tunneling command is not supported on Python version < 3.6")
-    if not api_client.token:
-        raise RuntimeError("The tunneling cli only supports personal token authentication.")
-
-    if cluster_id:
-        pass
-    elif cluster_name:
-        cluster = ClusterApi(api_client).get_cluster_by_name(cluster_name)
-        cluster_id = cluster["cluster_id"]
-    else:
-        raise RuntimeError('cluster_name and cluster_id must not be empty!')
-
-    # TODO(tunneling-cli): move this up once we support python3 only
-    from databricks_cli.tunnel.api import TunnelApi
-
-    click.echo("Starting a secure tunnel to cluster with ID: {}...".format(cluster_id))
-    TunnelApi(api_client, cluster_id, debug=debug).start_tunneling(local_port=local_port)
-
-
 @click.group(context_settings=CONTEXT_SETTINGS,
              short_help='Utility to interact with Databricks clusters.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
@@ -393,4 +357,3 @@ clusters_group.add_command(list_node_types_cli, name='list-node-types')
 clusters_group.add_command(spark_versions_cli, name='spark-versions')
 clusters_group.add_command(permanent_delete_cli, name='permanent-delete')
 clusters_group.add_command(cluster_events_cli, name='events')
-clusters_group.add_command(tunnel_cli, name='tunnel')

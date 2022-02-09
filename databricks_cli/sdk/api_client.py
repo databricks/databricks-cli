@@ -104,8 +104,6 @@ class ApiClient(object):
         self.verify = verify
         self.api_version = api_version
         self.jobs_api_version = jobs_api_version
-        self.host = host
-        self.token = token
 
     def close(self):
         """Close the client"""
@@ -113,8 +111,7 @@ class ApiClient(object):
 
     # helper functions starting here
 
-    def perform_query(self, method, path, data={}, headers=None, files=None, version=None,
-                      return_raw_response=False):
+    def perform_query(self, method, path, data = {}, headers = None, files=None, version=None):
         """set up connection and perform query"""
         if headers is None:
             headers = self.default_headers
@@ -147,8 +144,6 @@ class ApiClient(object):
             except ValueError:
                 pass
             raise requests.exceptions.HTTPError(message, response=e.response)
-        if return_raw_response:
-            return resp
         return resp.json()
 
 
