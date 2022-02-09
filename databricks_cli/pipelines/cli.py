@@ -200,13 +200,13 @@ def reset_cli(api_client, pipeline_id):
     click.echo("DeprecationWarning: the \"reset\" command is deprecated, " +
                "use the \"start --full-refresh\" command instead.")
     _validate_pipeline_id(pipeline_id)
-    PipelinesApi(api_client).start_update(pipeline_id, full_refresh=True)
-    click.echo("Reset triggered for pipeline {}.".format(pipeline_id))
+    resp = PipelinesApi(api_client).start_update(pipeline_id, full_refresh=True)
+    click.echo(_gen_start_update_msg(resp, pipeline_id, True))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='[Deprecated] Use the "start" command instead. ' +
-                          'Starts a pipeline run.')
+                          'Starts a pipeline update.')
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
@@ -217,7 +217,7 @@ def run_cli(api_client, pipeline_id):
     """
     [Deprecated] Use the "start" command instead.
 
-    Starts a pipeline run by starting the cluster and processing data.
+    Starts a pipeline update by starting the cluster and processing data.
 
     Usage:
 
@@ -226,12 +226,12 @@ def run_cli(api_client, pipeline_id):
     click.echo("Deprecation warning: the \"run\" command is deprecated." +
                " Use the \"start\" command instead.")
     _validate_pipeline_id(pipeline_id)
-    PipelinesApi(api_client).start_update(pipeline_id, full_refresh=False)
-    click.echo("Run triggered for pipeline {}.".format(pipeline_id))
+    resp = PipelinesApi(api_client).start_update(pipeline_id, full_refresh=False)
+    click.echo(_gen_start_update_msg(resp, pipeline_id, False))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Starts a pipeline run.')
+               short_help='Starts a pipeline update.')
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @click.option('--full-refresh', default=False, type=bool,
@@ -243,19 +243,19 @@ def run_cli(api_client, pipeline_id):
 @provide_api_client
 def start_cli(api_client, pipeline_id, full_refresh):
     """
-    Starts a pipelines run by starting the cluster and processing data.
+    Starts a pipelines update by starting the cluster and processing data.
 
     Usage:
 
     databricks pipelines start --pipeline-id 1234 --full-refresh=true
     """
     _validate_pipeline_id(pipeline_id)
-    PipelinesApi(api_client).start_update(pipeline_id, full_refresh=full_refresh)
-    click.echo("Started an update for pipeline {}.".format(pipeline_id))
+    resp = PipelinesApi(api_client).start_update(pipeline_id, full_refresh=full_refresh)
+    click.echo(_gen_start_update_msg(resp, pipeline_id, full_refresh))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Stops the pipeline run.')
+               short_help='Stops the pipeline update.')
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
@@ -264,8 +264,7 @@ def start_cli(api_client, pipeline_id, full_refresh):
 @provide_api_client
 def stop_cli(api_client, pipeline_id):
     """
-    Stops the pipeline run by terminating the cluster. Processing of data can
-    be resumed by calling `run`.
+    Stops the pipelines by cancelling any active update.
 
     Usage:
 
@@ -274,6 +273,18 @@ def stop_cli(api_client, pipeline_id):
     _validate_pipeline_id(pipeline_id)
     PipelinesApi(api_client).stop(pipeline_id)
     click.echo("Stopped pipeline {}.".format(pipeline_id))
+
+
+def _gen_start_update_msg(resp, pipeline_id, full_refresh):
+    output_msg = "Started an update "
+    if resp and 'update_id' in resp:
+        output_msg += "{} ".format(resp.get('update_id'))
+
+    if full_refresh:
+        output_msg += "with full refresh "
+
+    output_msg += "for pipeline {}.".format(pipeline_id)
+    return output_msg
 
 
 def _read_spec(src):

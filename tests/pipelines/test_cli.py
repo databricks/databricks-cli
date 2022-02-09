@@ -195,6 +195,18 @@ def test_deploy_with_invalid_spec_extension(pipelines_api_mock):
     assert pipelines_api_mock.deploy.call_count == 0   
 
 
+def test_gen_start_update_msg():
+    assert "Started an update for pipeline" in \
+           cli._gen_start_update_msg(None, "pipeline-id", False)
+    assert "Started an update with full refresh for pipeline" in \
+           cli._gen_start_update_msg(None, "pipeline-id", True)
+    resp = {'update_id': "abc"}
+    assert "Started an update abc with full refresh for pipeline" in \
+           cli._gen_start_update_msg(resp, "pipeline-id", True)
+    assert "Started an update abc for pipeline" in \
+           cli._gen_start_update_msg(resp, "pipeline-id", False)
+
+
 @provide_conf
 def test_cli_id(pipelines_api_mock):
     runner = CliRunner()
