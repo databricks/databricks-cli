@@ -134,8 +134,7 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
 @provide_api_client
 def delete_cli(api_client, pipeline_id):
     """
-    Stops the pipeline and deletes its associated Databricks resources. The pipeline can be
-    resumed by deploying it again.
+    Stops the pipeline by cancelling any active update.
 
     Usage:
 
