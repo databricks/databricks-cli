@@ -125,7 +125,7 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Stops the pipeline and deletes its associated Databricks resources.')
+               short_help='Stops the pipeline by cancelling any active update.')
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
