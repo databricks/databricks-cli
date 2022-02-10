@@ -217,7 +217,7 @@ def run_cli(api_client, pipeline_id):
     """
     [Deprecated] Use the "start" command instead.
 
-    Starts a pipelines update.
+    Starts a pipeline update.
 
     Usage:
 
@@ -243,7 +243,7 @@ def run_cli(api_client, pipeline_id):
 @provide_api_client
 def start_cli(api_client, pipeline_id, full_refresh):
     """
-    Starts a pipelines update.
+    Starts a pipeline update.
 
     Usage:
 
