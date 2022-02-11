@@ -300,7 +300,8 @@ def _read_spec(src):
         except json_parse_exception as e:
             error_and_quit("Invalid JSON provided in spec\n{}".format(e))
     else:
-        raise ValueError('The provided file extension for the spec is not supported.')
+        raise ValueError('The provided file extension for the spec is not supported. ' +
+                         'Only JSON files are supported.')
 
 
 def _get_pipeline_url(api_client, pipeline_id):
