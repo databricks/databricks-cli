@@ -95,7 +95,7 @@ def import_workspace_cli(api_client, source_path, target_path, language, format,
     """
     Imports a file from local to the Databricks workspace.
 
-    The format is by default SOURCE. Possible formats are SOURCE, HTML, JUPTYER, and DBC. Each
+    The format is by default SOURCE. Possible formats are SOURCE, HTML, JUPYTER, and DBC. Each
     format is documented at
     https://docs.databricks.com/api/latest/workspace.html#notebookexportformat.
     """
@@ -116,7 +116,7 @@ def export_workspace_cli(api_client, source_path, target_path, format, overwrite
     """
     Exports a notebook from the Databricks workspace.
 
-    The format is by default SOURCE. Possible formats are SOURCE, HTML, JUPTYER, and DBC. Each
+    The format is by default SOURCE. Possible formats are SOURCE, HTML, JUPYTER, and DBC. Each
     format is documented at
     https://docs.databricks.com/api/latest/workspace.html#notebookexportformat.
     """
