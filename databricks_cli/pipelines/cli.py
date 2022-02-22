@@ -125,7 +125,7 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Stops the pipeline by cancelling any active update.')
+               short_help='Stops the pipeline by cancelling any active update and deletes it.')
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
@@ -134,7 +134,7 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
 @provide_api_client
 def delete_cli(api_client, pipeline_id):
     """
-    Stops the pipeline by cancelling any active update.
+    Stops the pipeline by cancelling any active update and deletes it.
 
     Usage:
 
@@ -254,7 +254,7 @@ def start_cli(api_client, pipeline_id, full_refresh):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Stops the pipeline update.')
+               short_help='Stops the pipelines by cancelling any active update.')
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
