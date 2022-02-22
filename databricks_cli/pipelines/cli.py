@@ -66,11 +66,11 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
     JSON document that defines the required settings to run a Delta Live Tables pipeline
     on Databricks. All local libraries referenced in the spec are uploaded to DBFS.
 
-    If the pipeline spec contains an "id" field, or if a pipeline id is specified directly
+    If the pipeline spec contains an "id" field, or if a pipeline ID is specified directly
     (using the  --pipeline-id argument), attempts to update an existing pipeline
-    with that ID. If it does not, creates a new pipeline and logs the id of the new pipeline
-    to STDOUT. Note that if an id is both specified in the spec and passed via --pipeline-id,
-    the two ids must be the same, or the command will fail.
+    with that ID. If it does not, creates a new pipeline and logs the ID of the new pipeline
+    to STDOUT. Note that if an ID is both specified in the spec and passed via --pipeline-id,
+    the two IDs must be the same, or the command will fail.
 
     The deploy command will not create a new pipeline if a pipeline with the same name already
     exists. This check can be disabled by adding the --allow-duplicate-names option.
@@ -254,7 +254,7 @@ def start_cli(api_client, pipeline_id, full_refresh):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Stops the pipelines by cancelling any active update.')
+               short_help='Stops the pipeline by cancelling any active update.')
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
@@ -263,7 +263,7 @@ def start_cli(api_client, pipeline_id, full_refresh):
 @provide_api_client
 def stop_cli(api_client, pipeline_id):
     """
-    Stops the pipelines by cancelling any active update.
+    Stops the pipeline by cancelling any active update.
 
     Usage:
 
@@ -320,12 +320,13 @@ def _write_spec(src, spec):
 
 def _validate_pipeline_id(pipeline_id):
     """
-    Checks if the pipeline_id is not empty and only contains -, _ and alphanumeric characters.
+    Checks if the pipeline ID is not empty and contains only hyphen (-),
+    underscore (_), and alphanumeric characters.
     """
     if pipeline_id is None or len(pipeline_id) == 0:
-        error_and_quit(u'Empty pipeline id provided')
+        error_and_quit(u'Empty pipeline ID provided')
     if not set(pipeline_id) <= PIPELINE_ID_PERMITTED_CHARACTERS:
-        message = u'Pipeline id {} has invalid character(s)\n'.format(pipeline_id)
+        message = u'Pipeline ID {} has invalid character(s)\n'.format(pipeline_id)
         message += u'Valid characters are: _ - a-z A-Z 0-9'
         error_and_quit(message)
 
@@ -340,7 +341,7 @@ def _handle_duplicate_name_exception(spec, exception):
     if error_code == 'RESOURCE_CONFLICT':
         raise ValueError("Pipeline with name '{}' already exists. ".format(spec['name']) +
                          "If you are updating an existing pipeline, provide the pipeline " +
-                         "id using --pipeline-id. Otherwise, " +
+                         "ID using --pipeline-id. Otherwise, " +
                          "you can use the --allow-duplicate-names option to skip this check. ")
     raise exception
 

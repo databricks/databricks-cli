@@ -103,7 +103,7 @@ class PipelineSpecClickType(ParamType):
 
 class PipelineIdClickType(ParamType):
     name = 'PIPELINE_ID'
-    help = 'The Pipeline ID.'
+    help = 'The pipeline ID.'
 
 
 class OneOfOption(Option):
