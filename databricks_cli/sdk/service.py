@@ -1060,6 +1060,14 @@ class DeltaPipelinesService(object):
         return self.client.perform_query('POST', '/pipelines/{pipeline_id}/run'.format(pipeline_id=pipeline_id),
                                          data=_data, headers=headers)
 
+    def start_update(self, pipeline_id=None, full_refresh=None, headers=None):
+        _data = {}
+        if full_refresh:
+            _data['full_refresh'] = full_refresh
+        _data['cause'] = 'USER_ACTION'
+        return self.client.perform_query('POST', '/pipelines/{pipeline_id}/start'.format(pipeline_id=pipeline_id),
+                                         data=_data, headers=headers)
+
     def stop(self, pipeline_id=None, headers=None):
         _data = {}
 

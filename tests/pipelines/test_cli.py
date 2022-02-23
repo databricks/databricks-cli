@@ -195,17 +195,36 @@ def test_deploy_with_invalid_spec_extension(pipelines_api_mock):
     assert pipelines_api_mock.deploy.call_count == 0   
 
 
+def test_gen_start_update_msg():
+    assert "Started an update for pipeline" in \
+           cli._gen_start_update_msg(None, "pipeline-id", False)
+    assert "Started an update with full refresh for pipeline" in \
+           cli._gen_start_update_msg(None, "pipeline-id", True)
+    resp = {'update_id': "abc"}
+    assert "Started an update abc with full refresh for pipeline" in \
+           cli._gen_start_update_msg(resp, "pipeline-id", True)
+    assert "Started an update abc for pipeline" in \
+           cli._gen_start_update_msg(resp, "pipeline-id", False)
+
+
 @provide_conf
 def test_cli_id(pipelines_api_mock):
-    for command in [cli.reset_cli, cli.stop_cli, cli.run_cli]:
-        runner = CliRunner()
-        runner.invoke(command, ['--pipeline-id', PIPELINE_ID])
-        assert pipelines_api_mock.reset.call_args[0][0] == PIPELINE_ID
+    runner = CliRunner()
+    runner.invoke(cli.reset_cli, ['--pipeline-id', PIPELINE_ID])
+    runner.invoke(cli.run_cli, ['--pipeline-id', PIPELINE_ID])
+    runner.invoke(cli.start_cli, ['--pipeline-id', PIPELINE_ID])
+    runner.invoke(cli.start_cli, ['--pipeline-id', PIPELINE_ID, "--full-refresh", "true"])
+
+    start_update_call_args_list = pipelines_api_mock.start_update.call_args_list
+    assert start_update_call_args_list[0] == mock.call(PIPELINE_ID, full_refresh=True)
+    assert start_update_call_args_list[1] == mock.call(PIPELINE_ID, full_refresh=False)
+    assert start_update_call_args_list[2] == mock.call(PIPELINE_ID, full_refresh=False)
+    assert start_update_call_args_list[3] == mock.call(PIPELINE_ID, full_refresh=True)
 
 
 @provide_conf
 def test_cli_no_id(pipelines_api_mock):
-    for command in [cli.reset_cli, cli.stop_cli, cli.run_cli]:
+    for command in [cli.reset_cli, cli.stop_cli, cli.run_cli, cli.start_cli]:
         runner = CliRunner()
         result = runner.invoke(command, [])
         assert result.exit_code == 1
@@ -317,7 +336,7 @@ def test_deploy_pipeline_conflicting_ids(pipelines_api_mock, tmpdir):
 
     result = CliRunner().invoke(cli.deploy_cli, ['--spec', path, '--pipeline-id', "fake"])
     assert result.exit_code == 1
-    assert "ValueError: The ID provided in --pipeline_id 'fake' is different from the id " \
+    assert "ValueError: The ID provided in --pipeline_id 'fake' is different from the ID " \
            "provided in the spec '123'." in result.stdout
     assert pipelines_api_mock.deploy.call_count == 0
 
