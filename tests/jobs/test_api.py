@@ -137,6 +137,12 @@ def test_run_now():
             headers=None, version=None
         )
 
+        api.run_now('1', None, None, None, None, None, 'idempotent-token')
+        api_client_mock.perform_query.assert_called_with(
+            'POST', '/jobs/run-now', data={'job_id': '1', 'idempotency_token': 'idempotent-token'},
+            headers=None, version=None
+        )
+
         api.run_now('1', ['bla'], None, None, None, None, version='3.0')
         api_client_mock.perform_query.assert_called_with(
             'POST', '/jobs/run-now', data={'job_id': '1', 'jar_params': ['bla']},
