@@ -51,7 +51,8 @@ def test_submit_cli_json(runs_api_mock):
         runs_api_mock.submit_run.return_value = SUBMIT_RETURN
         runner = CliRunner()
         runner.invoke(cli.submit_cli, ['--json', SUBMIT_JSON])
-        assert runs_api_mock.submit_run.call_args[0][0] == json.loads(SUBMIT_JSON)
+        assert runs_api_mock.submit_run.call_args[0][0] == json.loads(
+            SUBMIT_JSON)
         assert echo_mock.call_args[0][0] == pretty_format(SUBMIT_RETURN)
 
 
@@ -73,7 +74,7 @@ def test_list_runs(runs_api_mock):
     with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock:
         runs_api_mock.list_runs.return_value = LIST_RETURN
         runner = CliRunner()
-        runner.invoke(cli.list_cli)
+        runner.invoke(cli.list_cli, ["--version", "2.1"])
         rows = [(1, 'name', 'RUNNING', 'n/a', RUN_PAGE_URL)]
         assert echo_mock.call_args[0][0] == tabulate(rows, tablefmt='plain')
 
@@ -83,7 +84,7 @@ def test_list_runs_output_json(runs_api_mock):
     with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock:
         runs_api_mock.list_runs.return_value = LIST_RETURN
         runner = CliRunner()
-        runner.invoke(cli.list_cli, ['--output', 'json'])
+        runner.invoke(cli.list_cli, ['--output', 'json', "--version", "2.1"])
         assert echo_mock.call_args[0][0] == pretty_format(LIST_RETURN)
 
 
@@ -92,7 +93,7 @@ def test_get_cli(runs_api_mock):
     with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock:
         runs_api_mock.get_run.return_value = {}
         runner = CliRunner()
-        runner.invoke(cli.get_cli, ['--run-id', 1])
+        runner.invoke(cli.get_cli, ['--run-id', 1, "--version", "2.1"])
         assert runs_api_mock.get_run.call_args[0][0] == 1
         assert echo_mock.call_args[0][0] == pretty_format({})
 
@@ -102,6 +103,6 @@ def test_cancel_cli(runs_api_mock):
     with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock:
         runs_api_mock.cancel_run.return_value = {}
         runner = CliRunner()
-        runner.invoke(cli.cancel_cli, ['--run-id', 1])
+        runner.invoke(cli.cancel_cli, ['--run-id', 1, "--version", "2.1"])
         assert runs_api_mock.cancel_run.call_args[0][0] == 1
         assert echo_mock.call_args[0][0] == pretty_format({})
