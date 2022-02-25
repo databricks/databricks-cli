@@ -157,7 +157,7 @@ class JobsService(object):
         return self.client.perform_query('GET', '/jobs/list', data=_data, headers=headers, version=version)
 
     def run_now(self, job_id=None, jar_params=None, notebook_params=None, python_params=None, spark_submit_params=None,
-                python_named_params=None, headers=None, version=None):
+                python_named_params=None, idempotency_token=None, headers=None, version=None):
         _data = {}
         if job_id is not None:
             _data['job_id'] = job_id
@@ -171,6 +171,8 @@ class JobsService(object):
             _data['python_named_params'] = python_named_params
         if spark_submit_params is not None:
             _data['spark_submit_params'] = spark_submit_params
+        if idempotency_token is not None:
+            _data['idempotency_token'] = idempotency_token
         return self.client.perform_query('POST', '/jobs/run-now', data=_data, headers=headers, version=version)
 
     def list_runs(self, job_id=None, active_only=None, completed_only=None, offset=None,

@@ -215,12 +215,16 @@ def get_cli(api_client, job_id, version):
                    '["--class", "org.apache.spark.examples.SparkPi"]')
 @click.option('--version', required=False, default=None, type=click.Choice(API_VERSIONS),
               help='Override the API version used to call jobs.')
+@click.option('--idempotency-token', default=None,
+              help='If an active run with the provided token already exists, ' +
+              'the request does not create a new run, ' +
+              'but returns the ID of the existing run instead.')
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
 def run_now_cli(api_client, job_id, jar_params, notebook_params, python_params,
-                python_named_params, spark_submit_params, version):
+                python_named_params, spark_submit_params, idempotency_token, version):
     """
     Runs a job with optional per-run parameters.
 
@@ -235,7 +239,7 @@ def run_now_cli(api_client, job_id, jar_params, notebook_params, python_params,
     spark_submit_params = json_loads(spark_submit_params) if spark_submit_params else None
     res = JobsApi(api_client).run_now(
         job_id, jar_params_json, notebook_params_json, python_params,
-        spark_submit_params, python_named_params, version=version)
+        spark_submit_params, python_named_params, idempotency_token, version=version)
     click.echo(pretty_format(res))
 
 
