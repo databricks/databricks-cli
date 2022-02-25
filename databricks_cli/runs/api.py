@@ -28,17 +28,19 @@ class RunsApi(object):
     def __init__(self, api_client):
         self.client = JobsService(api_client)
 
-    def submit_run(self, json):
-        return self.client.client.perform_query('POST', '/jobs/runs/submit', data=json)
+    def submit_run(self, json, version=None):
+        return self.client.client.perform_query('POST', '/jobs/runs/submit', data=json,
+                                                version=version)
 
-    def list_runs(self, job_id, active_only, completed_only, offset, limit):
-        return self.client.list_runs(job_id, active_only, completed_only, offset, limit)
+    def list_runs(self, job_id, active_only, completed_only, offset, limit, version=None):
+        return self.client.list_runs(job_id, active_only, completed_only, offset, limit,
+                                     version=version)
 
-    def get_run(self, run_id):
-        return self.client.get_run(run_id)
+    def get_run(self, run_id, version=None):
+        return self.client.get_run(run_id, version=version)
 
-    def cancel_run(self, run_id):
-        return self.client.cancel_run(run_id)
+    def cancel_run(self, run_id, version=None):
+        return self.client.cancel_run(run_id, version=version)
 
-    def get_run_output(self, run_id):
-        return self.client.get_run_output(run_id)
+    def get_run_output(self, run_id, version=None):
+        return self.client.get_run_output(run_id, version=version)
