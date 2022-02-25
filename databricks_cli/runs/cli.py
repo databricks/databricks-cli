@@ -25,30 +25,35 @@ import click
 from tabulate import tabulate
 
 from databricks_cli.click_types import OutputClickType, JsonClickType, RunIdClickType
+from databricks_cli.jobs.cli import check_version
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base, \
     truncate_string
-from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
+from databricks_cli.configure.config import provide_api_client, profile_option, debug_option, \
+    api_version_option
 from databricks_cli.runs.api import RunsApi
-from databricks_cli.version import print_version_callback, version
+from databricks_cli.version import print_version_callback, version as cli_version
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--json-file', default=None, type=click.Path(),
-              help='File containing JSON request to POST to /api/2.0/jobs/runs/submit.')
+              help='File containing JSON request to POST to /api/2.*/jobs/runs/submit.')
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/jobs/runs/submit'))
+              help=JsonClickType.help('/api/2.*/jobs/runs/submit'))
+@api_version_option
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def submit_cli(api_client, json_file, json):
+def submit_cli(api_client, json_file, json, version):
     """
     Submits a one-time run.
 
     The specification for the request json can be found
     https://docs.databricks.com/api/latest/jobs.html#runs-submit
     """
-    json_cli_base(json_file, json, lambda json: RunsApi(api_client).submit_run(json))
+    check_version(api_client, version)
+    json_cli_base(json_file, json, lambda json: RunsApi(
+        api_client).submit_run(json, version=version))
 
 
 def _runs_to_table(runs_json):
@@ -59,7 +64,8 @@ def _runs_to_table(runs_json):
         life_cycle_state = r.get('state', {}).get('life_cycle_state', 'n/a')
         result_state = r.get('state', {}).get('result_state', 'n/a')
         run_page_url = r.get('run_page_url', 'n/a')
-        row = (run_id, truncate_string(run_name), life_cycle_state, result_state, run_page_url)
+        row = (run_id, truncate_string(run_name),
+               life_cycle_state, result_state, run_page_url)
         ret.append(row)
     return ret
 
@@ -77,11 +83,12 @@ def _runs_to_table(runs_json):
               help='The limit determines the number of runs listed. '
                    'Limit must be between 0 and 1000. Set to 20 runs by default.')
 @click.option('--output', help=OutputClickType.help, type=OutputClickType())
+@api_version_option
 @debug_option
 @profile_option
-@eat_exceptions # noqa
+@eat_exceptions  # noqa
 @provide_api_client
-def list_cli(api_client, job_id, active_only, completed_only, offset, limit, output): # noqa
+def list_cli(api_client, job_id, active_only, completed_only, offset, limit, output, version):  # noqa
     """
     Lists job runs.
 
@@ -98,7 +105,9 @@ def list_cli(api_client, job_id, active_only, completed_only, offset, limit, out
 
       - Result state (can be n/a)
     """
-    runs_json = RunsApi(api_client).list_runs(job_id, active_only, completed_only, offset, limit)
+    check_version(api_client, version)
+    runs_json = RunsApi(api_client).list_runs(
+        job_id, active_only, completed_only, offset, limit, version=version)
     if OutputClickType.is_json(output):
         click.echo(pretty_format(runs_json))
     else:
@@ -107,51 +116,60 @@ def list_cli(api_client, job_id, active_only, completed_only, offset, limit, out
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--run-id', required=True, type=RunIdClickType())
+@api_version_option
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def get_cli(api_client, run_id):
+def get_cli(api_client, run_id, version):
     """
     Gets the metadata about a run in json form.
 
     The output schema is documented https://docs.databricks.com/api/latest/jobs.html#runs-get.
     """
-    click.echo(pretty_format(RunsApi(api_client).get_run(run_id)))
+    check_version(api_client, version)
+    click.echo(pretty_format(
+        RunsApi(api_client).get_run(run_id, version=version)))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--run-id', required=True, type=RunIdClickType())
+@api_version_option
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def get_output_cli(api_client, run_id):
+def get_output_cli(api_client, run_id, version):
     """
     Gets the output of a run
 
     The output schema is documented https://docs.databricks.com/api/latest/jobs.html#runs-get-output
     """
-    click.echo(pretty_format(RunsApi(api_client).get_run_output(run_id)))
+    check_version(api_client, version)
+    click.echo(pretty_format(
+        RunsApi(api_client).get_run_output(run_id, version=version)))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--run-id', required=True, type=RunIdClickType())
+@api_version_option
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def cancel_cli(api_client, run_id):
+def cancel_cli(api_client, run_id, version):
     """
     Cancels the run specified.
     """
-    click.echo(pretty_format(RunsApi(api_client).cancel_run(run_id)))
+    check_version(api_client, version)
+    click.echo(pretty_format(
+        RunsApi(api_client).cancel_run(run_id, version=version)))
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
              short_help='Utility to interact with the jobs runs.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
-              expose_value=False, is_eager=True, help=version)
+              expose_value=False, is_eager=True, help=cli_version)
 @debug_option
 @profile_option
 @eat_exceptions

@@ -28,12 +28,11 @@ from tabulate import tabulate
 
 from databricks_cli.click_types import OutputClickType, JsonClickType, JobIdClickType
 from databricks_cli.jobs.api import JobsApi
-from databricks_cli.sdk.version import API_VERSIONS
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base, \
     truncate_string
 
 from databricks_cli.configure.config import provide_api_client, profile_option, \
-    get_profile_from_context, debug_option, get_config
+    get_profile_from_context, debug_option, get_config, api_version_option
 from databricks_cli.configure.provider import DatabricksConfig, update_and_persist_config, \
     ProfileConfigProvider
 from databricks_cli.version import print_version_callback, version as cli_version
@@ -44,8 +43,7 @@ from databricks_cli.version import print_version_callback, version as cli_versio
               help='File containing JSON request to POST to /api/2.*/jobs/create.')
 @click.option('--json', default=None, type=JsonClickType(),
               help=JsonClickType.help('/api/2.*/jobs/create'))
-@click.option('--version', required=False, default=None, type=click.Choice(API_VERSIONS),
-              help='Override the API version used to call jobs.')
+@api_version_option
 @debug_option
 @profile_option
 @eat_exceptions
@@ -70,8 +68,7 @@ def create_cli(api_client, json_file, json, version):
 @click.option('--json', default=None, type=JsonClickType(),
               help='Partial JSON string to POST to /api/2.*/jobs/reset. '
                    'For more, read full help message.')
-@click.option('--version', required=False, default=None, type=click.Choice(API_VERSIONS),
-              help='Override the API version used to call jobs.')
+@api_version_option
 @debug_option
 @profile_option
 @eat_exceptions
@@ -107,8 +104,6 @@ def _jobs_to_table(jobs_json):
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Lists the jobs in the Databricks Job Service.')
 @click.option('--output', default=None, help=OutputClickType.help, type=OutputClickType())
-@click.option('--version', required=False, default=None, type=click.Choice(API_VERSIONS),
-              help='Override the API version used to call jobs.')
 @click.option('--type', 'job_type', default=None, help='The type of job to list', type=str)
 @click.option('--expand-tasks', is_flag=True,
               help='Expands the tasks array (only available in API 2.1).')
@@ -120,6 +115,7 @@ def _jobs_to_table(jobs_json):
 @click.option('--all', '_all', is_flag=True,
               help='Lists all jobs by executing sequential calls to the API ' +
                    '(only available in API 2.1).')
+@api_version_option
 @debug_option
 @profile_option
 @eat_exceptions
@@ -156,20 +152,21 @@ def list_cli(api_client, output, job_type, version, expand_tasks, offset, limit,
         jobs += jobs_json['jobs'] if 'jobs' in jobs_json else []
         has_more = jobs_json.get('has_more', False) and _all
         if has_more:
-            offset = offset + (len(jobs_json['jobs']) if 'jobs' in jobs_json else 20)
+            offset = offset + \
+                (len(jobs_json['jobs']) if 'jobs' in jobs_json else 20)
 
     out = {'jobs': jobs}
     if OutputClickType.is_json(output):
         click.echo(pretty_format(out))
     else:
-        click.echo(tabulate(_jobs_to_table(out), tablefmt='plain', disable_numparse=True))
+        click.echo(tabulate(_jobs_to_table(out),
+                   tablefmt='plain', disable_numparse=True))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Deletes the specified job.')
 @click.option('--job-id', required=True, type=JobIdClickType(), help=JobIdClickType.help)
-@click.option('--version', required=False, default=None, type=click.Choice(API_VERSIONS),
-              help='Override the API version used to call jobs.')
+@api_version_option
 @debug_option
 @profile_option
 @eat_exceptions
@@ -184,8 +181,7 @@ def delete_cli(api_client, job_id, version):
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--job-id', required=True, type=JobIdClickType(), help=JobIdClickType.help)
-@click.option('--version', required=False, default=None, type=click.Choice(API_VERSIONS),
-              help='Override the API version used to call jobs.')
+@api_version_option
 @debug_option
 @profile_option
 @eat_exceptions
@@ -195,7 +191,8 @@ def get_cli(api_client, job_id, version):
     Describes the metadata for a job.
     """
     check_version(api_client, version)
-    click.echo(pretty_format(JobsApi(api_client).get_job(job_id, version=version)))
+    click.echo(pretty_format(
+        JobsApi(api_client).get_job(job_id, version=version)))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
@@ -213,8 +210,7 @@ def get_cli(api_client, job_id, version):
 @click.option('--spark-submit-params', default=None, type=JsonClickType(),
               help='JSON string specifying an array of parameters. i.e. '
                    '["--class", "org.apache.spark.examples.SparkPi"]')
-@click.option('--version', required=False, default=None, type=click.Choice(API_VERSIONS),
-              help='Override the API version used to call jobs.')
+@api_version_option
 @debug_option
 @profile_option
 @eat_exceptions
@@ -229,10 +225,13 @@ def run_now_cli(api_client, job_id, jar_params, notebook_params, python_params,
     """
     check_version(api_client, version)
     jar_params_json = json_loads(jar_params) if jar_params else None
-    notebook_params_json = json_loads(notebook_params) if notebook_params else None
+    notebook_params_json = json_loads(
+        notebook_params) if notebook_params else None
     python_params = json_loads(python_params) if python_params else None
-    python_named_params = json_loads(python_named_params) if python_named_params else None
-    spark_submit_params = json_loads(spark_submit_params) if spark_submit_params else None
+    python_named_params = json_loads(
+        python_named_params) if python_named_params else None
+    spark_submit_params = json_loads(
+        spark_submit_params) if spark_submit_params else None
     res = JobsApi(api_client).run_now(
         job_id, jar_params_json, notebook_params_json, python_params,
         spark_submit_params, python_named_params, version=version)
@@ -240,13 +239,13 @@ def run_now_cli(api_client, job_id, jar_params, notebook_params, python_params,
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
-@click.option('--version', show_default=True, default=None, type=click.Choice(API_VERSIONS),
-              help='API version to use for jobs.')
+@api_version_option
 @debug_option
 @profile_option
 def configure(version):
     profile = get_profile_from_context()
-    config = ProfileConfigProvider(profile).get_config() if profile else get_config()
+    config = ProfileConfigProvider(
+        profile).get_config() if profile else get_config()
     new_config = config or DatabricksConfig.empty()
     new_config.jobs_api_version = version
     update_and_persist_config(profile, new_config)
