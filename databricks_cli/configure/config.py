@@ -29,6 +29,7 @@ from databricks_cli.click_types import ContextObject
 from databricks_cli.configure.provider import get_config, ProfileConfigProvider
 from databricks_cli.utils import InvalidConfigurationError
 from databricks_cli.sdk import ApiClient
+from databricks_cli.sdk.version import API_VERSIONS
 
 
 def provide_api_client(function):
@@ -64,7 +65,7 @@ def get_profile_from_context():
 
 
 def debug_option(f):
-    def callback(ctx, param, value): #  NOQA
+    def callback(ctx, param, value):  # NOQA
         context_object = ctx.ensure_object(ContextObject)
         context_object.set_debug(value)
     return click.option('--debug', is_flag=True, callback=callback,
@@ -72,13 +73,18 @@ def debug_option(f):
 
 
 def profile_option(f):
-    def callback(ctx, param, value): #  NOQA
+    def callback(ctx, param, value):  # NOQA
         if value is not None:
             context_object = ctx.ensure_object(ContextObject)
             context_object.set_profile(value)
     return click.option('--profile', required=False, default=None, callback=callback,
                         expose_value=False,
                         help='CLI connection profile to use. The default profile is "DEFAULT".')(f)
+
+
+def api_version_option(f):
+    return click.option('--version', required=False, default=None, type=click.Choice(API_VERSIONS),
+                        help='Override the API version used to call databricks.')(f)
 
 
 def _get_api_client(config, command_name=""):
