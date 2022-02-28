@@ -94,11 +94,11 @@ def test_list_runs():
             headers=None, version=None
         )
 
-        api.list_runs('1', True, False, 0, 20, version='3.0')
+        api.list_runs('1', True, False, 0, 20, version='3.0', expand_tasks=True)
         api_client_mock.perform_query.assert_called_with(
             'GET', '/jobs/runs/list',
             data={'job_id': '1', 'active_only': True,
-                  "completed_only": False, "offset": 0, "limit": 20},
+                  "completed_only": False, "offset": 0, "limit": 20, "expand_tasks": True},
             headers=None, version='3.0'
         )
 

@@ -113,13 +113,18 @@ def _runs_to_table(runs_json):
 @click.option('--limit', default=None, type=int,
               help='The limit determines the number of runs listed. '
                    'Limit must be between 0 and 1000. Set to 20 runs by default.')
+@click.option('--expand-tasks', is_flag=True,
+              help='Expands the tasks array (only available in API 2.1).')
+@click.option('--all', '_all', is_flag=True,
+              help='Lists all jobs by executing sequential calls to the API ' +
+                   '(only available in API 2.1).')
 @click.option('--output', help=OutputClickType.help, type=OutputClickType())
 @api_version_option
 @debug_option
 @profile_option
 @eat_exceptions  # noqa
 @provide_api_client
-def list_cli(api_client, job_id, active_only, completed_only, offset, limit, output, version):  # noqa
+def list_cli(api_client, job_id, active_only, completed_only, offset, limit, expand_tasks, output, version, _all):  # noqa
     """
     Lists job runs.
 
@@ -137,8 +142,26 @@ def list_cli(api_client, job_id, active_only, completed_only, offset, limit, out
       - Result state (can be n/a)
     """
     check_version(api_client, version)
-    runs_json = RunsApi(api_client).list_runs(
-        job_id, active_only, completed_only, offset, limit, version=version)
+    api_version = version or api_client.jobs_api_version
+    if api_version != '2.1' and (expand_tasks or offset or limit or _all):
+        click.echo(click.style('ERROR', fg='red') + ': the options --expand-tasks, ' +
+                   '--offset, --limit, and --all are only available in API 2.1', err=True)
+        return
+    runs_api = RunsApi(api_client)
+
+    has_more = True
+    runs = []
+    if _all:
+        offset = 0
+        limit = 20
+    while has_more:
+        runs_json = runs_api.list_runs(
+            job_id, active_only, completed_only, offset, limit, version=version, expand_tasks=expand_tasks)
+        runs += runs_json['runs'] if 'runs' in runs_json else []
+        has_more = runs_json.get('has_more', False) and _all
+        if has_more:
+            offset = offset + \
+                (len(runs_json['runs']) if 'runs' in runs_json else limit)
     if OutputClickType.is_json(output):
         click.echo(pretty_format(runs_json))
     else:

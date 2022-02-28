@@ -131,7 +131,7 @@ def test_list_runs(runs_api_mock):
     with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock:
         runs_api_mock.list_runs.return_value = LIST_RETURN
         runner = CliRunner()
-        runner.invoke(cli.list_cli, ["--version", "2.1"])
+        runner.invoke(cli.list_cli, ["--version", "2.1", "--expand-tasks"])
         rows = [(1, 'name', 'RUNNING', 'n/a', RUN_PAGE_URL)]
         assert echo_mock.call_args[0][0] == tabulate(rows, tablefmt='plain')
 
