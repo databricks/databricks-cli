@@ -33,6 +33,7 @@ class RunsApi(object):
                                                 version=version)
 
     def list_runs(self, job_id, active_only, completed_only, offset, limit, version=None, expand_tasks = None):
+        print(f"offset: {offset}, limit: {limit}")
         return self.client.list_runs(job_id, active_only, completed_only, offset, limit, expand_tasks, version=version)
 
     def get_run(self, run_id, version=None):

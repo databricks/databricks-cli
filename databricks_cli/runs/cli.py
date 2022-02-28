@@ -162,10 +162,11 @@ def list_cli(api_client, job_id, active_only, completed_only, offset, limit, exp
         if has_more:
             offset = offset + \
                 (len(runs_json['runs']) if 'runs' in runs_json else limit)
+    runs_output = {"runs": runs}
     if OutputClickType.is_json(output):
-        click.echo(pretty_format(runs_json))
+        click.echo(pretty_format(runs_output))
     else:
-        click.echo(tabulate(_runs_to_table(runs_json), tablefmt='plain'))
+        click.echo(tabulate(_runs_to_table(runs_output), tablefmt='plain'))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
