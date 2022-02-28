@@ -124,7 +124,8 @@ def _runs_to_table(runs_json):
 @profile_option
 @eat_exceptions  # noqa
 @provide_api_client
-def list_cli(api_client, job_id, active_only, completed_only, offset, limit, expand_tasks, output, version, _all):  # noqa
+def list_cli(api_client, job_id, active_only, completed_only, offset, limit, expand_tasks,
+             output, version, _all):  # noqa
     """
     Lists job runs.
 
@@ -156,7 +157,8 @@ def list_cli(api_client, job_id, active_only, completed_only, offset, limit, exp
         limit = 20
     while has_more:
         runs_json = runs_api.list_runs(
-            job_id, active_only, completed_only, offset, limit, version=version, expand_tasks=expand_tasks)
+            job_id, active_only, completed_only, offset, limit,
+            version=version, expand_tasks=expand_tasks)
         runs += runs_json['runs'] if 'runs' in runs_json else []
         has_more = runs_json.get('has_more', False) and _all
         if has_more:
