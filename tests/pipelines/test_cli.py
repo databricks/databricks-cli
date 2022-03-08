@@ -406,4 +406,3 @@ def test_with_missing_settings(pipelines_api_mock):
         assert "ValueError: Settings should be provided" in result.stdout
         assert pipelines_api_mock.create.call_count == 0
         assert pipelines_api_mock.edit.call_count == 0
-

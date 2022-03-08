@@ -466,10 +466,10 @@ def _handle_duplicate_name_exception(settings, exception, is_create_pipeline):
                 "If you are updating an existing pipeline, use \"edit\" command. "
                 "Otherwise, You can use the --allow-duplicate-names option to skip "
                 "this check. ")
-        else:
-            raise ValueError(
-                "Pipeline with name '{}' already exists. ".format(settings['name']) +
-                "You can use the --allow-duplicate-names option to skip this check. ")
+
+        raise ValueError(
+            "Pipeline with name '{}' already exists. ".format(settings['name']) +
+            "You can use the --allow-duplicate-names option to skip this check. ")
 
     raise exception
 
