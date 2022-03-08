@@ -46,7 +46,7 @@ class PipelinesApi(object):
         return self.client.client.perform_query('POST', '/pipelines', data=data,
                                                 headers=headers)
 
-    def deploy(self, spec, spec_dir, allow_duplicate_names, headers=None):
+    def edit(self, spec, spec_dir, allow_duplicate_names, headers=None):
         data = self._upload_libraries_and_update_spec(spec, spec_dir)
         data['allow_duplicate_names'] = allow_duplicate_names
         pipeline_id = data['id']

@@ -81,7 +81,7 @@ def test_create_pipeline_and_upload_libraries(put_file_mock, dbfs_path_validate,
 @mock.patch('databricks_cli.dbfs.api.DbfsApi.put_file')
 def test_deploy_pipeline_and_upload_libraries(put_file_mock, dbfs_path_validate, pipelines_api,
                                               tmpdir):
-    _test_library_uploads(pipelines_api, pipelines_api.deploy, SPEC, put_file_mock,
+    _test_library_uploads(pipelines_api, pipelines_api.edit, SPEC, put_file_mock,
                           dbfs_path_validate, tmpdir, False)
 
 
@@ -193,13 +193,13 @@ def test_deploy(pipelines_api):
     spec = copy.deepcopy(SPEC)
     spec['libraries'] = []
 
-    pipelines_api.deploy(spec, spec_dir='.', allow_duplicate_names=False)
+    pipelines_api.edit(spec, spec_dir='.', allow_duplicate_names=False)
     data = copy.deepcopy(spec)
     data['allow_duplicate_names'] = False
     client_mock.assert_called_with("PUT", "/pipelines/" + PIPELINE_ID, data=data, headers=None)
     assert client_mock.call_count == 1
 
-    pipelines_api.deploy(spec, spec_dir='.', allow_duplicate_names=True, headers=HEADERS)
+    pipelines_api.edit(spec, spec_dir='.', allow_duplicate_names=True, headers=HEADERS)
     data = copy.deepcopy(spec)
     data['allow_duplicate_names'] = True
     client_mock.assert_called_with("PUT", "/pipelines/" + PIPELINE_ID, data=data, headers=HEADERS)
