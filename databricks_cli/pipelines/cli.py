@@ -88,7 +88,7 @@ def create_cli(api_client, settings_arg, settings, allow_duplicate_names):
     settings_dir = os.path.dirname(src)
 
     if 'id' in settings_obj:
-        raise ValueError("Settings shouldn't contain \"id\" for create command.")
+        raise ValueError("Pipeline settings shouldn't contain \"id\" for create command.")
 
     try:
         response = PipelinesApi(api_client).create(
@@ -162,7 +162,7 @@ def edit_cli(api_client, settings_arg, settings, pipeline_id, allow_duplicate_na
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='[Deprecated] This command is deprecated, use create and edit '
-                          'commands instead.\n Deploys a delta pipeline according to the '
+                          'commands instead.\n Deploys a pipeline according to the '
                           'pipeline settings.')
 @click.argument('settings_arg', default=None, required=False)
 @click.option('--settings', default=None, type=PipelineSettingClickType(),

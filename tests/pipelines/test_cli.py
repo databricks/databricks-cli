@@ -379,7 +379,7 @@ def test_create_with_id(pipelines_api_mock, tmpdir):
 
     result = CliRunner().invoke(cli.create_cli, ['--settings', path])
     assert result.exit_code == 1
-    assert "ValueError: Settings shouldn't contain \"id\"" in result.stdout
+    assert "ValueError: Pipeline settings shouldn't contain \"id\"" in result.stdout
     assert pipelines_api_mock.create.call_count == 0
 
 
