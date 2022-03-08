@@ -86,6 +86,10 @@ def create_cli(api_client, settings_arg, settings, allow_duplicate_names):
     src = settings_arg if bool(settings_arg) else settings
     settings_obj = _read_settings(src)
     settings_dir = os.path.dirname(src)
+
+    if 'id' in settings_obj:
+        raise ValueError("Settings shouldn't contain \"id\" for create command.")
+
     try:
         response = PipelinesApi(api_client).create(
             settings_obj, settings_dir, allow_duplicate_names)

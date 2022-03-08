@@ -57,10 +57,10 @@ def click_ctx():
 
 
 @provide_conf
-def test_create_pipeline_spec_arg(pipelines_api_mock, tmpdir):
+def test_create_pipeline_settings_arg(pipelines_api_mock, tmpdir):
     pipelines_api_mock.create = mock.Mock(return_value={"pipeline_id": PIPELINE_ID})
 
-    path = tmpdir.join('/spec.json').strpath
+    path = tmpdir.join('/settings.json').strpath
     with open(path, 'w') as f:
         f.write(PIPELINE_SETTINGS_NO_ID)
 
@@ -71,10 +71,10 @@ def test_create_pipeline_spec_arg(pipelines_api_mock, tmpdir):
 
 
 @provide_conf
-def test_create_pipeline_spec_option(pipelines_api_mock, tmpdir):
+def test_create_pipeline_settings_option(pipelines_api_mock, tmpdir):
     pipelines_api_mock.create = mock.Mock(return_value={"pipeline_id": PIPELINE_ID})
 
-    path = tmpdir.join('/spec.json').strpath
+    path = tmpdir.join('/settings.json').strpath
     with open(path, 'w') as f:
         f.write(PIPELINE_SETTINGS_NO_ID)
 
@@ -85,7 +85,7 @@ def test_create_pipeline_spec_option(pipelines_api_mock, tmpdir):
 
 
 @provide_conf
-def test_edit_and_deploy_cli_spec_arg(pipelines_api_mock, tmpdir):
+def test_edit_and_deploy_cli_settings_arg(pipelines_api_mock, tmpdir):
     path = tmpdir.join('/settings.json').strpath
     with open(path, 'w') as f:
         f.write(PIPELINE_SETTINGS)
@@ -97,7 +97,7 @@ def test_edit_and_deploy_cli_spec_arg(pipelines_api_mock, tmpdir):
 
 
 @provide_conf
-def test_create_cli_spec_arg(pipelines_api_mock, tmpdir):
+def test_create_cli_settings_arg(pipelines_api_mock, tmpdir):
     path = tmpdir.join('/settings.json').strpath
     with open(path, 'w') as f:
         f.write(PIPELINE_SETTINGS_NO_ID)
@@ -146,7 +146,7 @@ def test_deploy_cli_incorrect_parameters(pipelines_api_mock, tmpdir):
 
 
 @provide_conf
-def test_only_one_of_spec_or_settings_should_be_provided(pipelines_api_mock, tmpdir):
+def test_only_one_of_settings_or_settings_should_be_provided(pipelines_api_mock, tmpdir):
     path = tmpdir.join('/settings.json').strpath
     with open(path, 'w') as f:
         f.write(PIPELINE_SETTINGS)
@@ -173,7 +173,7 @@ def test_delete_cli_correct_parameters(pipelines_api_mock):
 
 
 @provide_conf
-def test_deploy_spec_pipeline_id_is_not_changed_if_provided_in_spec(tmpdir):
+def test_deploy_settings_pipeline_id_is_not_changed_if_provided_in_spec(tmpdir):
     path = tmpdir.join('/settings.json').strpath
     with open(path, 'w') as f:
         f.write(PIPELINE_SETTINGS)
@@ -183,7 +183,7 @@ def test_deploy_spec_pipeline_id_is_not_changed_if_provided_in_spec(tmpdir):
 
 
 @provide_conf
-def test_correct_spec_extensions(pipelines_api_mock, tmpdir):
+def test_correct_settings_extensions(pipelines_api_mock, tmpdir):
     pipelines_api_mock.create = mock.Mock(return_value={"pipeline_id": PIPELINE_ID})
 
     runner = CliRunner()
@@ -233,7 +233,7 @@ def test_correct_spec_extensions(pipelines_api_mock, tmpdir):
 
 
 @provide_conf
-def test_invalid_spec_extension(pipelines_api_mock):
+def test_invalid_settings_extension(pipelines_api_mock):
     for cmd in [cli.deploy_cli, cli.create_cli, cli.edit_cli]:
         pipelines_api_mock.reset_mock()
         result = CliRunner().invoke(cmd, ['--settings', 'settings.invalid'])
@@ -355,7 +355,7 @@ def test_allow_duplicate_names_flag(pipelines_api_mock, tmpdir):
 
 @provide_conf
 def test_create_pipeline_no_update_spec(pipelines_api_mock, tmpdir):
-    path = tmpdir.join('/spec.json').strpath
+    path = tmpdir.join('/settings.json').strpath
     with open(path, 'w') as f:
         f.write(PIPELINE_SETTINGS_NO_ID)
     runner = CliRunner()
@@ -372,58 +372,38 @@ def test_create_pipeline_no_update_spec(pipelines_api_mock, tmpdir):
 
 
 @provide_conf
-def test_deploy_pipeline_conflicting_ids(pipelines_api_mock, tmpdir):
-    pipelines_api_mock.deploy = mock.Mock()
-
+def test_create_with_id(pipelines_api_mock, tmpdir):
     path = tmpdir.join('/settings.json').strpath
     with open(path, 'w') as f:
         f.write(PIPELINE_SETTINGS)
 
-    result = CliRunner().invoke(cli.deploy_cli, ['--spec', path, '--pipeline-id', "fake"])
+    result = CliRunner().invoke(cli.create_cli, ['--settings', path])
     assert result.exit_code == 1
-    assert "ValueError: The ID provided in --pipeline_id 'fake' is different from the ID " \
-           "provided in the settings '123'." in result.stdout
-    assert pipelines_api_mock.deploy.call_count == 0
+    assert "ValueError: Settings shouldn't contain \"id\"" in result.stdout
+    assert pipelines_api_mock.create.call_count == 0
 
 
 @provide_conf
-def test_edit_pipeline_conflicting_ids(pipelines_api_mock, tmpdir):
-    pipelines_api_mock.deploy = mock.Mock()
-
+def test_pipeline_conflicting_ids(pipelines_api_mock, tmpdir):
     path = tmpdir.join('/settings.json').strpath
     with open(path, 'w') as f:
         f.write(PIPELINE_SETTINGS)
-
-    result = CliRunner().invoke(cli.edit_cli, ['--settings', path, '--pipeline-id', "fake"])
-    assert result.exit_code == 1
-    assert "ValueError: The ID provided in --pipeline_id 'fake' is different from the ID " \
-           "provided in the settings '123'." in result.stdout
-    assert pipelines_api_mock.deploy.call_count == 0
-
-
-@provide_conf
-def test_deploy_with_missing_spec(pipelines_api_mock):
-    pipelines_api_mock.deploy = mock.Mock()
-    result = CliRunner().invoke(cli.deploy_cli, [])
-    assert result.exit_code == 1
-    assert "ValueError: Settings should be provided" in result.stdout
-    assert pipelines_api_mock.create.call_count == 0
-    assert pipelines_api_mock.edit.call_count == 0
+    for cmd in [cli.deploy_cli, cli.edit_cli]:
+        pipelines_api_mock.reset_mock()
+        result = CliRunner().invoke(cmd, ['--settings', path, '--pipeline-id', "fake"])
+        assert result.exit_code == 1
+        assert "ValueError: The ID provided in --pipeline_id 'fake' is different from the ID " \
+               "provided in the settings '123'." in result.stdout
+        assert pipelines_api_mock.deploy.call_count == 0
 
 
 @provide_conf
-def test_create_with_missing_settings(pipelines_api_mock):
-    pipelines_api_mock.create = mock.Mock()
-    result = CliRunner().invoke(cli.create_cli, [])
-    assert result.exit_code == 1
-    assert "ValueError: Settings should be provided" in result.stdout
-    assert pipelines_api_mock.create.call_count == 0
+def test_with_missing_settings(pipelines_api_mock):
+    for cmd in [cli.deploy_cli, cli.edit_cli, cli.create_cli]:
+        pipelines_api_mock.reset_mock()
+        result = CliRunner().invoke(cmd, [])
+        assert result.exit_code == 1
+        assert "ValueError: Settings should be provided" in result.stdout
+        assert pipelines_api_mock.create.call_count == 0
+        assert pipelines_api_mock.edit.call_count == 0
 
-
-@provide_conf
-def test_edit_with_missing_settings(pipelines_api_mock):
-    pipelines_api_mock.create = mock.Mock()
-    result = CliRunner().invoke(cli.edit_cli, [])
-    assert result.exit_code == 1
-    assert "ValueError: Settings should be provided" in result.stdout
-    assert pipelines_api_mock.edit.call_count == 0
