@@ -53,7 +53,7 @@ PIPELINE_ID_PERMITTED_CHARACTERS = set(string.ascii_letters + string.digits + '-
                short_help='Creates a pipeline according to the pipeline settings.')
 @click.argument('settings_arg', default=None, required=False)
 @click.option('--settings', default=None,
-              type=PipelineSettingClickType(), help=PipelineSpecClickType.help)
+              type=PipelineSettingClickType(), help=PipelineSettingClickType.help)
 @click.option('--allow-duplicate-names', is_flag=True,
               help="If true, skips duplicate name checking while creating the pipeline.")
 @debug_option
@@ -90,7 +90,7 @@ def create_cli(api_client, settings_arg, settings, allow_duplicate_names):
         response = PipelinesApi(api_client).create(
             settings_obj, settings_dir, allow_duplicate_names)
     except requests.exceptions.HTTPError as e:
-        _handle_duplicate_name_exception(settings_obj, e)
+        _handle_duplicate_name_exception(settings_obj, e, is_create_pipeline=True)
 
     new_pipeline_id = response['pipeline_id']
     click.echo("Successfully created pipeline: {} with ID: {}".format(
@@ -146,11 +146,12 @@ def edit_cli(api_client, settings_arg, settings, pipeline_id, allow_duplicate_na
         )
 
     settings_obj['id'] = pipeline_id or settings_obj.get('id', None)
+    _validate_pipeline_id(settings_obj['id'])
 
     try:
         PipelinesApi(api_client).edit(settings_obj, settings_dir, allow_duplicate_names)
     except requests.exceptions.HTTPError as e:
-        _handle_duplicate_name_exception(settings_obj, e)
+        _handle_duplicate_name_exception(settings_obj, e, is_create_pipeline=False)
     click.echo("Successfully edited pipeline settings: {}".format(
         _get_pipeline_url(api_client, settings_obj['id'])))
 
@@ -162,7 +163,8 @@ def edit_cli(api_client, settings_arg, settings, pipeline_id, allow_duplicate_na
 @click.argument('settings_arg', default=None, required=False)
 @click.option('--settings', default=None, type=PipelineSettingClickType(),
               help=PipelineSettingClickType.help)
-@click.option('--spec', default=None, type=PipelineSpecClickType(), help=PipelineSpecClickType.help)
+@click.option('--spec', default=None, type=PipelineSpecClickType(),
+              help=PipelineSpecClickType.help)
 @click.option('--allow-duplicate-names', is_flag=True,
               help="Skip duplicate name check while deploying pipeline")
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
@@ -200,8 +202,8 @@ def deploy_cli(api_client, settings_arg, settings, spec, allow_duplicate_names, 
     databricks pipelines deploy --pipeline-id 1234 --settings example.json
     """
     click.echo("DeprecationWarning: the \"deploy\" command is deprecated, " +
-               "use \"create\" command to create new pipeline or \"edit\" command " +
-               "to modify existing pipeline.")
+               "use \"create\" command to create a new pipeline or \"edit\" command " +
+               "to modify an existing pipeline.\n")
 
     settings_error_msg = 'Settings should be provided either as an argument ' \
                          '(Eg: databricks pipelines deploy example.json) or as ' \
@@ -222,7 +224,7 @@ def deploy_cli(api_client, settings_arg, settings, spec, allow_duplicate_names, 
             response = PipelinesApi(api_client).create(
                 settings_obj, settings_dir, allow_duplicate_names)
         except requests.exceptions.HTTPError as e:
-            _handle_duplicate_name_exception(settings_obj, e)
+            _handle_duplicate_name_exception(settings_obj, e, is_create_pipeline=True)
 
         new_pipeline_id = response['pipeline_id']
         click.echo("Successfully created pipeline: {} with ID: {}".format(
@@ -241,7 +243,7 @@ def deploy_cli(api_client, settings_arg, settings, spec, allow_duplicate_names, 
             PipelinesApi(api_client).edit(
                 settings_obj, settings_dir, allow_duplicate_names)
         except requests.exceptions.HTTPError as e:
-            _handle_duplicate_name_exception(settings_obj, e)
+            _handle_duplicate_name_exception(settings_obj, e, is_create_pipeline=False)
         click.echo("Successfully deployed pipeline: {}".format(
             _get_pipeline_url(api_client, settings_obj['id'])))
 
@@ -446,7 +448,7 @@ def _validate_pipeline_id(pipeline_id):
         error_and_quit(u'Empty pipeline ID provided')
 
 
-def _handle_duplicate_name_exception(settings, exception):
+def _handle_duplicate_name_exception(settings, exception, is_create_pipeline):
     error_code = None
     try:
         error_code = json.loads(exception.response.text).get('error_code')
@@ -454,20 +456,29 @@ def _handle_duplicate_name_exception(settings, exception):
         pass
 
     if error_code == 'RESOURCE_CONFLICT':
-        raise ValueError("Pipeline with name '{}' already exists. ".format(settings['name']) +
-                         "You can use the --allow-duplicate-names option to skip this check. ")
+        if is_create_pipeline:
+            raise ValueError(
+                "Pipeline with name '{}' already exists. ".format(settings['name']) +
+                "If you are updating an existing pipeline, use \"edit\" command. "
+                "Otherwise, You can use the --allow-duplicate-names option to skip "
+                "this check. ")
+        else:
+            raise ValueError(
+                "Pipeline with name '{}' already exists. ".format(settings['name']) +
+                "You can use the --allow-duplicate-names option to skip this check. ")
+
     raise exception
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
-             short_help='Utility to interact with Databricks Delta Live Table Pipelines.')
+             short_help='Utility to interact with Databricks Delta Live Tables Pipelines.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
 @debug_option
 @profile_option
 def pipelines_group():  # pragma: no cover
     """
-    Utility to interact with Databricks Delta Live Table Pipelines.
+    Utility to interact with Databricks Delta Live Tables Pipelines.
     """
     pass
 

@@ -91,7 +91,7 @@ def test_edit_and_deploy_cli_spec_arg(pipelines_api_mock, tmpdir):
         f.write(PIPELINE_SETTINGS)
     runner = CliRunner()
     for cmd in [cli.deploy_cli, cli.edit_cli]:
-        pipelines_api_mock.edit.reset_mock()
+        pipelines_api_mock.reset_mock()
         runner.invoke(cmd, [path])
         assert pipelines_api_mock.edit.call_args[0][0] == json.loads(PIPELINE_SETTINGS)
 
@@ -103,7 +103,7 @@ def test_create_cli_spec_arg(pipelines_api_mock, tmpdir):
         f.write(PIPELINE_SETTINGS_NO_ID)
     runner = CliRunner()
     for cmd in [cli.deploy_cli, cli.create_cli]:
-        pipelines_api_mock.create.reset_mock()
+        pipelines_api_mock.reset_mock()
         runner.invoke(cmd, [path])
         assert pipelines_api_mock.create.call_args[0][0] == json.loads(PIPELINE_SETTINGS_NO_ID)
 
@@ -120,7 +120,7 @@ def test_deploy_settings_option(pipelines_api_mock, tmpdir):
 
     runner = CliRunner()
     for option in ['--settings', '--spec']:
-        pipelines_api_mock.edit.reset_mock()
+        pipelines_api_mock.reset_mock()
         runner.invoke(cli.deploy_cli, [option, path])
         assert pipelines_api_mock.edit.call_args[0][0] == json.loads(PIPELINE_SETTINGS)
 
@@ -136,6 +136,7 @@ def test_deploy_cli_incorrect_parameters(pipelines_api_mock, tmpdir):
     runner = CliRunner()
 
     for option in ['--settings', '--spec']:
+        pipelines_api_mock.reset_mock()
         result = runner.invoke(cli.deploy_cli, [path, option, path])
         assert result.exit_code == 1
         assert pipelines_api_mock.edit.call_count == 0
@@ -191,13 +192,13 @@ def test_correct_spec_extensions(pipelines_api_mock, tmpdir):
         f.write(PIPELINE_SETTINGS_NO_ID)
 
     for cmd in [cli.deploy_cli, cli.create_cli]:
-        pipelines_api_mock.create.reset_mock()
+        pipelines_api_mock.reset_mock()
         result = runner.invoke(cmd, ['--settings', path_json])
         assert result.exit_code == 0
         assert pipelines_api_mock.create.call_count == 1
 
     for cmd in [cli.deploy_cli, cli.edit_cli]:
-        pipelines_api_mock.edit.reset_mock()
+        pipelines_api_mock.reset_mock()
         result = runner.invoke(cmd, ['--settings', path_json, '--pipeline-id', PIPELINE_ID])
         assert result.exit_code == 0
         assert pipelines_api_mock.edit.call_count == 1
@@ -305,7 +306,7 @@ def test_duplicate_name_check_error(pipelines_api_mock, tmpdir):
         f.write(PIPELINE_SETTINGS_NO_ID)
     runner = CliRunner()
     for cmd in [cli.deploy_cli, cli.create_cli]:
-        pipelines_api_mock.create.reset_mock()
+        pipelines_api_mock.reset_mock()
         pipelines_api_mock.create = mock.Mock(
             side_effect=requests.exceptions.HTTPError(response=mock_response))
         result = runner.invoke(cmd, [path])
@@ -316,7 +317,7 @@ def test_duplicate_name_check_error(pipelines_api_mock, tmpdir):
     with open(path, 'w') as f:
         f.write(PIPELINE_SETTINGS)
     for cmd in [cli.deploy_cli, cli.edit_cli]:
-        pipelines_api_mock.edit.reset_mock()
+        pipelines_api_mock.reset_mock()
         pipelines_api_mock.edit = mock.Mock(
             side_effect=requests.exceptions.HTTPError(response=mock_response))
         result = runner.invoke(cmd, [path])
@@ -333,7 +334,7 @@ def test_allow_duplicate_names_flag(pipelines_api_mock, tmpdir):
     runner = CliRunner()
 
     for cmd in [cli.deploy_cli, cli.create_cli]:
-        pipelines_api_mock.create.reset_mock()
+        pipelines_api_mock.reset_mock()
         runner.invoke(cmd, [path])
         assert pipelines_api_mock.create.call_args_list[0][0][2] is False
 
@@ -344,7 +345,7 @@ def test_allow_duplicate_names_flag(pipelines_api_mock, tmpdir):
         f.write(PIPELINE_SETTINGS)
 
     for cmd in [cli.deploy_cli, cli.edit_cli]:
-        pipelines_api_mock.edit.reset_mock()
+        pipelines_api_mock.reset_mock()
         runner.invoke(cmd, [path])
         assert pipelines_api_mock.edit.call_args_list[0][0][2] is False
 
