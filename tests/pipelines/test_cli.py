@@ -261,7 +261,7 @@ def test_cli_id(pipelines_api_mock):
     runner.invoke(cli.reset_cli, ['--pipeline-id', PIPELINE_ID])
     runner.invoke(cli.run_cli, ['--pipeline-id', PIPELINE_ID])
     runner.invoke(cli.start_cli, ['--pipeline-id', PIPELINE_ID])
-    runner.invoke(cli.start_cli, ['--pipeline-id', PIPELINE_ID, "--full-refresh", "true"])
+    runner.invoke(cli.start_cli, ['--pipeline-id', PIPELINE_ID, "--full-refresh"])
 
     start_update_call_args_list = pipelines_api_mock.start_update.call_args_list
     assert start_update_call_args_list[0] == mock.call(PIPELINE_ID, full_refresh=True)
@@ -300,7 +300,7 @@ def test_duplicate_name_check_error(pipelines_api_mock, tmpdir):
     mock_response = mock.MagicMock()
     mock_response.text = '{"error_code": "RESOURCE_CONFLICT"}'
 
-    path = tmpdir.join('/spec.json').strpath
+    path = tmpdir.join('/settings.json').strpath
     with open(path, 'w') as f:
         f.write(PIPELINE_SETTINGS_NO_ID)
     runner = CliRunner()

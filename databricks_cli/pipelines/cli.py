@@ -81,7 +81,7 @@ def create_cli(api_client, settings_arg, settings, allow_duplicate_names):
     if bool(settings_arg) == bool(settings):
         raise ValueError('Settings should be provided either as an argument ' +
                          '(Eg: databricks pipelines create example.json) or as ' +
-                         'an option (databricks pipelines create --settings example.json).')
+                         'an option (Eg: databricks pipelines create --settings example.json).')
 
     src = settings_arg if bool(settings_arg) else settings
     settings_obj = _read_settings(src)
@@ -132,7 +132,7 @@ def edit_cli(api_client, settings_arg, settings, pipeline_id, allow_duplicate_na
     if bool(settings_arg) == bool(settings):
         raise ValueError('Settings should be provided either as an argument ' +
                          '(Eg: databricks pipelines edit example.json) or as ' +
-                         'an option (databricks pipelines edit --settings example.json).')
+                         'an option (Eg: databricks pipelines edit --settings example.json).')
 
     src = settings_arg if bool(settings_arg) else settings
     settings_obj = _read_settings(src)
@@ -455,9 +455,7 @@ def _handle_duplicate_name_exception(settings, exception):
 
     if error_code == 'RESOURCE_CONFLICT':
         raise ValueError("Pipeline with name '{}' already exists. ".format(settings['name']) +
-                         "If you are updating an existing pipeline, provide the pipeline " +
-                         "ID using --pipeline-id. Otherwise, " +
-                         "you can use the --allow-duplicate-names option to skip this check. ")
+                         "You can use the --allow-duplicate-names option to skip this check. ")
     raise exception
 
 
