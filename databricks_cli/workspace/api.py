@@ -173,7 +173,7 @@ class WorkspaceApi(object):
         if not os.path.isdir(target_path):
             try:
                 os.makedirs(target_path)
-            except NotADirectoryError:
+            except OSError:
                 click.echo('{} could not be created locally. Skip.'.format(target_path))
                 return
         for obj in self.list_objects(source_path, headers=headers):
