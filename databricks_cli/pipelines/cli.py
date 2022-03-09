@@ -97,7 +97,7 @@ def create_cli(api_client, settings_arg, settings, allow_duplicate_names):
         _handle_duplicate_name_exception(settings_obj, e, is_create_pipeline=True)
 
     new_pipeline_id = response['pipeline_id']
-    click.echo("Successfully created pipeline: {} with ID: {}".format(
+    click.echo("Successfully created pipeline: {} with ID: {}.".format(
         _get_pipeline_url(api_client, new_pipeline_id), new_pipeline_id))
 
 
@@ -156,7 +156,7 @@ def edit_cli(api_client, settings_arg, settings, pipeline_id, allow_duplicate_na
         PipelinesApi(api_client).edit(settings_obj, settings_dir, allow_duplicate_names)
     except requests.exceptions.HTTPError as e:
         _handle_duplicate_name_exception(settings_obj, e, is_create_pipeline=False)
-    click.echo("Successfully edited pipeline settings: {}".format(
+    click.echo("Successfully edited pipeline settings: {}.".format(
         _get_pipeline_url(api_client, settings_obj['id'])))
 
 
@@ -170,7 +170,7 @@ def edit_cli(api_client, settings_arg, settings, pipeline_id, allow_duplicate_na
 @click.option('--spec', default=None, type=PipelineSpecClickType(),
               help=PipelineSpecClickType.help)
 @click.option('--allow-duplicate-names', is_flag=True,
-              help="Skip duplicate name check while deploying pipeline")
+              help="Skip duplicate name check while deploying pipeline.")
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
@@ -182,7 +182,7 @@ def deploy_cli(api_client, settings_arg, settings, spec, allow_duplicate_names, 
     [Deprecated] This command is deprecated, use create and edit commands instead.
 
     Deploys a pipeline according to the pipeline settings. The pipeline settings are a
-    JSON document that defines a Delta Live Tables pipeline on Databricks
+    JSON document that defines a Delta Live Tables pipeline on Databricks.
 
     If the pipeline settings contains an "id" field, or if a pipeline ID is specified directly
     (using the  --pipeline-id argument), attempts to update an existing pipeline
@@ -237,7 +237,7 @@ def deploy_cli(api_client, settings_arg, settings, spec, allow_duplicate_names, 
         if (pipeline_id and 'id' in settings_obj) and pipeline_id != settings_obj["id"]:
             raise ValueError(
                 "The ID provided in --pipeline_id '{}' is different from the ID provided "
-                "in the settings '{}'. Resolve the conflict and try the command again. ".format(
+                "in the settings '{}'. Resolve the conflict and try the command again.".format(
                     pipeline_id, settings_obj["id"])
             )
 
@@ -248,7 +248,7 @@ def deploy_cli(api_client, settings_arg, settings, spec, allow_duplicate_names, 
                 settings_obj, settings_dir, allow_duplicate_names)
         except requests.exceptions.HTTPError as e:
             _handle_duplicate_name_exception(settings_obj, e, is_create_pipeline=False)
-        click.echo("Successfully deployed pipeline: {}".format(
+        click.echo("Successfully deployed pipeline: {}.".format(
             _get_pipeline_url(api_client, settings_obj['id'])))
 
 
@@ -433,7 +433,7 @@ def _read_settings(src):
                 data = f.read()
             return json.loads(data)
         except json_parse_exception as e:
-            error_and_quit("Invalid JSON provided in settings\n{}".format(e))
+            error_and_quit("Invalid JSON provided in settings\n{}.".format(e))
     else:
         raise ValueError('The provided file extension for the settings is not supported. ' +
                          'Only JSON files are supported.')
