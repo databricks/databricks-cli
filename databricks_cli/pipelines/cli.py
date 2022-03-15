@@ -65,7 +65,7 @@ def create_cli(api_client, settings_arg, settings, allow_duplicate_names):
     Creates a pipeline according to the pipeline settings. The pipeline settings are a
     JSON document that defines a Delta Live Tables pipeline on Databricks.
 
-    If a pipeline with the same name already exists, pipeline will not be created.
+    If a pipeline with the same name already exists, the pipeline will not be created.
     This check can be disabled by adding the --allow-duplicate-names option.
 
     If the pipeline settings contain an "id" field, this command will fail.
@@ -88,7 +88,8 @@ def create_cli(api_client, settings_arg, settings, allow_duplicate_names):
     settings_dir = os.path.dirname(src)
 
     if 'id' in settings_obj:
-        raise ValueError("Pipeline settings shouldn't contain \"id\" for create command.")
+        raise ValueError("Pipeline settings shouldn't contain \"id\" "
+                         "when creating a pipeline.")
 
     try:
         response = PipelinesApi(api_client).create(
@@ -186,7 +187,7 @@ def deploy_cli(api_client, settings_arg, settings, spec, allow_duplicate_names, 
 
     If the pipeline settings contains an "id" field, or if a pipeline ID is specified directly
     (using the  --pipeline-id argument), attempts to update an existing pipeline
-    with that ID. If it does not, creates a new pipeline and logs the ID of the new pipeline
+    with that ID. If it does not, creates a new pipeline and logs the URL of the new pipeline
     to STDOUT. Note that if an ID is both specified in the settings and passed via --pipeline-id,
     the two IDs must be the same, or the command will fail.
 
@@ -253,7 +254,7 @@ def deploy_cli(api_client, settings_arg, settings, spec, allow_duplicate_names, 
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Deletes the pipeline and cancels active update if one exists.')
+               short_help='Deletes the pipeline and cancels any active updates.')
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
@@ -262,7 +263,7 @@ def deploy_cli(api_client, settings_arg, settings, spec, allow_duplicate_names, 
 @provide_api_client
 def delete_cli(api_client, pipeline_id):
     """
-    Deletes the pipeline and cancels active update if one exists.
+    Deletes the pipeline and cancels any active updates.
 
     Usage:
 
@@ -423,11 +424,12 @@ def _gen_start_update_msg(resp, pipeline_id, full_refresh):
 
 def _read_settings(src):
     """
-    Reads the settings at src as a JSON if no file extension is provided,
-    or if in the extension format if the format is supported.
+    Reads the settings at src as a JSON If the file has JSON extension or
+    if no file extension is provided. Other file extensions and formats are
+    not supported.
     """
     extension = os.path.splitext(src)[1]
-    if extension.lower() == '.json':
+    if extension.lower() == '.json' or (not extension):
         try:
             with open(src, 'r') as f:
                 data = f.read()

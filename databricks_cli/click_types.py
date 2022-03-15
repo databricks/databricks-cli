@@ -104,7 +104,7 @@ class PipelineSpecClickType(ParamType):
 
 class PipelineSettingClickType(ParamType):
     name = 'SETTINGS'
-    help = 'The path to the pipelines settings file'
+    help = 'The path to the pipelines settings file.'
 
 
 class PipelineIdClickType(ParamType):

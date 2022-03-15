@@ -187,6 +187,17 @@ def test_correct_settings_extensions(pipelines_api_mock, tmpdir):
     pipelines_api_mock.create = mock.Mock(return_value={"pipeline_id": PIPELINE_ID})
 
     runner = CliRunner()
+
+    path_no_extension = tmpdir.join('/settings').strpath
+    with open(path_no_extension, 'w') as f:
+        f.write(PIPELINE_SETTINGS_NO_ID)
+
+    for cmd in [cli.deploy_cli, cli.create_cli]:
+        pipelines_api_mock.reset_mock()
+        result = runner.invoke(cmd, ['--settings', path_no_extension])
+        assert result.exit_code == 0
+        assert pipelines_api_mock.create.call_count == 1
+
     path_json = tmpdir.join('/settings.json').strpath
     with open(path_json, 'w') as f:
         f.write(PIPELINE_SETTINGS_NO_ID)
