@@ -63,7 +63,8 @@ PIPELINE_ID_PERMITTED_CHARACTERS = set(string.ascii_letters + string.digits + '-
 def create_cli(api_client, settings_arg, settings, allow_duplicate_names):
     """
     Creates a pipeline according to the pipeline settings. The pipeline settings are a
-    JSON document that defines a Delta Live Tables pipeline on Databricks.
+    JSON document that defines a Delta Live Tables pipeline on Databricks. If the pipeline
+    creation is successful, logs the URL and the ID of the new pipeline to STDOUT.
 
     If a pipeline with the same name already exists, the pipeline will not be created.
     This check can be disabled by adding the --allow-duplicate-names option.
@@ -187,9 +188,9 @@ def deploy_cli(api_client, settings_arg, settings, spec, allow_duplicate_names, 
 
     If the pipeline settings contains an "id" field, or if a pipeline ID is specified directly
     (using the  --pipeline-id argument), attempts to update an existing pipeline
-    with that ID. If it does not, creates a new pipeline and logs the URL of the new pipeline
-    to STDOUT. Note that if an ID is both specified in the settings and passed via --pipeline-id,
-    the two IDs must be the same, or the command will fail.
+    with that ID. If it does not, creates a new pipeline and logs the URL and the ID of the
+    new pipeline to STDOUT. Note that if an ID is both specified in the settings and passed
+    via --pipeline-id, the two IDs must be the same, or the command will fail.
 
     The deploy command will not create a new pipeline if a pipeline with the same name already
     exists. This check can be disabled by adding the --allow-duplicate-names option.
