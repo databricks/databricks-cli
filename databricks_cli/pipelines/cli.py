@@ -50,7 +50,7 @@ PIPELINE_ID_PERMITTED_CHARACTERS = set(string.ascii_letters + string.digits + '-
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Creates a pipeline according to the pipeline settings.')
+               short_help='Creates a pipeline.')
 @click.argument('settings_arg', default=None, required=False)
 @click.option('--settings', default=None,
               type=PipelineSettingClickType(), help=PipelineSettingClickType.help)
@@ -81,7 +81,7 @@ def create_cli(api_client, settings_arg, settings, allow_duplicate_names):
     """
     if bool(settings_arg) == bool(settings):
         raise ValueError('Settings should be provided either as an argument ' +
-                         '(Eg: databricks pipelines create example.json) or as ' +
+                         '(databricks pipelines create example.json) or as ' +
                          'an option (Eg: databricks pipelines create --settings example.json).')
 
     src = settings_arg if bool(settings_arg) else settings
@@ -104,7 +104,7 @@ def create_cli(api_client, settings_arg, settings, allow_duplicate_names):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Edits a pipeline with the given pipeline settings.')
+               short_help='Edits a pipeline.')
 @click.argument('settings_arg', default=None, required=False)
 @click.option('--settings', default=None, type=PipelineSettingClickType(),
               help=PipelineSettingClickType.help)
@@ -124,7 +124,7 @@ def edit_cli(api_client, settings_arg, settings, pipeline_id, allow_duplicate_na
     If another pipeline with the same name exists, pipeline settings will not be edited.
     This check can be disabled by adding the --allow-duplicate-names option.
 
-    Note that if an ID is both specified in the settings and passed via --pipeline-id,
+    Note that if an ID is specified in both the settings and passed with the --pipeline-id argument,
     the two ids must be the same, or the command will fail.
 
     Usage:
