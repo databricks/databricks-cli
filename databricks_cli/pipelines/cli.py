@@ -61,7 +61,7 @@ PIPELINE_ID_PERMITTED_CHARACTERS = set(string.ascii_letters + string.digits + '-
 @pipelines_exception_eater
 @provide_api_client
 def create_cli(api_client, settings_arg, settings, allow_duplicate_names):
-# pylint: disable=line-too-long
+    # pylint: disable=line-too-long
     """
     Creates a pipeline according to the pipeline settings. The pipeline settings are a
     JSON document that defines a Delta Live Tables pipeline on Databricks.
@@ -86,7 +86,7 @@ def create_cli(api_client, settings_arg, settings, allow_duplicate_names):
 
     databricks pipelines create --settings example.json
     """
-# pylint: enable=line-too-long
+    # pylint: enable=line-too-long
     if bool(settings_arg) == bool(settings):
         raise ValueError('Settings should be provided either as an argument ' +
                          '(databricks pipelines create example.json) or as ' +
@@ -125,7 +125,7 @@ def create_cli(api_client, settings_arg, settings, allow_duplicate_names):
 @pipelines_exception_eater
 @provide_api_client
 def edit_cli(api_client, settings_arg, settings, pipeline_id, allow_duplicate_names):
-# pylint: disable=line-too-long
+    # pylint: disable=line-too-long
     """
     Edits a pipeline according to the pipeline settings. The pipeline settings are a
     JSON document that defines a Delta Live Tables pipeline on Databricks. To use a
@@ -149,7 +149,7 @@ def edit_cli(api_client, settings_arg, settings, pipeline_id, allow_duplicate_na
 
     databricks pipelines edit --settings example.json
     """
-# pylint: enable=line-too-long
+    # pylint: enable=line-too-long
     if bool(settings_arg) == bool(settings):
         raise ValueError('Settings should be provided either as an argument ' +
                          '(databricks pipelines edit example.json) or as ' +
@@ -195,7 +195,7 @@ def edit_cli(api_client, settings_arg, settings, pipeline_id, allow_duplicate_na
 @pipelines_exception_eater
 @provide_api_client
 def deploy_cli(api_client, settings_arg, settings, spec, allow_duplicate_names, pipeline_id):
-# pylint: disable=line-too-long
+    # pylint: disable=line-too-long
     """
     [Deprecated] This command is deprecated, use create and edit commands instead.
 
@@ -228,7 +228,7 @@ def deploy_cli(api_client, settings_arg, settings, spec, allow_duplicate_names, 
 
     databricks pipelines deploy --pipeline-id 1234 --settings example.json
     """
-# pylint: enable=line-too-long
+    # pylint: enable=line-too-long
     click.echo("DeprecationWarning: the \"deploy\" command is deprecated, " +
                "use \"create\" command to create a new pipeline or \"edit\" command " +
                "to modify an existing pipeline.\n")
