@@ -61,10 +61,17 @@ PIPELINE_ID_PERMITTED_CHARACTERS = set(string.ascii_letters + string.digits + '-
 @pipelines_exception_eater
 @provide_api_client
 def create_cli(api_client, settings_arg, settings, allow_duplicate_names):
+# pylint: disable=line-too-long
     """
     Creates a pipeline according to the pipeline settings. The pipeline settings are a
-    JSON document that defines a Delta Live Tables pipeline on Databricks. If the pipeline
-    creation is successful, logs the URL and the ID of the new pipeline to STDOUT.
+    JSON document that defines a Delta Live Tables pipeline on Databricks.
+
+    To use a file containing the pipeline settings, pass the file path to the command as
+    an argument or through --settings option. If the pipeline creation is successful, logs
+    the URL and the ID of the new pipeline to STDOUT.
+
+    Specification for the pipeline settings JSON can be found at
+    https://docs.databricks.com/data-engineering/delta-live-tables/delta-live-tables-configuration.html
 
     If a pipeline with the same name already exists, the pipeline will not be created.
     This check can be disabled by adding the --allow-duplicate-names option.
@@ -79,10 +86,11 @@ def create_cli(api_client, settings_arg, settings, allow_duplicate_names):
 
     databricks pipelines create --settings example.json
     """
+# pylint: enable=line-too-long
     if bool(settings_arg) == bool(settings):
         raise ValueError('Settings should be provided either as an argument ' +
                          '(databricks pipelines create example.json) or as ' +
-                         'an option (Eg: databricks pipelines create --settings example.json).')
+                         'an option (databricks pipelines create --settings example.json).')
 
     src = settings_arg if bool(settings_arg) else settings
     settings_obj = _read_settings(src)
@@ -117,9 +125,15 @@ def create_cli(api_client, settings_arg, settings, allow_duplicate_names):
 @pipelines_exception_eater
 @provide_api_client
 def edit_cli(api_client, settings_arg, settings, pipeline_id, allow_duplicate_names):
+# pylint: disable=line-too-long
     """
     Edits a pipeline according to the pipeline settings. The pipeline settings are a
-    JSON document that defines a Delta Live Tables pipeline on Databricks.
+    JSON document that defines a Delta Live Tables pipeline on Databricks. To use a
+    file containing the pipeline settings, pass the file path to the command as an
+    argument or through --settings option.
+
+    Specification for the pipeline settings JSON can be found at
+    https://docs.databricks.com/data-engineering/delta-live-tables/delta-live-tables-configuration.html
 
     If another pipeline with the same name exists, pipeline settings will not be edited.
     This check can be disabled by adding the --allow-duplicate-names option.
@@ -135,10 +149,11 @@ def edit_cli(api_client, settings_arg, settings, pipeline_id, allow_duplicate_na
 
     databricks pipelines edit --settings example.json
     """
+# pylint: enable=line-too-long
     if bool(settings_arg) == bool(settings):
         raise ValueError('Settings should be provided either as an argument ' +
-                         '(Eg: databricks pipelines edit example.json) or as ' +
-                         'an option (Eg: databricks pipelines edit --settings example.json).')
+                         '(databricks pipelines edit example.json) or as ' +
+                         'an option (databricks pipelines edit --settings example.json).')
 
     src = settings_arg if bool(settings_arg) else settings
     settings_obj = _read_settings(src)
@@ -180,17 +195,23 @@ def edit_cli(api_client, settings_arg, settings, pipeline_id, allow_duplicate_na
 @pipelines_exception_eater
 @provide_api_client
 def deploy_cli(api_client, settings_arg, settings, spec, allow_duplicate_names, pipeline_id):
+# pylint: disable=line-too-long
     """
     [Deprecated] This command is deprecated, use create and edit commands instead.
 
-    Deploys a pipeline according to the pipeline settings. The pipeline settings are a
-    JSON document that defines a Delta Live Tables pipeline on Databricks.
+    Creates or edits a pipeline according to the pipeline settings. The pipeline settings
+    are a JSON document that defines a Delta Live Tables pipeline on Databricks. To use a
+    file containing the pipeline settings, pass the file path to the command as an
+    argument or through --settings option.
+
+    Specification for the pipeline settings JSON can be found at
+    https://docs.databricks.com/data-engineering/delta-live-tables/delta-live-tables-configuration.html
 
     If the pipeline settings contains an "id" field, or if a pipeline ID is specified directly
     (using the  --pipeline-id argument), attempts to update an existing pipeline
     with that ID. If it does not, creates a new pipeline and logs the URL and the ID of the
-    new pipeline to STDOUT. Note that if an ID is both specified in the settings and passed
-    via --pipeline-id, the two IDs must be the same, or the command will fail.
+    new pipeline to STDOUT. Note that if an ID is specified in both the settings and passed
+    with the --pipeline-id argument, the two IDs must be the same, or the command will fail.
 
     The deploy command will not create a new pipeline if a pipeline with the same name already
     exists. This check can be disabled by adding the --allow-duplicate-names option.
@@ -207,13 +228,14 @@ def deploy_cli(api_client, settings_arg, settings, spec, allow_duplicate_names, 
 
     databricks pipelines deploy --pipeline-id 1234 --settings example.json
     """
+# pylint: enable=line-too-long
     click.echo("DeprecationWarning: the \"deploy\" command is deprecated, " +
                "use \"create\" command to create a new pipeline or \"edit\" command " +
                "to modify an existing pipeline.\n")
 
     settings_error_msg = 'Settings should be provided either as an argument ' \
-                         '(Eg: databricks pipelines deploy example.json) or as ' \
-                         'an option (Eg: databricks pipelines deploy --settings example.json).'
+                         '(databricks pipelines deploy example.json) or as ' \
+                         'an option (databricks pipelines deploy --settings example.json).'
     if bool(spec):
         if bool(spec) == bool(settings):
             raise ValueError(settings_error_msg)
