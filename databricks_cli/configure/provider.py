@@ -28,6 +28,7 @@ from os.path import expanduser, join
 
 from databricks_cli.utils import InvalidConfigurationError
 
+
 _home = expanduser('~')
 CONFIG_FILE_ENV_VAR = "DATABRICKS_CONFIG_FILE"
 HOST = 'host'
@@ -227,7 +228,11 @@ class SparkTaskContextConfigProvider(DatabricksConfigProvider):
             host = context.getLocalProperty("spark.databricks.api.url")
             token = context.getLocalProperty("spark.databricks.token")
             insecure = context.getLocalProperty("spark.databricks.ignoreTls")
-            config = DatabricksConfig.from_token(host=host, token=token, insecure=insecure)
+            config = DatabricksConfig.from_token(host=host,
+                                                 token=token,
+                                                 refresh_token=None,
+                                                 insecure=insecure,
+                                                 jobs_api_version=None)
             if config.is_valid:
                 return config
         return None

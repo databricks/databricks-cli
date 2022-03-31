@@ -45,7 +45,6 @@ DEFAULT_SCOPES = [
     'clusters',
     'mlflow',
     'offline_access',
-    'scim',
     'sql',
     'unity-catalog'
 ]
@@ -158,9 +157,11 @@ def _configure_cli_password(profile, insecure, host, jobs_api_version):
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Configures host and authentication info for the CLI.')
-@click.option('--oauth', '-o', 'oauth', show_default=True, is_flag=True, default=False)
+@click.option('--oauth', '-o', 'oauth', show_default=True, is_flag=True, default=False,
+              help='[Experimental] Use OAuth for authorization')
 @click.option('--scope', '-s', 'scope', show_default=True, multiple=True,
-              type=click.Choice(DEFAULT_SCOPES))
+              type=click.Choice(DEFAULT_SCOPES),
+              help='[Experimental] Specify which OAuth scopes to request access for')
 @click.option('--token', '-t', 'token', show_default=True, is_flag=True, default=False)
 @click.option('--token-file', '-f', 'token_file', default=None,
               help='Instead of reading the token from stdin, ' +

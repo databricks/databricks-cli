@@ -221,14 +221,19 @@ def get_tokens_from_response(oauth_response):
 
 
 def check_and_refresh_access_token(hostname, access_token, refresh_token):
-    expiration_time = datetime.utcnow()
+    now = datetime.now(tz=UTC)
+    # If we can't decode an expiration time, this will be expired by default.
+    expiration_time = now
     try:
+        # This token has already been verified and we are just parsing it.
+        # If it has been tampered with, it will be rejected on the server side.
+        # This avoids having to fetch the public key from the issuer and perform
+        # an unnecessary signature verification.
         decoded = jwt.decode(access_token, options={"verify_signature": False})
         expiration_time = datetime.fromtimestamp(decoded['exp'], tz=UTC)
     except PyJWTError as err:
         error_and_quit(err)
 
-    now = datetime.now(tz=UTC)
     if expiration_time > now:
         # The access token is fine. Just return it.
         return access_token, refresh_token, False
