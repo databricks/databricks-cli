@@ -39,6 +39,8 @@ TEST_TOKEN = 'dapiTESTING'
 TEST_PROFILE = 'dev'
 TEST_HOST_2 = 'https://test2.cloud.databricks.com'
 
+TEST_SCOPES = 'offline_access,sql,accounts'
+
 
 def test_configure_cli():
     runner = CliRunner()
@@ -120,3 +122,13 @@ def test_configure_cli_jobs_api_version_password():
     assert get_config().host == TEST_HOST
     assert get_config().username == TEST_USER
     assert get_config().password == TEST_PASSWORD
+
+
+def test_configure_cli_oauth():
+    runner = CliRunner()
+    runner.invoke(cli.configure_cli, ['--oauth'],
+                  input=(TEST_HOST + '\n' + TEST_SCOPES + '\n'))
+    # This is just exercising that the --oauth flag will parse the input as
+    # expected. If we use it on a live OAuth endpoint, it will expect to
+    # trigger a browser authentication flow. This is not going to be unit
+    # testable from the command line.

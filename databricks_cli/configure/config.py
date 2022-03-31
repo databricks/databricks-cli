@@ -26,7 +26,9 @@ import click
 import six
 
 from databricks_cli.click_types import ContextObject
-from databricks_cli.configure.provider import get_config, ProfileConfigProvider
+from databricks_cli.configure.provider import get_config, \
+    update_and_persist_config, ProfileConfigProvider
+from databricks_cli.oauth.oauth import check_and_refresh_access_token
 from databricks_cli.utils import InvalidConfigurationError
 from databricks_cli.sdk import ApiClient
 from databricks_cli.sdk.version import API_VERSIONS
@@ -44,13 +46,22 @@ def provide_api_client(function):
         command_name += "-" + str(uuid.uuid1())
         profile = get_profile_from_context()
         if profile:
-            # If we request a specific profile, only get credentials from tere.
+            # If we request a specific profile, only get credentials from there.
             config = ProfileConfigProvider(profile).get_config()
         else:
             # If unspecified, use the default provider, or allow for user overrides.
             config = get_config()
         if not config or not config.is_valid:
             raise InvalidConfigurationError.for_profile(profile)
+
+        # This checks if an OAuth access token has expired and will attempt to refresh it if
+        # a refresh token is present
+        if config.host and config.token and config.refresh_token:
+            config.token, config.refresh_token, updated = \
+                check_and_refresh_access_token(config.host, config.token, config.refresh_token)
+            if updated:
+                update_and_persist_config(profile, config)
+
         kwargs['api_client'] = _get_api_client(config, command_name)
 
         return function(*args, **kwargs)
