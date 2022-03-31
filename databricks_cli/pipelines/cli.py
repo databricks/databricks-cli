@@ -67,7 +67,7 @@ def create_cli(api_client, settings_arg, settings, allow_duplicate_names):
     JSON document that defines a Delta Live Tables pipeline on Databricks.
 
     To use a file containing the pipeline settings, pass the file path to the command as
-    an argument or through --settings option. If the pipeline creation is successful, logs
+    an argument or with the --settings option. If the pipeline creation is successful, logs
     the URL and the ID of the new pipeline to STDOUT.
 
     Specification for the pipeline settings JSON can be found at
@@ -130,7 +130,7 @@ def edit_cli(api_client, settings_arg, settings, pipeline_id, allow_duplicate_na
     Edits a pipeline according to the pipeline settings. The pipeline settings are a
     JSON document that defines a Delta Live Tables pipeline on Databricks. To use a
     file containing the pipeline settings, pass the file path to the command as an
-    argument or through --settings option.
+    argument or with the --settings option.
 
     Specification for the pipeline settings JSON can be found at
     https://docs.databricks.com/data-engineering/delta-live-tables/delta-live-tables-configuration.html
@@ -202,7 +202,7 @@ def deploy_cli(api_client, settings_arg, settings, spec, allow_duplicate_names, 
     Creates or edits a pipeline according to the pipeline settings. The pipeline settings
     are a JSON document that defines a Delta Live Tables pipeline on Databricks. To use a
     file containing the pipeline settings, pass the file path to the command as an
-    argument or through --settings option.
+    argument or with the --settings option.
 
     Specification for the pipeline settings JSON can be found at
     https://docs.databricks.com/data-engineering/delta-live-tables/delta-live-tables-configuration.html
