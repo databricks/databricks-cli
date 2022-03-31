@@ -63,7 +63,7 @@ PIPELINE_ID_PERMITTED_CHARACTERS = set(string.ascii_letters + string.digits + '-
 def create_cli(api_client, settings_arg, settings, allow_duplicate_names):
     # pylint: disable=line-too-long
     """
-    Creates a pipeline according to the pipeline settings. The pipeline settings are a
+    Creates a pipeline specified by the pipeline settings. The pipeline settings are a
     JSON document that defines a Delta Live Tables pipeline on Databricks.
 
     To use a file containing the pipeline settings, pass the file path to the command as
@@ -127,7 +127,7 @@ def create_cli(api_client, settings_arg, settings, allow_duplicate_names):
 def edit_cli(api_client, settings_arg, settings, pipeline_id, allow_duplicate_names):
     # pylint: disable=line-too-long
     """
-    Edits a pipeline according to the pipeline settings. The pipeline settings are a
+    Edits a pipeline specified by the pipeline settings. The pipeline settings are a
     JSON document that defines a Delta Live Tables pipeline on Databricks. To use a
     file containing the pipeline settings, pass the file path to the command as an
     argument or with the --settings option.
@@ -179,7 +179,7 @@ def edit_cli(api_client, settings_arg, settings, pipeline_id, allow_duplicate_na
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='[Deprecated] This command is deprecated, use create and edit '
-                          'commands instead.\n Creates or edits a pipeline according to the '
+                          'commands instead.\n Creates or edits a pipeline specified by the '
                           'pipeline settings.')
 @click.argument('settings_arg', default=None, required=False)
 @click.option('--settings', default=None, type=PipelineSettingClickType(),
@@ -199,7 +199,7 @@ def deploy_cli(api_client, settings_arg, settings, spec, allow_duplicate_names, 
     """
     [Deprecated] This command is deprecated, use create and edit commands instead.
 
-    Creates or edits a pipeline according to the pipeline settings. The pipeline settings
+    Creates or edits a pipeline specified by the pipeline settings. The pipeline settings
     are a JSON document that defines a Delta Live Tables pipeline on Databricks. To use a
     file containing the pipeline settings, pass the file path to the command as an
     argument or with the --settings option.
