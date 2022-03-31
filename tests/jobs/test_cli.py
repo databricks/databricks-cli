@@ -193,6 +193,7 @@ JAR_PARAMS = '[1, 2, 3]'
 PYTHON_PARAMS = '["python", "params"]'
 PYTHON_NAMED_PARAMS = '{"python": "named", "params": 1}'
 SPARK_SUBMIT_PARAMS = '["--class", "org.apache.spark.examples.SparkPi"]'
+IDEMPOTENCY_TOKEN = 'idempotent-token'
 
 
 @provide_conf
@@ -206,6 +207,8 @@ def test_run_now_no_params(jobs_api_mock):
         assert jobs_api_mock.run_now.call_args[0][2] is None
         assert jobs_api_mock.run_now.call_args[0][3] is None
         assert jobs_api_mock.run_now.call_args[0][4] is None
+        assert jobs_api_mock.run_now.call_args[0][5] is None
+        assert jobs_api_mock.run_now.call_args[0][6] is None
         assert echo_mock.call_args[0][0] == pretty_format(RUN_NOW_RETURN)
 
 
@@ -219,7 +222,8 @@ def test_run_now_with_params(jobs_api_mock):
                                         '--notebook-params', NOTEBOOK_PARAMS,
                                         '--python-params', PYTHON_PARAMS,
                                         '--python-named-params', PYTHON_NAMED_PARAMS,
-                                        '--spark-submit-params', SPARK_SUBMIT_PARAMS])
+                                        '--spark-submit-params', SPARK_SUBMIT_PARAMS,
+                                        '--idempotency-token', IDEMPOTENCY_TOKEN])
         assert jobs_api_mock.run_now.call_args[0][0] == 1
         assert jobs_api_mock.run_now.call_args[0][1] == json.loads(JAR_PARAMS)
         assert jobs_api_mock.run_now.call_args[0][2] == json.loads(
@@ -230,6 +234,7 @@ def test_run_now_with_params(jobs_api_mock):
             SPARK_SUBMIT_PARAMS)
         assert jobs_api_mock.run_now.call_args[0][5] == json.loads(
             PYTHON_NAMED_PARAMS)
+        assert jobs_api_mock.run_now.call_args[0][6] == IDEMPOTENCY_TOKEN
         assert echo_mock.call_args[0][0] == pretty_format(RUN_NOW_RETURN)
 
 

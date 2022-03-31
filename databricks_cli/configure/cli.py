@@ -27,6 +27,8 @@ from os import path
 import click
 from click import ParamType
 
+from databricks_cli.oauth.oauth import get_tokens
+
 from databricks_cli.configure.config import profile_option, get_profile_from_context, debug_option
 from databricks_cli.configure.provider import DatabricksConfig, update_and_persist_config, \
     ProfileConfigProvider
@@ -38,6 +40,14 @@ PROMPT_USERNAME = 'Username'
 PROMPT_PASSWORD = 'Password'  # NOQA
 PROMPT_TOKEN = 'Token'  # NOQA
 ENV_AAD_TOKEN = 'DATABRICKS_AAD_TOKEN'
+DEFAULT_SCOPES = [
+    'accounts',
+    'clusters',
+    'mlflow',
+    'offline_access',
+    'sql',
+    'unity-catalog'
+]
 
 
 def _configure_cli_token_file(profile, token_file, host, insecure, jobs_api_version):
@@ -51,7 +61,11 @@ def _configure_cli_token_file(profile, token_file, host, insecure, jobs_api_vers
     if not host:
         host = click.prompt(PROMPT_HOST, default=config.host, type=_DbfsHost())
 
-    new_config = DatabricksConfig.from_token(host, token, insecure, jobs_api_version)
+    new_config = DatabricksConfig.from_token(host=host,
+                                             token=token,
+                                             refresh_token=None,
+                                             insecure=insecure,
+                                             jobs_api_version=jobs_api_version)
     update_and_persist_config(profile, new_config)
 
 
@@ -62,7 +76,36 @@ def _configure_cli_token(profile, insecure, host, jobs_api_version):
         host = click.prompt(PROMPT_HOST, default=config.host, type=_DbfsHost())
 
     token = click.prompt(PROMPT_TOKEN, default=config.token, hide_input=True)
-    new_config = DatabricksConfig.from_token(host, token, insecure, jobs_api_version)
+    new_config = DatabricksConfig.from_token(host=host,
+                                             token=token,
+                                             refresh_token=None,
+                                             insecure=insecure,
+                                             jobs_api_version=jobs_api_version)
+    update_and_persist_config(profile, new_config)
+
+
+def scope_format(user_input):
+    user_inputs = user_input.split(',')
+    choice = click.Choice(DEFAULT_SCOPES)
+    return list(map(lambda x: choice(x.strip()), user_inputs))
+
+
+def _configure_cli_oauth(profile, insecure, host, scope, jobs_api_version):
+    config = ProfileConfigProvider(profile).get_config() or DatabricksConfig.empty()
+
+    if not host:
+        host = click.prompt(PROMPT_HOST, default=config.host, type=_DbfsHost())
+    if not scope:
+        scope = click.prompt(
+            "Pick one or more comma-separated scopes from {scopes}".format(scopes=DEFAULT_SCOPES),
+            value_proc=scope_format,
+            type=click.Choice(DEFAULT_SCOPES), default=None)
+    access_token, refresh_token = get_tokens(host, scope)
+    new_config = DatabricksConfig.from_token(host=host,
+                                             token=access_token,
+                                             refresh_token=refresh_token,
+                                             insecure=insecure,
+                                             jobs_api_version=jobs_api_version)
     update_and_persist_config(profile, new_config)
 
 
@@ -84,7 +127,11 @@ def _configure_cli_aad_token(profile, insecure, host, jobs_api_version):
         host = click.prompt(PROMPT_HOST, default=config.host, type=_DbfsHost())
 
     aad_token = os.environ.get(ENV_AAD_TOKEN)
-    new_config = DatabricksConfig.from_token(host, aad_token, insecure, jobs_api_version)
+    new_config = DatabricksConfig.from_token(host=host,
+                                             token=aad_token,
+                                             refresh_token=None,
+                                             insecure=insecure,
+                                             jobs_api_version=jobs_api_version)
     update_and_persist_config(profile, new_config)
 
 
@@ -110,6 +157,11 @@ def _configure_cli_password(profile, insecure, host, jobs_api_version):
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Configures host and authentication info for the CLI.')
+@click.option('--oauth', '-o', 'oauth', show_default=True, is_flag=True, default=False,
+              help='[Experimental] Use OAuth for authorization')
+@click.option('--scope', '-s', 'scope', show_default=True, multiple=True,
+              type=click.Choice(DEFAULT_SCOPES),
+              help='[Experimental] Specify which OAuth scopes to request access for')
 @click.option('--token', '-t', 'token', show_default=True, is_flag=True, default=False)
 @click.option('--token-file', '-f', 'token_file', default=None,
               help='Instead of reading the token from stdin, ' +
@@ -123,7 +175,7 @@ def _configure_cli_password(profile, insecure, host, jobs_api_version):
               type=click.Choice(API_VERSIONS), help='API version to use for jobs.')
 @debug_option
 @profile_option
-def configure_cli(token, aad_token, insecure, host, token_file, jobs_api_version):
+def configure_cli(token, aad_token, insecure, host, token_file, jobs_api_version, oauth, scope):
     """
     Configures host, authentication, and jobs-api version for the CLI.
     """
@@ -136,6 +188,9 @@ def configure_cli(token, aad_token, insecure, host, token_file, jobs_api_version
     elif token_file:
         _configure_cli_token_file(profile=profile, insecure=insecure_str, host=host,
                                   token_file=token_file, jobs_api_version=jobs_api_version)
+    elif oauth:
+        _configure_cli_oauth(profile=profile, insecure=insecure_str, host=host,
+                             scope=scope, jobs_api_version=jobs_api_version)
     elif aad_token:
         _configure_cli_aad_token(profile=profile, insecure=insecure_str, host=host,
                                  jobs_api_version=jobs_api_version)

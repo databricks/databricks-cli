@@ -226,20 +226,27 @@ def test_get(pipelines_api):
     assert (response['pipeline_id'] == PIPELINE_ID and response['state'] == 'RUNNING')
 
 
-def test_reset(pipelines_api):
-    pipelines_api.reset(PIPELINE_ID)
+def test_start_without_refresh(pipelines_api):
+    pipelines_api.start_update(PIPELINE_ID)
     client_mock = pipelines_api.client.client.perform_query
     assert client_mock.call_count == 1
-    client_mock.assert_called_with('POST', '/pipelines/{}/reset'.format(PIPELINE_ID),
-                                   data={}, headers=None)
+    expected_data = {
+        "cause": "USER_ACTION"
+    }
+    client_mock.assert_called_with('POST', '/pipelines/{}/start'.format(PIPELINE_ID),
+                                   data=expected_data, headers=None)
 
 
-def test_run(pipelines_api):
-    pipelines_api.run(PIPELINE_ID)
+def test_start_with_refresh(pipelines_api):
+    pipelines_api.start_update(PIPELINE_ID, full_refresh=True)
     client_mock = pipelines_api.client.client.perform_query
     assert client_mock.call_count == 1
-    client_mock.assert_called_with('POST', '/pipelines/{}/run'.format(PIPELINE_ID),
-                                   data={}, headers=None)
+    expected_data = {
+        "cause": "USER_ACTION",
+        "full_refresh": True,
+    }
+    client_mock.assert_called_with('POST', '/pipelines/{}/start'.format(PIPELINE_ID),
+                                   data=expected_data, headers=None)
 
 
 def test_stop(pipelines_api):
