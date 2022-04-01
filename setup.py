@@ -35,7 +35,7 @@ setup(
     packages=find_packages(exclude=['tests', 'tests.*']),
     install_requires=[
         'click>=6.7',
-        'pyjwt>=1.5.0',
+        'pyjwt>=1.7.0',
         'oauthlib>=3.1.0',
         'requests>=2.17.3',
         'tabulate>=0.7.7',
