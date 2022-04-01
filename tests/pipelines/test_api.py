@@ -81,11 +81,11 @@ def test_create_pipeline_and_upload_libraries(put_file_mock, dbfs_path_validate,
 @mock.patch('databricks_cli.dbfs.api.DbfsApi.put_file')
 def test_deploy_pipeline_and_upload_libraries(put_file_mock, dbfs_path_validate, pipelines_api,
                                               tmpdir):
-    _test_library_uploads(pipelines_api, pipelines_api.deploy, SPEC, put_file_mock,
+    _test_library_uploads(pipelines_api, pipelines_api.edit, SPEC, put_file_mock,
                           dbfs_path_validate, tmpdir, False)
 
 
-def _test_library_uploads(pipelines_api, api_method, spec, put_file_mock, dbfs_path_validate,
+def _test_library_uploads(pipelines_api, api_method, settings, put_file_mock, dbfs_path_validate,
                           tmpdir, allow_duplicate_names):
     """
     Scenarios Tested:
@@ -98,7 +98,7 @@ def _test_library_uploads(pipelines_api, api_method, spec, put_file_mock, dbfs_p
     A test local file which has '456' written to it is not present in Dbfs and therefore must be.
     uploaded to dbfs.
     """
-    spec = copy.deepcopy(spec)
+    settings = copy.deepcopy(settings)
 
     # set-up the test
     jar1 = tmpdir.join('jar1.jar').strpath
@@ -135,9 +135,9 @@ def _test_library_uploads(pipelines_api, api_method, spec, put_file_mock, dbfs_p
         {'whl': wheel1},
     ]
 
-    expected_data = copy.deepcopy(spec)
+    expected_data = copy.deepcopy(settings)
 
-    spec['libraries'] = libraries
+    settings['libraries'] = libraries
 
     hash123 = "40bd001563085fc35165329ea1ff5c5ecbdbbeef"
     hash456 = "51eac6b471a284d3341d8c0c63d0f1a286262a18"
@@ -155,7 +155,7 @@ def _test_library_uploads(pipelines_api, api_method, spec, put_file_mock, dbfs_p
     ]
     expected_data['allow_duplicate_names'] = allow_duplicate_names
 
-    api_method(spec, tmpdir.strpath, allow_duplicate_names)
+    api_method(settings, tmpdir.strpath, allow_duplicate_names)
     assert dbfs_path_validate.call_count == 5
     assert put_file_mock.call_count == 4
     assert put_file_mock.call_args_list[0][0][0] == jar2
@@ -171,17 +171,17 @@ def _test_library_uploads(pipelines_api, api_method, spec, put_file_mock, dbfs_p
 def test_create(pipelines_api):
     client_mock = pipelines_api.client.client.perform_query
 
-    spec = copy.deepcopy(SPEC_WITHOUT_ID)
-    spec['libraries'] = []
+    settings = copy.deepcopy(SPEC_WITHOUT_ID)
+    settings['libraries'] = []
 
-    pipelines_api.create(spec, spec_dir='.', allow_duplicate_names=False)
-    data = copy.deepcopy(spec)
+    pipelines_api.create(settings, settings_dir='.', allow_duplicate_names=False)
+    data = copy.deepcopy(settings)
     data['allow_duplicate_names'] = False
     client_mock.assert_called_with("POST", "/pipelines", data=data, headers=None)
     assert client_mock.call_count == 1
 
-    pipelines_api.create(spec, spec_dir='.', allow_duplicate_names=True, headers=HEADERS)
-    data = copy.deepcopy(spec)
+    pipelines_api.create(settings, settings_dir='.', allow_duplicate_names=True, headers=HEADERS)
+    data = copy.deepcopy(settings)
     data['allow_duplicate_names'] = True
     client_mock.assert_called_with("POST", "/pipelines", data=data, headers=HEADERS)
     assert client_mock.call_count == 2
@@ -190,17 +190,17 @@ def test_create(pipelines_api):
 def test_deploy(pipelines_api):
     client_mock = pipelines_api.client.client.perform_query
 
-    spec = copy.deepcopy(SPEC)
-    spec['libraries'] = []
+    settings = copy.deepcopy(SPEC)
+    settings['libraries'] = []
 
-    pipelines_api.deploy(spec, spec_dir='.', allow_duplicate_names=False)
-    data = copy.deepcopy(spec)
+    pipelines_api.edit(settings, settings_dir='.', allow_duplicate_names=False)
+    data = copy.deepcopy(settings)
     data['allow_duplicate_names'] = False
     client_mock.assert_called_with("PUT", "/pipelines/" + PIPELINE_ID, data=data, headers=None)
     assert client_mock.call_count == 1
 
-    pipelines_api.deploy(spec, spec_dir='.', allow_duplicate_names=True, headers=HEADERS)
-    data = copy.deepcopy(spec)
+    pipelines_api.edit(settings, settings_dir='.', allow_duplicate_names=True, headers=HEADERS)
+    data = copy.deepcopy(settings)
     data['allow_duplicate_names'] = True
     client_mock.assert_called_with("PUT", "/pipelines/" + PIPELINE_ID, data=data, headers=HEADERS)
     assert client_mock.call_count == 2

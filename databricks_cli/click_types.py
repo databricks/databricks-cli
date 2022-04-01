@@ -98,7 +98,13 @@ class SecretPrincipalClickType(ParamType):
 
 class PipelineSpecClickType(ParamType):
     name = 'SPEC'
-    help = 'The path to the pipelines deployment spec file.'
+    help = '[Deprecated] Use the settings option instead. \n' + \
+           'The path to the pipelines settings file.'
+
+
+class PipelineSettingClickType(ParamType):
+    name = 'SETTINGS'
+    help = 'The path to the pipelines settings file.'
 
 
 class PipelineIdClickType(ParamType):

@@ -33,7 +33,8 @@ except ImportError:
 
 import click
 
-from databricks_cli.click_types import PipelineSpecClickType, PipelineIdClickType
+from databricks_cli.click_types import PipelineSpecClickType, \
+    PipelineSettingClickType, PipelineIdClickType
 from databricks_cli.version import print_version_callback, version
 from databricks_cli.pipelines.api import PipelinesApi
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
@@ -49,28 +50,168 @@ PIPELINE_ID_PERMITTED_CHARACTERS = set(string.ascii_letters + string.digits + '-
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Deploys a pipeline according to the pipeline specification.')
-@click.argument('spec_arg', default=None, required=False)
-@click.option('--spec', default=None, type=PipelineSpecClickType(), help=PipelineSpecClickType.help)
+               short_help='Creates a pipeline.')
+@click.argument('settings_arg', default=None, required=False)
+@click.option('--settings', default=None,
+              type=PipelineSettingClickType(), help=PipelineSettingClickType.help)
 @click.option('--allow-duplicate-names', is_flag=True,
-              help="If true, skips duplicate name checking while deploying the pipeline.")
+              help="If true, skips duplicate name checking while creating the pipeline.")
+@debug_option
+@profile_option
+@pipelines_exception_eater
+@provide_api_client
+def create_cli(api_client, settings_arg, settings, allow_duplicate_names):
+    # pylint: disable=line-too-long
+    """
+    Creates a pipeline specified by the pipeline settings. The pipeline settings are a
+    JSON document that defines a Delta Live Tables pipeline on Databricks.
+
+    To use a file containing the pipeline settings, pass the file path to the command as
+    an argument or with the --settings option. If the pipeline creation is successful, logs
+    the URL and the ID of the new pipeline to STDOUT.
+
+    Specification for the pipeline settings JSON can be found at
+    https://docs.databricks.com/data-engineering/delta-live-tables/delta-live-tables-configuration.html
+
+    If a pipeline with the same name already exists, the pipeline will not be created.
+    This check can be disabled by adding the --allow-duplicate-names option.
+
+    If the pipeline settings contain an "id" field, this command will fail.
+
+    Usage:
+
+    databricks pipelines create example.json
+
+    OR
+
+    databricks pipelines create --settings example.json
+    """
+    # pylint: enable=line-too-long
+    if bool(settings_arg) == bool(settings):
+        raise ValueError('Settings should be provided either as an argument ' +
+                         '(databricks pipelines create example.json) or as ' +
+                         'an option (databricks pipelines create --settings example.json).')
+
+    src = settings_arg if bool(settings_arg) else settings
+    settings_obj = _read_settings(src)
+    settings_dir = os.path.dirname(src)
+
+    if 'id' in settings_obj:
+        raise ValueError("Pipeline settings shouldn't contain \"id\" "
+                         "when creating a pipeline.")
+
+    try:
+        response = PipelinesApi(api_client).create(
+            settings_obj, settings_dir, allow_duplicate_names)
+    except requests.exceptions.HTTPError as e:
+        _handle_duplicate_name_exception(settings_obj, e, is_create_pipeline=True)
+
+    new_pipeline_id = response['pipeline_id']
+    click.echo("Successfully created pipeline: {} with ID: {}.".format(
+        _get_pipeline_url(api_client, new_pipeline_id), new_pipeline_id))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Edits a pipeline.')
+@click.argument('settings_arg', default=None, required=False)
+@click.option('--settings', default=None, type=PipelineSettingClickType(),
+              help=PipelineSettingClickType.help)
+@click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
+              help=PipelineIdClickType.help)
+@click.option('--allow-duplicate-names', is_flag=True,
+              help="Skip duplicate name check while editing pipeline.")
+@debug_option
+@profile_option
+@pipelines_exception_eater
+@provide_api_client
+def edit_cli(api_client, settings_arg, settings, pipeline_id, allow_duplicate_names):
+    # pylint: disable=line-too-long
+    """
+    Edits a pipeline specified by the pipeline settings. The pipeline settings are a
+    JSON document that defines a Delta Live Tables pipeline on Databricks. To use a
+    file containing the pipeline settings, pass the file path to the command as an
+    argument or with the --settings option.
+
+    Specification for the pipeline settings JSON can be found at
+    https://docs.databricks.com/data-engineering/delta-live-tables/delta-live-tables-configuration.html
+
+    If another pipeline with the same name exists, pipeline settings will not be edited.
+    This check can be disabled by adding the --allow-duplicate-names option.
+
+    Note that if an ID is specified in both the settings and passed with the --pipeline-id argument,
+    the two ids must be the same, or the command will fail.
+
+    Usage:
+
+    databricks pipelines edit example.json
+
+    OR
+
+    databricks pipelines edit --settings example.json
+    """
+    # pylint: enable=line-too-long
+    if bool(settings_arg) == bool(settings):
+        raise ValueError('Settings should be provided either as an argument ' +
+                         '(databricks pipelines edit example.json) or as ' +
+                         'an option (databricks pipelines edit --settings example.json).')
+
+    src = settings_arg if bool(settings_arg) else settings
+    settings_obj = _read_settings(src)
+    settings_dir = os.path.dirname(src)
+
+    if (pipeline_id and 'id' in settings_obj) and pipeline_id != settings_obj["id"]:
+        raise ValueError(
+            "The ID provided in --pipeline_id '{}' is different from the ID provided "
+            "in the settings '{}'. Resolve the conflict and try the command again. ".format(
+                pipeline_id, settings_obj["id"])
+        )
+
+    settings_obj['id'] = pipeline_id or settings_obj.get('id', None)
+    _validate_pipeline_id(settings_obj['id'])
+
+    try:
+        PipelinesApi(api_client).edit(settings_obj, settings_dir, allow_duplicate_names)
+    except requests.exceptions.HTTPError as e:
+        _handle_duplicate_name_exception(settings_obj, e, is_create_pipeline=False)
+    click.echo("Successfully edited pipeline settings: {}.".format(
+        _get_pipeline_url(api_client, settings_obj['id'])))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='[Deprecated] This command is deprecated, use create and edit '
+                          'commands instead.\n Creates or edits a pipeline specified by the '
+                          'pipeline settings.')
+@click.argument('settings_arg', default=None, required=False)
+@click.option('--settings', default=None, type=PipelineSettingClickType(),
+              help=PipelineSettingClickType.help)
+@click.option('--spec', default=None, type=PipelineSpecClickType(),
+              help=PipelineSpecClickType.help)
+@click.option('--allow-duplicate-names', is_flag=True,
+              help="Skip duplicate name check while deploying pipeline.")
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
 @profile_option
 @pipelines_exception_eater
 @provide_api_client
-def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
+def deploy_cli(api_client, settings_arg, settings, spec, allow_duplicate_names, pipeline_id):
+    # pylint: disable=line-too-long
     """
-    Deploys a pipeline according to the pipeline specification. The pipeline spec is a
-    JSON document that defines the required settings to run a Delta Live Tables pipeline
-    on Databricks. All local libraries referenced in the spec are uploaded to DBFS.
+    [Deprecated] This command is deprecated, use create and edit commands instead.
 
-    If the pipeline spec contains an "id" field, or if a pipeline ID is specified directly
+    Creates or edits a pipeline specified by the pipeline settings. The pipeline settings
+    are a JSON document that defines a Delta Live Tables pipeline on Databricks. To use a
+    file containing the pipeline settings, pass the file path to the command as an
+    argument or with the --settings option.
+
+    Specification for the pipeline settings JSON can be found at
+    https://docs.databricks.com/data-engineering/delta-live-tables/delta-live-tables-configuration.html
+
+    If the pipeline settings contains an "id" field, or if a pipeline ID is specified directly
     (using the  --pipeline-id argument), attempts to update an existing pipeline
-    with that ID. If it does not, creates a new pipeline and logs the ID of the new pipeline
-    to STDOUT. Note that if an ID is both specified in the spec and passed via --pipeline-id,
-    the two IDs must be the same, or the command will fail.
+    with that ID. If it does not, creates a new pipeline and logs the URL and the ID of the
+    new pipeline to STDOUT. Note that if an ID is specified in both the settings and passed
+    with the --pipeline-id argument, the two IDs must be the same, or the command will fail.
 
     The deploy command will not create a new pipeline if a pipeline with the same name already
     exists. This check can be disabled by adding the --allow-duplicate-names option.
@@ -81,51 +222,62 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
 
     OR
 
-    databricks pipelines deploy --spec example.json
+    databricks pipelines deploy --settings example.json
 
     OR
 
-    databricks pipelines deploy --pipeline-id 1234 --spec example.json
+    databricks pipelines deploy --pipeline-id 1234 --settings example.json
     """
-    if bool(spec_arg) == bool(spec):
-        raise ValueError('The spec should be provided either by an option or argument')
-    src = spec_arg if bool(spec_arg) else spec
-    spec_obj = _read_spec(src)
-    spec_dir = os.path.dirname(src)
-    if not pipeline_id and 'id' not in spec_obj:
+    # pylint: enable=line-too-long
+    click.echo("DeprecationWarning: the \"deploy\" command is deprecated, " +
+               "use \"create\" command to create a new pipeline or \"edit\" command " +
+               "to modify an existing pipeline.\n")
+
+    settings_error_msg = 'Settings should be provided either as an argument ' \
+                         '(databricks pipelines deploy example.json) or as ' \
+                         'an option (databricks pipelines deploy --settings example.json).'
+    if bool(spec):
+        if bool(spec) == bool(settings):
+            raise ValueError(settings_error_msg)
+        settings = spec
+
+    if bool(settings_arg) == bool(settings):
+        raise ValueError(settings_error_msg)
+
+    src = settings_arg if bool(settings_arg) else settings
+    settings_obj = _read_settings(src)
+    settings_dir = os.path.dirname(src)
+    if not pipeline_id and 'id' not in settings_obj:
         try:
-            response = PipelinesApi(api_client).create(spec_obj, spec_dir, allow_duplicate_names)
+            response = PipelinesApi(api_client).create(
+                settings_obj, settings_dir, allow_duplicate_names)
         except requests.exceptions.HTTPError as e:
-            _handle_duplicate_name_exception(spec_obj, e)
+            _handle_duplicate_name_exception(settings_obj, e, is_create_pipeline=True)
 
         new_pipeline_id = response['pipeline_id']
-        click.echo("Pipeline has been assigned ID {}".format(new_pipeline_id))
-        click.echo("Successfully created pipeline: {}".format(
-            _get_pipeline_url(api_client, new_pipeline_id)))
-        click.echo(new_pipeline_id, err=True)
+        click.echo("Successfully created pipeline: {} with ID: {}".format(
+            _get_pipeline_url(api_client, new_pipeline_id), new_pipeline_id))
     else:
-        if (pipeline_id and 'id' in spec_obj) and pipeline_id != spec_obj["id"]:
+        if (pipeline_id and 'id' in settings_obj) and pipeline_id != settings_obj["id"]:
             raise ValueError(
                 "The ID provided in --pipeline_id '{}' is different from the ID provided "
-                "in the spec '{}'. Resolve the conflict and try the command again. "
-                "Because pipeline IDs are no longer persisted after being deleted, Databricks "
-                "recommends removing the ID field from your spec."
-                .format(pipeline_id, spec_obj["id"])
+                "in the settings '{}'. Resolve the conflict and try the command again.".format(
+                    pipeline_id, settings_obj["id"])
             )
 
-        spec_obj['id'] = pipeline_id or spec_obj.get('id', None)
-        _validate_pipeline_id(spec_obj['id'])
-
+        settings_obj['id'] = pipeline_id or settings_obj.get('id', None)
+        _validate_pipeline_id(settings_obj['id'])
         try:
-            PipelinesApi(api_client).deploy(spec_obj, spec_dir, allow_duplicate_names)
+            PipelinesApi(api_client).edit(
+                settings_obj, settings_dir, allow_duplicate_names)
         except requests.exceptions.HTTPError as e:
-            _handle_duplicate_name_exception(spec_obj, e)
-        click.echo("Successfully deployed pipeline: {}".format(
-            _get_pipeline_url(api_client, spec_obj['id'])))
+            _handle_duplicate_name_exception(settings_obj, e, is_create_pipeline=False)
+        click.echo("Successfully deployed pipeline: {}.".format(
+            _get_pipeline_url(api_client, settings_obj['id'])))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Stops the pipeline by cancelling any active update and deletes it.')
+               short_help='Deletes the pipeline and cancels any active updates.')
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
@@ -134,7 +286,7 @@ def deploy_cli(api_client, spec_arg, spec, allow_duplicate_names, pipeline_id):
 @provide_api_client
 def delete_cli(api_client, pipeline_id):
     """
-    Stops the pipeline by cancelling any active update and deletes it.
+    Deletes the pipeline and cancels any active updates.
 
     Usage:
 
@@ -146,7 +298,7 @@ def delete_cli(api_client, pipeline_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Gets a pipeline\'s current spec and status.')
+               short_help='Gets a pipeline\'s current settings and status.')
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
 @debug_option
@@ -155,7 +307,7 @@ def delete_cli(api_client, pipeline_id):
 @provide_api_client
 def get_cli(api_client, pipeline_id):
     """
-    Gets a pipeline's current spec and status.
+    Gets a pipeline's current settings and status.
 
     Usage:
 
@@ -166,12 +318,19 @@ def get_cli(api_client, pipeline_id):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Gets a pipeline\'s current spec and status.')
+               short_help='Lists all pipelines and their statuses.')
 @debug_option
 @profile_option
 @pipelines_exception_eater
 @provide_api_client
 def list_cli(api_client):
+    """
+    Lists all pipelines and their statuses.
+
+    Usage:
+
+    databricks pipelines list
+    """
     click.echo(pretty_format(PipelinesApi(api_client).list()))
 
 
@@ -233,9 +392,9 @@ def run_cli(api_client, pipeline_id):
                short_help='Starts a pipeline update.')
 @click.option('--pipeline-id', default=None, type=PipelineIdClickType(),
               help=PipelineIdClickType.help)
-@click.option('--full-refresh', default=False, type=bool,
-              help='If true, truncates tables and creates new checkpoint' +
-                   ' folders so that data is reprocessed from the beginning.')
+@click.option('--full-refresh', default=False, type=bool, is_flag=True,
+              help='If present, truncates tables and creates new checkpoint ' +
+                   'folders so that data is reprocessed from the beginning.')
 @debug_option
 @profile_option
 @pipelines_exception_eater
@@ -246,7 +405,7 @@ def start_cli(api_client, pipeline_id, full_refresh):
 
     Usage:
 
-    databricks pipelines start --pipeline-id 1234 --full-refresh=true
+    databricks pipelines start --pipeline-id 1234 --full-refresh
     """
     _validate_pipeline_id(pipeline_id)
     resp = PipelinesApi(api_client).start_update(pipeline_id, full_refresh=full_refresh)
@@ -286,21 +445,22 @@ def _gen_start_update_msg(resp, pipeline_id, full_refresh):
     return output_msg
 
 
-def _read_spec(src):
+def _read_settings(src):
     """
-    Reads the spec at src as a JSON if no file extension is provided, or if in the extension format
-    if the format is supported.
+    Reads the settings at src as a JSON If the file has JSON extension or
+    if no file extension is provided. Other file extensions and formats are
+    not supported.
     """
     extension = os.path.splitext(src)[1]
-    if extension.lower() == '.json':
+    if extension.lower() == '.json' or (not extension):
         try:
             with open(src, 'r') as f:
                 data = f.read()
             return json.loads(data)
         except json_parse_exception as e:
-            error_and_quit("Invalid JSON provided in spec\n{}".format(e))
+            error_and_quit("Invalid JSON provided in settings\n{}.".format(e))
     else:
-        raise ValueError('The provided file extension for the spec is not supported. ' +
+        raise ValueError('The provided file extension for the settings is not supported. ' +
                          'Only JSON files are supported.')
 
 
@@ -309,29 +469,15 @@ def _get_pipeline_url(api_client, pipeline_id):
     return urljoin(base_url, "#joblist/pipelines/{}".format(pipeline_id))
 
 
-def _write_spec(src, spec):
-    """
-    Writes the spec at src as JSON.
-    """
-    data = json.dumps(spec, indent=2) + '\n'
-    with open(src, 'w') as f:
-        f.write(data)
-
-
 def _validate_pipeline_id(pipeline_id):
     """
-    Checks if the pipeline ID is not empty and contains only hyphen (-),
-    underscore (_), and alphanumeric characters.
+    Checks if the pipeline ID is not empty.
     """
     if pipeline_id is None or len(pipeline_id) == 0:
         error_and_quit(u'Empty pipeline ID provided')
-    if not set(pipeline_id) <= PIPELINE_ID_PERMITTED_CHARACTERS:
-        message = u'Pipeline ID {} has invalid character(s)\n'.format(pipeline_id)
-        message += u'Valid characters are: _ - a-z A-Z 0-9'
-        error_and_quit(message)
 
 
-def _handle_duplicate_name_exception(spec, exception):
+def _handle_duplicate_name_exception(settings, exception, is_create_pipeline):
     error_code = None
     try:
         error_code = json.loads(exception.response.text).get('error_code')
@@ -339,27 +485,36 @@ def _handle_duplicate_name_exception(spec, exception):
         pass
 
     if error_code == 'RESOURCE_CONFLICT':
-        raise ValueError("Pipeline with name '{}' already exists. ".format(spec['name']) +
-                         "If you are updating an existing pipeline, provide the pipeline " +
-                         "ID using --pipeline-id. Otherwise, " +
-                         "you can use the --allow-duplicate-names option to skip this check. ")
+        if is_create_pipeline:
+            raise ValueError(
+                "Pipeline with name '{}' already exists. ".format(settings['name']) +
+                "If you are updating an existing pipeline, use \"edit\" command. "
+                "Otherwise, You can use the --allow-duplicate-names option to skip "
+                "this check. ")
+
+        raise ValueError(
+            "Pipeline with name '{}' already exists. ".format(settings['name']) +
+            "You can use the --allow-duplicate-names option to skip this check. ")
+
     raise exception
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
-             short_help='Utility to interact with the Databricks Delta Pipelines.')
+             short_help='Utility to interact with Databricks Delta Live Tables Pipelines.')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
 @debug_option
 @profile_option
 def pipelines_group():  # pragma: no cover
     """
-    Utility to interact with the Databricks pipelines.
+    Utility to interact with Databricks Delta Live Tables Pipelines.
     """
     pass
 
 
 pipelines_group.add_command(deploy_cli, name='deploy')
+pipelines_group.add_command(create_cli, name="create")
+pipelines_group.add_command(edit_cli, name="edit")
 pipelines_group.add_command(delete_cli, name='delete')
 pipelines_group.add_command(get_cli, name='get')
 pipelines_group.add_command(list_cli, name='list')
