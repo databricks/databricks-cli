@@ -143,14 +143,14 @@ class WorkspaceApi(object):
             # for now, just exclude hidden files or directories based on starting '.'
             filenames = [f for f in filenames if not f.startswith('.')]
         try:
-            self.mkdirs(source_path, headers=headers)
+            self.mkdirs(target_path, headers=headers)
         except HTTPError as e:
             click.echo(e.response.json())
             return
         for filename in filenames:
             cur_src = os.path.join(source_path, filename)
             # don't use os.path.join here since it will set \ on Windows
-            cur_dst = source_path.rstrip('/') + '/' + filename
+            cur_dst = target_path.rstrip('/') + '/' + filename
             if os.path.isdir(cur_src):
                 self.import_workspace_dir(cur_src, cur_dst, overwrite, exclude_hidden_files,
                                           headers=headers)
