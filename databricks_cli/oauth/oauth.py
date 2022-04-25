@@ -91,13 +91,21 @@ def fetch_well_known_config(idp_url):
     try:
         response = requests.request(method="GET", url=known_config_url)
     except RequestException:
-        error_and_quit("Unable to fetch OAuth configuration from {idp_url}."
-                       "Verify that OAuth is enabled on this account.".format(idp_url=idp_url))
+        error_and_quit("Unable to fetch OAuth configuration from {idp_url}.\n"
+                       "Verify it is a valid workspace URL and that OAuth is "
+                       "enabled on this account.".format(idp_url=idp_url))
 
     if response.status_code != 200:
-        error_and_quit("Unable to fetch OAuth configuration from {idp_url}. "
-                       "Verify that OAuth is enabled on this account.".format(idp_url=idp_url))
-    return json.loads(response.text)
+        error_and_quit("Received status {status} OAuth configuration from "
+                       "{idp_url}.\n Verify it is a valid workspace URL and "
+                       "that OAuth is enabled on this account."
+                       .format(status=response.status_code, idp_url=idp_url))
+    try:
+        return json.loads(response.text)
+    except json.decoder.JSONDecodeError:
+        error_and_quit("Unable to decode OAuth configuration from {idp_url}.\n"
+                       "Verify it is a valid workspace URL and that OAuth is "
+                       "enabled on this account.".format(idp_url=idp_url))
 
 
 def get_idp_url(host):
