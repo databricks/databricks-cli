@@ -105,6 +105,12 @@ class ApiClient(object):
         self.api_version = api_version
         self.jobs_api_version = jobs_api_version
 
+    def get_v1_client(self):
+        """Create an SDK v1 client based on this client"""
+        v1_client = copy.deepcopy(self)
+        v1_client.api_version = "1.2"
+        return v1_client
+
     def close(self):
         """Close the client"""
         pass
