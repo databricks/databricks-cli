@@ -111,7 +111,7 @@ def cp_cli(api_client, recursive, overwrite, src, dst):
     For recursive copies, files inside of the src directory will be copied inside the dst directory
     with the same name. If the dst path does not exist, a directory will be created. For example
     ``dbfs cp -r dbfs:/foo foo`` will create a directory foo and place the files ``dbfs:/foo/a`` at
-    ``foo/a``. If ``foo/a`` already exists, the file will not be overriden unless the --overwrite
+    ``foo/a``. If ``foo/a`` already exists, the file will not be overridden unless the --overwrite
     flag is provided -- however, dbfs cp --recursive will continue to try and copy other files.
     """
     # Copy to DBFS in this case
