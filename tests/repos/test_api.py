@@ -89,6 +89,7 @@ class TestGetRepoId(object):
         with pytest.raises(RuntimeError):
             repos_api_with_ws_service.get_repo_id(TEST_PATH)
 
+
 class TestCreateRepo(object):
     def test_get(self, repos_api_with_ws_service):
         with pytest.raises(ValueError):
