@@ -40,14 +40,22 @@ class ReposApi(object):
             status = self.ws_client.get_status(path)
             if status['object_type'] == 'REPO':
                 return status['object_id']
-        except requests.exceptions.HTTPError:
-            pass
+        except requests.exceptions.HTTPError as ex:
+            if ex.response.status_code != 404:
+                jsn = ex.response.json()
+                if 'message' in jsn:
+                    msg = jsn['message']
+                else:
+                    msg = ex.response.reason
+                raise RuntimeError(
+                    "Error fetching repo ID for {path}: HTTP code: {code}, {ex}".format(
+                        path=path, code=ex.response.status_code, ex=msg))
 
         raise RuntimeError("Can't find repo ID for {path}".format(path=path))
 
     def list(self, path_prefix, next_page_token):
         """
-        List repos that the caller has Manage permissions on. Results are 
+        List repos that the caller has Manage permissions on. Results are
         paginated with each page containing twenty repos.
         """
         return self.client.list_repos(path_prefix, next_page_token)
@@ -66,7 +74,7 @@ class ReposApi(object):
 
     def update(self, repo_id, branch, tag):
         """
-        Checks out the repo to the given branch or tag. Only one of ``branch`` 
+        Checks out the repo to the given branch or tag. Only one of ``branch``
         or ``tag`` should be provided.
         """
         assert bool(branch is not None) ^ bool(tag is not None)
