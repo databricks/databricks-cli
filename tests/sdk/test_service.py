@@ -129,6 +129,11 @@ def test_create_job(jobs_service):
     jobs_service.create_job(tasks=tasks, version='2.1')
     jobs_service.client.perform_query.assert_called_with('POST', '/jobs/create', data={'tasks': tasks}, headers=None, version='2.1')
 
+    tasks = {'task_key': '123', 'notebook_task': {'notebook_path': '/test'}}
+    tags = {"cost-center": "engineering","team": "jobs"}
+    jobs_service.create_job(tasks=tasks, tags= tags, version='2.1')
+    jobs_service.client.perform_query.assert_called_with('POST', '/jobs/create', data={'tasks': tasks, 'tags': tags}, headers=None, version='2.1')
+
 
 @provide_conf
 def test_create_job_invalid_types(jobs_service):
