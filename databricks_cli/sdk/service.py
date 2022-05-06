@@ -58,6 +58,7 @@ class JobsService(object):
         tags=None,
         format=None,
     ):
+
         _data = {}
         if name is not None:
             _data['name'] = name
