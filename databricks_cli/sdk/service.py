@@ -24,7 +24,9 @@
 # limitations under the License.
 #
 import os
-
+import sys
+if sys.version_info > (3, 5):
+    from typing import Dict, Any # noqa
 
 class JobsService(object):
     def __init__(self, client):
@@ -1075,6 +1077,7 @@ class DeltaPipelinesService(object):
 
         return self.client.perform_query('POST', '/pipelines/{pipeline_id}/stop'.format(pipeline_id=pipeline_id),
                                          data=_data, headers=headers)
+
 class ReposService(object):
     def __init__(self, client):
         self.client = client
@@ -1114,3 +1117,80 @@ class ReposService(object):
         _data = {}
     
         return self.client.perform_query('DELETE', '/repos/{id}'.format(id=id), data=_data, headers=headers)
+
+class ExecutionContextService(object):
+    """The execution context service provides funcitonality from the REST API 1.2 that is still supported
+       This includes the execution context and run command APIs.
+
+       https://docs.databricks.com/dev-tools/api/1.2/index.html#command-execution
+    """
+    def __init__(self, client):
+        self.client = client.get_v1_client()
+
+    def create_context(self, cluster_id, language = "python", headers=None):
+        # type: (str, str, Dict[Any, Any])  -> Dict[Any, Any]
+        _data = {}
+        _data['language'] = language
+        if cluster_id is not None:
+            _data['clusterId'] = cluster_id
+        
+        return self.client.perform_query(method="POST", path="/contexts/create", data=_data, headers=headers)
+
+    def get_context_status(self, cluster_id, context_id, headers=None):
+        # type: (str, str, Dict[Any, Any])  -> Dict[Any, Any]
+        _data = {}
+        if cluster_id is not None:
+            _data['clusterId'] = cluster_id
+        if context_id is not None:
+            _data['contextId'] = context_id
+        
+        return self.client.perform_query(method="GET", path="/contexts/status", data=_data, headers=headers)
+
+    def delete_context(self, cluster_id, context_id, headers=None):
+        # type: (str, str, Dict[Any, Any]) -> Any
+        _data = {}
+        if cluster_id is not None:
+            _data['clusterId'] = cluster_id
+        if context_id is not None:
+            _data['contextId'] = context_id
+        
+        return self.client.perform_query(method="POST", path="/contexts/destroy", data=_data, headers=headers)
+
+    def execute_command(self, cluster_id, context_id, command, language="python", headers=None):
+        # type: (str, str, str, str, Dict[Any, Any]) -> Dict[Any, Any]
+        _data = {}
+        _data['language'] = language
+        if cluster_id is not None:
+            _data['clusterId'] = cluster_id
+        if context_id is not None:
+            _data['contextId'] = context_id
+        if command is not None:
+            _data['command'] = command
+
+        result = self.client.perform_query(method="POST", path="/commands/execute", data=_data, headers=headers)
+        return result
+
+    def cancel_command(self, cluster_id, context_id, command_id, headers = None):
+        # type: (str, str, str, Dict[Any, Any]) -> Dict[Any, Any]
+        _data = {}
+        if cluster_id is not None:
+            _data['clusterId'] = cluster_id
+        if context_id is not None:
+            _data['contextId'] = context_id
+        if command_id is not None:
+            _data['commandId'] = command_id
+
+        self.client.perform_query(method="POST", path="/commands/cancel", data=_data, headers=headers)
+
+    def get_command_status(self, cluster_id, context_id, command_id, headers = None):
+        # type: (str, str, str, Dict[Any, Any]) -> Dict[Any, Any]
+        _data = {}
+        if cluster_id is not None:
+            _data['clusterId'] = cluster_id
+        if context_id is not None:
+            _data['contextId'] = context_id
+        if command_id is not None:
+            _data['commandId'] = command_id
+
+        result = self.client.perform_query(method="GET", path="/commands/status", data=_data, headers=headers)
+        return result

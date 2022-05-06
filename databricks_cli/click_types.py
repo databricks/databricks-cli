@@ -112,6 +112,37 @@ class PipelineIdClickType(ParamType):
     help = 'The pipeline ID.'
 
 
+class ExecutionContextIdClickType(ParamType):
+    name = 'CONTEXT_ID'
+    help = 'The execution context ID as returned from "databricks execution-context create".'
+
+
+class CommandIdClickType(ParamType):
+    name = 'COMMAND_ID'
+    help = 'The command ID as returned from "databricks execution-context command-execute".'    
+
+
+class CommandStringType(ParamType):
+    name = 'COMMAND'
+    help = 'The command string to run.'
+
+
+class CommandOutputType(ParamType):
+    name = 'FORMAT'
+    help = 'Can be "JSON" or "TEXT". Set to TEXT by default.'
+
+    def convert(self, value, param, ctx):
+        if value is None:
+            return 'text'
+        if value.lower() != 'json' and value.lower() != 'text':
+            raise RuntimeError('output must be "json" or "text"')
+        return value
+
+    @classmethod
+    def is_json(cls, value):
+        return value is not None and value.lower() == 'json'
+
+
 class OneOfOption(Option):
     def __init__(self, *args, **kwargs):
         self.one_of = kwargs.pop('one_of')
