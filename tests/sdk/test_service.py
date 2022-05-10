@@ -46,6 +46,7 @@ def test_delete_job(jobs_service):
 
 @provide_conf
 def test_get_job(jobs_service):
+
     jobs_service.get_job(None)
     jobs_service.client.perform_query.assert_called_with('GET', '/jobs/get', data={}, headers=None, version=None)
 
@@ -54,6 +55,34 @@ def test_get_job(jobs_service):
 
     jobs_service.get_job(1, version='2.1')
     jobs_service.client.perform_query.assert_called_with('GET', '/jobs/get', data={'job_id': 1}, headers=None, version='2.1')
+
+
+@provide_conf
+def test_update_job(jobs_service):
+    
+    jobs_service.update_job(None)
+    jobs_service.client.perform_query.assert_called_with('POST', '/jobs/update', data={}, headers=None, version=None)
+
+    jobs_service.update_job(1)
+    jobs_service.client.perform_query.assert_called_with('POST', '/jobs/update', data={'job_id': 1}, headers=None, version=None)
+
+    jobs_service.update_job(1, version='2.1')
+    jobs_service.client.perform_query.assert_called_with('POST', '/jobs/update', data={'job_id': 1}, headers=None, version='2.1')
+
+    # new_settings_argument
+    new_settings = {
+        "name": "job1",
+        "tags": {"cost-center": "engineering","team": "jobs"}
+    }
+    jobs_service.update_job(1, version='2.1', new_settings=new_settings)
+    jobs_service.client.perform_query.assert_called_with('POST', '/jobs/update', data={'job_id': 1, 'new_settings': new_settings}, headers=None, version='2.1')
+
+
+    # fields_to_remove argument
+    fields_to_remove = ["libraries","schedule"]
+    jobs_service.update_job(1, version='2.1', fields_to_remove=fields_to_remove)
+    jobs_service.client.perform_query.assert_called_with('POST', '/jobs/update', data={'job_id': 1, 'fields_to_remove': fields_to_remove}, headers=None, version='2.1')
+
 
 
 @provide_conf
@@ -157,6 +186,13 @@ def test_create_job_invalid_types(jobs_service):
         
     with pytest.raises(TypeError, match='spark_submit_task'):
         jobs_service.create_job(spark_submit_task=[])
+
+
+@provide_conf
+def test_update_job_invalid_types(jobs_service):
+    with pytest.raises(TypeError, match='new_settings'):
+        jobs_service.update_job(job_id=None, new_settings=[])
+
 
 
 @provide_conf

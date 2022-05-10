@@ -211,7 +211,7 @@ class JobsService(object):
             'POST', '/jobs/reset', data=_data, headers=headers, version=version
         )
 
-    def update_job(self, job_id, new_settings, fields_to_remove=None, headers=None, version=None):
+    def update_job(self, job_id, new_settings=None, fields_to_remove=None, headers=None, version=None):
         _data = {}
         if job_id is not None:
             _data['job_id'] = job_id
