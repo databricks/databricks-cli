@@ -88,3 +88,9 @@ class TestGetRepoId(object):
             side_effect=requests.exceptions.HTTPError(response=response))
         with pytest.raises(RuntimeError):
             repos_api_with_ws_service.get_repo_id(TEST_PATH)
+
+
+class TestCreateRepo(object):
+    def test_get(self, repos_api_with_ws_service):
+        with pytest.raises(ValueError):
+            repos_api_with_ws_service.create("https://github1.com/user/repo.git", None, None)

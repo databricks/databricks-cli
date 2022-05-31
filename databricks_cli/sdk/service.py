@@ -24,6 +24,9 @@
 # limitations under the License.
 #
 import os
+import re
+
+from six.moves.urllib.parse import urlparse
 
 
 class JobsService(object):
@@ -1075,9 +1078,34 @@ class DeltaPipelinesService(object):
 
         return self.client.perform_query('POST', '/pipelines/{pipeline_id}/stop'.format(pipeline_id=pipeline_id),
                                          data=_data, headers=headers)
+
+
 class ReposService(object):
+    __git_providers__ = {
+        "github.com":    "gitHub",
+        "dev.azure.com": "azureDevOpsServices",
+        "gitlab.com":    "gitLab",
+        "bitbucket.org": "bitbucketCloud"
+    }
+    __aws_code_commit_regexp__ = re.compile(r"^git-codecommit\.[^.]+\.amazonaws.com$")
+
     def __init__(self, client):
         self.client = client
+
+    @staticmethod
+    def detect_repo_provider(url):
+        provider = None
+        try:
+            netloc = urlparse(url).netloc
+            idx = netloc.rfind("@")
+            if idx != -1:
+                netloc = netloc[(idx + 1):]
+            provider = ReposService.__git_providers__.get(netloc.lower())
+            if provider is None and ReposService.__aws_code_commit_regexp__.match(netloc):
+                provider = "awsCodeCommit"
+        except:
+            pass
+        return provider
 
     def list_repos(self, path_prefix=None, next_page_token=None, headers=None):
         _data = {}
@@ -1090,7 +1118,8 @@ class ReposService(object):
     def get_repo(self, id, headers=None):
         _data = {}
     
-        return self.client.perform_query('GET', '/repos/{id}'.format(id=id), data=_data, headers=headers)
+        return self.client.perform_query('GET', '/repos/{id}'.format(id=id),
+                                         data=_data, headers=headers)
     
     def update_repo(self, id, branch=None, tag=None, headers=None):
         _data = {}
@@ -1098,14 +1127,20 @@ class ReposService(object):
             _data['branch'] = branch
         if tag is not None:
             _data['tag'] = tag
-        return self.client.perform_query('PATCH', '/repos/{id}'.format(id=id), data=_data, headers=headers)
+        return self.client.perform_query('PATCH', '/repos/{id}'.format(id=id),
+                                         data=_data, headers=headers)
     
     def create_repo(self, url, provider, path=None, headers=None):
         _data = {}
         if url is not None:
             _data['url'] = url
+        if provider is None or provider.trim() == "":
+            provider = self.detect_repo_provider(url)
         if provider is not None:
             _data['provider'] = provider
+        else:
+            raise ValueError("The Git provider parameter wasn't specified and we can't detect it "
+                             "from URL. Please pass 'provider' option")
         if path is not None:
             _data['path'] = path
         return self.client.perform_query('POST', '/repos', data=_data, headers=headers)
@@ -1113,4 +1148,5 @@ class ReposService(object):
     def delete_repo(self, id, headers=None):
         _data = {}
     
-        return self.client.perform_query('DELETE', '/repos/{id}'.format(id=id), data=_data, headers=headers)
+        return self.client.perform_query('DELETE', '/repos/{id}'.format(id=id),
+                                         data=_data, headers=headers)

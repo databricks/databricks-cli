@@ -52,7 +52,9 @@ def list_repos_cli(api_client, path_prefix, next_page_token):
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Create a repo and link it to the given remote Git repo')
 @click.option('--url', required=True, help="URL of the remote Git repo")
-@click.option('--provider', required=True, help="Git provider (case insensitive)")
+@click.option('--provider',
+              help="Git provider (case insensitive). Required if it couldn't be detected from "
+                   "host name")
 @click.option('--path', help="Desired workspace path of the repo object")
 @debug_option
 @profile_option

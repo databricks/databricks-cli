@@ -76,6 +76,18 @@ def test_create_validation(repos_api_mock):
 
 
 @provide_conf
+def test_create_validation_partial(repos_api_mock):
+    runner = CliRunner()
+    runner.invoke(cli.create_repo_cli,
+                  ["--url", TEST_URL])
+    repos_api_mock.create.assert_called_once_with(
+        TEST_URL,
+        None,
+        None,
+    )
+
+
+@provide_conf
 def test_get_validation(repos_api_mock):
     runner = CliRunner()
     runner.invoke(cli.get_repo_cli,
