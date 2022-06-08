@@ -5,7 +5,7 @@ WORKDIR /usr/src/databricks-cli
 COPY . .
 
 RUN pip install --upgrade pip && \
-    pip install -r dev-requirements.txt && \
+    pip install -r dev-requirements-py2.txt && \
     pip list && \
     ./lint.sh && \
     pip install . && \

@@ -1,0 +1,4 @@
+-r ./dev-requirements.txt
+prospector[with_pyroma]==0.12.7
+pylint-django<2.5.0
+pep8-naming==0.5.0
