@@ -31,7 +31,12 @@ pylint:
     - useless-suppression
     - raise-missing-from
     - redundant-u-string-prefix
+    - consider-using-from-import
 
 mccabe:
   disable:
     - MC0001
+
+pycodestyle:
+  disable:
+    - N806s
