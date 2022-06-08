@@ -36,7 +36,3 @@ pylint:
 mccabe:
   disable:
     - MC0001
-
-pycodestyle:
-  disable:
-    - N806s
