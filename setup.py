@@ -29,19 +29,22 @@ from setuptools import setup, find_packages
 version = imp.load_source(
     'databricks_cli.version', os.path.join('databricks_cli', 'version.py')).version
 
+
+def read_requirements_txt():
+    """
+    Read `install_requires` from `requirements.txt`.
+    They are kept in a separate file such that a developer can install
+    all necessary dependencies in a single pip invocation.
+    """
+    with open('requirements.txt', 'r') as file:
+        return [line.strip() for line in file.readlines()]
+
+
 setup(
     name='databricks-cli',
     version=version,
     packages=find_packages(exclude=['tests', 'tests.*']),
-    install_requires=[
-        'click>=6.7',
-        'pyjwt>=1.7.0',
-        'oauthlib>=3.1.0',
-        'requests>=2.17.3',
-        'tabulate>=0.7.7',
-        'six>=1.10.0',
-        'configparser>=0.3.5;python_version < "3.6"',
-    ],
+    install_requires=read_requirements_txt(),
     entry_points='''
         [console_scripts]
         databricks=databricks_cli.cli:cli

@@ -36,9 +36,6 @@ jobs:
         if: ${{ startsWith(matrix.python-version, '3.') }}
         run: pip install --upgrade -r dev-requirements-py3.txt
 
-      - name: Install package
-        run: pip install -e .
-
       - name: Run tests
         run: pytest tests --cov=./
 
