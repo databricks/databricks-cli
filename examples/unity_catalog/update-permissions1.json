@@ -1,0 +1,17 @@
+{
+  "changes": [
+    {
+      "principal": "adam.cain@databricks.com",
+      "add": ["SELECT"],
+      "remove": ["MODIFY"]
+    },
+    {
+      "principal": "eng-data-security",
+      "remove": ["CREATE"]
+    },
+    {
+      "principal": "users",
+      "add": ["USAGE"]
+    }
+  ]
+} 

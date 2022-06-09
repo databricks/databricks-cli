@@ -1,0 +1,38 @@
+{
+	"catalog_name": "main",
+	"schema_name": "default",
+	"name": "my_table",
+	"comment": "something really insightful",
+	"table_type": "MANAGED",
+	"data_source_format": "DELTA",
+	"columns": [
+		{
+			"name": "cust_id",
+			"type_name": "INT",
+			"type_text": "INT",
+			"type_json": "{\"name\":\"cust_id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}",
+			"nullable": false,
+			"position": 0
+		},
+		{
+			"name": "name",
+			"type_name": "STRING",
+			"type_text": "STRING",
+			"type_json": "{\"name\":\"name\",\"type\":\"string\",\"nullable\":false,\"metadata\":{}}",
+			"comment": "Short name",
+			"position": 1
+		},
+		{
+			"name": "some_flag",
+			"type_name": "BOOLEAN",
+			"type_text": "BOOLEAN",
+			"type_json": "{\"name\":\"some_flag\",\"type\":\"boolean\",\"nullable\":false,\"metadata\":{}}",
+			"nullable": false,
+			"position": 2
+		}
+	],
+	"properties": {
+		"first_key": "first value",
+		"second_key": "second value"
+	}
+}

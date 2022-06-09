@@ -1,0 +1,6 @@
+{
+    "name": "myloc1",
+    "credential_name": "mycred",
+    "comment": "hey hey",
+    "url": "s3://my.bucket"
+}
