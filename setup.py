@@ -37,7 +37,12 @@ def read_requirements_txt():
     all necessary dependencies in a single pip invocation.
     """
     with open('requirements.txt', 'r') as file:
-        return [line.strip() for line in file.readlines()]
+        return [
+            line.strip()
+            for line in file.readlines()
+            # Ignore empty lines and comments.
+            if line.strip() and not line.startswith('#')
+        ]
 
 
 setup(
