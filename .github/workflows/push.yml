@@ -1,0 +1,54 @@
+name: Test
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [ 2.7, 3.6 ]
+        os: [ ubuntu-latest ]
+    env:
+      OS: ${{ matrix.os }}
+      PYTHON_VERSION: ${{ matrix.python-version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install pip
+        run: pip install --upgrade pip
+
+      - name: Install development dependencies (Python 2)
+        if: ${{ startsWith(matrix.python-version, '2.') }}
+        run: pip install --upgrade -r dev-requirements-py2.txt
+
+      - name: Install development dependencies (Python 3)
+        if: ${{ startsWith(matrix.python-version, '3.') }}
+        run: pip install --upgrade -r dev-requirements-py3.txt
+
+      - name: Install package
+        run: pip install -e .
+
+      - name: Run tests
+        run: pytest tests --cov=./
+
+      - name: Run lint
+        run: prospector --profile ./prospector.yaml -t dodgy -t mccabe -t profile-validator -t pyflakes -t pylint
+
+      - name: Run rstcheck
+        run: rstcheck README.rst
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          env_vars: OS,PYTHON_VERSION

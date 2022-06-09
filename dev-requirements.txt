@@ -4,4 +4,3 @@ mock
 decorator
 requests_mock
 rstcheck
-codecov
