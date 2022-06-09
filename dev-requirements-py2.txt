@@ -1,0 +1,12 @@
+-r ./dev-requirements.txt
+prospector[with_pyroma]==0.12.7
+pylint-django<2.0
+pep8-naming==0.5.0
+flake8<3.5
+pyflakes<1.6.0,>=1.5.0
+
+# For some reason Travis tries to install the yanked version 1.7.0.
+# See https://pypi.org/project/lazy-object-proxy/#history.
+# See https://github.com/databricks/databricks-cli/pull/462.
+# Try to unpin this after moving away from Travis.
+lazy-object-proxy==1.6.0

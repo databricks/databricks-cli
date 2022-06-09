@@ -11,8 +11,7 @@ docker run -it -v `echo $PWD`:/root python:2.7.12 bash
 ```
 
 - `pip install -e .`
-- `pip install -r dev-requirements.txt`
-- `pip install -r tox-requirements.txt`
+- `pip install -r dev-requirements-py3.txt`
 
 To verify that the installation of `databricks-cli` is the one checked out from VCS, you can check by doing `python -c "import databricks_cli; print databricks_cli.__file__"`.
 

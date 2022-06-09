@@ -8,8 +8,7 @@ matrix:
       env: TOXENV=py36
 install:
   - pip install --upgrade pip
-  - pip install .
-  - pip install -r dev-requirements.txt
+  - pip install tox
 script:
   - pip list
   - tox

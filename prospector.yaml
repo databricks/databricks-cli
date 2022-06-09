@@ -24,6 +24,14 @@ pylint:
     - consider-using-set-comprehension
     - useless-object-inheritance
     - unnecessary-pass
+    - consider-using-f-string
+    - super-with-arguments
+    - unspecified-encoding
+    - global-variable-not-assigned
+    - useless-suppression
+    - raise-missing-from
+    - redundant-u-string-prefix
+    - consider-using-from-import
 
 mccabe:
   disable:
