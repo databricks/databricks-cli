@@ -1,0 +1,40 @@
+name: Test
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [ 2.7, 3.6 ]
+        os: [ ubuntu-latest ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install pip
+        run: pip install --upgrade pip
+
+      - name: Install dependencies (Python 2)
+        if: ${{ startsWith("2.", matrix.python-version) }}
+        run: pip install --upgrade -r dev-requirements-py2.txt
+
+      - name: Install dependencies (Python 3)
+        if: ${{ startsWith("3.", matrix.python-version) }}
+        run: pip install --upgrade -r dev-requirements-py3.txt
+
+      - name: Run tests
+        run: pytest tests --cov=./
+
+      - name: Run lint
+        run: prospector --profile ./prospector.yaml -t dodgy -t mccabe -t profile-validator -t pyflakes -t pylint
