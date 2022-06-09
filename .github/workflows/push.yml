@@ -26,11 +26,11 @@ jobs:
         run: pip install --upgrade pip
 
       - name: Install dependencies (Python 2)
-        if: ${{ startsWith('2.', matrix.python-version) }}
+        if: ${{ startsWith(matrix.python-version, '2.') }}
         run: pip install --upgrade -r dev-requirements-py2.txt
 
       - name: Install dependencies (Python 3)
-        if: ${{ startsWith('3.', matrix.python-version) }}
+        if: ${{ startsWith(matrix.python-version, '3.') }}
         run: pip install --upgrade -r dev-requirements-py3.txt
 
       - name: Run tests
