@@ -43,4 +43,4 @@ jobs:
         run: prospector --profile ./prospector.yaml -t dodgy -t mccabe -t profile-validator -t pyflakes -t pylint
 
       - name: Run rstcheck
-        run: rstcheck
+        run: rstcheck README.rst
