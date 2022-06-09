@@ -25,13 +25,16 @@ jobs:
       - name: Install pip
         run: pip install --upgrade pip
 
-      - name: Install dependencies (Python 2)
+      - name: Install development dependencies (Python 2)
         if: ${{ startsWith(matrix.python-version, '2.') }}
         run: pip install --upgrade -r dev-requirements-py2.txt
 
-      - name: Install dependencies (Python 3)
+      - name: Install development dependencies (Python 3)
         if: ${{ startsWith(matrix.python-version, '3.') }}
         run: pip install --upgrade -r dev-requirements-py3.txt
+
+      - name: Install package
+        run: pip install -e .
 
       - name: Run tests
         run: pytest tests --cov=./
