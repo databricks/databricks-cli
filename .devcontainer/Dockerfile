@@ -10,6 +10,7 @@ RUN if [ "${NODE_VERSION}" != "none" ]; then su vscode -c "umask 0002 && . /usr/
 
 RUN /usr/local/bin/python3 -m pip install --upgrade pip
 
+COPY requirements.txt /tmp/pip-tmp/
 COPY dev-requirements*.txt /tmp/pip-tmp/
 RUN pip3 --disable-pip-version-check --no-cache-dir install -r /tmp/pip-tmp/dev-requirements-py3.txt && rm -rf /tmp/pip-tmp
 

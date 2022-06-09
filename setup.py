@@ -34,6 +34,7 @@ setup(
     version=version,
     packages=find_packages(exclude=['tests', 'tests.*']),
     install_requires=[
+        # Note: please keep this in sync with `requirements.txt`.
         'click>=6.7',
         'pyjwt>=1.7.0',
         'oauthlib>=3.1.0',
