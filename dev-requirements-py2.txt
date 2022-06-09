@@ -2,6 +2,7 @@
 prospector[with_pyroma]==0.12.7
 pylint-django<2.0
 pep8-naming==0.5.0
+flake8<3.5
 
 # For some reason Travis tries to install the yanked version 1.7.0.
 # See https://pypi.org/project/lazy-object-proxy/#history.
