@@ -1,3 +1,4 @@
+# Note: please keep this in sync with `setup.py`.
 click>=6.7
 pyjwt>=1.7.0
 oauthlib>=3.1.0
