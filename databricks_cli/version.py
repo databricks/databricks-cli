@@ -43,7 +43,7 @@ def _match_version(value):
     return match
 
 
-def is_release_version(value = None):
+def is_release_version(value=None):
     """
     Returns whether the current version of databricks-cli is a release version or not.
     """
@@ -59,7 +59,7 @@ def is_release_version(value = None):
     return True
 
 
-def next_development_version(value = None):
+def next_development_version(value=None):
     """
     Returns the hypothetical next development version of databricks-cli.
     """
