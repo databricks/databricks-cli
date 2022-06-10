@@ -1,5 +1,5 @@
 # Databricks CLI
-# Copyright 2022 Databricks, Inc.
+# Copyright 2021 Databricks, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"), except
 # that the use of services to which certain application programming
@@ -23,8 +23,7 @@
 
 import click
 
-from databricks_cli.configure.config import profile_option, debug_option
-from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS
+from databricks_cli.utils import CONTEXT_SETTINGS
 from databricks_cli.version import print_version_callback, version
 
 from databricks_cli.unity_catalog.metastore_cli import register_metastore_commands
@@ -45,9 +44,6 @@ from databricks_cli.unity_catalog.lineage_cli import register_lineage_commands
              '**********************************************************************')
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
-@debug_option
-@profile_option
-@eat_exceptions
 def unity_catalog_group():  # pragma: no cover
     """
     Utility to interact with Databricks Unity Catalog.
