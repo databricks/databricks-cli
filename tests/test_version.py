@@ -29,22 +29,26 @@ import databricks_cli.version as version
 
 
 def test_is_release_version_defaults_to_current_version():
+    # Not specifying a version explicitly implies testing the current version.
     assert version.is_release_version() == version.is_release_version(version.version)
 
 
 def test_is_release_version():
+    # Release versions
     assert version.is_release_version("0.16.0")
     assert version.is_release_version("0.16.8")
     assert version.is_release_version("0.16.1111")
     assert version.is_release_version("0.17.0")
     assert version.is_release_version("1.0.0")
 
+    # Development versions
     assert not version.is_release_version("0.16.0.dev0")
     assert not version.is_release_version("0.16.8.dev0")
     assert not version.is_release_version("0.16.1111.dev1")
     assert not version.is_release_version("0.17.0.dev")
     assert not version.is_release_version("1.0.0.x")
 
+    # Malformed version
     with pytest.raises(ValueError):
         version.is_release_version("foobar")
 
