@@ -250,8 +250,13 @@ def delete_dac_cli(api_client, metastore_id, dac_id):
     UnityCatalogApi(api_client).delete_dac(metastore_id, dac_id)
 
 
+@click.group()
+def storage_credentials_group():  # pragma: no cover
+    pass
+
+
 def register_cred_commands(cmd_group):
-    # Storage Credential cmds:
+    # Register deprecated "verb-noun" commands for backward compatibility.
     cmd_group.add_command(hide_command(create_credential_cli), name='create-storage-credential')
     cmd_group.add_command(hide_command(list_credentials_cli), name='list-storage-credentials')
     cmd_group.add_command(hide_command(get_credential_cli), name='get-storage-credential')
@@ -263,3 +268,11 @@ def register_cred_commands(cmd_group):
     cmd_group.add_command(hide_command(list_dacs_cli), name='list-dacs')
     cmd_group.add_command(hide_command(get_dac_cli), name='get-dac')
     cmd_group.add_command(hide_command(delete_dac_cli), name='delete-dac')
+
+    # Register command group.
+    storage_credentials_group.add_command(create_credential_cli, name='create')
+    storage_credentials_group.add_command(list_credentials_cli, name='list')
+    storage_credentials_group.add_command(get_credential_cli, name='get')
+    storage_credentials_group.add_command(update_credential_cli, name='update')
+    storage_credentials_group.add_command(delete_credential_cli, name='delete')
+    cmd_group.add_command(storage_credentials_group, name='storage-credentials')

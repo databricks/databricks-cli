@@ -30,7 +30,7 @@ from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, to_graph
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='List schemas.')
+               short_help='List table lineage.')
 @click.option('--table-name', required=True,
               help='Name of the table with 3L namespace')
 @click.option('--level', required=False, type=int, default=1,
@@ -59,7 +59,7 @@ def list_table_lineages_cli(api_client, table_name, level):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='List schemas.')
+               short_help='List column lineage.')
 @click.option('--table-name', required=True,
               help='Name of the table with 3L namespace')
 @click.option('--column-name', required=True,
@@ -121,9 +121,22 @@ def list_column_lineages_cli(api_client, table_name, column_name):
     click.echo(mc_pretty_format(schemas_json))
 
 
+@click.group()
+def lineage_group():  # pragma: no cover
+    pass
+
+
 def register_lineage_commands(cmd_group):
+    # Register deprecated "verb-noun" commands for backward compatibility.
     cmd_group.add_command(hide_command(list_table_lineages_cli), name='list-table-lineages')
     cmd_group.add_command(hide_command(list_column_lineages_cli), name='list-column-lineages')
+
+    # Register command group.
+    # Note: we deviate from the "noun-verb" pattern here because it would be awkward to have to
+    # spell out "list" or "list-for". Table and column lineage is read only by definition.
+    lineage_group.add_command(list_table_lineages_cli, name='table')
+    lineage_group.add_command(list_column_lineages_cli, name='column')
+    cmd_group.add_command(lineage_group, name='lineage')
 
 
 def get_table_name(table_node):

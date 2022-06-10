@@ -130,6 +130,17 @@ def update_permissions_cli(api_client, catalog, schema, table, storage_credentia
                   encode_utf8=True)
 
 
+@click.group()
+def permissions_group():  # pragma: no cover
+    pass
+
+
 def register_perms_commands(cmd_group):
+    # Register deprecated "verb-noun" commands for backward compatibility.
     cmd_group.add_command(hide_command(get_permissions_cli), name='get-permissions')
     cmd_group.add_command(hide_command(update_permissions_cli), name='update-permissions')
+
+    # Register command group.
+    permissions_group.add_command(get_permissions_cli, name='get')
+    permissions_group.add_command(update_permissions_cli, name='update')
+    cmd_group.add_command(permissions_group, name='permissions')

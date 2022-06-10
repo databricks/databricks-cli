@@ -209,7 +209,13 @@ def unassign_metastore_cli(api_client, workspace_id, metastore_id):
     click.echo(mc_pretty_format(resp))
 
 
+@click.group()
+def metastores_group():  # pragma: no cover
+    pass
+
+
 def register_metastore_commands(cmd_group):
+    # Register deprecated "verb-noun" commands for backward compatibility.
     cmd_group.add_command(hide_command(create_metastore_cli), name='create-metastore')
     cmd_group.add_command(hide_command(list_metastores_cli), name='list-metastores')
     cmd_group.add_command(hide_command(get_metastore_cli), name='get-metastore')
@@ -218,3 +224,14 @@ def register_metastore_commands(cmd_group):
     cmd_group.add_command(hide_command(metastore_summary_cli), name='metastore-summary')
     cmd_group.add_command(hide_command(assign_metastore_cli), name='assign-metastore')
     cmd_group.add_command(hide_command(unassign_metastore_cli), name='unassign-metastore')
+
+    # Register command group.
+    metastores_group.add_command(create_metastore_cli, name='create')
+    metastores_group.add_command(list_metastores_cli, name='list')
+    metastores_group.add_command(get_metastore_cli, name='get')
+    metastores_group.add_command(update_metastore_cli, name='update')
+    metastores_group.add_command(delete_metastore_cli, name='delete')
+    metastores_group.add_command(metastore_summary_cli, name='get-summary')
+    metastores_group.add_command(assign_metastore_cli, name='assign')
+    metastores_group.add_command(unassign_metastore_cli, name='unassign')
+    cmd_group.add_command(metastores_group, name='metastores')

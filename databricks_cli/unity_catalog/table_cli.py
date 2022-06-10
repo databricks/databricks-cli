@@ -169,10 +169,25 @@ def delete_table_cli(api_client, full_name):
     UnityCatalogApi(api_client).delete_table(full_name)
 
 
+@click.group()
+def tables_group():  # pragma: no cover
+    pass
+
+
 def register_table_commands(cmd_group):
+    # Register deprecated "verb-noun" commands for backward compatibility.
     cmd_group.add_command(hide_command(create_table_cli), name='create-table')
     cmd_group.add_command(hide_command(list_tables_cli), name='list-tables')
     cmd_group.add_command(hide_command(list_table_summaries_cli), name='list-table-summaries')
     cmd_group.add_command(hide_command(get_table_cli), name='get-table')
     cmd_group.add_command(hide_command(update_table_cli), name='update-table')
     cmd_group.add_command(hide_command(delete_table_cli), name='delete-table')
+
+    # Register command group.
+    tables_group.add_command(create_table_cli, name='create')
+    tables_group.add_command(list_tables_cli, name='list')
+    tables_group.add_command(list_table_summaries_cli, name='list-summaries')
+    tables_group.add_command(get_table_cli, name='get')
+    tables_group.add_command(update_table_cli, name='update')
+    tables_group.add_command(delete_table_cli, name='delete')
+    cmd_group.add_command(tables_group, name='tables')

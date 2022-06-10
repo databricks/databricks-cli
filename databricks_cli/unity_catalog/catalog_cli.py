@@ -151,9 +151,23 @@ def delete_catalog_cli(api_client, name, purge):
     UnityCatalogApi(api_client).delete_catalog(name)
 
 
+@click.group()
+def catalogs_group():  # pragma: no cover
+    pass
+
+
 def register_catalog_commands(cmd_group):
+    # Register deprecated "verb-noun" commands for backward compatibility.
     cmd_group.add_command(hide_command(create_catalog_cli), name='create-catalog')
     cmd_group.add_command(hide_command(list_catalogs_cli), name='list-catalogs')
     cmd_group.add_command(hide_command(get_catalog_cli), name='get-catalog')
     cmd_group.add_command(hide_command(update_catalog_cli), name='update-catalog')
     cmd_group.add_command(hide_command(delete_catalog_cli), name='delete-catalog')
+
+    # Register command group.
+    catalogs_group.add_command(create_catalog_cli, name='create')
+    catalogs_group.add_command(list_catalogs_cli, name='list')
+    catalogs_group.add_command(get_catalog_cli, name='get')
+    catalogs_group.add_command(update_catalog_cli, name='update')
+    catalogs_group.add_command(delete_catalog_cli, name='delete')
+    cmd_group.add_command(catalogs_group, name='catalogs')

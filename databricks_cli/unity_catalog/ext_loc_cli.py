@@ -226,10 +226,25 @@ def validate_location_cli(api_client, name, url, cred_name, cred_aws_iam_role, c
     click.echo(mc_pretty_format(validation_json))
 
 
+@click.group()
+def external_locations_group():  # pragma: no cover
+    pass
+
+
 def register_ext_loc_commands(cmd_group):
+    # Register deprecated "verb-noun" commands for backward compatibility.
     cmd_group.add_command(hide_command(create_location_cli), name='create-external-location')
     cmd_group.add_command(hide_command(list_locations_cli), name='list-external-locations')
     cmd_group.add_command(hide_command(get_location_cli), name='get-external-location')
     cmd_group.add_command(hide_command(update_location_cli), name='update-external-location')
     cmd_group.add_command(hide_command(delete_location_cli), name='delete-external-location')
     cmd_group.add_command(hide_command(validate_location_cli), name='validate-external-location')
+
+    # Register command group.
+    external_locations_group.add_command(create_location_cli, name='create')
+    external_locations_group.add_command(list_locations_cli, name='lists')
+    external_locations_group.add_command(get_location_cli, name='get')
+    external_locations_group.add_command(update_location_cli, name='update')
+    external_locations_group.add_command(delete_location_cli, name='delete')
+    external_locations_group.add_command(validate_location_cli, name='validate')
+    cmd_group.add_command(external_locations_group, name='external-locations')

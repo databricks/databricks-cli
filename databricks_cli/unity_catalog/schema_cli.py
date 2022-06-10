@@ -150,9 +150,23 @@ def delete_schema_cli(api_client, full_name, purge):
     UnityCatalogApi(api_client).delete_schema(full_name)
 
 
+@click.group()
+def schemas_group():  # pragma: no cover
+    pass
+
+
 def register_schema_commands(cmd_group):
+    # Register deprecated "verb-noun" commands for backward compatibility.
     cmd_group.add_command(hide_command(create_schema_cli), name='create-schema')
     cmd_group.add_command(hide_command(list_schemas_cli), name='list-schemas')
     cmd_group.add_command(hide_command(get_schema_cli), name='get-schema')
     cmd_group.add_command(hide_command(update_schema_cli), name='update-schema')
     cmd_group.add_command(hide_command(delete_schema_cli), name='delete-schema')
+
+    # Register command group.
+    schemas_group.add_command(create_schema_cli, name='create')
+    schemas_group.add_command(list_schemas_cli, name='list')
+    schemas_group.add_command(get_schema_cli, name='get')
+    schemas_group.add_command(update_schema_cli, name='update')
+    schemas_group.add_command(delete_schema_cli, name='delete')
+    cmd_group.add_command(schemas_group, name='schemas')

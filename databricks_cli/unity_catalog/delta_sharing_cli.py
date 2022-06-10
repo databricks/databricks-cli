@@ -501,8 +501,13 @@ def delete_provider_cli(api_client, name):
     UnityCatalogApi(api_client).delete_provider(name)
 
 
-def register_delta_sharing_commands(cmd_group):
-    # Share cmds:
+@click.group()
+def shares_group():  # pragma: no cover
+    pass
+
+
+def register_shares_commands(cmd_group):
+    # Register deprecated "verb-noun" commands for backward compatibility.
     cmd_group.add_command(hide_command(create_share_cli), name='create-share')
     cmd_group.add_command(hide_command(list_shares_cli), name='list-shares')
     cmd_group.add_command(hide_command(get_share_cli), name='get-share')
@@ -511,7 +516,24 @@ def register_delta_sharing_commands(cmd_group):
     cmd_group.add_command(hide_command(list_share_permissions_cli), name='list-share-permissions')
     cmd_group.add_command(hide_command(update_share_permissions_cli), name='update-share-permissions')
 
-    # Recipient cmds:
+    # Register command group.
+    shares_group.add_command(create_share_cli, name='create')
+    shares_group.add_command(list_shares_cli, name='list')
+    shares_group.add_command(get_share_cli, name='get')
+    shares_group.add_command(update_share_cli, name='update')
+    shares_group.add_command(delete_share_cli, name='delete')
+    shares_group.add_command(list_share_permissions_cli, name='list-permissions')
+    shares_group.add_command(update_share_permissions_cli, name='update-permissions')
+    cmd_group.add_command(shares_group, name='shares')
+
+
+@click.group()
+def recipients_group():  # pragma: no cover
+    pass
+
+
+def register_recipients_commands(cmd_group):
+    # Register deprecated "verb-noun" commands for backward compatibility.
     cmd_group.add_command(hide_command(create_recipient_cli), name='create-recipient')
     cmd_group.add_command(hide_command(list_recipients_cli), name='list-recipients')
     cmd_group.add_command(hide_command(get_recipient_cli), name='get-recipient')
@@ -520,10 +542,42 @@ def register_delta_sharing_commands(cmd_group):
     cmd_group.add_command(hide_command(list_recipient_permissions_cli), name='list-recipient-permissions')
     cmd_group.add_command(hide_command(delete_recipient_cli), name='delete-recipient')
 
-    # Provider cmds:
+    # Register command group.
+    recipients_group.add_command(create_recipient_cli, name='create')
+    recipients_group.add_command(list_recipients_cli, name='list')
+    recipients_group.add_command(get_recipient_cli, name='get')
+    recipients_group.add_command(update_recipient_cli, name='update')
+    recipients_group.add_command(rotate_recipient_token_cli, name='rotate-token')
+    recipients_group.add_command(list_recipient_permissions_cli, name='list-permissions')
+    recipients_group.add_command(delete_recipient_cli, name='delete')
+    cmd_group.add_command(recipients_group, name='recipients')
+
+
+@click.group()
+def providers_group():  # pragma: no cover
+    pass
+
+
+def register_providers_commands(cmd_group):
+    # Register deprecated "verb-noun" commands for backward compatibility.
     cmd_group.add_command(hide_command(create_provider_cli), name='create-provider')
     cmd_group.add_command(hide_command(list_providers_cli), name='list-providers')
     cmd_group.add_command(hide_command(get_provider_cli), name='get-provider')
     cmd_group.add_command(hide_command(update_provider_cli), name='update-provider')
     cmd_group.add_command(hide_command(delete_provider_cli), name='delete-provider')
     cmd_group.add_command(hide_command(list_provider_shares_cli), name='list-provider-shares')
+
+    # Register command group.
+    providers_group.add_command(create_provider_cli, name='create')
+    providers_group.add_command(list_providers_cli, name='list')
+    providers_group.add_command(get_provider_cli, name='get')
+    providers_group.add_command(update_provider_cli, name='update')
+    providers_group.add_command(delete_provider_cli, name='delete')
+    providers_group.add_command(list_provider_shares_cli, name='list-shares')
+    cmd_group.add_command(providers_group, name='providers')
+
+
+def register_delta_sharing_commands(cmd_group):
+    register_shares_commands(cmd_group)
+    register_recipients_commands(cmd_group)
+    register_providers_commands(cmd_group)
