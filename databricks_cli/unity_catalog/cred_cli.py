@@ -1,5 +1,5 @@
 # Databricks CLI
-# Copyright 2021 Databricks, Inc.
+# Copyright 2022 Databricks, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"), except
 # that the use of services to which certain application programming
