@@ -53,7 +53,7 @@ def is_release_version(value = None):
     # The 4th group is the optional `.devZZZ` suffix.
     # If it is non-empty, this is not a release version.
     match = _match_version(value)
-    if match[4] is not None:
+    if match.group(4) is not None:
         return False
 
     return True
@@ -67,7 +67,7 @@ def next_development_version(value = None):
         value = version
 
     match = _match_version(value)
-    major = int(match[1])
-    minor = int(match[2])
-    patch = int(match[3])
+    major = int(match.group(1))
+    minor = int(match.group(2))
+    patch = int(match.group(3))
     return "{}.{}.{}.dev0".format(major, minor, patch + 1)
