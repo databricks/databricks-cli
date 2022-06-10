@@ -26,7 +26,7 @@ import click
 from databricks_cli.click_types import JsonClickType
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.unity_catalog.api import UnityCatalogApi
-from databricks_cli.unity_catalog.utils import mc_pretty_format, hide_command
+from databricks_cli.unity_catalog.utils import mc_pretty_format, hide
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
 
 
@@ -158,11 +158,11 @@ def catalogs_group():  # pragma: no cover
 
 def register_catalog_commands(cmd_group):
     # Register deprecated "verb-noun" commands for backward compatibility.
-    cmd_group.add_command(hide_command(create_catalog_cli), name='create-catalog')
-    cmd_group.add_command(hide_command(list_catalogs_cli), name='list-catalogs')
-    cmd_group.add_command(hide_command(get_catalog_cli), name='get-catalog')
-    cmd_group.add_command(hide_command(update_catalog_cli), name='update-catalog')
-    cmd_group.add_command(hide_command(delete_catalog_cli), name='delete-catalog')
+    cmd_group.add_command(hide(create_catalog_cli), name='create-catalog')
+    cmd_group.add_command(hide(list_catalogs_cli), name='list-catalogs')
+    cmd_group.add_command(hide(get_catalog_cli), name='get-catalog')
+    cmd_group.add_command(hide(update_catalog_cli), name='update-catalog')
+    cmd_group.add_command(hide(delete_catalog_cli), name='delete-catalog')
 
     # Register command group.
     catalogs_group.add_command(create_catalog_cli, name='create')

@@ -26,7 +26,7 @@ import click
 from databricks_cli.click_types import JsonClickType
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.unity_catalog.api import UnityCatalogApi
-from databricks_cli.unity_catalog.utils import del_none, mc_pretty_format, hide_command
+from databricks_cli.unity_catalog.utils import del_none, mc_pretty_format, hide
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
 
 
@@ -233,12 +233,12 @@ def external_locations_group():  # pragma: no cover
 
 def register_ext_loc_commands(cmd_group):
     # Register deprecated "verb-noun" commands for backward compatibility.
-    cmd_group.add_command(hide_command(create_location_cli), name='create-external-location')
-    cmd_group.add_command(hide_command(list_locations_cli), name='list-external-locations')
-    cmd_group.add_command(hide_command(get_location_cli), name='get-external-location')
-    cmd_group.add_command(hide_command(update_location_cli), name='update-external-location')
-    cmd_group.add_command(hide_command(delete_location_cli), name='delete-external-location')
-    cmd_group.add_command(hide_command(validate_location_cli), name='validate-external-location')
+    cmd_group.add_command(hide(create_location_cli), name='create-external-location')
+    cmd_group.add_command(hide(list_locations_cli), name='list-external-locations')
+    cmd_group.add_command(hide(get_location_cli), name='get-external-location')
+    cmd_group.add_command(hide(update_location_cli), name='update-external-location')
+    cmd_group.add_command(hide(delete_location_cli), name='delete-external-location')
+    cmd_group.add_command(hide(validate_location_cli), name='validate-external-location')
 
     # Register command group.
     external_locations_group.add_command(create_location_cli, name='create')

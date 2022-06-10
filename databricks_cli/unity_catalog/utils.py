@@ -45,7 +45,7 @@ def del_none(json):
         del_none(json[key])
 
 
-def hide_command(cmd):
+def hide(cmd):
     """
     Return a copy of specified Click command instance with `hidden = True`.
     This requires Click >= v7.0.

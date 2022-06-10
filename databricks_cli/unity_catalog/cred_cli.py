@@ -26,7 +26,7 @@ import click
 from databricks_cli.click_types import DacIdClickType, JsonClickType, MetastoreIdClickType
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.unity_catalog.api import UnityCatalogApi
-from databricks_cli.unity_catalog.utils import mc_pretty_format, hide_command
+from databricks_cli.unity_catalog.utils import mc_pretty_format, hide
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
 
 
@@ -257,17 +257,17 @@ def storage_credentials_group():  # pragma: no cover
 
 def register_cred_commands(cmd_group):
     # Register deprecated "verb-noun" commands for backward compatibility.
-    cmd_group.add_command(hide_command(create_credential_cli), name='create-storage-credential')
-    cmd_group.add_command(hide_command(list_credentials_cli), name='list-storage-credentials')
-    cmd_group.add_command(hide_command(get_credential_cli), name='get-storage-credential')
-    cmd_group.add_command(hide_command(update_credential_cli), name='update-storage-credential')
-    cmd_group.add_command(hide_command(delete_credential_cli), name='delete-storage-credential')
+    cmd_group.add_command(hide(create_credential_cli), name='create-storage-credential')
+    cmd_group.add_command(hide(list_credentials_cli), name='list-storage-credentials')
+    cmd_group.add_command(hide(get_credential_cli), name='get-storage-credential')
+    cmd_group.add_command(hide(update_credential_cli), name='update-storage-credential')
+    cmd_group.add_command(hide(delete_credential_cli), name='delete-storage-credential')
 
     # DAC cmds: [TO BE DEPRECATED ONCE STORAGE CREDENTIALS ARE FULLY SUPPORTED]
-    cmd_group.add_command(hide_command(create_dac_cli), name='create-dac')
-    cmd_group.add_command(hide_command(list_dacs_cli), name='list-dacs')
-    cmd_group.add_command(hide_command(get_dac_cli), name='get-dac')
-    cmd_group.add_command(hide_command(delete_dac_cli), name='delete-dac')
+    cmd_group.add_command(hide(create_dac_cli), name='create-dac')
+    cmd_group.add_command(hide(list_dacs_cli), name='list-dacs')
+    cmd_group.add_command(hide(get_dac_cli), name='get-dac')
+    cmd_group.add_command(hide(delete_dac_cli), name='delete-dac')
 
     # Register command group.
     storage_credentials_group.add_command(create_credential_cli, name='create')

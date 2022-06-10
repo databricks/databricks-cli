@@ -25,7 +25,7 @@ import click
 
 from databricks_cli.click_types import MetastoreIdClickType, WorkspaceIdClickType, JsonClickType
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
-from databricks_cli.unity_catalog.utils import mc_pretty_format, hide_command
+from databricks_cli.unity_catalog.utils import mc_pretty_format, hide
 from databricks_cli.unity_catalog.api import UnityCatalogApi
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
 
@@ -216,14 +216,14 @@ def metastores_group():  # pragma: no cover
 
 def register_metastore_commands(cmd_group):
     # Register deprecated "verb-noun" commands for backward compatibility.
-    cmd_group.add_command(hide_command(create_metastore_cli), name='create-metastore')
-    cmd_group.add_command(hide_command(list_metastores_cli), name='list-metastores')
-    cmd_group.add_command(hide_command(get_metastore_cli), name='get-metastore')
-    cmd_group.add_command(hide_command(update_metastore_cli), name='update-metastore')
-    cmd_group.add_command(hide_command(delete_metastore_cli), name='delete-metastore')
-    cmd_group.add_command(hide_command(metastore_summary_cli), name='metastore-summary')
-    cmd_group.add_command(hide_command(assign_metastore_cli), name='assign-metastore')
-    cmd_group.add_command(hide_command(unassign_metastore_cli), name='unassign-metastore')
+    cmd_group.add_command(hide(create_metastore_cli), name='create-metastore')
+    cmd_group.add_command(hide(list_metastores_cli), name='list-metastores')
+    cmd_group.add_command(hide(get_metastore_cli), name='get-metastore')
+    cmd_group.add_command(hide(update_metastore_cli), name='update-metastore')
+    cmd_group.add_command(hide(delete_metastore_cli), name='delete-metastore')
+    cmd_group.add_command(hide(metastore_summary_cli), name='metastore-summary')
+    cmd_group.add_command(hide(assign_metastore_cli), name='assign-metastore')
+    cmd_group.add_command(hide(unassign_metastore_cli), name='unassign-metastore')
 
     # Register command group.
     metastores_group.add_command(create_metastore_cli, name='create')
