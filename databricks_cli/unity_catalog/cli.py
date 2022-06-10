@@ -50,7 +50,7 @@ from databricks_cli.unity_catalog.lineage_cli import register_lineage_commands
 @eat_exceptions
 def unity_catalog_group():  # pragma: no cover
     """
-    Utility to interact with Databricks unity-catalog.
+    Utility to interact with Databricks Unity Catalog.
     """
     pass
 
