@@ -26,7 +26,7 @@ import click
 from databricks_cli.click_types import JsonClickType
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.unity_catalog.api import UnityCatalogApi
-from databricks_cli.unity_catalog.utils import mc_pretty_format
+from databricks_cli.unity_catalog.utils import mc_pretty_format, hide_command
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
 
 
@@ -151,8 +151,8 @@ def delete_schema_cli(api_client, full_name, purge):
 
 
 def register_schema_commands(cmd_group):
-    cmd_group.add_command(create_schema_cli, name='create-schema')
-    cmd_group.add_command(list_schemas_cli, name='list-schemas')
-    cmd_group.add_command(get_schema_cli, name='get-schema')
-    cmd_group.add_command(update_schema_cli, name='update-schema')
-    cmd_group.add_command(delete_schema_cli, name='delete-schema')
+    cmd_group.add_command(hide_command(create_schema_cli), name='create-schema')
+    cmd_group.add_command(hide_command(list_schemas_cli), name='list-schemas')
+    cmd_group.add_command(hide_command(get_schema_cli), name='get-schema')
+    cmd_group.add_command(hide_command(update_schema_cli), name='update-schema')
+    cmd_group.add_command(hide_command(delete_schema_cli), name='delete-schema')

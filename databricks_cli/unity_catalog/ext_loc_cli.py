@@ -26,7 +26,7 @@ import click
 from databricks_cli.click_types import JsonClickType
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.unity_catalog.api import UnityCatalogApi
-from databricks_cli.unity_catalog.utils import del_none, mc_pretty_format
+from databricks_cli.unity_catalog.utils import del_none, mc_pretty_format, hide_command
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
 
 
@@ -227,9 +227,9 @@ def validate_location_cli(api_client, name, url, cred_name, cred_aws_iam_role, c
 
 
 def register_ext_loc_commands(cmd_group):
-    cmd_group.add_command(create_location_cli, name='create-external-location')
-    cmd_group.add_command(list_locations_cli, name='list-external-locations')
-    cmd_group.add_command(get_location_cli, name='get-external-location')
-    cmd_group.add_command(update_location_cli, name='update-external-location')
-    cmd_group.add_command(delete_location_cli, name='delete-external-location')
-    cmd_group.add_command(validate_location_cli, name='validate-external-location')
+    cmd_group.add_command(hide_command(create_location_cli), name='create-external-location')
+    cmd_group.add_command(hide_command(list_locations_cli), name='list-external-locations')
+    cmd_group.add_command(hide_command(get_location_cli), name='get-external-location')
+    cmd_group.add_command(hide_command(update_location_cli), name='update-external-location')
+    cmd_group.add_command(hide_command(delete_location_cli), name='delete-external-location')
+    cmd_group.add_command(hide_command(validate_location_cli), name='validate-external-location')

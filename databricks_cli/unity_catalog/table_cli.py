@@ -26,7 +26,7 @@ import click
 from databricks_cli.click_types import JsonClickType
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.unity_catalog.api import UnityCatalogApi
-from databricks_cli.unity_catalog.utils import mc_pretty_format
+from databricks_cli.unity_catalog.utils import mc_pretty_format, hide_command
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
 
 
@@ -170,9 +170,9 @@ def delete_table_cli(api_client, full_name):
 
 
 def register_table_commands(cmd_group):
-    cmd_group.add_command(create_table_cli, name='create-table')
-    cmd_group.add_command(list_tables_cli, name='list-tables')
-    cmd_group.add_command(list_table_summaries_cli, name='list-table-summaries')
-    cmd_group.add_command(get_table_cli, name='get-table')
-    cmd_group.add_command(update_table_cli, name='update-table')
-    cmd_group.add_command(delete_table_cli, name='delete-table')
+    cmd_group.add_command(hide_command(create_table_cli), name='create-table')
+    cmd_group.add_command(hide_command(list_tables_cli), name='list-tables')
+    cmd_group.add_command(hide_command(list_table_summaries_cli), name='list-table-summaries')
+    cmd_group.add_command(hide_command(get_table_cli), name='get-table')
+    cmd_group.add_command(hide_command(update_table_cli), name='update-table')
+    cmd_group.add_command(hide_command(delete_table_cli), name='delete-table')

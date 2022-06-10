@@ -26,7 +26,7 @@ import click
 from databricks_cli.click_types import JsonClickType
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.unity_catalog.api import UnityCatalogApi
-from databricks_cli.unity_catalog.utils import mc_pretty_format
+from databricks_cli.unity_catalog.utils import mc_pretty_format, hide_command
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
 
 
@@ -503,27 +503,27 @@ def delete_provider_cli(api_client, name):
 
 def register_delta_sharing_commands(cmd_group):
     # Share cmds:
-    cmd_group.add_command(create_share_cli, name='create-share')
-    cmd_group.add_command(list_shares_cli, name='list-shares')
-    cmd_group.add_command(get_share_cli, name='get-share')
-    cmd_group.add_command(update_share_cli, name='update-share')
-    cmd_group.add_command(delete_share_cli, name='delete-share')
-    cmd_group.add_command(list_share_permissions_cli, name='list-share-permissions')
-    cmd_group.add_command(update_share_permissions_cli, name='update-share-permissions')
+    cmd_group.add_command(hide_command(create_share_cli), name='create-share')
+    cmd_group.add_command(hide_command(list_shares_cli), name='list-shares')
+    cmd_group.add_command(hide_command(get_share_cli), name='get-share')
+    cmd_group.add_command(hide_command(update_share_cli), name='update-share')
+    cmd_group.add_command(hide_command(delete_share_cli), name='delete-share')
+    cmd_group.add_command(hide_command(list_share_permissions_cli), name='list-share-permissions')
+    cmd_group.add_command(hide_command(update_share_permissions_cli), name='update-share-permissions')
 
     # Recipient cmds:
-    cmd_group.add_command(create_recipient_cli, name='create-recipient')
-    cmd_group.add_command(list_recipients_cli, name='list-recipients')
-    cmd_group.add_command(get_recipient_cli, name='get-recipient')
-    cmd_group.add_command(update_recipient_cli, name='update-recipient')
-    cmd_group.add_command(rotate_recipient_token_cli, name='rotate-recipient-token')
-    cmd_group.add_command(list_recipient_permissions_cli, name='list-recipient-permissions')
-    cmd_group.add_command(delete_recipient_cli, name='delete-recipient')
+    cmd_group.add_command(hide_command(create_recipient_cli), name='create-recipient')
+    cmd_group.add_command(hide_command(list_recipients_cli), name='list-recipients')
+    cmd_group.add_command(hide_command(get_recipient_cli), name='get-recipient')
+    cmd_group.add_command(hide_command(update_recipient_cli), name='update-recipient')
+    cmd_group.add_command(hide_command(rotate_recipient_token_cli), name='rotate-recipient-token')
+    cmd_group.add_command(hide_command(list_recipient_permissions_cli), name='list-recipient-permissions')
+    cmd_group.add_command(hide_command(delete_recipient_cli), name='delete-recipient')
 
     # Provider cmds:
-    cmd_group.add_command(create_provider_cli, name='create-provider')
-    cmd_group.add_command(list_providers_cli, name='list-providers')
-    cmd_group.add_command(get_provider_cli, name='get-provider')
-    cmd_group.add_command(update_provider_cli, name='update-provider')
-    cmd_group.add_command(delete_provider_cli, name='delete-provider')
-    cmd_group.add_command(list_provider_shares_cli, name='list-provider-shares')
+    cmd_group.add_command(hide_command(create_provider_cli), name='create-provider')
+    cmd_group.add_command(hide_command(list_providers_cli), name='list-providers')
+    cmd_group.add_command(hide_command(get_provider_cli), name='get-provider')
+    cmd_group.add_command(hide_command(update_provider_cli), name='update-provider')
+    cmd_group.add_command(hide_command(delete_provider_cli), name='delete-provider')
+    cmd_group.add_command(hide_command(list_provider_shares_cli), name='list-provider-shares')

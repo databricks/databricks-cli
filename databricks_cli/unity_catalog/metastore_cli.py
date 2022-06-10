@@ -25,7 +25,7 @@ import click
 
 from databricks_cli.click_types import MetastoreIdClickType, WorkspaceIdClickType, JsonClickType
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
-from databricks_cli.unity_catalog.utils import mc_pretty_format
+from databricks_cli.unity_catalog.utils import mc_pretty_format, hide_command
 from databricks_cli.unity_catalog.api import UnityCatalogApi
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
 
@@ -210,11 +210,11 @@ def unassign_metastore_cli(api_client, workspace_id, metastore_id):
 
 
 def register_metastore_commands(cmd_group):
-    cmd_group.add_command(create_metastore_cli, name='create-metastore')
-    cmd_group.add_command(list_metastores_cli, name='list-metastores')
-    cmd_group.add_command(get_metastore_cli, name='get-metastore')
-    cmd_group.add_command(update_metastore_cli, name='update-metastore')
-    cmd_group.add_command(delete_metastore_cli, name='delete-metastore')
-    cmd_group.add_command(metastore_summary_cli, name='metastore-summary')
-    cmd_group.add_command(assign_metastore_cli, name='assign-metastore')
-    cmd_group.add_command(unassign_metastore_cli, name='unassign-metastore')
+    cmd_group.add_command(hide_command(create_metastore_cli), name='create-metastore')
+    cmd_group.add_command(hide_command(list_metastores_cli), name='list-metastores')
+    cmd_group.add_command(hide_command(get_metastore_cli), name='get-metastore')
+    cmd_group.add_command(hide_command(update_metastore_cli), name='update-metastore')
+    cmd_group.add_command(hide_command(delete_metastore_cli), name='delete-metastore')
+    cmd_group.add_command(hide_command(metastore_summary_cli), name='metastore-summary')
+    cmd_group.add_command(hide_command(assign_metastore_cli), name='assign-metastore')
+    cmd_group.add_command(hide_command(unassign_metastore_cli), name='unassign-metastore')

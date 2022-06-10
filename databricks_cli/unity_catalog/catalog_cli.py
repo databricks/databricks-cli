@@ -26,7 +26,7 @@ import click
 from databricks_cli.click_types import JsonClickType
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.unity_catalog.api import UnityCatalogApi
-from databricks_cli.unity_catalog.utils import mc_pretty_format
+from databricks_cli.unity_catalog.utils import mc_pretty_format, hide_command
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
 
 
@@ -152,8 +152,8 @@ def delete_catalog_cli(api_client, name, purge):
 
 
 def register_catalog_commands(cmd_group):
-    cmd_group.add_command(create_catalog_cli, name='create-catalog')
-    cmd_group.add_command(list_catalogs_cli, name='list-catalogs')
-    cmd_group.add_command(get_catalog_cli, name='get-catalog')
-    cmd_group.add_command(update_catalog_cli, name='update-catalog')
-    cmd_group.add_command(delete_catalog_cli, name='delete-catalog')
+    cmd_group.add_command(hide_command(create_catalog_cli), name='create-catalog')
+    cmd_group.add_command(hide_command(list_catalogs_cli), name='list-catalogs')
+    cmd_group.add_command(hide_command(get_catalog_cli), name='get-catalog')
+    cmd_group.add_command(hide_command(update_catalog_cli), name='update-catalog')
+    cmd_group.add_command(hide_command(delete_catalog_cli), name='delete-catalog')

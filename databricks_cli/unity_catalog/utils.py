@@ -21,6 +21,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import copy
+
 from databricks_cli.utils import pretty_format
 
 
@@ -41,3 +43,13 @@ def del_none(json):
         del json[key]
     for key in to_recurse:
         del_none(json[key])
+
+
+def hide_command(cmd):
+    """
+    Return a copy of specified Click command instance with `hidden = True`.
+    This requires Click >= v7.0.
+    """
+    cmd_copy = copy.copy(cmd)
+    cmd_copy.hidden = True
+    return cmd_copy

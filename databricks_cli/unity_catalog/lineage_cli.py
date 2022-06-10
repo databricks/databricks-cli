@@ -25,7 +25,7 @@ import click
 
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.unity_catalog.api import UnityCatalogApi
-from databricks_cli.unity_catalog.utils import mc_pretty_format
+from databricks_cli.unity_catalog.utils import mc_pretty_format, hide_command
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, to_graph
 
 
@@ -122,8 +122,8 @@ def list_column_lineages_cli(api_client, table_name, column_name):
 
 
 def register_lineage_commands(cmd_group):
-    cmd_group.add_command(list_table_lineages_cli, name='list-table-lineages')
-    cmd_group.add_command(list_column_lineages_cli, name='list-column-lineages')
+    cmd_group.add_command(hide_command(list_table_lineages_cli), name='list-table-lineages')
+    cmd_group.add_command(hide_command(list_column_lineages_cli), name='list-column-lineages')
 
 
 def get_table_name(table_node):

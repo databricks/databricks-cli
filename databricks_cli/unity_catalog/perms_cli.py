@@ -26,7 +26,7 @@ import click
 from databricks_cli.click_types import JsonClickType, OneOfOption
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.unity_catalog.api import UnityCatalogApi
-from databricks_cli.unity_catalog.utils import mc_pretty_format
+from databricks_cli.unity_catalog.utils import mc_pretty_format, hide_command
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
 
 
@@ -131,5 +131,5 @@ def update_permissions_cli(api_client, catalog, schema, table, storage_credentia
 
 
 def register_perms_commands(cmd_group):
-    cmd_group.add_command(get_permissions_cli, name='get-permissions')
-    cmd_group.add_command(update_permissions_cli, name='update-permissions')
+    cmd_group.add_command(hide_command(get_permissions_cli), name='get-permissions')
+    cmd_group.add_command(hide_command(update_permissions_cli), name='update-permissions')
