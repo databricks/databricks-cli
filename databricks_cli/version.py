@@ -21,6 +21,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
+
+
 version = '0.16.8.dev0' #  NOQA
 
 
@@ -30,3 +33,41 @@ def print_version_callback(ctx, param, value): #  NOQA
         return
     click.echo('Version {}'.format(version))
     ctx.exit()
+
+
+def _match_version(value):
+    # Expect version to be of the form: `X.Y.Z(.suffix)?`
+    match = re.match(r'^(\d+)\.(\d+)\.(\d+)(\.\w+)?$', value)
+    if match is None:
+        raise ValueError("Non-compliant version string: " + value)
+    return match
+
+
+def is_release_version(value=None):
+    """
+    Returns whether the current version of databricks-cli is a release version or not.
+    """
+    if value is None:
+        value = version
+
+    # The 4th group is the optional `.devZZZ` suffix.
+    # If it is non-empty, this is not a release version.
+    match = _match_version(value)
+    if match.group(4) is not None:
+        return False
+
+    return True
+
+
+def next_development_version(value=None):
+    """
+    Returns the hypothetical next development version of databricks-cli.
+    """
+    if value is None:
+        value = version
+
+    match = _match_version(value)
+    major = int(match.group(1))
+    minor = int(match.group(2))
+    patch = int(match.group(3))
+    return "{}.{}.{}.dev0".format(major, minor, patch + 1)
