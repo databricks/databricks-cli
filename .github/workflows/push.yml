@@ -108,7 +108,7 @@ jobs:
           set -x
           pip install ${{ steps.build-dist.outputs.sdist-path }}
           python -c "import databricks_cli.version; print(databricks_cli.version.version)"
-          which databricks_cli
+          which databricks
           databricks --version
           which dbfs
           dbfs --version
@@ -118,7 +118,7 @@ jobs:
           set -x
           pip install --force-reinstall ${{ steps.build-dist.outputs.wheel-path }}
           python -c "import databricks_cli.version; print(databricks_cli.version.version)"
-          which databricks_cli
+          which databricks
           databricks --version
           which dbfs
           dbfs --version
