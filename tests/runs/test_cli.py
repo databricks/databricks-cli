@@ -35,6 +35,25 @@ from tests.utils import provide_conf
 
 SUBMIT_RETURN = {'run_id': 5}
 SUBMIT_JSON = '{"name": "test_run"}'
+RUNS_GET_RETURN_SUCCESS = {
+    "state": {
+        "life_cycle_state": "TERMINATED",
+        "result_state": "SUCCESS",
+    },
+}
+RUNS_GET_RETURN_FAILURE = {
+    "state": {
+        "life_cycle_state": "INTERNAL_ERROR",
+        "result_state": "FAILED",
+        "state_message": "OH NO!",
+    },
+}
+RUNS_GET_RETURN_RUNNING = {
+    "state": {
+        "life_cycle_state": "RUNNING",
+    },
+    "run_page_url": "https://www.google.com"
+}
 
 
 @pytest.fixture()
@@ -54,6 +73,36 @@ def test_submit_cli_json(runs_api_mock):
         assert runs_api_mock.submit_run.call_args[0][0] == json.loads(
             SUBMIT_JSON)
         assert echo_mock.call_args[0][0] == pretty_format(SUBMIT_RETURN)
+
+@provide_conf
+def test_submit_wait_success(runs_api_mock):
+    with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock:
+        runs_api_mock.submit_run.return_value = SUBMIT_RETURN
+        runs_api_mock.get_run.return_value = RUNS_GET_RETURN_SUCCESS
+        runner = CliRunner()
+        runner.invoke(cli.submit_cli, ['--json', SUBMIT_JSON, '--version=2.1', '--wait'])
+        runs_api_mock.get_run.assert_called_once()
+        assert echo_mock.call_args_list[1][0][0] == 'Job completed successfully.'
+
+@provide_conf
+def test_submit_wait_failure(runs_api_mock):
+    with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock:
+        runs_api_mock.submit_run.return_value = SUBMIT_RETURN
+        runs_api_mock.get_run.return_value = RUNS_GET_RETURN_FAILURE
+        runner = CliRunner()
+        runner.invoke(cli.submit_cli, ['--json', SUBMIT_JSON, '--version', '2.1', '--wait'])
+        assert 'job failed with state FAILED and state message OH NO!' in echo_mock.call_args_list[1][0][0]
+
+@provide_conf
+def test_submit_wait_eventually_succeeds(runs_api_mock):
+    with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock, mock.patch('time.sleep') as sleep_mock:
+        runs_api_mock.submit_run.return_value = SUBMIT_RETURN
+        runs_api_mock.get_run.side_effect = [RUNS_GET_RETURN_RUNNING, RUNS_GET_RETURN_SUCCESS]
+        runner = CliRunner()
+        runner.invoke(cli.submit_cli, ['--json', SUBMIT_JSON, '--version', '2.1', '--wait'])
+        assert echo_mock.call_args_list[1][0][0] == 'Job still running with lifecycle state RUNNING. URL: https://www.google.com'
+        sleep_mock.assert_called_once()
+        assert echo_mock.call_args_list[2][0][0] == 'Job completed successfully.'
 
 
 RUN_PAGE_URL = 'https://databricks.com/#job/1/run/1'
