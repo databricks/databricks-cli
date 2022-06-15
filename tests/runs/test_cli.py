@@ -90,9 +90,8 @@ def test_submit_wait_failure(runs_api_mock):
         runs_api_mock.submit_run.return_value = SUBMIT_RETURN
         runs_api_mock.get_run.return_value = RUNS_GET_RETURN_FAILURE
         runner = CliRunner()
-        result = runner.invoke(cli.submit_cli, ['--json', SUBMIT_JSON, '--version=2.1', '--wait'])
-        assert 'job failed with state FAILED and state message OH NO!' in \
-               echo_mock.call_args_list[1][0][0]
+        result = runner.invoke(cli.submit_cli, ['--json', SUBMIT_JSON, '--wait'])
+        assert 'job failed with state FAILED and state message OH NO!' in echo_mock.call_args[0][0]
         assert result.exit_code == 1
 
 @provide_conf
@@ -102,8 +101,8 @@ def test_submit_wait_eventually_succeeds(runs_api_mock):
         runs_api_mock.submit_run.return_value = SUBMIT_RETURN
         runs_api_mock.get_run.side_effect = [RUNS_GET_RETURN_RUNNING, RUNS_GET_RETURN_SUCCESS]
         runner = CliRunner()
-        result = runner.invoke(cli.submit_cli, ['--json', SUBMIT_JSON, '--version=2.1', '--wait'])
-        assert echo_mock.call_args_list[1][0][0] == 'Job still running with lifecycle state ' + \
+        result = runner.invoke(cli.submit_cli, ['--json', SUBMIT_JSON, '--wait'])
+        assert echo_mock.call_args[0][0] == 'Job still running with lifecycle state ' + \
                                                     'RUNNING. URL: https://www.google.com'
         sleep_mock.assert_called_once()
         assert result.exit_code == 0
