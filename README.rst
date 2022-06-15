@@ -1,9 +1,9 @@
 databricks-cli
 ==============
-.. image:: https://github.com/databricks/databricks-cli/actions/workflows/push.yml/badge.svg?branch=master
-  :target: https://github.com/databricks/databricks-cli/actions/workflows/push.yml?query=branch%3Amaster
+.. image:: https://github.com/databricks/databricks-cli/actions/workflows/push.yml/badge.svg?branch=main
+  :target: https://github.com/databricks/databricks-cli/actions/workflows/push.yml?query=branch%main
   :alt: Build status
-.. image:: https://codecov.io/gh/databricks/databricks-cli/branch/master/graph/badge.svg
+.. image:: https://codecov.io/gh/databricks/databricks-cli/branch/main/graph/badge.svg
   :target: https://codecov.io/gh/databricks/databricks-cli
 
 
