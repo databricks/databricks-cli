@@ -32,7 +32,7 @@ version = imp.load_source(
 setup(
     name='databricks-cli',
     version=version,
-    packages=find_packages(exclude=['tests', 'tests.*']),
+    packages=find_packages(include=['databricks_cli*']),
     install_requires=[
         # Note: please keep this in sync with `requirements.txt`.
         'click>=6.7',
