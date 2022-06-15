@@ -76,8 +76,8 @@ def submit_cli(api_client, json_file, json, wait, version):
                 else:
                     error_and_quit('Run failed with state ' + run_state['result_state'] +
                                    ' and state message ' + run_state['state_message'])
-            click.echo('Run is still active, with lifecycle state ' + run_state['life_cycle_state'] +
-                        '. URL: ' + run['run_page_url'], err=True)
+            click.echo('Run is still active, with lifecycle state ' +
+                       run_state['life_cycle_state'] + '. URL: ' + run['run_page_url'], err=True)
             time.sleep(5)
 
 

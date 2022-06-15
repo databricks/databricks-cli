@@ -41,13 +41,6 @@ RUNS_GET_RETURN_SUCCESS = {
         "result_state": "SUCCESS",
     },
 }
-RUNS_GET_RETURN_FAILURE = {
-    "state": {
-        "life_cycle_state": "INTERNAL_ERROR",
-        "result_state": "FAILED",
-        "state_message": "OH NO!",
-    },
-}
 RUNS_GET_RETURN_RUNNING = {
     "state": {
         "life_cycle_state": "RUNNING",
@@ -83,11 +76,18 @@ def test_submit_wait_success(runs_api_mock):
     runs_api_mock.get_run.assert_called_once()
     assert result.exit_code == 0
 
+@pytest.mark.parametrize('bad_life_cycle_state', ['TERMINATED', 'SKIPPED', 'INTERNAL_ERROR'])
 @provide_conf
-def test_submit_wait_failure(runs_api_mock):
+def test_submit_wait_failure(runs_api_mock, bad_life_cycle_state):
     with mock.patch('click.echo') as echo_mock:
         runs_api_mock.submit_run.return_value = SUBMIT_RETURN
-        runs_api_mock.get_run.return_value = RUNS_GET_RETURN_FAILURE
+        runs_api_mock.get_run.return_value = {
+            "state": {
+                "life_cycle_state": bad_life_cycle_state,
+                "result_state": "FAILED",
+                "state_message": "OH NO!",
+            },
+        }
         runner = CliRunner()
         result = runner.invoke(cli.submit_cli, ['--json', SUBMIT_JSON, '--wait'])
         assert 'Run failed with state FAILED and state message OH NO!' in echo_mock.call_args[0][0]
