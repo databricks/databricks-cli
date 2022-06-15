@@ -21,6 +21,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
 import time
 from json import loads as json_loads
 
@@ -29,7 +30,8 @@ from tabulate import tabulate
 
 from databricks_cli.click_types import OutputClickType, JsonClickType, RunIdClickType
 from databricks_cli.jobs.cli import check_version
-from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, truncate_string
+from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, truncate_string, \
+    error_and_quit
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option, \
     api_version_option
 from databricks_cli.runs.api import RunsApi
@@ -71,14 +73,12 @@ def submit_cli(api_client, json_file, json, wait, version):
             run_state = run['state']
             if run_state['life_cycle_state'] in completed_states:
                 if run_state['result_state'] == 'SUCCESS':
-                    click.echo('Job completed successfully.')
+                    sys.exit(0)
                 else:
-                    click.echo(click.style('ERROR', fg='red') + ': job failed with state ' +
-                                run_state['result_state'] + ' and state message ' +
-                                run_state['state_message'], err=True)
-                return
+                    error_and_quit('job failed with state ' + run_state['result_state'] +
+                                   ' and state message ' + run_state['state_message'])
             click.echo('Job still running with lifecycle state ' + run_state['life_cycle_state'] +
-                        '. URL: ' + run['run_page_url'])
+                        '. URL: ' + run['run_page_url'], err=True)
             time.sleep(5)
 
 
