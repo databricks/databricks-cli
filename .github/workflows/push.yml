@@ -58,3 +58,67 @@ jobs:
         uses: codecov/codecov-action@v2
         with:
           env_vars: OS,PYTHON_VERSION
+
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+          - '2.7'
+          - '3.6'
+    env:
+      PYTHON_VERSION: ${{ matrix.python-version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install pip
+        run: pip install --upgrade pip
+
+      - name: Install dependencies
+        run: |
+          pip install wheel
+
+      - name: Build distribution files
+        id: build-dist
+        run: |
+          # Build distribution files
+          python setup.py sdist bdist_wheel
+
+          # List distribution files and check their file sizes
+          ls -lh dist
+
+          # Set step outputs
+          sdist_path=$(find dist -type f -name "*.tar.gz")
+          wheel_path=$(find dist -type f -name "*.whl")
+          wheel_name=$(basename $wheel_path)
+          wheel_size=$(stat -c %s $wheel_path)
+          echo "::set-output name=sdist-path::${sdist_path}"
+          echo "::set-output name=wheel-path::${wheel_path}"
+          echo "::set-output name=wheel-name::${wheel_name}"
+          echo "::set-output name=wheel-size::${wheel_size}"
+
+      - name: Test installation from tarball
+        run: |
+          set -x
+          pip install ${{ steps.build-dist.outputs.sdist-path }}
+          python -c "import databricks_cli.version; print(databricks_cli.version.version)"
+          which databricks
+          databricks --version
+          which dbfs
+          dbfs --version
+
+      - name: Test installation from wheel
+        run: |
+          set -x
+          pip install --force-reinstall ${{ steps.build-dist.outputs.wheel-path }}
+          python -c "import databricks_cli.version; print(databricks_cli.version.version)"
+          which databricks
+          databricks --version
+          which dbfs
+          dbfs --version
