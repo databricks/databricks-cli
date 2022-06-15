@@ -57,12 +57,6 @@ def submit_cli(api_client, json_file, json, wait, version):
     https://docs.databricks.com/api/latest/jobs.html#runs-submit
     """
     check_version(api_client, version)
-    api_version = version or api_client.jobs_api_version
-    if api_version != '2.1' and wait:
-        click.echo(click.style('ERROR', fg='red') + ': the option --wait is only available ' +
-                   'in API 2.1', err=True)
-        return
-
     if json_file:
         with open(json_file, 'r') as f:
             json = f.read()
