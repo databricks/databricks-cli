@@ -64,7 +64,8 @@ jobs:
     strategy:
       matrix:
         python-version:
-          - '3.7'
+          - '2.7'
+          - '3.6'
     env:
       PYTHON_VERSION: ${{ matrix.python-version }}
     steps:
@@ -78,10 +79,6 @@ jobs:
 
       - name: Install pip
         run: pip install --upgrade pip
-
-      - name: Install dependencies
-        run: |
-          pip install wheel twine
 
       - name: Build distribution files
         id: build-dist
@@ -101,10 +98,6 @@ jobs:
           echo "::set-output name=wheel-path::${wheel_path}"
           echo "::set-output name=wheel-name::${wheel_name}"
           echo "::set-output name=wheel-size::${wheel_size}"
-
-      - name: Run twine check
-        run: |
-          twine check --strict ${{ steps.build-dist.outputs.wheel-path }}
 
       - name: Test installation from tarball
         run: |
