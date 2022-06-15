@@ -22,15 +22,14 @@
 # limitations under the License.
 
 import time
-from json import dumps as json_dumps, loads as json_loads
+from json import loads as json_loads
 
 import click
 from tabulate import tabulate
 
 from databricks_cli.click_types import OutputClickType, JsonClickType, RunIdClickType
 from databricks_cli.jobs.cli import check_version
-from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base, \
-    truncate_string
+from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, truncate_string
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option, \
     api_version_option
 from databricks_cli.runs.api import RunsApi
