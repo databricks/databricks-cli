@@ -80,6 +80,10 @@ jobs:
       - name: Install pip
         run: pip install --upgrade pip
 
+      - name: Install dependencies
+        run: |
+          pip install wheel
+
       - name: Build distribution files
         id: build-dist
         run: |
