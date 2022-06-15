@@ -2,7 +2,7 @@ name: Tag new version
 
 on:
   push:
-    branches: [master]
+    branches: [main]
     paths:
       - 'databricks_cli/version.py'
   
