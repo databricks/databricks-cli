@@ -1,5 +1,6 @@
+#
 # Databricks CLI
-# Copyright 2017 Databricks, Inc.
+# Copyright 2020 Databricks, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"), except
 # that the use of services to which certain application programming
@@ -20,37 +21,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+import pytest
 
-"""
-Databricks Python REST Client 2.0 for interacting with various services.
+from databricks_cli.scim.cli import validate_user_params
 
-Currently supports services including clusters, clusters policies and jobs.
 
-Requires Python 2.7.9 or above.
+@pytest.mark.parametrize('json_file, json, user_name, groups, entitlements, roles, should_fail', [
+    # json_file, json, user_name, groups, entitlements, roles, should_fail
+    [None, None, None, None, None, None, True],
+    [None, None, 'ac', None, None, None, False],
+    [None, '{}', None, None, None, None, False],
+    [None, '{}', 'ac', None, None, None, True],
+    ['so', None, None, None, None, None, False],
+    ['so', None, 'ac', None, None, None, True],
+    ['so', '{}', None, None, None, None, True],
+    ['so', '{}', 'ac', None, None, None, True],
 
-To get started, below is an example usage of the Python API client.
-
-  # Import databricks package:
-  from databricks import *
-
-  # Create a client:
-  userName = "user@company.com"
-  password = "MySecretPassword"
-  client = ApiClient(userName, password, host = "https://dbc-12345678-9101.cloud.databricks.com")
-
-  # List jobs:
-  jobs = JobsService(client)
-  print jobs.list_jobs()
-
-  # For help:
-  help(databricks)
-
-  # To examine available services:
-  help(databricks.service)
-
-  # To examine the jobs API:
-  help(JobsService)
-"""
-from .service import *
-from .scim_service import *
-from .api_client import ApiClient
+])
+def test_user_args(json_file, json, user_name, groups, entitlements, roles, should_fail):
+    if should_fail:
+        with pytest.raises(RuntimeError):
+            validate_user_params(json_file, json, user_name, groups, entitlements, roles)
+    else:
+        validate_user_params(json_file, json, user_name, groups, entitlements, roles)

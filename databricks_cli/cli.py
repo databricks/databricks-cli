@@ -25,6 +25,7 @@ import click
 
 from databricks_cli.configure.config import profile_option, debug_option
 from databricks_cli.libraries.cli import libraries_group
+from databricks_cli.scim.cli import scim_group
 from databricks_cli.version import print_version_callback, version
 from databricks_cli.utils import CONTEXT_SETTINGS
 from databricks_cli.configure.cli import configure_cli
@@ -63,6 +64,7 @@ cli.add_command(libraries_group, name='libraries')
 cli.add_command(secrets_group, name='secrets')
 cli.add_command(stack_group, name='stack')
 cli.add_command(groups_group, name='groups')
+cli.add_command(scim_group, name='scim')
 cli.add_command(tokens_group, name='tokens')
 cli.add_command(instance_pools_group, name="instance-pools")
 cli.add_command(pipelines_group, name='pipelines')
