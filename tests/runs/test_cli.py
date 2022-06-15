@@ -76,13 +76,12 @@ def test_submit_cli_json(runs_api_mock):
 
 @provide_conf
 def test_submit_wait_success(runs_api_mock):
-    with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock:
-        runs_api_mock.submit_run.return_value = SUBMIT_RETURN
-        runs_api_mock.get_run.return_value = RUNS_GET_RETURN_SUCCESS
-        runner = CliRunner()
-        result = runner.invoke(cli.submit_cli, ['--json', SUBMIT_JSON, '--wait'])
-        runs_api_mock.get_run.assert_called_once()
-        assert result.exit_code == 0
+    runs_api_mock.submit_run.return_value = SUBMIT_RETURN
+    runs_api_mock.get_run.return_value = RUNS_GET_RETURN_SUCCESS
+    runner = CliRunner()
+    result = runner.invoke(cli.submit_cli, ['--json', SUBMIT_JSON, '--wait'])
+    runs_api_mock.get_run.assert_called_once()
+    assert result.exit_code == 0
 
 @provide_conf
 def test_submit_wait_failure(runs_api_mock):
