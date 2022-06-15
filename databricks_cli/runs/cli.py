@@ -52,7 +52,7 @@ from databricks_cli.version import print_version_callback, version as cli_versio
 @provide_api_client
 def submit_cli(api_client, json_file, json, wait, version):
     """
-    Submits a one-time run.
+    Submits a one-time run and optionally waits for its completion.
 
     The specification for the request json can be found
     https://docs.databricks.com/api/latest/jobs.html#runs-submit
@@ -74,9 +74,9 @@ def submit_cli(api_client, json_file, json, wait, version):
                 if run_state['result_state'] == 'SUCCESS':
                     sys.exit(0)
                 else:
-                    error_and_quit('job failed with state ' + run_state['result_state'] +
+                    error_and_quit('Run failed with state ' + run_state['result_state'] +
                                    ' and state message ' + run_state['state_message'])
-            click.echo('Job still running with lifecycle state ' + run_state['life_cycle_state'] +
+            click.echo('Run is still active, with lifecycle state ' + run_state['life_cycle_state'] +
                         '. URL: ' + run['run_page_url'], err=True)
             time.sleep(5)
 
