@@ -1,0 +1,40 @@
+name: Tag new version
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'databricks_cli/version.py'
+  
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: "3.10"
+
+      - name: Check if this is a release version
+        id: version
+        env:
+          PYTHONPATH: /home/runner/work/databricks-cli/databricks-cli
+        shell: python
+        run: |
+          from databricks_cli.version import version, is_release_version
+          print("::set-output name=version::" + version)
+          if is_release_version():
+            print("::set-output name=is_release_version::true")
+            print("Release version: " + version)
+          else:
+            print("::set-output name=is_release_version::false")
+            print("Not a release version: " + version)
+
+      - name: Create and push tag
+        if: steps.version.outputs.is_release_version == 'true'
+        run: |
+          git tag ${{ steps.version.outputs.version }}
+          git push origin ${{ steps.version.outputs.version }}
