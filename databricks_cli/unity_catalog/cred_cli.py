@@ -23,7 +23,7 @@
 
 import click
 
-from databricks_cli.click_types import JsonClickType, MetastoreIdClickType
+from databricks_cli.click_types import JsonClickType
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.unity_catalog.api import UnityCatalogApi
 from databricks_cli.unity_catalog.utils import mc_pretty_format, hide
