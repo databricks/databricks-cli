@@ -27,8 +27,10 @@ jobs:
           print("::set-output name=version::" + version)
           if is_release_version():
             print("::set-output name=is_release_version::true")
+            print("Release version: " + version)
           else:
             print("::set-output name=is_release_version::false")
+            print("Not a release version: " + version)
 
       - name: Create and push tag
         if: steps.version.outputs.is_release_version == 'true'
