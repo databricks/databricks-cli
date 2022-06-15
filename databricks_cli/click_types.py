@@ -117,11 +117,6 @@ class MetastoreIdClickType(ParamType):
     help = 'ID of the Metastore'
 
 
-class DacIdClickType(ParamType):
-    name = 'DAC_ID'
-    help = 'ID of the desired data access configuration'
-
-
 class WorkspaceIdClickType(ParamType):
     name = 'WORKSPACE_ID'
     help = 'ID of the Workspace'

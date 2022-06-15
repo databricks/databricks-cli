@@ -23,7 +23,7 @@
 
 import click
 
-from databricks_cli.click_types import DacIdClickType, JsonClickType, MetastoreIdClickType
+from databricks_cli.click_types import JsonClickType, MetastoreIdClickType
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.unity_catalog.api import UnityCatalogApi
 from databricks_cli.unity_catalog.utils import mc_pretty_format, hide
@@ -156,100 +156,6 @@ def delete_credential_cli(api_client, name, force):
     UnityCatalogApi(api_client).delete_storage_credential(name, force)
 
 
-#############  Data Access Configuration Commands  ############
-
-
-@click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Create data access configuration.')
-@click.option('--metastore-id', required=True, type=MetastoreIdClickType(),
-              help='Unique identifier of the metastore parent of the DAC.')
-@click.option('--skip-validation', '-s', 'skip_val', is_flag=True, default=False,
-              help='Skip the validation of new DAC info before creation')
-@click.option('--json-file', default=None, type=click.Path(),
-              help='File containing JSON request to POST.')
-@click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/unity-catalog/data-access-configurations'))
-@debug_option
-@profile_option
-@eat_exceptions
-@provide_api_client
-def create_dac_cli(api_client, metastore_id, skip_val, json_file, json):
-    """
-    Create new data access configuration.
-
-    Calls the 'createDataAccessConfiguration' RPC endpoint of the Unity Catalog service.
-    The public specification for the JSON request is in development.
-    Returns the properties of the newly-created DAC.
-
-    """
-    json_cli_base(json_file, json,
-                  lambda json: UnityCatalogApi(api_client).create_dac(metastore_id, json,
-                                                                      skip_val),
-                  encode_utf8=True)
-
-
-@click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='List data access configurations.')
-@click.option('--metastore-id', required=True, type=MetastoreIdClickType(),
-              help='Unique identifier of the metastore parent of the DAC(s).')
-@debug_option
-@profile_option
-@eat_exceptions
-@provide_api_client
-def list_dacs_cli(api_client, metastore_id):
-    """
-    List data access configurations.
-
-    Calls the 'listDataAccessConfigurations' RPC endpoint of the Unity Catalog service.
-    Returns array of DataAccessConfigurations.
-
-    """
-    dacs_json = UnityCatalogApi(api_client).list_dacs(metastore_id)
-    click.echo(mc_pretty_format(dacs_json))
-
-
-@click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Get data access configuration.')
-@click.option('--metastore-id', required=True, type=MetastoreIdClickType(),
-              help='Unique identifier of the metastore parent of the DAC.')
-@click.option('--dac-id', required=True, type=DacIdClickType(),
-              help='Data access configuration ID.')
-@debug_option
-@profile_option
-@eat_exceptions
-@provide_api_client
-def get_dac_cli(api_client, metastore_id, dac_id):
-    """
-    Get data access configuration details.
-
-    Calls the 'getDataAccessConfiguration' RPC endpoint of the Unity Catalog service.
-    Returns details of the DAC specified by its id (TODO: lookup by DAC name?).
-
-    """
-    dac_json = UnityCatalogApi(api_client).get_dac(metastore_id, dac_id)
-    click.echo(mc_pretty_format(dac_json))
-
-
-@click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Delete data access configuration.')
-@click.option('--metastore-id', required=True, type=MetastoreIdClickType(),
-              help='Unique identifier of the metastore parent of the DAC.')
-@click.option('--dac-id', required=True, type=DacIdClickType(),
-              help='Data access configuration ID.')
-@debug_option
-@profile_option
-@eat_exceptions
-@provide_api_client
-def delete_dac_cli(api_client, metastore_id, dac_id):
-    """
-    Delete data access configuration details.
-
-    Calls the 'deleteDataAccessConfiguration' RPC endpoint of the Unity Catalog service.
-
-    """
-    UnityCatalogApi(api_client).delete_dac(metastore_id, dac_id)
-
-
 @click.group()
 def storage_credentials_group():  # pragma: no cover
     pass
@@ -262,12 +168,6 @@ def register_cred_commands(cmd_group):
     cmd_group.add_command(hide(get_credential_cli), name='get-storage-credential')
     cmd_group.add_command(hide(update_credential_cli), name='update-storage-credential')
     cmd_group.add_command(hide(delete_credential_cli), name='delete-storage-credential')
-
-    # DAC cmds: [TO BE DEPRECATED ONCE STORAGE CREDENTIALS ARE FULLY SUPPORTED]
-    cmd_group.add_command(hide(create_dac_cli), name='create-dac')
-    cmd_group.add_command(hide(list_dacs_cli), name='list-dacs')
-    cmd_group.add_command(hide(get_dac_cli), name='get-dac')
-    cmd_group.add_command(hide(delete_dac_cli), name='delete-dac')
 
     # Register command group.
     storage_credentials_group.add_command(create_credential_cli, name='create')
