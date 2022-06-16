@@ -53,3 +53,13 @@ def hide(cmd):
     cmd_copy = copy.copy(cmd)
     cmd_copy.hidden = True
     return cmd_copy
+
+
+def json_file_help(method, path):
+    path = "/api/2.0/unity-catalog" + path
+    return "File containing JSON request to {} to {}.".format(method, path)
+
+
+def json_string_help(method, path):
+    path = "/api/2.0/unity-catalog" + path
+    return "JSON string to {} to {}.".format(method, path)

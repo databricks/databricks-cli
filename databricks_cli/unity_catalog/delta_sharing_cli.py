@@ -26,7 +26,8 @@ import click
 from databricks_cli.click_types import JsonClickType
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.unity_catalog.api import UnityCatalogApi
-from databricks_cli.unity_catalog.utils import mc_pretty_format, hide
+from databricks_cli.unity_catalog.utils import hide, json_file_help, json_string_help, \
+    mc_pretty_format
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
 
 
@@ -117,9 +118,9 @@ def list_share_permissions_cli(api_client, name):
 @click.option('--name', required=True,
               help='Name of the share whose permissions are updated.')
 @click.option('--json-file', default=None, type=click.Path(),
-              help='File containing JSON request to POST.')
+              help=json_file_help(method='POST', path='/shares/{name}/permissions'))
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/unity-catalog/shares/{name}/permissions'))
+              help=json_string_help(method='POST', path='/shares/{name}/permissions'))
 @debug_option
 @profile_option
 @eat_exceptions
@@ -150,9 +151,9 @@ def shared_data_object(name):
 @click.option('--remove-table', default=None, multiple=True,
               help='Full name of table to remove from share')
 @click.option('--json-file', default=None, type=click.Path(),
-              help='File containing JSON request to PATCH.')
+              help=json_file_help(method='PATCH', path='/shares/{name}'))
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/shares'))
+              help=json_string_help(method='PATCH', path='/shares/{name}'))
 @debug_option
 @profile_option
 @eat_exceptions
@@ -272,9 +273,9 @@ def get_recipient_cli(api_client, name):
 @click.option('--name', required=True,
               help='Name of the recipient who needs to be updated.')
 @click.option('--json-file', default=None, type=click.Path(),
-              help='File containing JSON request to PATCH.')
+              help=json_file_help(method='PATCH', path='/recipients/{name}'))
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/unity-catalog/recipients/{name}'))
+              help=json_string_help(method='PATCH', path='/recipients/{name}'))
 @debug_option
 @profile_option
 @eat_exceptions

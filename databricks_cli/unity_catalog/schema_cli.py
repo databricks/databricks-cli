@@ -26,7 +26,8 @@ import click
 from databricks_cli.click_types import JsonClickType
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.unity_catalog.api import UnityCatalogApi
-from databricks_cli.unity_catalog.utils import mc_pretty_format, hide
+from databricks_cli.unity_catalog.utils import hide, json_file_help, json_string_help, \
+    mc_pretty_format
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
 
 
@@ -100,9 +101,9 @@ def get_schema_cli(api_client, full_name):
 @click.option('--full-name', required=True,
               help='Full name (<catalog>.<schema>) of the schema to update.')
 @click.option('--json-file', default=None, type=click.Path(),
-              help='File containing JSON request to PATCH.')
+              help=json_file_help(method='PATCH', path='/schemas/{name}'))
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/schemas'))
+              help=json_string_help(method='PATCH', path='/schemas/{name}'))
 @debug_option
 @profile_option
 @eat_exceptions

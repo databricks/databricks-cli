@@ -26,7 +26,8 @@ import click
 from databricks_cli.click_types import JsonClickType, OneOfOption
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.unity_catalog.api import UnityCatalogApi
-from databricks_cli.unity_catalog.utils import mc_pretty_format, hide
+from databricks_cli.unity_catalog.utils import hide, json_file_help, json_string_help, \
+    mc_pretty_format
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
 
 
@@ -104,9 +105,9 @@ def get_permissions_cli(api_client, catalog, schema, table, storage_credential,
               one_of=PERMISSIONS_OBJ_TYPES,
               help='Name of the external location of interest')
 @click.option('--json-file', default=None, type=click.Path(),
-              help='File containing JSON of permissions change to PATCH.')
+              help=json_file_help(method='PATCH', path='/permissions/{securable}/{id}'))
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/unity-catalog/permissions'))
+              help=json_string_help(method='PATCH', path='/permissions/{securable}/{id}'))
 @debug_option
 @profile_option
 @eat_exceptions

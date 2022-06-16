@@ -26,7 +26,8 @@ import click
 from databricks_cli.click_types import JsonClickType
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.unity_catalog.api import UnityCatalogApi
-from databricks_cli.unity_catalog.utils import mc_pretty_format, hide
+from databricks_cli.unity_catalog.utils import hide, json_file_help, json_string_help, \
+    mc_pretty_format
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
 
 
@@ -38,9 +39,9 @@ from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
 @click.option('--skip-validation', '-s', 'skip_val', is_flag=True, default=False,
               help='Skip the validation of new credential info before creation')
 @click.option('--json-file', default=None, type=click.Path(),
-              help='File containing JSON request to POST.')
+              help=json_file_help(method='POST', path='/storage-credentials'))
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/unity-catalog/storage-credentials'))
+              help=json_string_help(method='POST', path='/storage-credentials'))
 @debug_option
 @profile_option
 # UC's createStorageCredential returns a 401 when validation fails; that translates to
@@ -111,9 +112,9 @@ def get_credential_cli(api_client, name):
 @click.option('--skip-validation', '-s', 'skip_val', is_flag=True, default=False,
               help='Skip the validation of new credential info before update')
 @click.option('--json-file', default=None, type=click.Path(),
-              help='File containing JSON request to PATCH.')
+              help=json_file_help(method='PATCH', path='/storage-credentials/{name}'))
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/storage-credentials'))
+              help=json_string_help(method='PATCH', path='/storage-credentials/{name}'))
 @debug_option
 @profile_option
 # See comment for create-storage-credential

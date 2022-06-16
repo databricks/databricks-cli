@@ -26,7 +26,8 @@ import click
 from databricks_cli.click_types import JsonClickType
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.unity_catalog.api import UnityCatalogApi
-from databricks_cli.unity_catalog.utils import del_none, mc_pretty_format, hide
+from databricks_cli.unity_catalog.utils import del_none, hide, json_file_help, json_string_help, \
+    mc_pretty_format
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
 
 
@@ -41,9 +42,9 @@ from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
 @click.option('--skip-validation', '-s', 'skip_val', is_flag=True, default=False,
               help='Skip the validation of location\'s storage credential before creation')
 @click.option('--json-file', default=None, type=click.Path(),
-              help='File containing JSON request to POST.')
+              help=json_file_help(method='POST', path='/external-locations'))
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/unity-catalog/external-locations'))
+              help=json_string_help(method='POST', path='/external-locations'))
 @debug_option
 @profile_option
 # UC's createExternalLocation returns a 401 when the validation of the external location's
@@ -124,9 +125,9 @@ def get_location_cli(api_client, name):
 @click.option('--skip-validation', '-s', 'skip_val', is_flag=True, default=False,
               help='Skip the validation of location\'s storage credential before creation')
 @click.option('--json-file', default=None, type=click.Path(),
-              help='File containing JSON request to PATCH.')
+              help=json_file_help(method='PATCH', path='/external-locations/{name}'))
 @click.option('--json', default=None, type=JsonClickType(),
-              help=JsonClickType.help('/api/2.0/external-locations'))
+              help=json_string_help(method='PATCH', path='/external-locations/{name}'))
 @debug_option
 @profile_option
 # See comment for create_location_cli
