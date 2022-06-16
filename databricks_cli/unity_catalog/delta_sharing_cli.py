@@ -147,9 +147,11 @@ def shared_data_object(name):
 @click.option('--name', required=True,
               help='Name of the share to update.')
 @click.option('--add-table', default=None, multiple=True,
-              help='Full name of table to add to share')
+              metavar='NAME',
+              help='Full name of table to add to share (can be specified multiple times).')
 @click.option('--remove-table', default=None, multiple=True,
-              help='Full name of table to remove from share')
+              metavar='NAME',
+              help='Full name of table to remove from share (can be specified multiple times).')
 @click.option('--json-file', default=None, type=click.Path(),
               help=json_file_help(method='PATCH', path='/shares/{name}'))
 @click.option('--json', default=None, type=JsonClickType(),
