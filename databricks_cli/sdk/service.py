@@ -37,7 +37,7 @@ class JobsService(object):
                    email_notifications=None, timeout_seconds=None, max_retries=None,
                    min_retry_interval_millis=None, retry_on_timeout=None, schedule=None,
                    notebook_task=None, spark_jar_task=None, spark_python_task=None,
-                   spark_submit_task=None, max_concurrent_runs=None, tasks=None, headers=None, version=None):
+                   spark_submit_task=None, max_concurrent_runs=None, tasks=None, headers=None, version=None, git_source=None):
         _data = {}
         if name is not None:
             _data['name'] = name
@@ -85,6 +85,8 @@ class JobsService(object):
             _data['max_concurrent_runs'] = max_concurrent_runs
         if tasks is not None:
             _data['tasks'] = tasks
+        if git_source is not None:
+            _data['git_source'] = git_source
         return self.client.perform_query('POST', '/jobs/create', data=_data, headers=headers, version=version)
 
     def submit_run(self, run_name=None, existing_cluster_id=None, new_cluster=None, libraries=None,
