@@ -48,10 +48,7 @@ def create_table_cli(api_client, json_file, json):
     WARNING: Creating table metadata via the UC API may create a table
     that is unusable in DBR. Instead, use SQL commands (CREATE TABLE) in DBR.
 
-    Calls the 'createTable' RPC endpoint of the Unity Catalog service.
     The public specification for the JSON request is in development.
-    Returns the properties of the newly-created table.
-
     """
     json_cli_base(json_file, json,
                   lambda json: UnityCatalogApi(api_client).create_table(json),
@@ -73,10 +70,6 @@ def create_table_cli(api_client, json_file, json):
 def list_tables_cli(api_client, catalog_name, schema_name, name_pattern):
     """
     List tables.
-
-    Calls the 'listTables' RPC endpoint of the Unity Catalog service.
-    Returns array of TableInfos.
-
     """
     tables_json = UnityCatalogApi(api_client).list_tables(catalog_name, schema_name, name_pattern)
     click.echo(mc_pretty_format(tables_json))
@@ -93,10 +86,6 @@ def list_tables_cli(api_client, catalog_name, schema_name, name_pattern):
 def list_table_summaries_cli(api_client, catalog_name):
     """
     List table summaries (in bulk).
-
-    Calls the 'listTableSummaries' RPC endpoint of the Unity Catalog service.
-    Returns array of TableSummarys.
-
     """
     tables_json = UnityCatalogApi(api_client).list_table_summaries(catalog_name)
     click.echo(mc_pretty_format(tables_json))
@@ -113,10 +102,6 @@ def list_table_summaries_cli(api_client, catalog_name):
 def get_table_cli(api_client, full_name):
     """
     Get a table.
-
-    Calls the 'getTable' RPC endpoint of the Unity Catalog service.
-    Returns nothing.
-
     """
     table_json = UnityCatalogApi(api_client).get_table(full_name)
     click.echo(mc_pretty_format(table_json))
@@ -141,10 +126,7 @@ def update_table_cli(api_client, full_name, json_file, json):
     WARNING: Altering table metadata via the UC API may cause the table
     to be unusable in DBR. Instead, use SQL commands (ALTER TABLE) in DBR.
 
-    Calls the 'updateTable' RPC endpoint of the Unity Catalog service.
     The public specification for the JSON request is in development.
-    Returns nothing.
-
     """
     json_cli_base(json_file, json,
                   lambda json: UnityCatalogApi(api_client).update_table(full_name, json),
@@ -162,10 +144,6 @@ def update_table_cli(api_client, full_name, json_file, json):
 def delete_table_cli(api_client, full_name):
     """
     Delete a table.
-
-    Calls the 'deleteTable' RPC endpoint of the Unity Catalog service.
-    Returns nothing.
-
     """
     UnityCatalogApi(api_client).delete_table(full_name)
 

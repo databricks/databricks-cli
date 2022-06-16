@@ -44,10 +44,6 @@ from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
 def create_share_cli(api_client, name):
     """
     Create a new share.
-
-    Prints the newly-created share.
-    Returns nothing.
-
     """
     share_json = UnityCatalogApi(api_client).create_share(name)
     click.echo(mc_pretty_format(share_json))
@@ -62,10 +58,6 @@ def create_share_cli(api_client, name):
 def list_shares_cli(api_client):
     """
     List shares.
-
-    Prints shares.
-    Returns nothing.
-
     """
     shares_json = UnityCatalogApi(api_client).list_shares()
     click.echo(mc_pretty_format(shares_json))
@@ -84,10 +76,6 @@ def list_shares_cli(api_client):
 def get_share_cli(api_client, name, include_shared_data):
     """
     Get a share.
-
-    Prints the corresponding share.
-    Returns nothing.
-
     """
     share_json = UnityCatalogApi(api_client).get_share(name, include_shared_data)
     click.echo(mc_pretty_format(share_json))
@@ -104,10 +92,6 @@ def get_share_cli(api_client, name, include_shared_data):
 def list_share_permissions_cli(api_client, name):
     """
     List permissions on a share.
-
-    Prints share permissions on a share.
-    Returns nothing.
-
     """
     perms_json = UnityCatalogApi(api_client).list_share_permissions(name)
     click.echo(mc_pretty_format(perms_json))
@@ -129,10 +113,7 @@ def update_share_permissions_cli(api_client, name, json_file, json):
     """
     Update permissions on a share.
 
-    Prints the updated share permissions.
     The public specification for the JSON request is in development.
-    Returns nothing.
-
     """
     json_cli_base(json_file, json,
                   lambda json: UnityCatalogApi(api_client).update_share_permissions(name, json))
@@ -164,10 +145,7 @@ def update_share_cli(api_client, name, add_table, remove_table, json_file, json)
     """
     Update a share.
 
-    Prints the updated share.
     The public specification for the JSON request is in development.
-    Returns nothing.
-
     """
     if len(add_table) > 0 or len(remove_table) > 0:
         updates = []
@@ -194,10 +172,6 @@ def update_share_cli(api_client, name, add_table, remove_table, json_file, json)
 def delete_share_cli(api_client, name):
     """
     Delete a share.
-
-    Prints nothing.
-    Returns nothing.
-
     """
     UnityCatalogApi(api_client).delete_share(name)
 
@@ -222,10 +196,6 @@ def delete_share_cli(api_client, name):
 def create_recipient_cli(api_client, name, comment, sharing_code, allowed_ip_address):
     """
     Create a new recipient.
-
-    Prints the newly-created recipient.
-    Returns nothing.
-
     """
     recipient_json = UnityCatalogApi(api_client).create_recipient(
         name, comment, sharing_code, allowed_ip_address)
@@ -241,10 +211,6 @@ def create_recipient_cli(api_client, name, comment, sharing_code, allowed_ip_add
 def list_recipients_cli(api_client):
     """
     List recipients.
-
-    Prints recipients.
-    Returns nothing.
-
     """
     recipients_json = UnityCatalogApi(api_client).list_recipients()
     click.echo(mc_pretty_format(recipients_json))
@@ -261,10 +227,6 @@ def list_recipients_cli(api_client):
 def get_recipient_cli(api_client, name):
     """
     Get a recipient.
-
-    Prints the corresponding recipient.
-    Returns nothing.
-
     """
     recipient_json = UnityCatalogApi(api_client).get_recipient(name)
     click.echo(mc_pretty_format(recipient_json))
@@ -286,10 +248,7 @@ def update_recipient_cli(api_client, name, json_file, json):
     """
     Update a recipient.
 
-    Prints the updated recipient.
     The public specification for the JSON request is in development.
-    Returns nothing.
-
     """
     json_cli_base(json_file, json,
                   lambda json: UnityCatalogApi(api_client).update_recipient(name, json))
@@ -308,10 +267,6 @@ def update_recipient_cli(api_client, name, json_file, json):
 def rotate_recipient_token_cli(api_client, name, existing_token_expire_in_seconds):
     """
     Rotate recipient token.
-
-    Prints the recipient with rotated tokens.
-    Returns nothing.
-
     """
     recipient_json = \
         UnityCatalogApi(api_client).rotate_recipient_token(name, existing_token_expire_in_seconds)
@@ -329,10 +284,6 @@ def rotate_recipient_token_cli(api_client, name, existing_token_expire_in_second
 def list_recipient_permissions_cli(api_client, name):
     """
     List a recipient's share permissions.
-
-    Prints share permissions of a recipient.
-    Returns nothing.
-
     """
     recipient_json = UnityCatalogApi(api_client).get_recipient_share_permissions(name)
     click.echo(mc_pretty_format(recipient_json))
@@ -349,10 +300,6 @@ def list_recipient_permissions_cli(api_client, name):
 def delete_recipient_cli(api_client, name):
     """
     Delete a recipient.
-
-    Prints nothing.
-    Returns nothing.
-
     """
     UnityCatalogApi(api_client).delete_recipient(name)
 
@@ -377,10 +324,7 @@ def create_provider_cli(api_client, name, comment, recipient_profile_json_file,
     """
     Create a provider.
 
-    Prints the newly-created provider.
     The public specification for the JSON request is in development.
-    Returns nothing.
-
     """
     if recipient_profile_json is None and recipient_profile_json_file is None:
         created_provider = UnityCatalogApi(api_client).create_provider(
@@ -401,10 +345,6 @@ def create_provider_cli(api_client, name, comment, recipient_profile_json_file,
 def list_providers_cli(api_client):
     """
     List providers.
-
-    Prints providers.
-    Returns nothing.
-
     """
     proviers_json = UnityCatalogApi(api_client).list_providers()
     click.echo(mc_pretty_format(proviers_json))
@@ -421,10 +361,6 @@ def list_providers_cli(api_client):
 def get_provider_cli(api_client, name):
     """
     Get a provider.
-
-    Prints the corresponding provider.
-    Returns nothing.
-
     """
     provier_json = UnityCatalogApi(api_client).get_provider(name)
     click.echo(mc_pretty_format(provier_json))
@@ -449,10 +385,7 @@ def update_provider_cli(api_client, name, new_name, comment, recipient_profile_j
     """
     Update a provider.
 
-    Prints the updated provider info.
     The public specification for the JSON request is in development.
-    Returns nothing.
-
     """
     if recipient_profile_json is None and recipient_profile_json_file is None:
         updated_provider = UnityCatalogApi(api_client).update_provider(name, new_name, comment)
@@ -476,10 +409,6 @@ def update_provider_cli(api_client, name, new_name, comment, recipient_profile_j
 def list_provider_shares_cli(api_client, name):
     """
     List a provider's shares.
-
-    Prints shares of a provider.
-    Returns nothing.
-
     """
     shares_json = UnityCatalogApi(api_client).list_provider_shares(name)
     click.echo(mc_pretty_format(shares_json))
@@ -496,10 +425,6 @@ def list_provider_shares_cli(api_client, name):
 def delete_provider_cli(api_client, name):
     """
     Delete a provider.
-
-    Prints nothing.
-    Returns nothing.
-
     """
     UnityCatalogApi(api_client).delete_provider(name)
 

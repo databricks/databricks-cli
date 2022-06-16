@@ -75,10 +75,6 @@ def get_permissions_cli(api_client, catalog, schema, table, storage_credential,
                         external_location):
     """
     Get permissions on a securable.
-
-    Calls the 'getPermissions' RPC endpoint of the Unity Catalog service.
-    Returns PermissionsList for the requested securable.
-
     """
     sec_type, sec_name = _get_perm_securable_name_and_type(catalog, schema, table,
                                                            storage_credential, external_location)
@@ -117,10 +113,7 @@ def update_permissions_cli(api_client, catalog, schema, table, storage_credentia
     """
     Update permissions on a securable.
 
-    Calls the 'updatePermissions' RPC endpoint of the Unity Catalog service.
     The public specification for the JSON request is in development.
-    Returns updated PermissionsList for the requested securable.
-
     """
     sec_type, sec_name = _get_perm_securable_name_and_type(catalog, schema, table,
                                                            storage_credential, external_location)

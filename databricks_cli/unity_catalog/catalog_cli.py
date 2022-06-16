@@ -47,10 +47,6 @@ from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
 def create_catalog_cli(api_client, name, comment, provider, share):
     """
     Create a new catalog.
-
-    Calls the 'createCatalog' RPC endpoint of the Unity Catalog service.
-    Returns the CatalogInfo for the newly-created catalog.
-
     """
     catalog_json = UnityCatalogApi(api_client).create_catalog(name, comment,
                                                               provider, share)
@@ -66,10 +62,6 @@ def create_catalog_cli(api_client, name, comment, provider, share):
 def list_catalogs_cli(api_client):
     """
     List catalogs.
-
-    Calls the 'listCatalogs' RPC endpoint of the Unity Catalog service.
-    Returns array of CatalogInfos.
-
     """
     catalogs_json = UnityCatalogApi(api_client).list_catalogs()
     click.echo(mc_pretty_format(catalogs_json))
@@ -86,10 +78,6 @@ def list_catalogs_cli(api_client):
 def get_catalog_cli(api_client, name):
     """
     Get a catalog.
-
-    Calls the 'getCatalog' RPC endpoint of the Unity Catalog service.
-    Returns nothing.
-
     """
     catalog_json = UnityCatalogApi(api_client).get_catalog(name)
     click.echo(mc_pretty_format(catalog_json))
@@ -111,10 +99,7 @@ def update_catalog_cli(api_client, name, json_file, json):
     """
     Update a catalog.
 
-    Calls the 'updateCatalog' RPC endpoint of the Unity Catalog service.
     The public specification for the JSON request is in development.
-    Returns nothing.
-
     """
     json_cli_base(json_file, json,
                   lambda json: UnityCatalogApi(api_client).update_catalog(name, json))
@@ -133,10 +118,6 @@ def update_catalog_cli(api_client, name, json_file, json):
 def delete_catalog_cli(api_client, name, purge):
     """
     Delete a catalog.
-
-    Calls the 'deleteCatalog' RPC endpoint of the Unity Catalog service.
-    Returns nothing.
-
     """
     if purge:
         tables_response = UnityCatalogApi(api_client).list_table_summaries(name)

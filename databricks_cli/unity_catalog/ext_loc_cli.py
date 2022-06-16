@@ -57,10 +57,7 @@ def create_location_cli(api_client, name, url, storage_credential_name, skip_val
     """
     Create new external location.
 
-    Calls the 'createExternalLocation' RPC endpoint of the Unity Catalog service.
     The public specification for the JSON request is in development.
-    Returns the properties of the newly-created Storage Credential.
-
     """
     if (name is not None) and (url is not None) and (storage_credential_name is not None):
         if (json_file is not None) or (json is not None):
@@ -87,10 +84,6 @@ def create_location_cli(api_client, name, url, storage_credential_name, skip_val
 def list_locations_cli(api_client, ):
     """
     List external locations.
-
-    Calls the 'listExternalLocations' RPC endpoint of the Unity Catalog service.
-    Returns array of ExternalLocations.
-
     """
     locs_json = UnityCatalogApi(api_client).list_external_locations()
     click.echo(mc_pretty_format(locs_json))
@@ -107,10 +100,6 @@ def list_locations_cli(api_client, ):
 def get_location_cli(api_client, name):
     """
     Get an external location.
-
-    Calls the 'getExternalLocation' RPC endpoint of the Unity Catalog service.
-    Returns an ExternalLocation object.
-
     """
     loc_json = UnityCatalogApi(api_client).get_external_location(name)
     click.echo(mc_pretty_format(loc_json))
@@ -137,10 +126,7 @@ def update_location_cli(api_client, name, force, skip_val, json_file, json):
     """
     Update an external location.
 
-    Calls the 'updateExternalLocation' RPC endpoint of the Unity Catalog service.
     The public specification for the JSON request is in development.
-    Returns nothing.
-
     """
     json_cli_base(json_file, json,
                   lambda json: UnityCatalogApi(api_client).update_external_location(name, json,
@@ -162,10 +148,6 @@ def update_location_cli(api_client, name, force, skip_val, json_file, json):
 def delete_location_cli(api_client, name, force):
     """
     Delete an external location.
-
-    Calls the 'deleteExternalLocation' RPC endpoint of the Unity Catalog service.
-    Returns nothing.
-
     """
     UnityCatalogApi(api_client).delete_external_location(name, force)
 
@@ -195,7 +177,6 @@ def validate_location_cli(api_client, name, url, cred_name, cred_aws_iam_role, c
     """
     Validate an external location/credential combination.
 
-    Calls the 'validateExternalLocation' RPC endpoint of the Unity Catalog service.
     This call will attempt to read/list/write/delete with the given credentials and
     external location.
 

@@ -45,12 +45,7 @@ from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
 @provide_api_client
 def create_metastore_cli(api_client, name, storage_root):
     """
-    Create new metastore specified by the JSON input.
-
-    Calls the 'createMetastore' RPC endpoint of the Unity Catalog service.
-    The public specification for the JSON request is in development.
-    Returns the properties of the newly-created metastore.
-
+    Create new metastore.
     """
     metastore_json = UnityCatalogApi(api_client).create_metastore(name, storage_root)
     click.echo(mc_pretty_format(metastore_json))
@@ -65,10 +60,6 @@ def create_metastore_cli(api_client, name, storage_root):
 def list_metastores_cli(api_client):
     """
     List metastores.
-
-    Calls the 'listMetastores' RPC endpoint of the Unity Catalog service.
-    Returns array of MetastoreInfos.
-
     """
     metastores_json = UnityCatalogApi(api_client).list_metastores()
     click.echo(mc_pretty_format(metastores_json))
@@ -85,10 +76,6 @@ def list_metastores_cli(api_client):
 def get_metastore_cli(api_client, metastore_id):
     """
     Get a metastore.
-
-    Calls the 'getMetastore' RPC endpoint of the Unity Catalog service.
-    Returns nothing.
-
     """
     metastore_json = UnityCatalogApi(api_client).get_metastore(metastore_id)
     click.echo(mc_pretty_format(metastore_json))
@@ -110,10 +97,7 @@ def update_metastore_cli(api_client, metastore_id, json_file, json):
     """
     Update a metastore.
 
-    Calls the 'updateMetastore' RPC endpoint of the Unity Catalog service.
     The public specification for the JSON request is in development.
-    Returns nothing.
-
     """
     json_cli_base(json_file, json,
                   lambda json: UnityCatalogApi(api_client).update_metastore(metastore_id, json))
@@ -131,10 +115,6 @@ def update_metastore_cli(api_client, metastore_id, json_file, json):
 def delete_metastore_cli(api_client, metastore_id, force):
     """
     Delete a metastore.
-
-    Calls the 'deleteMetastore' RPC endpoint of the Unity Catalog service.
-    Returns nothing.
-
     """
     UnityCatalogApi(api_client).delete_metastore(metastore_id, force)
 
@@ -148,10 +128,6 @@ def delete_metastore_cli(api_client, metastore_id, force):
 def metastore_summary_cli(api_client):
     """
     Get metastore summary.
-
-    Calls the 'getMetastoreSummary' RPC endpoint of the Unity Catalog service.
-    Returns nothing.
-
     """
     summary_json = UnityCatalogApi(api_client).get_metastore_summary()
     click.echo(mc_pretty_format(summary_json))
@@ -175,11 +151,7 @@ def assign_metastore_cli(api_client, workspace_id, metastore_id, default_catalog
     """
     Assign a metastore to a specified workspace.
 
-    Calls the 'createMetastoreAssignment' RPC endpoint of the Unity Catalog service.
-    If that fails due to the workspace already having a Metastore assigned, it calls
-    the 'updateMetastoreAssignment' endpoint.
-    Returns nothing.
-
+    If the workspace already has a metastore assigned, it is updated.
     """
     resp = UnityCatalogApi(api_client).create_metastore_assignment(workspace_id, metastore_id,
                                                                    default_catalog_name)
@@ -200,10 +172,6 @@ def assign_metastore_cli(api_client, workspace_id, metastore_id, default_catalog
 def unassign_metastore_cli(api_client, workspace_id, metastore_id):
     """
     Unassign a metastore from a workspace.
-
-    Calls the 'deleteMetastoreAssignment' RPC endpoint of the Unity Catalog service.
-    Returns nothing.
-
     """
     resp = UnityCatalogApi(api_client).delete_metastore_assignment(workspace_id, metastore_id)
     # resp will just be an empty object ('{}') but it's good to print *something*

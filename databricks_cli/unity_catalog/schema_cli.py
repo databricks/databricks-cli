@@ -45,10 +45,6 @@ from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
 def create_schema_cli(api_client, catalog_name, name, comment):
     """
     Create a new schema in the specified catalog.
-
-    Calls the 'createSchema' RPC endpoint of the Unity Catalog service.
-    Returns the SchemaInfo for the newly-created schema.
-
     """
     schema_json = UnityCatalogApi(api_client).create_schema(catalog_name, name, comment)
     click.echo(mc_pretty_format(schema_json))
@@ -67,10 +63,6 @@ def create_schema_cli(api_client, catalog_name, name, comment):
 def list_schemas_cli(api_client, catalog_name, name_pattern):
     """
     List schemas.
-
-    Calls the 'listSchemas' RPC endpoint of the Unity Catalog service.
-    Returns array of SchemaInfos.
-
     """
     schemas_json = UnityCatalogApi(api_client).list_schemas(catalog_name, name_pattern)
     click.echo(mc_pretty_format(schemas_json))
@@ -87,10 +79,6 @@ def list_schemas_cli(api_client, catalog_name, name_pattern):
 def get_schema_cli(api_client, full_name):
     """
     Get a schema.
-
-    Calls the 'getSchema' RPC endpoint of the Unity Catalog service.
-    Returns nothing.
-
     """
     schema_json = UnityCatalogApi(api_client).get_schema(full_name)
     click.echo(mc_pretty_format(schema_json))
@@ -112,10 +100,7 @@ def update_schema_cli(api_client, full_name, json_file, json):
     """
     Update a schema.
 
-    Calls the 'updateSchema' RPC endpoint of the Unity Catalog service.
     The public specification for the JSON request is in development.
-    Returns nothing.
-
     """
     json_cli_base(json_file, json,
                   lambda json: UnityCatalogApi(api_client).update_schema(full_name, json))
@@ -134,10 +119,6 @@ def update_schema_cli(api_client, full_name, json_file, json):
 def delete_schema_cli(api_client, full_name, purge):
     """
     Delete a schema.
-
-    Calls the 'deleteSchema' RPC endpoint of the Unity Catalog service.
-    Returns nothing.
-
     """
     if purge:
         (catalog_name, schema_name) = full_name.split('.')

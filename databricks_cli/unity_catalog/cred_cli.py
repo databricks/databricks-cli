@@ -54,10 +54,7 @@ def create_credential_cli(api_client, skip_val, json_file, json):
     """
     Create new storage credential.
 
-    Calls the 'createStorageCredential' RPC endpoint of the Unity Catalog service.
     The public specification for the JSON request is in development.
-    Returns the properties of the newly-created Storage Credential.
-
     """
     json_cli_base(json_file, json,
                   lambda json: UnityCatalogApi(api_client).create_storage_credential(json,
@@ -76,10 +73,6 @@ def create_credential_cli(api_client, skip_val, json_file, json):
 def list_credentials_cli(api_client, name_pattern):
     """
     List storage credentials.
-
-    Calls the 'listStorageCredentials' RPC endpoint of the Unity Catalog service.
-    Returns array of StorageCredentials.
-
     """
     creds_json = UnityCatalogApi(api_client).list_storage_credentials(name_pattern)
     click.echo(mc_pretty_format(creds_json))
@@ -96,10 +89,6 @@ def list_credentials_cli(api_client, name_pattern):
 def get_credential_cli(api_client, name):
     """
     Get a storage credential.
-
-    Calls the 'getStorageCredential' RPC endpoint of the Unity Catalog service.
-    Returns an StorageCredential object.
-
     """
     cred_json = UnityCatalogApi(api_client).get_storage_credential(name)
     click.echo(mc_pretty_format(cred_json))
@@ -124,10 +113,7 @@ def update_credential_cli(api_client, name, skip_val, json_file, json):
     """
     Update a storage credential.
 
-    Calls the 'updateStorageCredential' RPC endpoint of the Unity Catalog service.
     The public specification for the JSON request is in development.
-    Returns nothing.
-
     """
     json_cli_base(json_file, json,
                   lambda json: UnityCatalogApi(api_client).update_storage_credential(name,
@@ -149,10 +135,6 @@ def update_credential_cli(api_client, name, skip_val, json_file, json):
 def delete_credential_cli(api_client, name, force):
     """
     Delete a storage credential.
-
-    Calls the 'deleteStorageCredential' RPC endpoint of the Unity Catalog service.
-    Returns nothing.
-
     """
     UnityCatalogApi(api_client).delete_storage_credential(name, force)
 
