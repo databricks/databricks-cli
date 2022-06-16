@@ -72,17 +72,17 @@ def submit_cli(api_client, json_file, json, wait, version):
         while True:
             run = RunsApi(api_client).get_run(run_id, version=version)
             run_state = run['state']
-            if run_state['life_cycle_state'] in completed_states:
+            life_cycle_state = run_state['life_cycle_state']
+            if life_cycle_state in completed_states:
                 if run_state['result_state'] == 'SUCCESS':
                     sys.exit(0)
                 else:
                     error_and_quit('Run failed with state ' + run_state['result_state'] +
                                    ' and state message ' + run_state['state_message'])
-            if prev_life_cycle_state != run_state['life_cycle_state']:
-                prev_life_cycle_state = run_state['life_cycle_state']
-                click.echo('Waiting on run to complete. Current state: ' +
-                           run_state['life_cycle_state'] + '. URL: ' +
-                           run['run_page_url'], err=True)
+            if prev_life_cycle_state != life_cycle_state:
+                click.echo('Waiting on run to complete. Current state: ' + life_cycle_state +
+                           '. URL: ' + run['run_page_url'], err=True)
+                prev_life_cycle_state = life_cycle_state
             time.sleep(backoff_with_jitter(attempt))
             attempt += 1
 
