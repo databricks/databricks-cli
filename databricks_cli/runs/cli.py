@@ -44,7 +44,7 @@ from databricks_cli.version import print_version_callback, version as cli_versio
 @click.option('--json', default=None, type=JsonClickType(),
               help=JsonClickType.help('/api/2.*/jobs/runs/submit'))
 @click.option('--wait', is_flag=True, default=False,
-              help='If specified, wait for the submitted run to complete.')
+              help='If specified, waits for the submitted run to complete.')
 @api_version_option
 @debug_option
 @profile_option
