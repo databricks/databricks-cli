@@ -35,7 +35,7 @@ def recurse(obj, dry_run, prefix):
     if not dry_run:
         try:
             os.makedirs('/'.join(prefix))
-        except FileExistsError:
+        except OSError:
             pass
     for name, command in obj.commands.items():
         if command.hidden:
@@ -46,11 +46,11 @@ def recurse(obj, dry_run, prefix):
             recurse(command, dry_run, prefix + [name])
         if isinstance(command, click.Command):
             path = path + '.txt'
-            print('Write ' + path)
+            click.echo('Write ' + path)
             if not dry_run:
-                with open(path, 'w', encoding='utf-8') as file:
+                with open(path, 'w', encoding='utf-8') as f:
                     with click.Context(command) as ctx:
-                        file.write(command.get_help(ctx))
+                        f.write(command.get_help(ctx))
 
 
 @click.command()
