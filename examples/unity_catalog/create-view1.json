@@ -1,7 +1,0 @@
-{
-	"catalog_name": "default",
-	"schema_name": "default",
-	"name": "my_view",
-	"table_type": "VIEW",
-	"view_definition": "CREATE VIEW AS SELECT * FROM some_table"
-}
