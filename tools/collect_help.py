@@ -64,4 +64,5 @@ def main(dry_run, prefix):
 
 
 if __name__ == '__main__':
+    # pylint: disable=no-value-for-parameter
     main()
