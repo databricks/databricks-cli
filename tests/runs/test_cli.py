@@ -41,11 +41,18 @@ RUNS_GET_RETURN_SUCCESS = {
         "result_state": "SUCCESS",
     },
 }
+RUNS_GET_RETURN_PENDING = {
+    "state": {
+        "life_cycle_state": "PENDING",
+        "state_message": "Waiting for cluster",
+    },
+    "run_page_url": "https://www.google.com",
+}
 RUNS_GET_RETURN_RUNNING = {
     "state": {
         "life_cycle_state": "RUNNING",
     },
-    "run_page_url": "https://www.google.com"
+    "run_page_url": "https://www.google.com",
 }
 
 
@@ -67,44 +74,43 @@ def test_submit_cli_json(runs_api_mock):
             SUBMIT_JSON)
         assert echo_mock.call_args[0][0] == pretty_format(SUBMIT_RETURN)
 
+
 @provide_conf
 def test_submit_wait_success(runs_api_mock):
-    runs_api_mock.submit_run.return_value = SUBMIT_RETURN
-    runs_api_mock.get_run.return_value = RUNS_GET_RETURN_SUCCESS
-    runner = CliRunner()
-    result = runner.invoke(cli.submit_cli, ['--json', SUBMIT_JSON, '--wait'])
-    runs_api_mock.get_run.assert_called_once()
-    assert result.exit_code == 0
+    with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock, \
+         mock.patch('time.sleep') as sleep_mock:
+        runs_api_mock.submit_run.return_value = SUBMIT_RETURN
+        runs_api_mock.get_run.side_effect = [RUNS_GET_RETURN_PENDING, RUNS_GET_RETURN_PENDING, \
+                                             RUNS_GET_RETURN_RUNNING, RUNS_GET_RETURN_SUCCESS]
+        runner = CliRunner()
+        result = runner.invoke(cli.submit_cli, ['--json', SUBMIT_JSON, '--wait'])
+        assert runs_api_mock.get_run.call_count == 4
+        assert sleep_mock.call_count == 3
+        assert echo_mock.call_args[0][0] == 'Run is still active, with lifecycle state ' + \
+                                                    'RUNNING. URL: https://www.google.com'
+        assert result.exit_code == 0
+
 
 @pytest.mark.parametrize('bad_life_cycle_state', ['TERMINATED', 'SKIPPED', 'INTERNAL_ERROR'])
 @provide_conf
 def test_submit_wait_failure(runs_api_mock, bad_life_cycle_state):
-    with mock.patch('click.echo') as echo_mock:
+    with mock.patch('click.echo') as echo_mock, mock.patch('time.sleep') as sleep_mock:
         runs_api_mock.submit_run.return_value = SUBMIT_RETURN
-        runs_api_mock.get_run.return_value = {
+        runs_get_failed = {
             "state": {
                 "life_cycle_state": bad_life_cycle_state,
                 "result_state": "FAILED",
                 "state_message": "OH NO!",
             },
         }
+        runs_api_mock.get_run.side_effect = [RUNS_GET_RETURN_PENDING, RUNS_GET_RETURN_PENDING, \
+                                             RUNS_GET_RETURN_RUNNING, runs_get_failed]
         runner = CliRunner()
         result = runner.invoke(cli.submit_cli, ['--json', SUBMIT_JSON, '--wait'])
+        assert runs_api_mock.get_run.call_count == 4
+        assert sleep_mock.call_count == 3
         assert 'Run failed with state FAILED and state message OH NO!' in echo_mock.call_args[0][0]
         assert result.exit_code == 1
-
-@provide_conf
-def test_submit_wait_eventually_succeeds(runs_api_mock):
-    with mock.patch('databricks_cli.runs.cli.click.echo') as echo_mock, \
-         mock.patch('time.sleep') as sleep_mock:
-        runs_api_mock.submit_run.return_value = SUBMIT_RETURN
-        runs_api_mock.get_run.side_effect = [RUNS_GET_RETURN_RUNNING, RUNS_GET_RETURN_SUCCESS]
-        runner = CliRunner()
-        result = runner.invoke(cli.submit_cli, ['--json', SUBMIT_JSON, '--wait'])
-        assert echo_mock.call_args[0][0] == 'Run is still active, with lifecycle state ' + \
-                                                    'RUNNING. URL: https://www.google.com'
-        sleep_mock.assert_called_once()
-        assert result.exit_code == 0
 
 
 RUN_PAGE_URL = 'https://databricks.com/#job/1/run/1'
