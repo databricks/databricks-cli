@@ -31,7 +31,7 @@ from tabulate import tabulate
 from databricks_cli.click_types import OutputClickType, JsonClickType, RunIdClickType
 from databricks_cli.jobs.cli import check_version
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, truncate_string, \
-    error_and_quit
+    error_and_quit, backoff_with_jitter
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option, \
     api_version_option
 from databricks_cli.runs.api import RunsApi
@@ -66,6 +66,8 @@ def submit_cli(api_client, json_file, json, wait, version):
     if wait:
         run_id = submit_res['run_id']
         completed_states = set(['TERMINATED', 'SKIPPED', 'INTERNAL_ERROR'])
+        prev_life_cycle_state = ""
+        attempt = 0
         # Wait for run to complete
         while True:
             run = RunsApi(api_client).get_run(run_id, version=version)
@@ -76,9 +78,13 @@ def submit_cli(api_client, json_file, json, wait, version):
                 else:
                     error_and_quit('Run failed with state ' + run_state['result_state'] +
                                    ' and state message ' + run_state['state_message'])
-            click.echo('Run is still active, with lifecycle state ' +
-                       run_state['life_cycle_state'] + '. URL: ' + run['run_page_url'], err=True)
-            time.sleep(5)
+            if prev_life_cycle_state != run_state['life_cycle_state']:
+                prev_life_cycle_state = run_state['life_cycle_state']
+                click.echo('Waiting on run to complete. Current state: ' +
+                           run_state['life_cycle_state'] + '. URL: ' +
+                           run['run_page_url'], err=True)
+            time.sleep(backoff_with_jitter(attempt))
+            attempt += 1
 
 
 def _runs_to_table(runs_json):

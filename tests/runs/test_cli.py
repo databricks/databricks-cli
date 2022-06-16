@@ -86,8 +86,8 @@ def test_submit_wait_success(runs_api_mock):
         result = runner.invoke(cli.submit_cli, ['--json', SUBMIT_JSON, '--wait'])
         assert runs_api_mock.get_run.call_count == 4
         assert sleep_mock.call_count == 3
-        assert echo_mock.call_args[0][0] == 'Run is still active, with lifecycle state ' + \
-                                                    'RUNNING. URL: https://www.google.com'
+        assert echo_mock.call_args[0][0] == 'Waiting on run to complete. Current state: ' + \
+                                            'RUNNING. URL: https://www.google.com'
         assert result.exit_code == 0
 
 
