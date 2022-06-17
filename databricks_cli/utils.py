@@ -21,6 +21,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import math
+import random
 import sys
 import traceback
 from json import dumps as json_dumps, loads as json_loads
@@ -96,6 +98,20 @@ def error_and_quit(message):
         traceback.print_exc()
     click.echo(u'Error: {}'.format(message))
     sys.exit(1)
+
+
+INTERVAL_MAX = 30
+INTERVAL_BASE = 5
+MAX_EXPONENT = 10
+
+
+def backoff_with_jitter(attempt):
+    """
+    Creates a growing but randomized wait time based on the number of attempts already made.
+    """
+    exponent = min(attempt, MAX_EXPONENT)
+    sleep_time = min(INTERVAL_MAX, INTERVAL_BASE * 2 ** exponent)
+    return random.randrange(math.floor(sleep_time * 0.5), sleep_time)
 
 
 def pretty_format(json, encode_utf8=False):

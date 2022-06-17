@@ -21,13 +21,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
+import time
+from json import loads as json_loads
+
 import click
 from tabulate import tabulate
 
 from databricks_cli.click_types import OutputClickType, JsonClickType, RunIdClickType
 from databricks_cli.jobs.cli import check_version
-from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base, \
-    truncate_string
+from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, truncate_string, \
+    error_and_quit, backoff_with_jitter
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option, \
     api_version_option
 from databricks_cli.runs.api import RunsApi
@@ -39,21 +43,48 @@ from databricks_cli.version import print_version_callback, version as cli_versio
               help='File containing JSON request to POST to /api/2.*/jobs/runs/submit.')
 @click.option('--json', default=None, type=JsonClickType(),
               help=JsonClickType.help('/api/2.*/jobs/runs/submit'))
+@click.option('--wait', is_flag=True, default=False,
+              help='Waits for the submitted run to complete.')
 @api_version_option
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def submit_cli(api_client, json_file, json, version):
+def submit_cli(api_client, json_file, json, wait, version):
     """
-    Submits a one-time run.
+    Submits a one-time run and optionally waits for its completion.
 
     The specification for the request json can be found
     https://docs.databricks.com/api/latest/jobs.html#runs-submit
     """
     check_version(api_client, version)
-    json_cli_base(json_file, json, lambda json: RunsApi(
-        api_client).submit_run(json, version=version))
+    if json_file:
+        with open(json_file, 'r') as f:
+            json = f.read()
+    submit_res = RunsApi(api_client).submit_run(json_loads(json), version=version)
+    click.echo(pretty_format(submit_res))
+    if wait:
+        run_id = submit_res['run_id']
+        completed_states = set(['TERMINATED', 'SKIPPED', 'INTERNAL_ERROR'])
+        prev_life_cycle_state = ""
+        attempt = 0
+        # Wait for run to complete
+        while True:
+            run = RunsApi(api_client).get_run(run_id, version=version)
+            run_state = run['state']
+            life_cycle_state = run_state['life_cycle_state']
+            if life_cycle_state in completed_states:
+                if run_state['result_state'] == 'SUCCESS':
+                    sys.exit(0)
+                else:
+                    error_and_quit('Run failed with state ' + run_state['result_state'] +
+                                   ' and state message ' + run_state['state_message'])
+            if prev_life_cycle_state != life_cycle_state:
+                click.echo('Waiting on run to complete. Current state: ' + life_cycle_state +
+                           '. URL: ' + run['run_page_url'], err=True)
+                prev_life_cycle_state = life_cycle_state
+            time.sleep(backoff_with_jitter(attempt))
+            attempt += 1
 
 
 def _runs_to_table(runs_json):
