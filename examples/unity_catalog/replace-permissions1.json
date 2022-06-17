@@ -1,0 +1,18 @@
+{
+  "privilege_assignments": [
+    {
+      "privileges": [
+        "SELECT",
+        "USAGE"
+      ],
+      "principal": "foo@bar.com"
+    },
+    {
+      "privileges": [
+        "OWN",
+        "MODIFY"
+      ],
+      "principal": "some_group"
+    }
+  ]
+}

@@ -35,7 +35,7 @@ setup(
     packages=find_packages(include=['databricks_cli*']),
     install_requires=[
         # Note: please keep this in sync with `requirements.txt`.
-        'click>=6.7',
+        'click>=7.0',
         'pyjwt>=1.7.0',
         'oauthlib>=3.1.0',
         'requests>=2.17.3',
