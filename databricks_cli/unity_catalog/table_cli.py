@@ -32,7 +32,8 @@ from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Create a table. [DO NOT USE]')
+               short_help='Create a table. [DO NOT USE]',
+               hidden=True)
 @click.option('--json-file', default=None, type=click.Path(),
               help=json_file_help(method='POST', path='/tables'))
 @click.option('--json', default=None, type=JsonClickType(),
@@ -108,7 +109,8 @@ def get_table_cli(api_client, full_name):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Update a table. [DO NOT USE]')
+               short_help='Update a table. [DO NOT USE]',
+               hidden=True)
 @click.option('--full-name', required=True,
               help='Full name (<catalog>.<schema>.<table>) of the table to update.')
 @click.option('--json-file', default=None, type=click.Path(),
@@ -150,6 +152,10 @@ def delete_table_cli(api_client, full_name):
 
 @click.group()
 def tables_group():  # pragma: no cover
+    """
+    Note: To create or update tables, please run the appropriate SQL commands
+    on a cluster or endpoint (CREATE TABLE and ALTER TABLE).
+    """
     pass
 
 
