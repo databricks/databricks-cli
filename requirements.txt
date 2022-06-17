@@ -1,5 +1,5 @@
 # Note: please keep this in sync with `setup.py`.
-click>=6.7
+click>=7.0
 pyjwt>=1.7.0
 oauthlib>=3.1.0
 requests>=2.17.3

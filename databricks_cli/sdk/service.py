@@ -1134,7 +1134,7 @@ class ReposService(object):
         _data = {}
         if url is not None:
             _data['url'] = url
-        if provider is None or provider.trim() == "":
+        if provider is None or provider.strip() == "":
             provider = self.detect_repo_provider(url)
         if provider is not None:
             _data['provider'] = provider

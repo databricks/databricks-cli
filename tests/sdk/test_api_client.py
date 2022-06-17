@@ -124,10 +124,3 @@ def test_api_client_url_parsing():
     # databricks_cli.configure.cli
     client = ApiClient(host='http://databricks.com')
     assert client.get_url('') == 'http://databricks.com/api/2.0'
-
-
-def test_repos_provider_detection():
-    assert ReposService.detect_repo_provider("https://github.com/org/repo.git") == "gitHub"
-    assert ReposService.detect_repo_provider(
-        "https://git-codecommit.us-east-2.amazonaws.com/v1/repos/MyDemoRepo") == "awsCodeCommit"
-    assert ReposService.detect_repo_provider("https://github1.com/org/repo.git") is None

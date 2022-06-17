@@ -112,6 +112,16 @@ class PipelineIdClickType(ParamType):
     help = 'The pipeline ID.'
 
 
+class MetastoreIdClickType(ParamType):
+    name = 'METASTORE_ID'
+    help = 'ID of the Metastore'
+
+
+class WorkspaceIdClickType(ParamType):
+    name = 'WORKSPACE_ID'
+    help = 'ID of the Workspace'
+
+
 class OneOfOption(Option):
     def __init__(self, *args, **kwargs):
         self.one_of = kwargs.pop('one_of')
