@@ -25,6 +25,12 @@
 from databricks_cli.unity_catalog.utils import mc_pretty_format
 
 
+# 'path' is assumed to have the '/api/v2.x' prefix removed.
+#
+def is_uc_path(path):
+    return path.startswith('/unity-catalog') or path.startswith('/lineage-tracking')
+
+
 class UnityCatalogService(object):
     def __init__(self, client):
         self.client = client

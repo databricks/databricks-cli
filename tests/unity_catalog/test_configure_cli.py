@@ -1,5 +1,5 @@
 # Databricks CLI
-# Copyright 2017 Databricks, Inc.
+# Copyright 2022 Databricks, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"), except
 # that the use of services to which certain application programming
@@ -21,9 +21,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-API_VERSION = '2.0'
+# pylint:disable=redefined-outer-name
 
-DEFAULT_UC_API_VERSION = '2.1'
+from click.testing import CliRunner
 
-# Available API versions
-API_VERSIONS = ['2.0', '2.1']
+from databricks_cli.configure.config import get_config
+import databricks_cli.unity_catalog.configure_cli as cli
+from tests.utils import provide_conf
+
+
+@provide_conf
+def test_configure():
+    runner = CliRunner()
+    runner.invoke(cli.configure_cli, [])
+    assert get_config().uc_api_version is None
+
+    runner.invoke(cli.configure_cli, ['--version=2.0'])
+    assert get_config().uc_api_version == '2.0'
+
+    runner.invoke(cli.configure_cli, ['--version=2.1'])
+    assert get_config().uc_api_version == '2.1'

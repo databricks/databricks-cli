@@ -84,6 +84,20 @@ def test_configure_cli_insecure():
     assert get_config().insecure == 'True'
 
 
+def test_configure_cli_uc_api_version_default():
+    runner = CliRunner()
+    runner.invoke(cli.configure_cli, ['--token'],
+                  input=(TEST_HOST + '\n' + TEST_TOKEN + '\n'))
+    assert get_config().uc_api_version == "2.1"
+
+
+def test_configure_cli_uc_api_version():
+    runner = CliRunner()
+    runner.invoke(cli.configure_cli, ['--uc-api-version', '2.0', '--token'],
+                  input=(TEST_HOST + '\n' + TEST_TOKEN + '\n'))
+    assert get_config().uc_api_version == '2.0'
+
+
 def test_configure_cli_jobs_api_version():
     runner = CliRunner()
     runner.invoke(cli.configure_cli, ['--jobs-api-version', '2.1', '--token'],

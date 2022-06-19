@@ -32,7 +32,7 @@ from databricks_cli.oauth.oauth import get_tokens
 from databricks_cli.configure.config import profile_option, get_profile_from_context, debug_option
 from databricks_cli.configure.provider import DatabricksConfig, update_and_persist_config, \
     ProfileConfigProvider
-from databricks_cli.sdk.version import API_VERSION, API_VERSIONS
+from databricks_cli.sdk.version import API_VERSION, API_VERSIONS, DEFAULT_UC_API_VERSION
 from databricks_cli.utils import CONTEXT_SETTINGS
 
 PROMPT_HOST = 'Databricks Host (should begin with https://)'
@@ -50,7 +50,8 @@ DEFAULT_SCOPES = [
 ]
 
 
-def _configure_cli_token_file(profile, token_file, host, insecure, jobs_api_version):
+def _configure_cli_token_file(profile, token_file, host, insecure, jobs_api_version,
+                              uc_api_version):
     if not path.exists(token_file):
         raise RuntimeError('Unable to read token from "{}"'.format(token_file))
 
@@ -65,11 +66,12 @@ def _configure_cli_token_file(profile, token_file, host, insecure, jobs_api_vers
                                              token=token,
                                              refresh_token=None,
                                              insecure=insecure,
-                                             jobs_api_version=jobs_api_version)
+                                             jobs_api_version=jobs_api_version,
+                                             uc_api_version=uc_api_version)
     update_and_persist_config(profile, new_config)
 
 
-def _configure_cli_token(profile, insecure, host, jobs_api_version):
+def _configure_cli_token(profile, insecure, host, jobs_api_version, uc_api_version):
     config = ProfileConfigProvider(profile).get_config() or DatabricksConfig.empty()
 
     if not host:
@@ -80,7 +82,8 @@ def _configure_cli_token(profile, insecure, host, jobs_api_version):
                                              token=token,
                                              refresh_token=None,
                                              insecure=insecure,
-                                             jobs_api_version=jobs_api_version)
+                                             jobs_api_version=jobs_api_version,
+                                             uc_api_version=uc_api_version)
     update_and_persist_config(profile, new_config)
 
 
@@ -90,7 +93,7 @@ def scope_format(user_input):
     return list(map(lambda x: choice(x.strip()), user_inputs))
 
 
-def _configure_cli_oauth(profile, insecure, host, scope, jobs_api_version):
+def _configure_cli_oauth(profile, insecure, host, scope, jobs_api_version, uc_api_version):
     config = ProfileConfigProvider(profile).get_config() or DatabricksConfig.empty()
 
     if not host:
@@ -105,11 +108,12 @@ def _configure_cli_oauth(profile, insecure, host, scope, jobs_api_version):
                                              token=access_token,
                                              refresh_token=refresh_token,
                                              insecure=insecure,
-                                             jobs_api_version=jobs_api_version)
+                                             jobs_api_version=jobs_api_version,
+                                             uc_api_version=uc_api_version)
     update_and_persist_config(profile, new_config)
 
 
-def _configure_cli_aad_token(profile, insecure, host, jobs_api_version):
+def _configure_cli_aad_token(profile, insecure, host, jobs_api_version, uc_api_version):
     config = ProfileConfigProvider(profile).get_config() or DatabricksConfig.empty()
 
     if ENV_AAD_TOKEN not in os.environ:
@@ -131,11 +135,12 @@ def _configure_cli_aad_token(profile, insecure, host, jobs_api_version):
                                              token=aad_token,
                                              refresh_token=None,
                                              insecure=insecure,
-                                             jobs_api_version=jobs_api_version)
+                                             jobs_api_version=jobs_api_version,
+                                             uc_api_version=uc_api_version)
     update_and_persist_config(profile, new_config)
 
 
-def _configure_cli_password(profile, insecure, host, jobs_api_version):
+def _configure_cli_password(profile, insecure, host, jobs_api_version, uc_api_version):
     config = ProfileConfigProvider(profile).get_config() or DatabricksConfig.empty()
     if config.password:
         default_password = '*' * len(config.password)
@@ -151,7 +156,7 @@ def _configure_cli_password(profile, insecure, host, jobs_api_version):
     if password == default_password:
         password = config.password
     new_config = DatabricksConfig.from_password(host, username, password, insecure,
-                                                jobs_api_version)
+                                                jobs_api_version, uc_api_version)
     update_and_persist_config(profile, new_config)
 
 
@@ -173,9 +178,12 @@ def _configure_cli_password(profile, insecure, host, jobs_api_version):
               help='DO NOT verify SSL Certificates')
 @click.option('--jobs-api-version', show_default=True, default=API_VERSION,
               type=click.Choice(API_VERSIONS), help='API version to use for jobs.')
+@click.option('--uc-api-version', show_default=True, default=DEFAULT_UC_API_VERSION,
+              type=click.Choice(API_VERSIONS), help='API version to use for unity-catalog.')
 @debug_option
 @profile_option
-def configure_cli(token, aad_token, insecure, host, token_file, jobs_api_version, oauth, scope):
+def configure_cli(token, aad_token, insecure, host, token_file, jobs_api_version, uc_api_version,
+                  oauth, scope):
     """
     Configures host, authentication, and jobs-api version for the CLI.
     """
@@ -184,19 +192,21 @@ def configure_cli(token, aad_token, insecure, host, token_file, jobs_api_version
 
     if token:
         _configure_cli_token(profile=profile, insecure=insecure_str, host=host,
-                             jobs_api_version=jobs_api_version)
+                             jobs_api_version=jobs_api_version, uc_api_version=uc_api_version)
     elif token_file:
         _configure_cli_token_file(profile=profile, insecure=insecure_str, host=host,
-                                  token_file=token_file, jobs_api_version=jobs_api_version)
+                                  token_file=token_file, jobs_api_version=jobs_api_version,
+                                  uc_api_version=uc_api_version)
     elif oauth:
         _configure_cli_oauth(profile=profile, insecure=insecure_str, host=host,
-                             scope=scope, jobs_api_version=jobs_api_version)
+                             scope=scope, jobs_api_version=jobs_api_version,
+                             uc_api_version=uc_api_version)
     elif aad_token:
         _configure_cli_aad_token(profile=profile, insecure=insecure_str, host=host,
-                                 jobs_api_version=jobs_api_version)
+                                 jobs_api_version=jobs_api_version, uc_api_version=uc_api_version)
     else:
         _configure_cli_password(profile=profile, insecure=insecure_str, host=host,
-                                jobs_api_version=jobs_api_version)
+                                jobs_api_version=jobs_api_version, uc_api_version=uc_api_version)
 
 
 class _DbfsHost(ParamType):

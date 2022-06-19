@@ -21,11 +21,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from databricks_cli.sdk.version import DEFAULT_UC_API_VERSION
 from databricks_cli.unity_catalog.uc_service import UnityCatalogService
 
 
 class UnityCatalogApi(object):
     def __init__(self, api_client):
+        # Default to UC API version 2.1 if it's not overridden by profile config
+        if api_client.uc_api_version is None:
+            api_client.uc_api_version = DEFAULT_UC_API_VERSION
         self.client = UnityCatalogService(api_client)
 
     # Metastore APIs

@@ -51,6 +51,9 @@ except ImportError:
     from urllib3.util.retry import Retry
 
 from databricks_cli.version import version as databricks_cli_version
+from databricks_cli.sdk.version import DEFAULT_UC_API_VERSION
+from databricks_cli.unity_catalog.uc_service import is_uc_path
+
 
 class TlsV1HttpAdapter(HTTPAdapter):
     """
@@ -68,7 +71,8 @@ class ApiClient(object):
     to be used by different versions of the client.
     """
     def __init__(self, user=None, password=None, host=None, token=None,
-                 api_version=version.API_VERSION, default_headers={}, verify=True, command_name="", jobs_api_version=None):
+                 api_version=version.API_VERSION, default_headers={}, verify=True, command_name="",
+                 jobs_api_version=None, uc_api_version=None):
         if host[-1] == "/":
             host = host[:-1]
 
@@ -104,6 +108,8 @@ class ApiClient(object):
         self.verify = verify
         self.api_version = api_version
         self.jobs_api_version = jobs_api_version
+        # Default to UC API version 2.1 if it's not overridden by profile config
+        self.uc_api_version = uc_api_version if uc_api_version else DEFAULT_UC_API_VERSION
 
     def close(self):
         """Close the client"""
@@ -152,6 +158,8 @@ class ApiClient(object):
             return self.url + version + path
         elif self.jobs_api_version and path and path.startswith('/jobs'):
             return self.url + self.jobs_api_version + path
+        elif self.uc_api_version and path and is_uc_path(path):
+            return self.url + self.uc_api_version + path
         return self.url + self.api_version + path
 
 

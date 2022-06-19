@@ -38,6 +38,7 @@ TOKEN = 'token'
 REFRESH_TOKEN = 'refresh_token'
 INSECURE = 'insecure'
 JOBS_API_VERSION = 'jobs-api-version'
+UC_API_VERSION = 'uc-api-version'
 DEFAULT_SECTION = 'DEFAULT'
 
 # User-provided override for the DatabricksConfigProvider
@@ -101,6 +102,7 @@ def update_and_persist_config(profile, databricks_config):
     _set_option(raw_config, profile, REFRESH_TOKEN, databricks_config.refresh_token)
     _set_option(raw_config, profile, INSECURE, databricks_config.insecure)
     _set_option(raw_config, profile, JOBS_API_VERSION, databricks_config.jobs_api_version)
+    _set_option(raw_config, profile, UC_API_VERSION, databricks_config.uc_api_version)
     _overwrite_config(raw_config)
 
 
@@ -248,8 +250,9 @@ class EnvironmentVariableConfigProvider(DatabricksConfigProvider):
         refresh_token = os.environ.get('DATABRICKS_REFRESH_TOKEN')
         insecure = os.environ.get('DATABRICKS_INSECURE')
         jobs_api_version = os.environ.get('DATABRICKS_JOBS_API_VERSION')
+        uc_api_version = os.environ.get('DATABRICKS_UC_API_VERSION')
         config = DatabricksConfig(host, username, password, token,
-                                  refresh_token, insecure, jobs_api_version)
+                                  refresh_token, insecure, jobs_api_version, uc_api_version)
         if config.is_valid:
             return config
         return None
@@ -269,8 +272,9 @@ class ProfileConfigProvider(DatabricksConfigProvider):
         refresh_token = _get_option_if_exists(raw_config, self.profile, REFRESH_TOKEN)
         insecure = _get_option_if_exists(raw_config, self.profile, INSECURE)
         jobs_api_version = _get_option_if_exists(raw_config, self.profile, JOBS_API_VERSION)
+        uc_api_version = _get_option_if_exists(raw_config, self.profile, UC_API_VERSION)
         config = DatabricksConfig(host, username, password, token,
-                                  refresh_token, insecure, jobs_api_version)
+                                  refresh_token, insecure, jobs_api_version, uc_api_version)
         if config.is_valid:
             return config
         return None
@@ -278,7 +282,8 @@ class ProfileConfigProvider(DatabricksConfigProvider):
 
 class DatabricksConfig(object):
     def __init__(self, host, username, password, token,
-                 refresh_token=None, insecure=None, jobs_api_version=None):  # noqa
+                 refresh_token=None, insecure=None, jobs_api_version=None,
+                 uc_api_version=None):  # noqa
         self.host = host
         self.username = username
         self.password = password
@@ -286,26 +291,31 @@ class DatabricksConfig(object):
         self.refresh_token = refresh_token
         self.insecure = insecure
         self.jobs_api_version = jobs_api_version
+        self.uc_api_version = uc_api_version
 
     @classmethod
-    def from_token(cls, host, token, refresh_token=None, insecure=None, jobs_api_version=None):
+    def from_token(cls, host, token, refresh_token=None, insecure=None, jobs_api_version=None,
+                   uc_api_version=None):
         return DatabricksConfig(host=host,
                                 username=None,
                                 password=None,
                                 token=token,
                                 refresh_token=refresh_token,
                                 insecure=insecure,
-                                jobs_api_version=jobs_api_version)
+                                jobs_api_version=jobs_api_version,
+                                uc_api_version=uc_api_version)
 
     @classmethod
-    def from_password(cls, host, username, password, insecure=None, jobs_api_version=None):
+    def from_password(cls, host, username, password, insecure=None, jobs_api_version=None,
+                      uc_api_version=None):
         return DatabricksConfig(host=host,
                                 username=username,
                                 password=password,
                                 token=None,
                                 refresh_token=None,
                                 insecure=insecure,
-                                jobs_api_version=jobs_api_version)
+                                jobs_api_version=jobs_api_version,
+                                uc_api_version=uc_api_version)
 
     @classmethod
     def empty(cls):
@@ -315,7 +325,8 @@ class DatabricksConfig(object):
                                 token=None,
                                 refresh_token=None,
                                 insecure=None,
-                                jobs_api_version=None)
+                                jobs_api_version=None,
+                                uc_api_version=None)
 
     @property
     def is_valid_with_token(self):

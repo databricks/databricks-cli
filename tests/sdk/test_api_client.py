@@ -109,6 +109,16 @@ def test_get_url():
     assert client.get_url('/jobs/list') == 'https://databricks.com/api/2.1/jobs/list'
     assert client.get_url('/jobs/list', '3.0') == 'https://databricks.com/api/3.0/jobs/list'
 
+    assert client.uc_api_version == '2.1'
+    assert client.get_url('/unity-catalog/catalogs') == \
+        'https://databricks.com/api/2.1/unity-catalog/catalogs'
+    assert client.get_url('/unity-catalog/catalogs', '2.0') == \
+        'https://databricks.com/api/2.0/unity-catalog/catalogs'
+    client = ApiClient(host='https://databricks.com', uc_api_version = '2.0')
+    assert client.uc_api_version == '2.0'
+    assert client.get_url('/unity-catalog/catalogs') == \
+        'https://databricks.com/api/2.0/unity-catalog/catalogs'
+
 
 def test_api_client_url_parsing():
     client = ApiClient(host='https://databricks.com')

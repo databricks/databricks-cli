@@ -26,6 +26,7 @@ import click
 from databricks_cli.utils import CONTEXT_SETTINGS
 from databricks_cli.version import print_version_callback, version
 
+from databricks_cli.unity_catalog.configure_cli import register_configure_commands
 from databricks_cli.unity_catalog.metastore_cli import register_metastore_commands
 from databricks_cli.unity_catalog.catalog_cli import register_catalog_commands
 from databricks_cli.unity_catalog.schema_cli import register_schema_commands
@@ -51,6 +52,7 @@ def unity_catalog_group():  # pragma: no cover
     pass
 
 
+register_configure_commands(unity_catalog_group)
 register_metastore_commands(unity_catalog_group)
 register_ext_loc_commands(unity_catalog_group)
 register_cred_commands(unity_catalog_group)
