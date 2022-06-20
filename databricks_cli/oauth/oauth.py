@@ -263,7 +263,7 @@ def get_tokens(hostname, scope=None):
     oauth_config = fetch_well_known_config(idp_url)
     # We are going to override oauth_config["authorization_endpoint"] use the
     # /oidc redirector on the hostname, which may inject additional parameters.
-    auth_url = "{}oidc/v1/authorize".format(hostname)
+    auth_url = "{}/v1/authorize".format(get_idp_url(hostname))
     state = token_urlsafe(16)
     (verifier, challenge) = get_challenge()
     client = get_client()
