@@ -128,6 +128,15 @@ def test_json_cli_base_no_args():
         utils.json_cli_base('a', 'b', mock.Mock())
 
 
+def test_backoff_with_jitter():
+    assert 2 <= utils.backoff_with_jitter(0) <= 5
+    assert 5 <= utils.backoff_with_jitter(1) <= 10
+    assert 10 <= utils.backoff_with_jitter(2) <= 20
+    assert 15 <= utils.backoff_with_jitter(3) <= 30
+    assert 15 <= utils.backoff_with_jitter(5) <= 30
+    assert 15 <= utils.backoff_with_jitter(1000) <= 30
+
+
 def test_truncate_string():
     assert utils.truncate_string('apple', 3) == 'app...'
     assert utils.truncate_string('apple') == 'apple'
