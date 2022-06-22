@@ -977,7 +977,7 @@ class DeltaPipelinesService(object):
         self.client = client
 
     def create(self, id=None, name=None, storage=None, configuration=None, clusters=None,
-               libraries=None, continuous=None, development=None, allow_duplicate_names=None,
+               libraries=None, target=None, continuous=None, development=None, allow_duplicate_names=None,
                headers=None):
         _data = {}
         if id is not None:
@@ -992,6 +992,8 @@ class DeltaPipelinesService(object):
             _data['clusters'] = clusters
         if libraries is not None:
             _data['libraries'] = libraries
+        if target is not None:
+            _data['target'] = target
         if continuous is not None:
             _data['continuous'] = continuous
         if development is not None:
@@ -1001,7 +1003,7 @@ class DeltaPipelinesService(object):
         return self.client.perform_query('POST', '/pipelines', data=_data, headers=headers)
 
     def deploy(self, pipeline_id=None, id=None, name=None, storage=None, configuration=None,
-               clusters=None, libraries=None, continuous=None, development=None,
+               clusters=None, libraries=None, target=None, continuous=None, development=None,
                allow_duplicate_names=None, headers=None):
         _data = {}
         if id is not None:
@@ -1016,6 +1018,8 @@ class DeltaPipelinesService(object):
             _data['clusters'] = clusters
         if libraries is not None:
             _data['libraries'] = libraries
+        if target is not None:
+            _data['target'] = target
         if continuous is not None:
             _data['continuous'] = continuous
         if development is not None:
