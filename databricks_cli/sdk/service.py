@@ -1018,12 +1018,8 @@ class DeltaPipelinesService(object):
             _data['libraries'] = libraries
         if continuous is not None:
             _data['continuous'] = continuous
-            # if not isinstance(trigger, dict):
-            #     raise TypeError('Expected databricks.PipelineTrigger() or dict for field trigger')
         if development is not None:
             _data['development'] = development
-            # if not isinstance(filters, dict):
-            #     raise TypeError('Expected databricks.Filters() or dict for field filters')
         if allow_duplicate_names is not None:
             _data['allow_duplicate_names'] = allow_duplicate_names
         return self.client.perform_query('PUT', '/pipelines/{pipeline_id}'.format(pipeline_id=pipeline_id), data=_data,
