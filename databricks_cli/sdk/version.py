@@ -23,5 +23,7 @@
 
 API_VERSION = '2.0'
 
+UC_API_VERSION = '2.1'
+
 # Available API versions
 API_VERSIONS = ['2.0', '2.1']

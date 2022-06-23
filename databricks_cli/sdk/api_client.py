@@ -50,6 +50,7 @@ except ImportError:
     from urllib3 import exceptions
     from urllib3.util.retry import Retry
 
+from databricks_cli.sdk.version import UC_API_VERSION
 from databricks_cli.version import version as databricks_cli_version
 
 class TlsV1HttpAdapter(HTTPAdapter):
@@ -152,7 +153,13 @@ class ApiClient(object):
             return self.url + version + path
         elif self.jobs_api_version and path and path.startswith('/jobs'):
             return self.url + self.jobs_api_version + path
+        elif path and _is_uc_path(path):
+            return self.url + UC_API_VERSION + path
         return self.url + self.api_version + path
+
+
+def _is_uc_path(path):
+    return path.startswith('/unity-catalog') or path.startswith('/lineage-tracking')
 
 
 def _translate_boolean_to_query_param(value):
