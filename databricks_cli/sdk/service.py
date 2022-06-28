@@ -977,7 +977,7 @@ class DeltaPipelinesService(object):
         self.client = client
 
     def create(self, id=None, name=None, storage=None, configuration=None, clusters=None,
-               libraries=None, trigger=None, filters=None, allow_duplicate_names=None,
+               libraries=None, trigger=None, filters=None, target=None, continuous=None, development=None, allow_duplicate_names=None,
                headers=None):
         _data = {}
         if id is not None:
@@ -1000,12 +1000,18 @@ class DeltaPipelinesService(object):
             _data['filters'] = filters
             if not isinstance(filters, dict):
                 raise TypeError('Expected databricks.Filters() or dict for field filters')
+        if target is not None:
+            _data['target'] = target
+        if continuous is not None:
+            _data['continuous'] = continuous
+        if development is not None:
+            _data['development'] = development
         if allow_duplicate_names is not None:
             _data['allow_duplicate_names'] = allow_duplicate_names
         return self.client.perform_query('POST', '/pipelines', data=_data, headers=headers)
 
     def deploy(self, pipeline_id=None, id=None, name=None, storage=None, configuration=None,
-               clusters=None, libraries=None, trigger=None, filters=None,
+               clusters=None, libraries=None, trigger=None, filters=None, target=None, continuous=None, development=None,
                allow_duplicate_names=None, headers=None):
         _data = {}
         if id is not None:
@@ -1028,6 +1034,12 @@ class DeltaPipelinesService(object):
             _data['filters'] = filters
             if not isinstance(filters, dict):
                 raise TypeError('Expected databricks.Filters() or dict for field filters')
+        if target is not None:
+            _data['target'] = target
+        if continuous is not None:
+            _data['continuous'] = continuous
+        if development is not None:
+            _data['development'] = development
         if allow_duplicate_names is not None:
             _data['allow_duplicate_names'] = allow_duplicate_names
         return self.client.perform_query('PUT', '/pipelines/{pipeline_id}'.format(pipeline_id=pipeline_id), data=_data,
