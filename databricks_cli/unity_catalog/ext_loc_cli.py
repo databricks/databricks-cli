@@ -224,7 +224,7 @@ def register_ext_loc_commands(cmd_group):
 
     # Register command group.
     external_locations_group.add_command(create_location_cli, name='create')
-    external_locations_group.add_command(list_locations_cli, name='lists')
+    external_locations_group.add_command(list_locations_cli, name='list')
     external_locations_group.add_command(get_location_cli, name='get')
     external_locations_group.add_command(update_location_cli, name='update')
     external_locations_group.add_command(delete_location_cli, name='delete')
