@@ -37,11 +37,7 @@ from databricks_cli.unity_catalog.perms_cli import register_perms_commands
 from databricks_cli.unity_catalog.lineage_cli import register_lineage_commands
 
 
-@click.group(context_settings=CONTEXT_SETTINGS,
-             help='Utility to interact with Databricks Unity Catalog.\n\n' +
-             '**********************************************************************\n' +
-             'WARNING: these commands are EXPERIMENTAL and not officially supported.\n' +
-             '**********************************************************************')
+@click.group(context_settings=CONTEXT_SETTINGS)
 @click.option('--version', '-v', is_flag=True, callback=print_version_callback,
               expose_value=False, is_eager=True, help=version)
 def unity_catalog_group():  # pragma: no cover
