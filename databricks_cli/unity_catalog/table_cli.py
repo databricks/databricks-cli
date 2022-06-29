@@ -152,11 +152,9 @@ def delete_table_cli(api_client, full_name):
 
 @click.group(context_settings=CONTEXT_SETTINGS,
              short_help=' ',
-             help='\n**********************************************************************\n' +
-                  'Note:\n' +
-                  'To create or update tables, please run the relevant SQL commands on a\n' +
-                  'DBR cluster or SQL endpoint/warehouse (CREATE TABLE and ALTER TABLE).\n' +
-                  '**********************************************************************')
+             help='Note:\n' +
+                  'To create or update tables, use SQL commands\n' +
+                  '(CREATE TABLE or ALTER TABLE) on a cluster or SQL warehouse.')
 def tables_group():  # pragma: no cover
     pass
 
