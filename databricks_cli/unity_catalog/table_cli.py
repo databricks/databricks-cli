@@ -150,12 +150,12 @@ def delete_table_cli(api_client, full_name):
     UnityCatalogApi(api_client).delete_table(full_name)
 
 
-@click.group()
+@click.group(context_settings=CONTEXT_SETTINGS,
+             short_help=' ',
+             help='Note:\n' +
+                  'To create or update tables, use SQL commands\n' +
+                  '(CREATE TABLE or ALTER TABLE) on a cluster or SQL warehouse.')
 def tables_group():  # pragma: no cover
-    """
-    Note: To create or update tables, please run the appropriate SQL commands
-    on a cluster or endpoint (CREATE TABLE and ALTER TABLE).
-    """
     pass
 
 
