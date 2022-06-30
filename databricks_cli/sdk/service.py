@@ -54,6 +54,9 @@ class JobsService(object):
         headers=None,
         version=None,
         git_source=None,
+        job_clusters=None,
+        tags=None,
+        format=None,
     ):
         _data = {}
         if name is not None:
@@ -114,6 +117,14 @@ class JobsService(object):
             _data['tasks'] = tasks
         if git_source is not None:
             _data['git_source'] = git_source
+            if not isinstance(git_source, dict):
+                raise TypeError('Expected databricks.GitSource() or dict for field git_source')
+        if job_clusters is not None:
+            _data['job_clusters'] = job_clusters
+        if tags is not None:
+            _data['tags'] = tags
+        if format is not None:
+            _data['format'] = format
         return self.client.perform_query(
             'POST', '/jobs/create', data=_data, headers=headers, version=version
         )
@@ -132,6 +143,9 @@ class JobsService(object):
         tasks=None,
         headers=None,
         version=None,
+        idempotency_token=None,
+        job_clusters=None,
+        git_source=None,
     ):
         _data = {}
         if run_name is not None:
@@ -172,6 +186,14 @@ class JobsService(object):
             _data['timeout_seconds'] = timeout_seconds
         if tasks is not None:
             _data['tasks'] = tasks
+        if idempotency_token is not None:
+            _data['idempotency_token'] = idempotency_token
+        if job_clusters is not None:
+            _data['job_clusters'] = job_clusters
+        if git_source is not None:
+            _data['git_source'] = git_source
+            if not isinstance(git_source, dict):
+                raise TypeError('Expected databricks.GitSource() or dict for field git_source')
         return self.client.perform_query(
             'POST', '/jobs/runs/submit', data=_data, headers=headers, version=version
         )
@@ -208,7 +230,6 @@ class JobsService(object):
         self, job_type=None, expand_tasks=None, limit=None, offset=None, headers=None, version=None
     ):
         _data = {}
-
         if job_type is not None:
             _data['job_type'] = job_type
         if expand_tasks is not None:
@@ -217,7 +238,6 @@ class JobsService(object):
             _data['limit'] = limit
         if offset is not None:
             _data['offset'] = offset
-
         return self.client.perform_query(
             'GET', '/jobs/list', data=_data, headers=headers, version=version
         )
@@ -243,14 +263,48 @@ class JobsService(object):
             _data['notebook_params'] = notebook_params
         if python_params is not None:
             _data['python_params'] = python_params
-        if python_named_params is not None:
-            _data['python_named_params'] = python_named_params
         if spark_submit_params is not None:
             _data['spark_submit_params'] = spark_submit_params
+        if python_named_params is not None:
+            _data['python_named_params'] = python_named_params
         if idempotency_token is not None:
             _data['idempotency_token'] = idempotency_token
         return self.client.perform_query(
             'POST', '/jobs/run-now', data=_data, headers=headers, version=version
+        )
+
+    def repair(
+        self,
+        run_id,
+        latest_repair_id=None,
+        rerun_tasks=None,
+        jar_params=None,
+        notebook_params=None,
+        python_params=None,
+        spark_submit_params=None,
+        python_named_params=None,
+        headers=None,
+        version=None,
+    ):
+        _data = {}
+        if run_id is not None:
+            _data['run_id'] = run_id
+        if latest_repair_id is not None:
+            _data['latest_repair_id'] = latest_repair_id
+        if rerun_tasks is not None:
+            _data['rerun_tasks'] = rerun_tasks
+        if jar_params is not None:
+            _data['jar_params'] = jar_params
+        if notebook_params is not None:
+            _data['notebook_params'] = notebook_params
+        if python_params is not None:
+            _data['python_params'] = python_params
+        if spark_submit_params is not None:
+            _data['spark_submit_params'] = spark_submit_params
+        if python_named_params is not None:
+            _data['python_named_params'] = python_named_params
+        return self.client.perform_query(
+            'POST', '/jobs/runs/repair', data=_data, headers=headers, version=version
         )
 
     def list_runs(
@@ -262,6 +316,10 @@ class JobsService(object):
         limit=None,
         headers=None,
         version=None,
+        run_type=None,
+        expand_tasks=None,
+        start_time_from=None,
+        start_time_to=None,
     ):
         _data = {}
         if job_id is not None:
@@ -274,14 +332,24 @@ class JobsService(object):
             _data['offset'] = offset
         if limit is not None:
             _data['limit'] = limit
+        if run_type is not None:
+            _data['run_type'] = run_type
+        if expand_tasks is not None:
+            _data['expand_tasks'] = expand_tasks
+        if start_time_from is not None:
+            _data['start_time_from'] = start_time_from
+        if start_time_to is not None:
+            _data['start_time_to'] = start_time_to
         return self.client.perform_query(
             'GET', '/jobs/runs/list', data=_data, headers=headers, version=version
         )
 
-    def get_run(self, run_id=None, headers=None, version=None):
+    def get_run(self, run_id=None, headers=None, version=None, include_history=None):
         _data = {}
         if run_id is not None:
             _data['run_id'] = run_id
+        if include_history is not None:
+            _data['include_history'] = include_history
         return self.client.perform_query(
             'GET', '/jobs/runs/get', data=_data, headers=headers, version=version
         )
@@ -327,7 +395,6 @@ class ClusterService(object):
 
     def list_clusters(self, headers=None):
         _data = {}
-
         return self.client.perform_query('GET', '/clusters/list', data=_data, headers=headers)
 
     def create_cluster(
@@ -349,6 +416,12 @@ class ClusterService(object):
         cluster_source=None,
         instance_pool_id=None,
         headers=None,
+        azure_attributes=None,
+        gcp_attributes=None,
+        policy_id=None,
+        enable_local_disk_encryption=None,
+        driver_instance_pool_id=None,
+        apply_policy_default_values=None,
     ):
         _data = {}
         if num_workers is not None:
@@ -393,6 +466,26 @@ class ClusterService(object):
             _data['cluster_source'] = cluster_source
         if instance_pool_id is not None:
             _data['instance_pool_id'] = instance_pool_id
+        if azure_attributes is not None:
+            _data['azure_attributes'] = azure_attributes
+            if not isinstance(azure_attributes, dict):
+                raise TypeError(
+                    'Expected databricks.AzureAttributes() or dict for field azure_attributes'
+                )
+        if gcp_attributes is not None:
+            _data['gcp_attributes'] = gcp_attributes
+            if not isinstance(gcp_attributes, dict):
+                raise TypeError(
+                    'Expected databricks.GcpAttributes() or dict for field gcp_attributes'
+                )
+        if policy_id is not None:
+            _data['policy_id'] = policy_id
+        if enable_local_disk_encryption is not None:
+            _data['enable_local_disk_encryption'] = enable_local_disk_encryption
+        if driver_instance_pool_id is not None:
+            _data['driver_instance_pool_id'] = driver_instance_pool_id
+        if apply_policy_default_values is not None:
+            _data['apply_policy_default_values'] = apply_policy_default_values
         return self.client.perform_query('POST', '/clusters/create', data=_data, headers=headers)
 
     def start_cluster(self, cluster_id, headers=None):
@@ -403,7 +496,6 @@ class ClusterService(object):
 
     def list_spark_versions(self, headers=None):
         _data = {}
-
         return self.client.perform_query(
             'GET', '/clusters/spark-versions', data=_data, headers=headers
         )
@@ -460,6 +552,12 @@ class ClusterService(object):
         cluster_source=None,
         instance_pool_id=None,
         headers=None,
+        azure_attributes=None,
+        gcp_attributes=None,
+        policy_id=None,
+        enable_local_disk_encryption=None,
+        driver_instance_pool_id=None,
+        apply_policy_default_values=None,
     ):
         _data = {}
         if cluster_id is not None:
@@ -506,6 +604,26 @@ class ClusterService(object):
             _data['cluster_source'] = cluster_source
         if instance_pool_id is not None:
             _data['instance_pool_id'] = instance_pool_id
+        if azure_attributes is not None:
+            _data['azure_attributes'] = azure_attributes
+            if not isinstance(azure_attributes, dict):
+                raise TypeError(
+                    'Expected databricks.AzureAttributes() or dict for field azure_attributes'
+                )
+        if gcp_attributes is not None:
+            _data['gcp_attributes'] = gcp_attributes
+            if not isinstance(gcp_attributes, dict):
+                raise TypeError(
+                    'Expected databricks.GcpAttributes() or dict for field gcp_attributes'
+                )
+        if policy_id is not None:
+            _data['policy_id'] = policy_id
+        if enable_local_disk_encryption is not None:
+            _data['enable_local_disk_encryption'] = enable_local_disk_encryption
+        if driver_instance_pool_id is not None:
+            _data['driver_instance_pool_id'] = driver_instance_pool_id
+        if apply_policy_default_values is not None:
+            _data['apply_policy_default_values'] = apply_policy_default_values
         return self.client.perform_query('POST', '/clusters/edit', data=_data, headers=headers)
 
     def get_cluster(self, cluster_id, headers=None):
@@ -528,14 +646,12 @@ class ClusterService(object):
 
     def list_node_types(self, headers=None):
         _data = {}
-
         return self.client.perform_query(
             'GET', '/clusters/list-node-types', data=_data, headers=headers
         )
 
     def list_available_zones(self, headers=None):
         _data = {}
-
         return self.client.perform_query('GET', '/clusters/list-zones', data=_data, headers=headers)
 
     def get_events(
@@ -571,22 +687,40 @@ class PolicyService(object):
     def __init__(self, client):
         self.client = client
 
+    def get_policy(self, policy_id=None, headers=None):
+        _data = {}
+        if policy_id is not None:
+            _data['policy_id'] = policy_id
+        return self.client.perform_query(
+            'GET', '/policies/clusters/get', data=_data, headers=headers
+        )
+
     def list_policies(self, headers=None):
         _data = {}
-
         return self.client.perform_query(
             'GET', '/policies/clusters/list', data=_data, headers=headers
         )
 
-    def create_policy(self, policy_name, definition, headers=None):
+    def create_policy(self, policy_name=None, definition=None, headers=None, name=None):
         _data = {}
-        if policy_name is not None:
-            _data['policy_name'] = policy_name
         if definition is not None:
             _data['definition'] = definition
-
+        if name is not None:
+            _data['name'] = name
         return self.client.perform_query(
             'POST', '/policies/clusters/create', data=_data, headers=headers
+        )
+
+    def edit_policy(self, policy_id, policy_name=None, definition=None, headers=None, name=None):
+        _data = {}
+        if policy_id is not None:
+            _data['policy_id'] = policy_id
+        if definition is not None:
+            _data['definition'] = definition
+        if name is not None:
+            _data['name'] = name
+        return self.client.perform_query(
+            'POST', '/policies/clusters/edit', data=_data, headers=headers
         )
 
     def delete_policy(self, policy_id, headers=None):
@@ -595,27 +729,6 @@ class PolicyService(object):
             _data['policy_id'] = policy_id
         return self.client.perform_query(
             'POST', '/policies/clusters/delete', data=_data, headers=headers
-        )
-
-    def edit_policy(self, policy_id, policy_name, definition, headers=None):
-        _data = {}
-        if policy_id is not None:
-            _data['policy_id'] = policy_id
-        if policy_name is not None:
-            _data['policy_name'] = policy_name
-        if definition is not None:
-            _data['definition'] = definition
-
-        return self.client.perform_query(
-            'POST', '/policies/clusters/edit', data=_data, headers=headers
-        )
-
-    def get_policy(self, policy_id, headers=None):
-        _data = {}
-        if policy_id is not None:
-            _data['policy_id'] = policy_id
-        return self.client.perform_query(
-            'GET', '/policies/clusters/get', data=_data, headers=headers
         )
 
 
@@ -633,7 +746,6 @@ class ManagedLibraryService(object):
 
     def all_cluster_statuses(self, headers=None):
         _data = {}
-
         return self.client.perform_query(
             'GET', '/libraries/all-cluster-statuses', data=_data, headers=headers
         )
@@ -738,7 +850,7 @@ class DbfsService(object):
             filename = os.path.basename(src_path)
             _files = {'file': (filename, open(src_path, 'rb'), 'multipart/form-data')}
         return self.client.perform_query(
-            'POST', '/dbfs/put', data=_data, headers=headers, files=_files
+            'POST', '/dbfs-testing/put', data=_data, headers=headers, files=_files
         )
 
     def mkdirs(self, path, headers=None):
@@ -936,7 +1048,6 @@ class SecretService(object):
 
     def list_scopes(self, headers=None):
         _data = {}
-
         return self.client.perform_query('GET', '/secrets/scopes/list', data=_data, headers=headers)
 
     def put_secret(self, scope, key, string_value=None, bytes_value=None, headers=None):
@@ -1012,29 +1123,28 @@ class GroupsService(object):
 
     def add_to_group(self, parent_name, user_name=None, group_name=None, headers=None):
         _data = {}
+        if parent_name is not None:
+            _data['parent_name'] = parent_name
         if user_name is not None:
             _data['user_name'] = user_name
         if group_name is not None:
             _data['group_name'] = group_name
-        if parent_name is not None:
-            _data['parent_name'] = parent_name
         return self.client.perform_query('POST', '/groups/add-member', data=_data, headers=headers)
 
     def remove_from_group(self, parent_name, user_name=None, group_name=None, headers=None):
         _data = {}
+        if parent_name is not None:
+            _data['parent_name'] = parent_name
         if user_name is not None:
             _data['user_name'] = user_name
         if group_name is not None:
             _data['group_name'] = group_name
-        if parent_name is not None:
-            _data['parent_name'] = parent_name
         return self.client.perform_query(
             'POST', '/groups/remove-member', data=_data, headers=headers
         )
 
     def get_groups(self, headers=None):
         _data = {}
-
         return self.client.perform_query('GET', '/groups/list', data=_data, headers=headers)
 
     def get_group_members(self, group_name, headers=None):
@@ -1072,7 +1182,6 @@ class TokenService(object):
 
     def list_tokens(self, headers=None):
         _data = {}
-
         return self.client.perform_query('GET', '/token/list', data=_data, headers=headers)
 
     def revoke_token(self, token_id, headers=None):
@@ -1099,6 +1208,9 @@ class InstancePoolService(object):
         disk_spec=None,
         preloaded_spark_versions=None,
         headers=None,
+        preloaded_docker_images=None,
+        azure_attributes=None,
+        gcp_attributes=None,
     ):
         _data = {}
         if instance_pool_name is not None:
@@ -1127,6 +1239,20 @@ class InstancePoolService(object):
                 raise TypeError('Expected databricks.DiskSpec() or dict for field disk_spec')
         if preloaded_spark_versions is not None:
             _data['preloaded_spark_versions'] = preloaded_spark_versions
+        if preloaded_docker_images is not None:
+            _data['preloaded_docker_images'] = preloaded_docker_images
+        if azure_attributes is not None:
+            _data['azure_attributes'] = azure_attributes
+            if not isinstance(azure_attributes, dict):
+                raise TypeError(
+                    'Expected databricks.InstancePoolAzureAttributes() or dict for field azure_attributes'
+                )
+        if gcp_attributes is not None:
+            _data['gcp_attributes'] = gcp_attributes
+            if not isinstance(gcp_attributes, dict):
+                raise TypeError(
+                    'Expected databricks.InstancePoolGcpAttributes() or dict for field gcp_attributes'
+                )
         return self.client.perform_query(
             'POST', '/instance-pools/create', data=_data, headers=headers
         )
@@ -1153,6 +1279,9 @@ class InstancePoolService(object):
         disk_spec=None,
         preloaded_spark_versions=None,
         headers=None,
+        preloaded_docker_images=None,
+        azure_attributes=None,
+        gcp_attributes=None,
     ):
         _data = {}
         if instance_pool_id is not None:
@@ -1183,6 +1312,20 @@ class InstancePoolService(object):
                 raise TypeError('Expected databricks.DiskSpec() or dict for field disk_spec')
         if preloaded_spark_versions is not None:
             _data['preloaded_spark_versions'] = preloaded_spark_versions
+        if preloaded_docker_images is not None:
+            _data['preloaded_docker_images'] = preloaded_docker_images
+        if azure_attributes is not None:
+            _data['azure_attributes'] = azure_attributes
+            if not isinstance(azure_attributes, dict):
+                raise TypeError(
+                    'Expected databricks.InstancePoolAzureAttributes() or dict for field azure_attributes'
+                )
+        if gcp_attributes is not None:
+            _data['gcp_attributes'] = gcp_attributes
+            if not isinstance(gcp_attributes, dict):
+                raise TypeError(
+                    'Expected databricks.InstancePoolGcpAttributes() or dict for field gcp_attributes'
+                )
         return self.client.perform_query(
             'POST', '/instance-pools/edit', data=_data, headers=headers
         )
