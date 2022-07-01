@@ -45,7 +45,7 @@ import databricks_cli.workspace.api
 
 def collect_argspecs(modules):
     return {
-        f"{func.__module__}.{func.__qualname__}": inspect.getfullargspec(func).args
+        func.__module__ + "." + func.__qualname__: inspect.getfullargspec(func).args
         for mod in modules
         for (_, clazz) in inspect.getmembers(mod, predicate=inspect.isclass)
         for (_, func) in inspect.getmembers(clazz, predicate=inspect.isfunction)
