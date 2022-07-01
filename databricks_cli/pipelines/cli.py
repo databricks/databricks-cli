@@ -23,7 +23,6 @@
 
 import os
 import json
-import string
 import requests
 
 try:
