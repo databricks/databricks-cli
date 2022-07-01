@@ -116,7 +116,7 @@ def _runs_to_table(runs_json):
 @click.option('--expand-tasks', is_flag=True,
               help='Expands the tasks array (only available in API 2.1).')
 @click.option('--all', '_all', is_flag=True,
-              help='Lists all jobs by executing sequential calls to the API ' +
+              help='Lists all runs by executing sequential calls to the API ' +
                    '(only available in API 2.1).')
 @click.option('--output', help=OutputClickType.help, type=OutputClickType())
 @api_version_option
