@@ -46,8 +46,6 @@ try:
 except AttributeError:  # Python 2
     json_parse_exception = ValueError
 
-PIPELINE_ID_PERMITTED_CHARACTERS = set(string.ascii_letters + string.digits + '-_')
-
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Creates a pipeline.')
