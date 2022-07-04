@@ -55,6 +55,7 @@ def collect_argspecs(modules):
     }
 
 
+# pylint: disable=superfluous-parens
 def _test_compatibility(current_argspecs, existing_argspecs):
     removed_functions = []
     incompatible_functions = []
