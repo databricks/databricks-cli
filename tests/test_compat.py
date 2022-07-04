@@ -49,9 +49,12 @@ import databricks_cli.workspace.api
 def collect_argspecs(modules):
     return {
         func.__module__ + "." + func.__qualname__: inspect.getfullargspec(func).args
-        for mod in modules
-        for (_, clazz) in inspect.getmembers(mod, predicate=inspect.isclass)
+        for module in modules
+        for (_, clazz) in inspect.getmembers(module, predicate=inspect.isclass)
         for (_, func) in inspect.getmembers(clazz, predicate=inspect.isfunction)
+
+        # Ignore functions that are defined outside the specified module.
+        if module.__name__ == func.__module__
     }
 
 
