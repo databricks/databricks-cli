@@ -92,7 +92,7 @@ def _test_compatibility(current_argspecs, existing_argspecs):
         assert len(incompatible_functions) == 0
 
 
-@unittest.skipIf(six.PY2, reason='Needs Python 3')
+@unittest.skipIf(six.PY2, reason='The `inspect` package has significantly changed in Python 3.')
 def test_compatibility():
     api_packages = [
         databricks_cli.cluster_policies.api,
