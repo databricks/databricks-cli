@@ -24,6 +24,8 @@
 import inspect
 import json
 import os
+import unittest
+
 import six
 
 import databricks_cli.sdk.service
@@ -44,15 +46,9 @@ import databricks_cli.unity_catalog.api
 import databricks_cli.workspace.api
 
 
-if six.PY2:
-    getargspec = inspect.getargspec
-else:
-    getargspec = inspect.getfullargspec
-
-
 def collect_argspecs(modules):
     return {
-        func.__module__ + "." + func.__qualname__: getargspec(func).args
+        func.__module__ + "." + func.__qualname__: inspect.getfullargspec(func).args
         for mod in modules
         for (_, clazz) in inspect.getmembers(mod, predicate=inspect.isclass)
         for (_, func) in inspect.getmembers(clazz, predicate=inspect.isfunction)
@@ -92,6 +88,7 @@ def _test_compatibility(current_argspecs, existing_argspecs):
         assert len(incompatible_functions) == 0
 
 
+@unittest.skipIf(six.PY2, reason='Needs Python 3')
 def test_compatibility():
     api_packages = [
         databricks_cli.cluster_policies.api,
