@@ -762,7 +762,7 @@ class SecretService(object):
             _data['bytes_value'] = bytes_value
         return self.client.perform_query('POST', '/secrets/put', data=_data, headers=headers)
 
-    def delete_secret(self, scope, key, headers=None):
+    def delete_secret(self, scope, key, foo, headers=None):
         _data = {}
         if scope is not None:
             _data['scope'] = scope
