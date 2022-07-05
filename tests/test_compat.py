@@ -33,11 +33,11 @@ import unittest
 import six
 
 
-def normalize_module_name(str):
+def normalize_module_name(name):
     """
     Replace `databricks_cli_main` with `databricks_cli` to make objects comparable.
     """
-    return re.sub(r"^(databricks_cli)_main", r"\1", str)
+    return re.sub(r"^(databricks_cli)_main", r"\1", name)
 
 
 def func_key(func):
@@ -53,7 +53,6 @@ def collect_argspecs(modules):
         for module in modules
         for (_, clazz) in inspect.getmembers(module, predicate=inspect.isclass)
         for (_, func) in inspect.getmembers(clazz, predicate=inspect.isfunction)
-
         # Ignore functions that are defined outside the specified module.
         if module.__name__ == func.__module__
     }
@@ -97,7 +96,6 @@ def import_databricks_modules(root):
     return [
         # Generated code.
         importlib.import_module(".sdk.service", root),
-
         # Functionality under the API package is used as an SDK by some.
         importlib.import_module(".cluster_policies.api", root),
         importlib.import_module(".clusters.api", root),
@@ -150,10 +148,7 @@ def test_compatibility():
 
 
 if __name__ == '__main__':
-    """
-    If run directly, instead of through pytest, dump a copy
-    of the argspecs in this repository.
-    """
+    # If run directly, write the argspecs in this repository to stdout.
     json.dump(
         obj=collect_argspecs(import_databricks_modules("databricks_cli")),
         fp=sys.stdout,
