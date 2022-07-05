@@ -122,3 +122,30 @@ jobs:
           databricks --version
           which dbfs
           dbfs --version
+
+  compat:
+    name: Public API compatibility
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Checkout main branch
+        uses: actions/checkout@v2
+        with:
+          ref: main
+          path: databricks-cli-main
+
+      - name: Set up Python
+        uses: actions/setup-python@v1
+
+      - name: Install pip
+        run: pip install --upgrade pip
+
+      - name: Install development dependencies (Python 3)
+        run: pip install --upgrade -r dev-requirements-py3.txt
+
+      - name: Run compatibility test
+        run: |
+          export DATABRICKS_CLI_MAIN_CHECKOUT=$GITHUB_WORKSPACE/databricks-cli-main
+          pytest --capture=no tests/test_compat.py

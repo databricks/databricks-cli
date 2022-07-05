@@ -21,34 +21,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import importlib
 import inspect
 import json
 import os
+import re
+import sys
+import tempfile
 import unittest
 
 import six
 
-import databricks_cli.sdk.service
 
-import databricks_cli.cluster_policies.api
-import databricks_cli.clusters.api
-import databricks_cli.dbfs.api
-import databricks_cli.groups.api
-import databricks_cli.instance_pools.api
-import databricks_cli.jobs.api
-import databricks_cli.libraries.api
-import databricks_cli.pipelines.api
-import databricks_cli.repos.api
-import databricks_cli.runs.api
-import databricks_cli.secrets.api
-import databricks_cli.tokens.api
-import databricks_cli.unity_catalog.api
-import databricks_cli.workspace.api
+def normalize_module_name(str):
+    """
+    Replace `databricks_cli_main` with `databricks_cli` to make objects comparable.
+    """
+    return re.sub(r"^(databricks_cli)_main", r"\1", str)
+
+
+def func_key(func):
+    """
+    Returns key of the full package path to the specified function.
+    """
+    return normalize_module_name(func.__module__) + "." + func.__qualname__
 
 
 def collect_argspecs(modules):
     return {
-        func.__module__ + "." + func.__qualname__: inspect.getfullargspec(func).args
+        func_key(func): inspect.getfullargspec(func).args
         for module in modules
         for (_, clazz) in inspect.getmembers(module, predicate=inspect.isclass)
         for (_, func) in inspect.getmembers(clazz, predicate=inspect.isfunction)
@@ -92,34 +93,69 @@ def _test_compatibility(current_argspecs, existing_argspecs):
         assert len(incompatible_functions) == 0
 
 
-@unittest.skipIf(six.PY2, reason='The `inspect` package has significantly changed in Python 3.')
-def test_compatibility():
-    api_packages = [
-        databricks_cli.cluster_policies.api,
-        databricks_cli.clusters.api,
-        databricks_cli.dbfs.api,
-        databricks_cli.groups.api,
-        databricks_cli.instance_pools.api,
-        databricks_cli.jobs.api,
-        databricks_cli.libraries.api,
-        databricks_cli.pipelines.api,
-        databricks_cli.repos.api,
-        databricks_cli.runs.api,
-        databricks_cli.secrets.api,
-        databricks_cli.tokens.api,
-        databricks_cli.unity_catalog.api,
-        databricks_cli.workspace.api,
+def import_databricks_modules(root):
+    return [
+        # Generated code.
+        importlib.import_module(".sdk.service", root),
+
+        # Functionality under the API package is used as an SDK by some.
+        importlib.import_module(".cluster_policies.api", root),
+        importlib.import_module(".clusters.api", root),
+        importlib.import_module(".dbfs.api", root),
+        importlib.import_module(".groups.api", root),
+        importlib.import_module(".instance_pools.api", root),
+        importlib.import_module(".jobs.api", root),
+        importlib.import_module(".libraries.api", root),
+        importlib.import_module(".pipelines.api", root),
+        importlib.import_module(".repos.api", root),
+        importlib.import_module(".runs.api", root),
+        importlib.import_module(".secrets.api", root),
+        importlib.import_module(".tokens.api", root),
+        importlib.import_module(".unity_catalog.api", root),
+        importlib.import_module(".workspace.api", root),
     ]
 
-    current_argspecs = collect_argspecs([databricks_cli.sdk.service] + api_packages)
 
-    test_compatibility_file = os.getenv('TEST_COMPATIBILITY_FILE', default=None)
-    if test_compatibility_file:
-        with open(test_compatibility_file, 'r', encoding='utf-8') as f:
-            existing_argspecs = json.load(f)
-        _test_compatibility(current_argspecs, existing_argspecs)
-    else:
-        # Write argspecs to file.
-        test_compatibility_file = os.path.join(os.path.dirname(__file__), "test_compat.json")
-        with open(test_compatibility_file, 'w', encoding='utf-8') as f:
-            json.dump(current_argspecs, f, indent=2)
+def databricks_cli_main_checkout_path():
+    return os.getenv('DATABRICKS_CLI_MAIN_CHECKOUT')
+
+
+def can_perform_compatibility_check():
+    """
+    Checks if the user has specified a path to a parallel checkout
+    of the main branch of the databricks-cli repository.
+
+    The files in this checkout will be imported under an aliased
+    package name such that we have access to the argument specs
+    of the functions in both the main branch and this repository.
+    """
+    path = databricks_cli_main_checkout_path()
+    return path and os.path.isdir(path)
+
+
+@unittest.skipIf(six.PY2 or not can_perform_compatibility_check(), reason=None)
+def test_compatibility():
+    # Make the specified path importable by symlinking its `databricks_cli`
+    # directory
+    tmpdir = tempfile.mkdtemp()
+    sys.path.append(tmpdir)
+    os.symlink(
+        os.path.join(databricks_cli_main_checkout_path(), "databricks_cli"),
+        os.path.join(tmpdir, "databricks_cli_main"),
+    )
+
+    current_argspecs = collect_argspecs(import_databricks_modules("databricks_cli"))
+    existing_argspecs = collect_argspecs(import_databricks_modules("databricks_cli_main"))
+    _test_compatibility(current_argspecs, existing_argspecs)
+
+
+if __name__ == '__main__':
+    """
+    If run directly, instead of through pytest, dump a copy
+    of the argspecs in this repository.
+    """
+    json.dump(
+        obj=collect_argspecs(import_databricks_modules("databricks_cli")),
+        fp=sys.stdout,
+        indent=2,
+    )
