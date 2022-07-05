@@ -133,6 +133,13 @@ def can_perform_compatibility_check():
 
 @unittest.skipIf(six.PY2 or not can_perform_compatibility_check(), reason=None)
 def test_compatibility():
+    """
+    To run this test, checkout a reference copy of this repository and set
+    the DATABRICKS_CLI_MAIN_CHECKOUT environment variable to its path.
+
+    See `.github/workflows/` for the configuration of the GitHub action that runs it.
+    """
+
     # Make the specified path importable by symlinking its `databricks_cli`
     # directory
     tmpdir = tempfile.mkdtemp()
