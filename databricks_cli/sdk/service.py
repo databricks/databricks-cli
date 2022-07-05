@@ -783,41 +783,17 @@ class DbfsService(object):
             _data['length'] = length
         return self.client.perform_query('GET', '/dbfs/read', data=_data, headers=headers)
 
-    def read_test(self, path, offset=None, length=None, headers=None):
-        _data = {}
-        if path is not None:
-            _data['path'] = path
-        if offset is not None:
-            _data['offset'] = offset
-        if length is not None:
-            _data['length'] = length
-        return self.client.perform_query('GET', '/dbfs-testing/read', data=_data, headers=headers)
-
     def get_status(self, path, headers=None):
         _data = {}
         if path is not None:
             _data['path'] = path
         return self.client.perform_query('GET', '/dbfs/get-status', data=_data, headers=headers)
 
-    def get_status_test(self, path, headers=None):
-        _data = {}
-        if path is not None:
-            _data['path'] = path
-        return self.client.perform_query(
-            'GET', '/dbfs-testing/get-status', data=_data, headers=headers
-        )
-
     def list(self, path, headers=None):
         _data = {}
         if path is not None:
             _data['path'] = path
         return self.client.perform_query('GET', '/dbfs/list', data=_data, headers=headers)
-
-    def list_test(self, path, headers=None):
-        _data = {}
-        if path is not None:
-            _data['path'] = path
-        return self.client.perform_query('GET', '/dbfs-testing/list', data=_data, headers=headers)
 
     def put(self, path, contents=None, overwrite=None, headers=None, src_path=None):
         _data = {}
@@ -836,36 +812,11 @@ class DbfsService(object):
             'POST', '/dbfs/put', data=_data, headers=headers, files=_files
         )
 
-    def put_test(self, path, contents=None, overwrite=None, headers=None, src_path=None):
-        _data = {}
-        _files = None
-        if path is not None:
-            _data['path'] = path
-        if contents is not None:
-            _data['contents'] = contents
-        if overwrite is not None:
-            _data['overwrite'] = overwrite
-        if src_path is not None:
-            headers = {'Content-Type': None}
-            filename = os.path.basename(src_path)
-            _files = {'file': (filename, open(src_path, 'rb'), 'multipart/form-data')}
-        return self.client.perform_query(
-            'POST', '/dbfs-testing/put', data=_data, headers=headers, files=_files
-        )
-
     def mkdirs(self, path, headers=None):
         _data = {}
         if path is not None:
             _data['path'] = path
         return self.client.perform_query('POST', '/dbfs/mkdirs', data=_data, headers=headers)
-
-    def mkdirs_test(self, path, headers=None):
-        _data = {}
-        if path is not None:
-            _data['path'] = path
-        return self.client.perform_query(
-            'POST', '/dbfs-testing/mkdirs', data=_data, headers=headers
-        )
 
     def move(self, source_path, destination_path, headers=None):
         _data = {}
@@ -875,14 +826,6 @@ class DbfsService(object):
             _data['destination_path'] = destination_path
         return self.client.perform_query('POST', '/dbfs/move', data=_data, headers=headers)
 
-    def move_test(self, source_path, destination_path, headers=None):
-        _data = {}
-        if source_path is not None:
-            _data['source_path'] = source_path
-        if destination_path is not None:
-            _data['destination_path'] = destination_path
-        return self.client.perform_query('POST', '/dbfs-testing/move', data=_data, headers=headers)
-
     def delete(self, path, recursive=None, headers=None):
         _data = {}
         if path is not None:
@@ -890,16 +833,6 @@ class DbfsService(object):
         if recursive is not None:
             _data['recursive'] = recursive
         return self.client.perform_query('POST', '/dbfs/delete', data=_data, headers=headers)
-
-    def delete_test(self, path, recursive=None, headers=None):
-        _data = {}
-        if path is not None:
-            _data['path'] = path
-        if recursive is not None:
-            _data['recursive'] = recursive
-        return self.client.perform_query(
-            'POST', '/dbfs-testing/delete', data=_data, headers=headers
-        )
 
     def create(self, path, overwrite=None, headers=None):
         _data = {}
@@ -909,16 +842,6 @@ class DbfsService(object):
             _data['overwrite'] = overwrite
         return self.client.perform_query('POST', '/dbfs/create', data=_data, headers=headers)
 
-    def create_test(self, path, overwrite=None, headers=None):
-        _data = {}
-        if path is not None:
-            _data['path'] = path
-        if overwrite is not None:
-            _data['overwrite'] = overwrite
-        return self.client.perform_query(
-            'POST', '/dbfs-testing/create', data=_data, headers=headers
-        )
-
     def add_block(self, handle, data, headers=None):
         _data = {}
         if handle is not None:
@@ -927,27 +850,11 @@ class DbfsService(object):
             _data['data'] = data
         return self.client.perform_query('POST', '/dbfs/add-block', data=_data, headers=headers)
 
-    def add_block_test(self, handle, data, headers=None):
-        _data = {}
-        if handle is not None:
-            _data['handle'] = handle
-        if data is not None:
-            _data['data'] = data
-        return self.client.perform_query(
-            'POST', '/dbfs-testing/add-block', data=_data, headers=headers
-        )
-
     def close(self, handle, headers=None):
         _data = {}
         if handle is not None:
             _data['handle'] = handle
         return self.client.perform_query('POST', '/dbfs/close', data=_data, headers=headers)
-
-    def close_test(self, handle, headers=None):
-        _data = {}
-        if handle is not None:
-            _data['handle'] = handle
-        return self.client.perform_query('POST', '/dbfs-testing/close', data=_data, headers=headers)
 
 
 class WorkspaceService(object):
