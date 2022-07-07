@@ -235,6 +235,9 @@ class UnityCatalogApi(object):
     def get_permissions(self, sec_type, sec_name):
         return self.client.get_permissions(sec_type, sec_name)
 
+    def get_effective_permissions(self, sec_type, sec_name):
+        return self.client.get_effective_permissions(sec_type, sec_name)
+
     def update_permissions(self, sec_type, sec_name, diff_spec):
         return self.client.update_permissions(sec_type, sec_name, diff_spec)
 
