@@ -25,6 +25,7 @@
 #
 import os
 import re
+import io
 
 from six.moves.urllib.parse import urlparse
 
@@ -146,6 +147,7 @@ class JobsService(object):
         idempotency_token=None,
         job_clusters=None,
         git_source=None,
+        access_control_list=None,
     ):
         _data = {}
         if run_name is not None:
@@ -194,6 +196,8 @@ class JobsService(object):
             _data['git_source'] = git_source
             if not isinstance(git_source, dict):
                 raise TypeError('Expected databricks.GitSource() or dict for field git_source')
+        if access_control_list is not None:
+            _data['access_control_list'] = access_control_list
         return self.client.perform_query(
             'POST', '/jobs/runs/submit', data=_data, headers=headers, version=version
         )
@@ -811,6 +815,21 @@ class DbfsService(object):
         return self.client.perform_query(
             'POST', '/dbfs/put', data=_data, headers=headers, files=_files
         )
+
+    def put_string(self, path, contents, overwrite=None, headers=None):
+        _data = {}
+        _files = None
+        if path is not None:
+            _data['path'] = path
+        if overwrite is not None:
+            _data['overwrite'] = overwrite
+        if headers is not None:
+            headers = {'Content-Type': None, **headers}
+        else:
+            headers = {'Content-Type': None}
+        filename = os.path.basename(path)
+        _files = {'file': (filename, io.StringIO(contents), 'multipart/form-data')}
+        return self.client.perform_query('POST', '/dbfs/put', data=_data, headers=headers, files=_files)
 
     def mkdirs(self, path, headers=None):
         _data = {}
