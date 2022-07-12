@@ -67,7 +67,8 @@ def _get_perm_securable_name_and_type(catalog_name, schema_full_name, table_full
 @click.option('--external-location', cls=OneOfOption, default=None,
               one_of=PERMISSIONS_OBJ_TYPES,
               help='Name of the external location of interest')
-@click.option('--effective', '-e', is_flag=True, default=False)
+@click.option('--effective', is_flag=True, default=False,
+              help='Get effective permissions (including inherited privileges)')
 @debug_option
 @profile_option
 @eat_exceptions
