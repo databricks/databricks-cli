@@ -474,12 +474,21 @@ class UnityCatalogService(object):
 
     # Permissions Operations
 
-    def _permissions_url(self, sec_type, sec_name):
-        return '/unity-catalog/permissions/%s/%s' % (sec_type, sec_name)
+    def _permissions_url(self, sec_type, sec_name, effective=False):
+        if effective:
+            return '/unity-catalog/effective-permissions/%s/%s' % (sec_type, sec_name)
+        else:
+            return '/unity-catalog/permissions/%s/%s' % (sec_type, sec_name)
 
     def get_permissions(self, sec_type, sec_name, headers=None):
         _data = {}
         return self.client.perform_query('GET', self._permissions_url(sec_type, sec_name),
+                                         data=_data, headers=headers)
+
+    def get_effective_permissions(self, sec_type, sec_name, headers=None):
+        _data = {}
+        return self.client.perform_query('GET', self._permissions_url(sec_type, sec_name,
+                                                                      effective=True),
                                          data=_data, headers=headers)
 
     def update_permissions(self, sec_type, sec_name, perm_diff_spec, headers=None):

@@ -67,19 +67,24 @@ def _get_perm_securable_name_and_type(catalog_name, schema_full_name, table_full
 @click.option('--external-location', cls=OneOfOption, default=None,
               one_of=PERMISSIONS_OBJ_TYPES,
               help='Name of the external location of interest')
+@click.option('--effective', is_flag=True, default=False,
+              help='Get effective permissions (including inherited privileges)')
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
 def get_permissions_cli(api_client, catalog, schema, table, storage_credential,
-                        external_location):
+                        external_location, effective):
     """
     Get permissions on a securable.
     """
     sec_type, sec_name = _get_perm_securable_name_and_type(catalog, schema, table,
                                                            storage_credential, external_location)
 
-    perm_json = UnityCatalogApi(api_client).get_permissions(sec_type, sec_name)
+    if effective:
+        perm_json = UnityCatalogApi(api_client).get_effective_permissions(sec_type, sec_name)
+    else:
+        perm_json = UnityCatalogApi(api_client).get_permissions(sec_type, sec_name)
     click.echo(mc_pretty_format(perm_json))
 
 
