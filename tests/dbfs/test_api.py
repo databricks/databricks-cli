@@ -36,13 +36,26 @@ from databricks_cli.dbfs.exceptions import LocalFileExistsException
 
 TEST_DBFS_PATH = DbfsPath('dbfs:/test')
 DUMMY_TIME = 1613158406000
-TEST_FILE_JSON = {
+TEST_FILE_JSON1 = {
     'path': '/test',
     'is_dir': False,
     'file_size': 1,
     'modification_time': DUMMY_TIME
 }
-TEST_FILE_INFO = api.FileInfo(TEST_DBFS_PATH, False, 1, DUMMY_TIME)
+TEST_FILE_JSON2 = {
+    'path': '/dir/test',
+    'is_dir': False,
+    'file_size': 1,
+    'modification_time': DUMMY_TIME
+}
+TEST_DIR_JSON = {
+    'path': '/dir',
+    'is_dir': True,
+    'file_size': 0,
+    'modification_time': DUMMY_TIME
+}
+TEST_FILE_INFO0 = api.FileInfo(TEST_DBFS_PATH, False, 1, DUMMY_TIME)
+TEST_FILE_INFO1 = api.FileInfo(TEST_DBFS_PATH2, False, 1, DUMMY_TIME)
 
 
 def get_resource_does_not_exist_exception():
@@ -74,7 +87,7 @@ class TestFileInfo(object):
         assert TEST_DBFS_PATH.basename == row[2]
 
     def test_from_json(self):
-        file_info = api.FileInfo.from_json(TEST_FILE_JSON)
+        file_info = api.FileInfo.from_json(TEST_FILE_JSON0)
         assert file_info.dbfs_path == TEST_DBFS_PATH
         assert not file_info.is_dir
         assert file_info.file_size == 1
@@ -89,15 +102,26 @@ def dbfs_api():
 
 
 class TestDbfsApi(object):
-    def test_list_files_exists(self, dbfs_api):
+    def test_list_files_recursive(self, dbfs_api):
         json = {
-            'files': [TEST_FILE_JSON]
+            'files': [TEST_FILE_JSON0, TEST_DIR_JSON, TEST_FILE_JSON1]
         }
         dbfs_api.client.list.return_value = json
-        files = dbfs_api.list_files(TEST_DBFS_PATH)
+        files = dbfs_api.list_files("dbfs:/")
+
+        assert len(files) == 2
+        assert TEST_FILE_INFO0 == files[0]
+        assert TEST_FILE_INFO1 == files[1]
+
+    def test_list_files_exists(self, dbfs_api):
+        json = {
+            'files': [TEST_FILE_JSON0]
+        }
+        dbfs_api.client.list.return_value = json
+        files = dbfs_api.list_files(TEST_DBFS_PATH, is_recursive=True)
 
         assert len(files) == 1
-        assert TEST_FILE_INFO == files[0]
+        assert TEST_FILE_INFO0 == files[0]
 
     def test_list_files_does_not_exist(self, dbfs_api):
         json = {}
@@ -107,7 +131,7 @@ class TestDbfsApi(object):
         assert len(files) == 0
 
     def test_file_exists_true(self, dbfs_api):
-        dbfs_api.client.get_status.return_value = TEST_FILE_JSON
+        dbfs_api.client.get_status.return_value = TEST_FILE_JSON0
         assert dbfs_api.file_exists(TEST_DBFS_PATH)
 
     def test_file_exists_false(self, dbfs_api):
@@ -116,8 +140,8 @@ class TestDbfsApi(object):
         assert not dbfs_api.file_exists(TEST_DBFS_PATH)
 
     def test_get_status(self, dbfs_api):
-        dbfs_api.client.get_status.return_value = TEST_FILE_JSON
-        assert dbfs_api.get_status(TEST_DBFS_PATH) == TEST_FILE_INFO
+        dbfs_api.client.get_status.return_value = TEST_FILE_JSON0
+        assert dbfs_api.get_status(TEST_DBFS_PATH) == TEST_FILE_INFO0
 
     def test_get_status_fail(self, dbfs_api):
         exception = get_resource_does_not_exist_exception()
@@ -151,7 +175,8 @@ class TestDbfsApi(object):
         dbfs_api.put_file(test_file_path, TEST_DBFS_PATH, True)
         assert api_mock.add_block.call_count == 1
         assert test_handle == api_mock.add_block.call_args[0][0]
-        assert b64encode(b'test').decode() == api_mock.add_block.call_args[0][1]
+        assert b64encode(b'test').decode(
+        ) == api_mock.add_block.call_args[0][1]
         assert api_mock.close.call_count == 1
         assert test_handle == api_mock.close.call_args[0][0]
 
@@ -164,7 +189,7 @@ class TestDbfsApi(object):
 
     def test_get_file(self, dbfs_api, tmpdir):
         api_mock = dbfs_api.client
-        api_mock.get_status.return_value = TEST_FILE_JSON
+        api_mock.get_status.return_value = TEST_FILE_JSON0
         api_mock.read.return_value = {
             'bytes_read': 1,
             'data': b64encode(b'x'),

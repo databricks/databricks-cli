@@ -38,12 +38,14 @@ from databricks_cli.dbfs.dbfs_path import DbfsPath, DbfsPathClickType
 @click.option('-l', is_flag=True, default=False,
               help="""Displays full information including size, file type 
                       and modification time since Epoch in milliseconds.""")
+@click.option('--recursive', '-r', is_flag=True, default=False,
+              help='Displays all subdirectories and files.')
 @click.argument('dbfs_path', nargs=-1, type=DbfsPathClickType())
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def ls_cli(api_client, l, absolute, dbfs_path): #  NOQA
+def ls_cli(api_client, l, absolute, recursive, dbfs_path): #  NOQA
     """
     List files in DBFS.
     """
@@ -53,7 +55,10 @@ def ls_cli(api_client, l, absolute, dbfs_path): #  NOQA
         dbfs_path = dbfs_path[0]
     else:
         error_and_quit('ls can take a maximum of one path.')
-    files = DbfsApi(api_client).list_files(dbfs_path)
+
+    DbfsApi(api_client).list_files(dbfs_path, is_recursive=recursive)
+    absolute = absolute or recursive
+
     table = tabulate([f.to_row(is_long_form=l, is_absolute=absolute) for f in files],
                      tablefmt='plain')
     click.echo(table)
