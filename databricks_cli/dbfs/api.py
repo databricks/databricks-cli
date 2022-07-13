@@ -91,8 +91,8 @@ class DbfsApi(object):
     def __init__(self, api_client):
         self.client = DbfsService(api_client)
 
-    def _recursive_list(self, **kwargs):
-        paths = self.client.list_files(**kwargs)
+    def _recursive_list(self, *args, **kwargs):
+        paths = self.client.list_files(*args, **kwargs)
         files = [p for p in paths if not p.is_dir]
         for p in paths:
             files = files + self._recursive_list(p) if p.is_dir else files
