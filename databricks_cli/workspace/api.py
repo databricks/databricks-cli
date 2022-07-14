@@ -22,7 +22,6 @@
 # limitations under the License.
 
 import os
-import re
 from base64 import b64encode, b64decode
 
 import click
@@ -36,7 +35,6 @@ DIRECTORY = 'DIRECTORY'
 NOTEBOOK = 'NOTEBOOK'
 LIBRARY = 'LIBRARY'
 REPO = 'REPO'
-LOCAL_OS_COMPATIBLE_PATH_REGEX = r'[^\w\-_\. ]' + re.escape(os.sep)
 
 
 class WorkspaceFileInfo(object):
@@ -168,16 +166,15 @@ class WorkspaceApi(object):
                                 'continue.').format(cur_src, extensions))
 
     def export_workspace_dir(self, source_path, target_path, overwrite, headers=None):
-        os_compatible_target_path = re.sub(LOCAL_OS_COMPATIBLE_PATH_REGEX, '_', target_path)
-        if os.path.isfile(os_compatible_target_path):
+        if os.path.isfile(target_path):
             click.echo('{} exists as a file. Skipping this subtree {}'
-                       .format(os_compatible_target_path, source_path))
+                       .format(target_path, source_path))
             return
-        if not os.path.isdir(os_compatible_target_path):
-            os.makedirs(os_compatible_target_path)
+        if not os.path.isdir(target_path):
+            os.makedirs(target_path)
         for obj in self.list_objects(source_path, headers=headers):
             cur_src = obj.path
-            cur_dst = os.path.join(os_compatible_target_path, obj.basename)
+            cur_dst = os.path.join(target_path, obj.basename)
             if obj.is_dir:
                 self.export_workspace_dir(cur_src, cur_dst, overwrite, headers=headers)
             elif obj.is_notebook:
