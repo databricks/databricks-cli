@@ -88,11 +88,6 @@ class JobsService(object):
             _data['schedule'] = schedule
             if not isinstance(schedule, dict):
                 raise TypeError('Expected databricks.CronSchedule() or dict for field schedule')
-        if git_source is not None:
-            _data['git_source'] = git_source
-            if not isinstance(git_source, dict):
-                raise TypeError('Expected databricks.GitSource() or dict for field git_source')
-
         if notebook_task is not None:
             _data['notebook_task'] = notebook_task
             if not isinstance(notebook_task, dict):
@@ -169,10 +164,6 @@ class JobsService(object):
             _data['new_cluster'] = new_cluster
             if not isinstance(new_cluster, dict):
                 raise TypeError('Expected databricks.NewCluster() or dict for field new_cluster')
-        if git_source is not None:
-            _data['git_source'] = git_source
-            if not isinstance(git_source, dict):
-                raise TypeError('Expected databricks.GitSource() or dict for field git_source')
         if libraries is not None:
             _data['libraries'] = libraries
         if notebook_task is not None:
