@@ -56,7 +56,7 @@ def ls_cli(api_client, l, absolute, recursive, dbfs_path): #  NOQA
     else:
         error_and_quit('ls can take a maximum of one path.')
 
-    DbfsApi(api_client).list_files(dbfs_path, is_recursive=recursive)
+    files = DbfsApi(api_client).list_files(dbfs_path, is_recursive=recursive)
     absolute = absolute or recursive
 
     table = tabulate([f.to_row(is_long_form=l, is_absolute=absolute) for f in files],
