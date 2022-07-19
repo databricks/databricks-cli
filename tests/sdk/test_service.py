@@ -138,12 +138,14 @@ def test_create_dbt_task(jobs_service):
         'git_branch': 'main'
     }
 
-    tasks = {
+    tasks = [
+      {
         'task_key': 'dbt',
         'dbt_task': {
             'commands': ['dbt test']
         }
-    }
+      }
+    ]
 
     jobs_service.create_job(git_source=git_source, tasks=tasks)
     jobs_service.client.perform_query.assert_called_with('POST', '/jobs/create', data={'git_source': git_source, 'tasks': tasks}, headers=None, version=None)
