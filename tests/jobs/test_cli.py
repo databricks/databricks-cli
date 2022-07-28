@@ -74,15 +74,24 @@ def test_create_cli_json_file(jobs_api_mock, tmpdir):
 
 RESET_JSON = '{"job_name": "test_job"}'
 
+CORRECT_RESPONSE = {'job_id': 1,
+                    'new_settings': json.loads(RESET_JSON)}
 
 @provide_conf
 def test_reset_cli_json(jobs_api_mock):
     runner = CliRunner()
     runner.invoke(cli.reset_cli, ['--json', RESET_JSON, '--job-id', 1])
-    assert jobs_api_mock.reset_job.call_args[0][0] == {
-        'job_id': 1,
-        'new_settings': json.loads(RESET_JSON)
-    }
+    assert jobs_api_mock.reset_job.call_args[0][0] == CORRECT_RESPONSE
+
+
+RESET_JSON_NEW_SETTINGS = '{"new_settings": {"job_name": "test_job"}}'
+
+
+@provide_conf
+def test_reset_cli_json_new_settings(jobs_api_mock):
+    runner = CliRunner()
+    runner.invoke(cli.reset_cli, ['--json', RESET_JSON_NEW_SETTINGS, '--job-id', 1])
+    assert jobs_api_mock.reset_job.call_args[0][0] == CORRECT_RESPONSE
 
 
 LIST_RETURN = {

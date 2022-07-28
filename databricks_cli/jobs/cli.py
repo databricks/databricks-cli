@@ -87,10 +87,14 @@ def reset_cli(api_client, json_file, json, job_id, version):
         with open(json_file, 'r') as f:
             json = f.read()
     deser_json = json_loads(json)
-    request_body = {
-        'job_id': job_id,
-        'new_settings': deser_json
-    }
+    if 'new_settings' in deser_json:
+        request_body = deser_json
+        request_body['job_id'] = job_id
+    else:
+        request_body = {
+            'job_id': job_id,
+            'new_settings': deser_json
+        }
     JobsApi(api_client).reset_job(request_body, version=version)
 
 
