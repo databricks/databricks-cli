@@ -31,7 +31,6 @@ A common class to be used by client of different APIs
 import base64
 import json
 import warnings
-from pytest import param
 import requests
 import ssl
 import copy
