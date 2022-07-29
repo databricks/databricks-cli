@@ -31,6 +31,7 @@ A common class to be used by client of different APIs
 import base64
 import json
 import warnings
+from pytest import param
 import requests
 import ssl
 import copy
@@ -82,6 +83,7 @@ class ApiClient(object):
             raise_on_status=False # return original response when retries have been exhausted
         )
         self.session = requests.Session()
+        self.session.auth = lambda x: x
         self.session.mount('https://', TlsV1HttpAdapter(max_retries=retries))
 
         parsed_url = urlparse(host)
@@ -125,6 +127,7 @@ class ApiClient(object):
             warnings.simplefilter("ignore", exceptions.InsecureRequestWarning)
             if method == 'GET':
                 translated_data = {k: _translate_boolean_to_query_param(data[k]) for k in data}
+                print(headers, translated_data)
                 resp = self.session.request(method, self.get_url(path, version=version), params = translated_data,
                                             verify = self.verify, headers = headers)
             else:
