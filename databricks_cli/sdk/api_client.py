@@ -126,7 +126,6 @@ class ApiClient(object):
             warnings.simplefilter("ignore", exceptions.InsecureRequestWarning)
             if method == 'GET':
                 translated_data = {k: _translate_boolean_to_query_param(data[k]) for k in data}
-                print(headers, translated_data)
                 resp = self.session.request(method, self.get_url(path, version=version), params = translated_data,
                                             verify = self.verify, headers = headers)
             else:
