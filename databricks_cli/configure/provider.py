@@ -79,9 +79,17 @@ def _set_option(raw_config, profile, option, value):
 
 def _overwrite_config(raw_config):
     config_path = _get_path()
+    # Create config file with owner only rw permissions
+    if not os.path.exists(config_path):
+        file_descriptor = os.open(config_path, os.O_CREAT | os.O_RDWR, 0o600)
+        os.close(file_descriptor)
+
+    # Change file permissions to owner only rw if that's not the case
+    if not os.stat(config_path).st_mode == 0o100600:
+        os.chmod(config_path, 0o600)
+
     with open(config_path, 'w') as cfg:
         raw_config.write(cfg)
-    os.chmod(config_path, 0o600)
 
 
 def update_and_persist_config(profile, databricks_config):

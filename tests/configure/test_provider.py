@@ -23,14 +23,17 @@
 
 import os
 
+from configparser import ConfigParser
 from mock import patch
 import pytest
 
 from databricks_cli.configure.provider import DatabricksConfig, DEFAULT_SECTION, \
     update_and_persist_config, get_config_for_profile, get_config, \
     set_config_provider, ProfileConfigProvider, _get_path, DatabricksConfigProvider,\
-    SparkTaskContextConfigProvider
+    SparkTaskContextConfigProvider, _overwrite_config
 from databricks_cli.utils import InvalidConfigurationError
+
+
 
 
 TEST_HOST = 'https://test.cloud.databricks.com'
@@ -246,3 +249,25 @@ def test_mlflow_config_constructor():
     assert conf.password == TEST_PASSWORD
     assert conf.token == TEST_TOKEN
     assert conf.insecure is False
+
+def test_overwrite_config_creates_file_with_correct_permission():
+    config_path = _get_path()
+
+    assert not os.path.exists(config_path)
+    _overwrite_config(ConfigParser())
+    assert os.path.exists(config_path)
+
+    # assert mode 600 ie owner only can read write
+    assert os.stat(config_path).st_mode == 0o100600
+
+
+def test_overwrite_config_overwrites_permissions_to_600():
+    config_path = _get_path()
+    file_descriptor = os.open(config_path, os.O_CREAT | os.O_RDWR)
+    os.close(file_descriptor)
+
+    assert not os.stat(config_path).st_mode == 0o100600
+
+    _overwrite_config(ConfigParser())
+
+    assert os.stat(config_path).st_mode == 0o100600
