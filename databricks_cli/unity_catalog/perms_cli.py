@@ -32,13 +32,15 @@ from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
 
 
 PERMISSIONS_OBJ_TYPES = [
-    'catalog', 'schema', 'table', 'storage-credential', 'external-location'
+    'metastore', 'catalog', 'schema', 'table', 'storage-credential', 'external-location'
 ]
 
 
-def _get_perm_securable_name_and_type(catalog_name, schema_full_name, table_full_name,
-                                      credential_name, location_name):
-    if catalog_name:
+def _get_perm_securable_name_and_type(metastore_id, catalog_name, schema_full_name,
+                                      table_full_name, credential_name, location_name):
+    if metastore_id:
+        return ('metastore', metastore_id)
+    elif catalog_name:
         return ('catalog', catalog_name)
     elif schema_full_name:
         return ('schema', schema_full_name)
@@ -52,6 +54,9 @@ def _get_perm_securable_name_and_type(catalog_name, schema_full_name, table_full
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Get permissions on a securable.')
+@click.option('--metastore', cls=OneOfOption, default=None,
+              one_of=PERMISSIONS_OBJ_TYPES,
+              help='ID of metastore of interest')
 @click.option('--catalog', cls=OneOfOption, default=None,
               one_of=PERMISSIONS_OBJ_TYPES,
               help='Name of catalog of interest')
@@ -73,12 +78,12 @@ def _get_perm_securable_name_and_type(catalog_name, schema_full_name, table_full
 @profile_option
 @eat_exceptions
 @provide_api_client
-def get_permissions_cli(api_client, catalog, schema, table, storage_credential,
+def get_permissions_cli(api_client, metastore, catalog, schema, table, storage_credential,
                         external_location, effective):
     """
     Get permissions on a securable.
     """
-    sec_type, sec_name = _get_perm_securable_name_and_type(catalog, schema, table,
+    sec_type, sec_name = _get_perm_securable_name_and_type(metastore, catalog, schema, table,
                                                            storage_credential, external_location)
 
     if effective:
@@ -90,6 +95,9 @@ def get_permissions_cli(api_client, catalog, schema, table, storage_credential,
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='update permissions on a securable.')
+@click.option('--metastore', cls=OneOfOption, default=None,
+              one_of=PERMISSIONS_OBJ_TYPES,
+              help='ID of metastore of interest')
 @click.option('--catalog', cls=OneOfOption, default=None,
               one_of=PERMISSIONS_OBJ_TYPES,
               help='Name of catalog of interest')
@@ -113,14 +121,14 @@ def get_permissions_cli(api_client, catalog, schema, table, storage_credential,
 @profile_option
 @eat_exceptions
 @provide_api_client
-def update_permissions_cli(api_client, catalog, schema, table, storage_credential,
+def update_permissions_cli(api_client, metastore, catalog, schema, table, storage_credential,
                            external_location, json_file, json):
     """
     Update permissions on a securable.
 
     The public specification for the JSON request is in development.
     """
-    sec_type, sec_name = _get_perm_securable_name_and_type(catalog, schema, table,
+    sec_type, sec_name = _get_perm_securable_name_and_type(metastore, catalog, schema, table,
                                                            storage_credential, external_location)
 
     json_cli_base(json_file, json,
