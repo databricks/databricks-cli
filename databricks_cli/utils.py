@@ -151,13 +151,13 @@ def to_graph(dict_obj, graph_name="Graph"):
 
 class InvalidConfigurationError(RuntimeError):
     @staticmethod
-    def for_profile(profile):
+    def for_profile(profile, cli_tool=sys.argv[0]):
         if profile is None:
             return InvalidConfigurationError(
                 'You haven\'t configured the CLI yet! '
-                'Please configure by entering `{} configure`'.format(sys.argv[0]))
+                'Please configure by entering `{} configure`'.format(cli_tool))
         return InvalidConfigurationError(
             ('You haven\'t configured the CLI yet for the profile {profile}! '
              'Please configure by entering '
              '`{argv} configure --profile {profile}`').format(
-                profile=profile, argv=sys.argv[0]))
+                profile=profile, argv=cli_tool))
