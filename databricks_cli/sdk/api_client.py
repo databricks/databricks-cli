@@ -151,7 +151,7 @@ class ApiClient(object):
     def get_url(self, path, version=None):
         if version:
             return self.url + version + path
-        elif self.jobs_api_version and path and path.startswith('/jobs'):
+        elif self.jobs_api_version and path and '/jobs' in path:
             return self.url + self.jobs_api_version + path
         elif path and _is_uc_path(path):
             return self.url + UC_API_VERSION + path
