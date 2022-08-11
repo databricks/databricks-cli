@@ -192,8 +192,8 @@ class UnityCatalogApi(object):
 
     # Recipient APIs
 
-    def create_recipient(self, name, comment, sharing_code, allowed_ip_addresses):
-        return self.client.create_recipient(name, comment, sharing_code, allowed_ip_addresses)
+    def create_recipient(self, name, comment, global_metastore_id, allowed_ip_addresses):
+        return self.client.create_recipient(name, comment, global_metastore_id, allowed_ip_addresses)
 
     def list_recipients(self):
         return self.client.list_recipients()
