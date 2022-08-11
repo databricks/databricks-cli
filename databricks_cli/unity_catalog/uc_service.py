@@ -376,15 +376,15 @@ class UnityCatalogService(object):
 
     # Recipient Operations
 
-    def create_recipient(self, name, comment=None, global_metastore_id=None,
+    def create_recipient(self, name, comment=None, sharing_id=None,
                          allowed_ip_addresses=None, headers=None):
         _data = {
             'name': name,
         }
         if comment is not None:
             _data['comment'] = comment
-        if global_metastore_id is not None:
-            _data['data_recipient_global_metastore_id'] = global_metastore_id
+        if sharing_id is not None:
+            _data['data_recipient_global_metastore_id'] = sharing_id
             _data['authentication_type'] = 'DATABRICKS'
         else:
             _data['authentication_type'] = 'TOKEN'
