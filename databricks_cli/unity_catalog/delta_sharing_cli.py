@@ -184,7 +184,7 @@ def delete_share_cli(api_client, name):
 @click.option('--comment', default=None, required=False,
               help='Free-form text description.')
 @click.option('--sharing-id', default=None, required=False,
-              help='The sharing id provided by the data recipient offline.')
+              help='The sharing identifier provided by the data recipient offline.')
 @click.option('--allowed_ip_address', default=None, required=False, multiple=True,
               help=(
                   'IP address in CIDR notation that is allowed to use delta sharing. '
