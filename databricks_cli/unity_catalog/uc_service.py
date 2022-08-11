@@ -92,6 +92,11 @@ class UnityCatalogService(object):
         url = '/unity-catalog/workspaces/%s/metastore' % (workspace_id)
         return self.client.perform_query('DELETE', url, data=_data, headers=headers)
 
+    def get_current_metastore_assignment(self, headers=None):
+        _data = {}
+        return self.client.perform_query('GET', '/unity-catalog/current-metastore-assignment',
+                                         data=_data, headers=headers)
+
     # External Location Operations
 
     def create_external_location(self, loc_spec, skip_validation, headers=None):

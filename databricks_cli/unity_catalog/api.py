@@ -59,6 +59,9 @@ class UnityCatalogApi(object):
     def delete_metastore_assignment(self, workspace_id, metastore_id):
         return self.client.delete_metastore_assignment(workspace_id, metastore_id)
 
+    def get_current_metastore_assignment(self):
+        return self.client.get_current_metastore_assignment()
+
     # External Location APIs
 
     def create_external_location(self, loc_spec, skip_validation):
