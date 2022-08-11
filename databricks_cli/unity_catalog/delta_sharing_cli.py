@@ -28,7 +28,7 @@ from databricks_cli.configure.config import provide_api_client, profile_option, 
 from databricks_cli.unity_catalog.api import UnityCatalogApi
 from databricks_cli.unity_catalog.utils import hide, json_file_help, json_string_help, \
     mc_pretty_format
-from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base, merge_dicts
+from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base, merge_dicts_shallow
 
 
 ##############  Share Commands  ##############
@@ -194,7 +194,7 @@ def delete_share_cli(api_client, name):
               help='Free-form text description.')
 @click.option('--sharing-code', default=None, required=False,
               help='A one-time sharing code shared by the data recipient offline.')
-@click.option('--allowed_ip_address', default=None, required=False, multiple=True,
+@click.option('--allowed-ip-address', default=None, required=False, multiple=True,
               help=(
                   'IP address in CIDR notation that is allowed to use delta sharing. '
                   '(can be specified multiple times).'))
@@ -250,7 +250,7 @@ def get_recipient_cli(api_client, name):
               help='Free-form text description.')
 @click.option('--owner', default=None, required=False,
               help='Owner of the recipient.')
-@click.option('--allowed_ip_address', default=None, required=False, multiple=True,
+@click.option('--allowed-ip-address', default=None, required=False, multiple=True,
               help=(
                   'IP address in CIDR notation that is allowed to use delta sharing '
                   '(can be specified multiple times). Specify a single empty string to disable '
@@ -438,7 +438,7 @@ def update_provider_cli(api_client, name, new_name, comment, owner, recipient_pr
             json_cli_base(recipient_profile_json_file, recipient_profile_json,
                           lambda profile_json: UnityCatalogApi(api_client).update_provider(
                               name,
-                              provider_spec=merge_dicts(
+                              provider_spec=merge_dicts_shallow(
                                   data,
                                   {'recipient_profile_str': mc_pretty_format(profile_json)})),
                           error_msg='Either --recipient-profile-json-file or ' +

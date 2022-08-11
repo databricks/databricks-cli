@@ -163,9 +163,9 @@ class InvalidConfigurationError(RuntimeError):
                 profile=profile, argv=sys.argv[0]))
 
 
-def merge_dicts(*dicts):
+def merge_dicts_shallow(*dicts):
     """
-    Merges dicts throw shallow copy.
+    Merges dicts through shallow copy.
     """
     result = {}
     for d in dicts:
