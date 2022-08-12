@@ -92,6 +92,11 @@ class UnityCatalogService(object):
         url = '/unity-catalog/workspaces/%s/metastore' % (workspace_id)
         return self.client.perform_query('DELETE', url, data=_data, headers=headers)
 
+    def get_current_metastore_assignment(self, headers=None):
+        _data = {}
+        return self.client.perform_query('GET', '/unity-catalog/current-metastore-assignment',
+                                         data=_data, headers=headers)
+
     # External Location Operations
 
     def create_external_location(self, loc_spec, skip_validation, headers=None):
@@ -371,15 +376,15 @@ class UnityCatalogService(object):
 
     # Recipient Operations
 
-    def create_recipient(self, name, comment=None, sharing_code=None,
+    def create_recipient(self, name, comment=None, sharing_id=None,
                          allowed_ip_addresses=None, headers=None):
         _data = {
             'name': name,
         }
         if comment is not None:
             _data['comment'] = comment
-        if sharing_code is not None:
-            _data['sharing_code'] = sharing_code
+        if sharing_id is not None:
+            _data['data_recipient_global_metastore_id'] = sharing_id
             _data['authentication_type'] = 'DATABRICKS'
         else:
             _data['authentication_type'] = 'TOKEN'

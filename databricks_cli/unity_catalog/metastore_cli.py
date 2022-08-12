@@ -132,6 +132,19 @@ def metastore_summary_cli(api_client):
     summary_json = UnityCatalogApi(api_client).get_metastore_summary()
     click.echo(mc_pretty_format(summary_json))
 
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Get metastore assignment for workspace.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def get_metastore_assignment_cli(api_client):
+    """
+    Get current metastore assignment for workspace.
+    """
+    assign_json = UnityCatalogApi(api_client).get_current_metastore_assignment()
+    click.echo(mc_pretty_format(assign_json))
+
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Assign a metastore to a workspace.')
@@ -193,6 +206,8 @@ def register_metastore_commands(cmd_group):
     cmd_group.add_command(hide(metastore_summary_cli), name='metastore-summary')
     cmd_group.add_command(hide(assign_metastore_cli), name='assign-metastore')
     cmd_group.add_command(hide(unassign_metastore_cli), name='unassign-metastore')
+    cmd_group.add_command(hide(get_metastore_assignment_cli),
+                          name='get-metastore-assignment')
 
     # Register command group.
     metastores_group.add_command(create_metastore_cli, name='create')
@@ -203,4 +218,5 @@ def register_metastore_commands(cmd_group):
     metastores_group.add_command(metastore_summary_cli, name='get-summary')
     metastores_group.add_command(assign_metastore_cli, name='assign')
     metastores_group.add_command(unassign_metastore_cli, name='unassign')
+    metastores_group.add_command(get_metastore_assignment_cli, name='get-assignment')
     cmd_group.add_command(metastores_group, name='metastores')

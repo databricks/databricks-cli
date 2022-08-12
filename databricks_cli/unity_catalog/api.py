@@ -60,6 +60,9 @@ class UnityCatalogApi(object):
     def delete_metastore_assignment(self, workspace_id, metastore_id):
         return self.client.delete_metastore_assignment(workspace_id, metastore_id)
 
+    def get_current_metastore_assignment(self):
+        return self.client.get_current_metastore_assignment()
+
     # External Location APIs
 
     def create_external_location(self, loc_spec, skip_validation):
@@ -190,8 +193,8 @@ class UnityCatalogApi(object):
 
     # Recipient APIs
 
-    def create_recipient(self, name, comment, sharing_code, allowed_ip_addresses):
-        return self.client.create_recipient(name, comment, sharing_code, allowed_ip_addresses)
+    def create_recipient(self, name, comment, sharing_id, allowed_ip_addresses):
+        return self.client.create_recipient(name, comment, sharing_id, allowed_ip_addresses)
 
     def list_recipients(self):
         return self.client.list_recipients()
