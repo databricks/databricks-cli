@@ -183,8 +183,8 @@ def delete_share_cli(api_client, name):
 @click.option('--name', required=True, help='Name of new recipient.')
 @click.option('--comment', default=None, required=False,
               help='Free-form text description.')
-@click.option('--sharing-code', default=None, required=False,
-              help='A one-time sharing code shared by the data recipient offline.')
+@click.option('--sharing-id', default=None, required=False,
+              help='The sharing identifier provided by the data recipient offline.')
 @click.option('--allowed_ip_address', default=None, required=False, multiple=True,
               help=(
                   'IP address in CIDR notation that is allowed to use delta sharing. '
@@ -193,12 +193,12 @@ def delete_share_cli(api_client, name):
 @profile_option
 @eat_exceptions
 @provide_api_client
-def create_recipient_cli(api_client, name, comment, sharing_code, allowed_ip_address):
+def create_recipient_cli(api_client, name, comment, sharing_id, allowed_ip_address):
     """
     Create a new recipient.
     """
     recipient_json = UnityCatalogApi(api_client).create_recipient(
-        name, comment, sharing_code, allowed_ip_address)
+        name, comment, sharing_id, allowed_ip_address)
     click.echo(mc_pretty_format(recipient_json))
 
 
