@@ -28,7 +28,8 @@ from databricks_cli.configure.config import provide_api_client, profile_option, 
 from databricks_cli.unity_catalog.api import UnityCatalogApi
 from databricks_cli.unity_catalog.utils import hide, json_file_help, json_string_help, \
     mc_pretty_format
-from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base, merge_dicts_shallow
+from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base, \
+    merge_dicts_shallow
 
 
 ##############  Share Commands  ##############
