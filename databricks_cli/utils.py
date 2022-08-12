@@ -161,3 +161,14 @@ class InvalidConfigurationError(RuntimeError):
              'Please configure by entering '
              '`{argv} configure --profile {profile}`').format(
                 profile=profile, argv=sys.argv[0]))
+
+
+def merge_dicts_shallow(*dicts):
+    """
+    Merges dicts through shallow copy.
+    """
+    result = {}
+    for d in dicts:
+        result.update(d)
+    return result
+    

@@ -457,17 +457,9 @@ class UnityCatalogService(object):
         return self.client.perform_query('GET', '/unity-catalog/providers/%s' % (name),
                                          data={}, headers=headers)
 
-    def update_provider(self, name, new_name, comment, recipient_profile, headers=None):
-        _data = {}
-        if new_name is not None:
-            _data['name'] = new_name
-        if recipient_profile is not None:
-            _data['recipient_profile_str'] = mc_pretty_format(recipient_profile)
-        if comment is not None:
-            _data['comment'] = comment
-
+    def update_provider(self, name, provider_spec, headers=None):
         return self.client.perform_query('PATCH', '/unity-catalog/providers/%s' % (name),
-                                         data=_data, headers=headers)
+                                         data=provider_spec, headers=headers)
 
     def delete_provider(self, name, headers=None):
         return self.client.perform_query('DELETE', '/unity-catalog/providers/%s' % (name),

@@ -28,7 +28,8 @@ from databricks_cli.configure.config import provide_api_client, profile_option, 
 from databricks_cli.unity_catalog.api import UnityCatalogApi
 from databricks_cli.unity_catalog.utils import hide, json_file_help, json_string_help, \
     mc_pretty_format
-from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
+from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base, \
+    merge_dicts_shallow
 
 
 ##############  Share Commands  ##############
@@ -127,6 +128,11 @@ def shared_data_object(name):
                short_help='Update a share.')
 @click.option('--name', required=True,
               help='Name of the share to update.')
+@click.option('--new-name', default=None, help='New name of the share.')
+@click.option('--comment', default=None, required=False,
+              help='Free-form text description.')
+@click.option('--owner', default=None, required=False,
+              help='Owner of the share.')
 @click.option('--add-table', default=None, multiple=True,
               metavar='NAME',
               help='Full name of table to add to share (can be specified multiple times).')
@@ -141,20 +147,24 @@ def shared_data_object(name):
 @profile_option
 @eat_exceptions
 @provide_api_client
-def update_share_cli(api_client, name, add_table, remove_table, json_file, json):
+def update_share_cli(api_client, name, new_name, comment, owner,
+                     add_table, remove_table, json_file, json):
     """
     Update a share.
 
     The public specification for the JSON request is in development.
     """
-    if len(add_table) > 0 or len(remove_table) > 0:
+    if ((new_name is not None) or (comment is not None) or (owner is not None) or
+        len(add_table) > 0 or len(remove_table) > 0):
+        if (json_file is not None) or (json is not None):
+            raise ValueError('Cannot specify JSON if any other update flags are specified')
         updates = []
         for a in add_table:
             updates.append({'action': 'ADD', 'data_object': shared_data_object(a)})
         for r in remove_table:
             updates.append({'action': 'REMOVE', 'data_object': shared_data_object(r)})
-        d = {'updates': updates}
-        share_json = UnityCatalogApi(api_client).update_share(name, d)
+        data = {'name': new_name, 'comment': comment, 'owner': owner, 'updates': updates}
+        share_json = UnityCatalogApi(api_client).update_share(name, data)
         click.echo(mc_pretty_format(share_json))
     else:
         json_cli_base(json_file, json,
@@ -185,10 +195,10 @@ def delete_share_cli(api_client, name):
               help='Free-form text description.')
 @click.option('--sharing-id', default=None, required=False,
               help='The sharing identifier provided by the data recipient offline.')
-@click.option('--allowed_ip_address', default=None, required=False, multiple=True,
+@click.option('--allowed-ip-address', default=None, required=False, multiple=True,
               help=(
                   'IP address in CIDR notation that is allowed to use delta sharing. '
-                  'Supports multiple options.'))
+                  '(can be specified multiple times).'))
 @debug_option
 @profile_option
 @eat_exceptions
@@ -236,6 +246,16 @@ def get_recipient_cli(api_client, name):
                short_help='Update a recipient.')
 @click.option('--name', required=True,
               help='Name of the recipient who needs to be updated.')
+@click.option('--new-name', default=None, help='New name of the recipient.')
+@click.option('--comment', default=None, required=False,
+              help='Free-form text description.')
+@click.option('--owner', default=None, required=False,
+              help='Owner of the recipient.')
+@click.option('--allowed-ip-address', default=None, required=False, multiple=True,
+              help=(
+                  'IP address in CIDR notation that is allowed to use delta sharing '
+                  '(can be specified multiple times). Specify a single empty string to disable '
+                  'IP allowlist.'))
 @click.option('--json-file', default=None, type=click.Path(),
               help=json_file_help(method='PATCH', path='/recipients/{name}'))
 @click.option('--json', default=None, type=JsonClickType(),
@@ -244,14 +264,27 @@ def get_recipient_cli(api_client, name):
 @profile_option
 @eat_exceptions
 @provide_api_client
-def update_recipient_cli(api_client, name, json_file, json):
+def update_recipient_cli(api_client, name, new_name, comment, owner,
+                         allowed_ip_address, json_file, json):
     """
     Update a recipient.
 
     The public specification for the JSON request is in development.
     """
-    json_cli_base(json_file, json,
-                  lambda json: UnityCatalogApi(api_client).update_recipient(name, json))
+    if ((new_name is not None) or (comment is not None) or (owner is not None) or
+        (allowed_ip_address is not None)):
+        if (json_file is not None) or (json is not None):
+            raise ValueError('Cannot specify JSON if any other update flags are specified')
+        data = {'name': new_name, 'comment': comment, 'owner': owner}
+        if len(allowed_ip_address) > 0:
+            data['ip_access_list'] = {}
+            if len(allowed_ip_address) != 1 or allowed_ip_address[0] != '':
+                data['ip_access_list']['allowed_ip_addresses'] = allowed_ip_address
+        recipient_json = UnityCatalogApi(api_client).update_recipient(name, data)
+        click.echo(mc_pretty_format(recipient_json))
+    else:
+        json_cli_base(json_file, json,
+                      lambda json: UnityCatalogApi(api_client).update_recipient(name, json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -369,34 +402,53 @@ def get_provider_cli(api_client, name):
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Update a provider.')
 @click.option('--name', required=True, help='Name of the provider to update.')
-@click.option('--new_name', default=None, help='New name of the provider.')
+@click.option('--new-name', default=None, help='New name of the provider.')
 @click.option('--comment', default=None, required=False,
               help='Free-form text description.')
+@click.option('--owner', default=None, required=False,
+              help='Owner of the provider.')
 @click.option('--recipient-profile-json-file', default=None, type=click.Path(),
               help='File containing recipient profile in JSON format.')
 @click.option('--recipient-profile-json', default=None, type=JsonClickType(),
               help='JSON string containing recipient profile.')
+@click.option('--json-file', default=None, type=click.Path(),
+              help=json_file_help(method='PATCH', path='/providers/{name}'))
+@click.option('--json', default=None, type=JsonClickType(),
+              help=json_string_help(method='PATCH', path='/providers/{name}'))
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def update_provider_cli(api_client, name, new_name, comment, recipient_profile_json_file,
-                        recipient_profile_json):
+def update_provider_cli(api_client, name, new_name, comment, owner, recipient_profile_json_file,
+                        recipient_profile_json, json_file, json):
     """
     Update a provider.
 
     The public specification for the JSON request is in development.
     """
-    if recipient_profile_json is None and recipient_profile_json_file is None:
-        updated_provider = UnityCatalogApi(api_client).update_provider(name, new_name, comment)
-        click.echo(mc_pretty_format(updated_provider))
-    else:
-        json_cli_base(recipient_profile_json_file, recipient_profile_json,
-                      lambda json: UnityCatalogApi(api_client).update_provider(name, new_name,
-                                                                               comment, json),
-                      error_msg='Either --recipient-profile-json-file or ' +
-                      '--recipient-profile-json should be provided')
+    if ((new_name is not None) or (comment is not None) or (owner is not None) or
+        (recipient_profile_json_file is not None) or (recipient_profile_json) is not None):
+        if (json_file is not None) or (json is not None):
+            raise ValueError('Cannot specify JSON if any other update flags are specified')
+        data = {'name': new_name, 'comment': comment, 'owner': owner}
 
+        if (recipient_profile_json_file is None) and (recipient_profile_json is None):
+            provider_json = UnityCatalogApi(api_client).update_provider(name, provider_spec=data)
+            click.echo(mc_pretty_format(provider_json))
+        else:
+            json_cli_base(recipient_profile_json_file, recipient_profile_json,
+                          lambda profile_json: UnityCatalogApi(api_client).update_provider(
+                              name,
+                              provider_spec=merge_dicts_shallow(
+                                  data,
+                                  {'recipient_profile_str': mc_pretty_format(profile_json)})),
+                          error_msg='Either --recipient-profile-json-file or ' +
+                          '--recipient-profile-json should be provided')
+    else:
+        json_cli_base(json_file, json,
+                      lambda json: UnityCatalogApi(api_client).update_provider(
+                          name, provider_spec=json))
+            
 
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='List shares of a provider.')

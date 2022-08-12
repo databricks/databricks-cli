@@ -22,6 +22,7 @@
 # limitations under the License.
 
 from databricks_cli.unity_catalog.uc_service import UnityCatalogService
+from databricks_cli.unity_catalog.utils import mc_pretty_format
 
 
 class UnityCatalogApi(object):
@@ -224,9 +225,20 @@ class UnityCatalogApi(object):
     def get_provider(self, name):
         return self.client.get_provider(name)
 
-    def update_provider(self, name, new_name=None, comment=None, recipient_profile=None):
-        return self.client.update_provider(name, new_name, comment, recipient_profile)
-
+    def update_provider(self, name, new_name=None, comment=None,
+                        recipient_profile=None, provider_spec=None):
+        # If spec is provided, override all legacy parameters.
+        if provider_spec is not None:
+            return self.client.update_provider(name, provider_spec)
+        _data = {}
+        if new_name is not None:
+            _data['name'] = new_name
+        if recipient_profile is not None:
+            _data['recipient_profile_str'] = mc_pretty_format(recipient_profile)
+        if comment is not None:
+            _data['comment'] = comment
+        return self.client.update_provider(name, _data)
+        
     def delete_provider(self, name):
         return self.client.delete_provider(name)
 
