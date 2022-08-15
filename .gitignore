@@ -18,4 +18,3 @@ venv
 tox.output
 .gitignore
 tox.ini
-*.un~
