@@ -121,12 +121,16 @@ def delete_catalog_cli(api_client, name, purge):
     """
     if purge:
         tables_response = UnityCatalogApi(api_client).list_table_summaries(name)
-        for t in tables_response.get('tables', []):
+        tables = tables_response.get('tables', [])
+        tables = filter(lambda t: t['full_name'].split('.')[1] != 'information_schema', tables)
+        for t in tables:
             click.echo("Deleting table: %s" % (t['full_name']))
             UnityCatalogApi(api_client).delete_table(t['full_name'])
 
         schemas_response = UnityCatalogApi(api_client).list_schemas(name, None)
-        for s in schemas_response.get('schemas', []):
+        schemas = schemas_response.get('schemas', [])
+        schemas = filter(lambda s: s['name'] != 'information_schema', schemas)
+        for s in schemas:
             click.echo("Purging schema: %s" % (s['full_name']))
             UnityCatalogApi(api_client).delete_schema(s['full_name'])
 
