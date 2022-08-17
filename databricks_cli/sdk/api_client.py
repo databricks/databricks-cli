@@ -41,7 +41,6 @@ from . import version
 from requests.adapters import HTTPAdapter
 from requests.utils import get_netrc_auth
 from requests.auth import HTTPBasicAuth
-from requests import PreparedRequest
 from six.moves.urllib.parse import urlparse
 
 try:
@@ -77,7 +76,7 @@ class FallbackNetrcAuth(requests.auth.AuthBase):
         request.Session().auth=FallbackNetrcAuth()
     '''
 
-    def __call__(self, r: PreparedRequest):
+    def __call__(self, r):
         if "Authorization" in r.headers:
             return r
         
