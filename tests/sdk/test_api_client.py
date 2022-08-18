@@ -48,7 +48,7 @@ def m():
 
 @pytest.fixture(autouse=False)
 def netrc_b64(tmp_path, monkeypatch):
-    netrc_file_path = os.path.join(tmp_path, ".netrc")
+    netrc_file_path = os.path.join(str(tmp_path), ".netrc")
     with open(netrc_file_path, "w+") as netrc:
         #generates header Authorization: 'Basic bmV0cmM6cGFzc3dvcmQ='
         netrc.write("machine databricks.com login netrc password password")
