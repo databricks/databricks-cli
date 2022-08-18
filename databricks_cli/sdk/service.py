@@ -58,6 +58,7 @@ class JobsService(object):
         tags=None,
         format=None,
         dbt_task=None,
+        access_control_list=None,
     ):
         _data = {}
         if name is not None:
@@ -130,6 +131,8 @@ class JobsService(object):
             _data['dbt_task'] = dbt_task
             if not isinstance(dbt_task, dict):
                 raise TypeError('Expected databricks.DbtTask() or dict for field dbt_task')
+        if access_control_list is not None:
+            _data['access_control_list'] = access_control_list
         return self.client.perform_query(
             'POST', '/jobs/create', data=_data, headers=headers, version=version
         )
@@ -152,6 +155,7 @@ class JobsService(object):
         job_clusters=None,
         git_source=None,
         dbt_task=None,
+        access_control_list=None,
     ):
         _data = {}
         if run_name is not None:
@@ -204,6 +208,8 @@ class JobsService(object):
             _data['dbt_task'] = dbt_task
             if not isinstance(dbt_task, dict):
                 raise TypeError('Expected databricks.DbtTask() or dict for field dbt_task')
+        if access_control_list is not None:
+            _data['access_control_list'] = access_control_list
         return self.client.perform_query(
             'POST', '/jobs/runs/submit', data=_data, headers=headers, version=version
         )
