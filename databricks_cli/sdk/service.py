@@ -226,6 +226,22 @@ class JobsService(object):
             'POST', '/jobs/reset', data=_data, headers=headers, version=version
         )
 
+    def update_job(
+        self, job_id, new_settings=None, fields_to_remove=None, headers=None, version=None
+    ):
+        _data = {}
+        if job_id is not None:
+            _data['job_id'] = job_id
+        if new_settings is not None:
+            _data['new_settings'] = new_settings
+            if not isinstance(new_settings, dict):
+                raise TypeError('Expected databricks.JobSettings() or dict for field new_settings')
+        if fields_to_remove is not None:
+            _data['fields_to_remove'] = fields_to_remove
+        return self.client.perform_query(
+            'POST', '/jobs/update', data=_data, headers=headers, version=version
+        )
+
     def delete_job(self, job_id, headers=None, version=None):
         _data = {}
         if job_id is not None:

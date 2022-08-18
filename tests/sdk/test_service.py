@@ -57,6 +57,32 @@ def test_get_job(jobs_service):
 
 
 @provide_conf
+def test_update_job(jobs_service):
+    jobs_service.update_job(None)
+    jobs_service.client.perform_query.assert_called_with('POST', '/jobs/update', data={}, headers=None, version=None)
+
+    jobs_service.update_job(1)
+    jobs_service.client.perform_query.assert_called_with('POST', '/jobs/update', data={'job_id': 1}, headers=None, version=None)
+
+    jobs_service.update_job(1, version='2.1')
+    jobs_service.client.perform_query.assert_called_with('POST', '/jobs/update', data={'job_id': 1}, headers=None, version='2.1')
+
+    # new_settings_argument
+    new_settings = {
+        "name": "job1",
+        "tags": {"cost-center": "engineering","team": "jobs"}
+    }
+    jobs_service.update_job(1, version='2.1', new_settings=new_settings)
+    jobs_service.client.perform_query.assert_called_with('POST', '/jobs/update', data={'job_id': 1, 'new_settings': new_settings}, headers=None, version='2.1')
+
+    # fields_to_remove argument
+    fields_to_remove = ["libraries", "schedule"]
+    jobs_service.update_job(1, version='2.1', fields_to_remove=fields_to_remove)
+    jobs_service.client.perform_query.assert_called_with('POST', '/jobs/update', data={'job_id': 1, 'fields_to_remove': fields_to_remove}, headers=None, version='2.1')
+
+
+
+@provide_conf
 def test_list_jobs(jobs_service):
     jobs_service.list_jobs()
     jobs_service.client.perform_query.assert_called_with('GET', '/jobs/list', data={}, headers=None, version=None)
@@ -129,6 +155,11 @@ def test_create_job(jobs_service):
     jobs_service.create_job(tasks=tasks, version='2.1')
     jobs_service.client.perform_query.assert_called_with('POST', '/jobs/create', data={'tasks': tasks}, headers=None, version='2.1')
 
+    tasks = {'task_key': '123', 'notebook_task': {'notebook_path': '/test'}}
+    tags = {"cost-center": "engineering","team": "jobs"}
+    jobs_service.create_job(tasks=tasks, tags= tags, version='2.1')
+    jobs_service.client.perform_query.assert_called_with('POST', '/jobs/create', data={'tasks': tasks, 'tags': tags}, headers=None, version='2.1')
+
 
 @provide_conf
 def test_create_dbt_task(jobs_service):
@@ -188,6 +219,13 @@ def test_create_job_invalid_types(jobs_service):
 
     with pytest.raises(TypeError, match='dbt_task'):
         jobs_service.create_job(dbt_task=[])
+
+
+@provide_conf
+def test_update_job_invalid_types(jobs_service):
+    with pytest.raises(TypeError, match='new_settings'):
+        jobs_service.update_job(job_id=None, new_settings=[])
+
 
 
 @provide_conf
