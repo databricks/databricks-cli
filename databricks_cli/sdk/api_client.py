@@ -73,7 +73,9 @@ class FallbackNetrcAuth(requests.auth.AuthBase):
     Use with::
 
         requests.get(url, auth=FallbackNetrcAuth())
-        request.Session().auth=FallbackNetrcAuth()
+        
+        s = requests.Session()
+        s.auth = FallbackNetrcAuth()
     '''
 
     def __call__(self, r):

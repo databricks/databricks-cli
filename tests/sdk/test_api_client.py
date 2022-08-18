@@ -20,7 +20,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from asyncore import write
 import json
+import os
 
 import pytest
 import requests
@@ -43,6 +45,16 @@ requests_mock.mock.case_sensitive = True
 def m():
     with requests_mock.Mocker() as m:
         yield m
+
+@pytest.fixture(autouse=False)
+def netrc_b64(tmp_path, monkeypatch):
+    netrc_file_path = os.path.join(tmp_path, ".netrc")
+    with open(netrc_file_path, "w+") as netrc:
+        #generates header Authorization: 'Basic bmV0cmM6cGFzc3dvcmQ='
+        netrc.write("machine databricks.com login netrc password password")
+
+    monkeypatch.setenv("NETRC", netrc_file_path)
+    return "bmV0cmM6cGFzc3dvcmQ="
 
 def test_simple_request(m):
     data = {'cucumber': 'dade'}
@@ -130,3 +142,21 @@ def test_api_client_url_parsing():
     # databricks_cli.configure.cli
     client = ApiClient(host='http://databricks.com')
     assert client.get_url('') == 'http://databricks.com/api/2.0'
+
+def test_api_client_auth_netrc_and_user_password(m, netrc_b64):
+    m.get('https://databricks.com/api/2.0/endpoint', text=json.dumps({}))
+    client = ApiClient(user="apple", password="banana", host="https://databricks.com")
+    client.perform_query("GET", "/endpoint")
+    assert m.request_history[0].headers['Authorization'] == "Basic YXBwbGU6YmFuYW5h"
+
+def test_api_client_auth_only_valid_netrc(m, netrc_b64):
+    m.get('https://databricks.com/api/2.0/endpoint', text=json.dumps({}))
+    client = ApiClient(host="https://databricks.com")
+    client.perform_query("GET", "/endpoint")
+    assert m.request_history[0].headers['Authorization'] == "Basic " + netrc_b64
+
+def test_api_client_auth_no_netrc(m):
+    m.get('https://databricks.com/api/2.0/endpoint', text=json.dumps({}))
+    client = ApiClient(host="https://databricks.com")
+    client.perform_query("GET", "/endpoint")
+    assert "Authorization" not in m.request_history[0].headers
