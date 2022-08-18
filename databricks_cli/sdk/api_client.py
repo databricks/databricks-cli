@@ -84,7 +84,7 @@ class FallbackNetrcAuth(requests.auth.AuthBase):
         
         netrc_tuple = get_netrc_auth(r.url)
 
-        if netrc_tuple is None:
+        if netrc_tuple is None or not any(netrc_tuple):
             return r
         
         return HTTPBasicAuth(*netrc_tuple)(r)
