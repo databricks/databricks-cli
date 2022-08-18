@@ -131,6 +131,36 @@ def test_create_job(jobs_service):
 
 
 @provide_conf
+def test_create_dbt_task(jobs_service):
+    git_source  = {
+        'git_provider': 'github',
+        'git_url': 'https://github.com/foo/bar',
+        'git_branch': 'main'
+    }
+
+    tasks = [
+      {
+        'task_key': 'dbt',
+        'dbt_task': {
+            'commands': ['dbt test']
+        }
+      }
+    ]
+
+    jobs_service.create_job(git_source=git_source, tasks=tasks)
+    jobs_service.client.perform_query.assert_called_with('POST', '/jobs/create', data={'git_source': git_source, 'tasks': tasks}, headers=None, version=None)
+
+
+@provide_conf
+def test_run_now_dbt_task(jobs_service):
+    job_id = 1337
+    dbt_commands = ['dbt test', 'dbt deps']
+
+    jobs_service.run_now(job_id=job_id, dbt_commands=dbt_commands)
+    jobs_service.client.perform_query.assert_called_with('POST', '/jobs/run-now', data={'job_id': job_id, 'dbt_commands': dbt_commands}, headers=None, version=None)
+
+
+@provide_conf
 def test_create_job_invalid_types(jobs_service):
     with pytest.raises(TypeError, match='new_cluster'):
         jobs_service.create_job(new_cluster=[])
@@ -140,7 +170,10 @@ def test_create_job_invalid_types(jobs_service):
 
     with pytest.raises(TypeError, match='schedule'):
         jobs_service.create_job(schedule=[])
-        
+
+    with pytest.raises(TypeError, match='git_source'):
+        jobs_service.create_job(git_source=[])
+
     with pytest.raises(TypeError, match='notebook_task'):
         jobs_service.create_job(notebook_task=[])
         
@@ -153,6 +186,9 @@ def test_create_job_invalid_types(jobs_service):
     with pytest.raises(TypeError, match='spark_submit_task'):
         jobs_service.create_job(spark_submit_task=[])
 
+    with pytest.raises(TypeError, match='dbt_task'):
+        jobs_service.create_job(dbt_task=[])
+
 
 @provide_conf
 def test_submit_run_invalid_types(jobs_service):
@@ -164,7 +200,10 @@ def test_submit_run_invalid_types(jobs_service):
 
     with pytest.raises(TypeError, match='schedule'):
         jobs_service.submit_run(schedule=[])
-        
+
+    with pytest.raises(TypeError, match='git_source'):
+        jobs_service.submit_run(git_source=[])
+
     with pytest.raises(TypeError, match='notebook_task'):
         jobs_service.submit_run(notebook_task=[])
         
@@ -176,3 +215,6 @@ def test_submit_run_invalid_types(jobs_service):
         
     with pytest.raises(TypeError, match='spark_submit_task'):
         jobs_service.submit_run(spark_submit_task=[])
+
+    with pytest.raises(TypeError, match='dbt_task'):
+        jobs_service.submit_run(dbt_task=[])

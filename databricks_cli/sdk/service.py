@@ -57,6 +57,7 @@ class JobsService(object):
         job_clusters=None,
         tags=None,
         format=None,
+        dbt_task=None,
     ):
         _data = {}
         if name is not None:
@@ -125,6 +126,10 @@ class JobsService(object):
             _data['tags'] = tags
         if format is not None:
             _data['format'] = format
+        if dbt_task is not None:
+            _data['dbt_task'] = dbt_task
+            if not isinstance(dbt_task, dict):
+                raise TypeError('Expected databricks.DbtTask() or dict for field dbt_task')
         return self.client.perform_query(
             'POST', '/jobs/create', data=_data, headers=headers, version=version
         )
@@ -146,6 +151,7 @@ class JobsService(object):
         idempotency_token=None,
         job_clusters=None,
         git_source=None,
+        dbt_task=None,
     ):
         _data = {}
         if run_name is not None:
@@ -194,6 +200,10 @@ class JobsService(object):
             _data['git_source'] = git_source
             if not isinstance(git_source, dict):
                 raise TypeError('Expected databricks.GitSource() or dict for field git_source')
+        if dbt_task is not None:
+            _data['dbt_task'] = dbt_task
+            if not isinstance(dbt_task, dict):
+                raise TypeError('Expected databricks.DbtTask() or dict for field dbt_task')
         return self.client.perform_query(
             'POST', '/jobs/runs/submit', data=_data, headers=headers, version=version
         )
@@ -253,6 +263,7 @@ class JobsService(object):
         idempotency_token=None,
         headers=None,
         version=None,
+        dbt_commands=None,
     ):
         _data = {}
         if job_id is not None:
@@ -269,6 +280,8 @@ class JobsService(object):
             _data['python_named_params'] = python_named_params
         if idempotency_token is not None:
             _data['idempotency_token'] = idempotency_token
+        if dbt_commands is not None:
+            _data['dbt_commands'] = dbt_commands
         return self.client.perform_query(
             'POST', '/jobs/run-now', data=_data, headers=headers, version=version
         )
@@ -285,6 +298,7 @@ class JobsService(object):
         python_named_params=None,
         headers=None,
         version=None,
+        dbt_commands=None,
     ):
         _data = {}
         if run_id is not None:
@@ -303,6 +317,8 @@ class JobsService(object):
             _data['spark_submit_params'] = spark_submit_params
         if python_named_params is not None:
             _data['python_named_params'] = python_named_params
+        if dbt_commands is not None:
+            _data['dbt_commands'] = dbt_commands
         return self.client.perform_query(
             'POST', '/jobs/runs/repair', data=_data, headers=headers, version=version
         )
