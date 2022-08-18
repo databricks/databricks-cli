@@ -392,6 +392,14 @@ class JobsService(object):
             'POST', '/jobs/runs/cancel', data=_data, headers=headers, version=version
         )
 
+    def cancel_all_runs(self, job_id, headers=None, version=None):
+        _data = {}
+        if job_id is not None:
+            _data['job_id'] = job_id
+        return self.client.perform_query(
+            'POST', '/jobs/runs/cancel-all', data=_data, headers=headers, version=version
+        )
+
     def get_run_output(self, run_id, headers=None, version=None):
         _data = {}
         if run_id is not None:
