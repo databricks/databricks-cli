@@ -21,6 +21,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import json
+import os
 
 import pytest
 import requests
@@ -43,6 +44,12 @@ requests_mock.mock.case_sensitive = True
 def m():
     with requests_mock.Mocker() as m:
         yield m
+
+@pytest.fixture(autouse=False)
+def netrc_file(tmp_path, monkeypatch):
+    netrc_file_path = os.path.join(str(tmp_path), ".netrc")
+    monkeypatch.setenv("NETRC", netrc_file_path)
+    return netrc_file_path
 
 def test_simple_request(m):
     data = {'cucumber': 'dade'}
@@ -130,3 +137,38 @@ def test_api_client_url_parsing():
     # databricks_cli.configure.cli
     client = ApiClient(host='http://databricks.com')
     assert client.get_url('') == 'http://databricks.com/api/2.0'
+
+def test_api_client_auth_netrc_and_user_password(m, netrc_file):
+    with open(netrc_file, "w+") as netrc:
+        #generates header Authorization: 'Basic bmV0cmM6cGFzc3dvcmQ='
+        netrc.write("machine databricks.com login netrc password password")
+
+    m.get('https://databricks.com/api/2.0/endpoint', text=json.dumps({}))
+    client = ApiClient(user="apple", password="banana", host="https://databricks.com")
+    client.perform_query("GET", "/endpoint")
+    assert m.request_history[0].headers['Authorization'] == "Basic YXBwbGU6YmFuYW5h"
+
+def test_api_client_auth_only_valid_netrc(m, netrc_file):
+    with open(netrc_file, "w+") as netrc:
+        #generates header Authorization: 'Basic bmV0cmM6cGFzc3dvcmQ='
+        netrc.write("machine databricks.com login netrc password password")
+
+    m.get('https://databricks.com/api/2.0/endpoint', text=json.dumps({}))
+    client = ApiClient(host="https://databricks.com")
+    client.perform_query("GET", "/endpoint")
+    assert m.request_history[0].headers['Authorization'] == "Basic bmV0cmM6cGFzc3dvcmQ="
+
+def test_api_client_auth_invalid_netrc(m, netrc_file):
+    with open(netrc_file, "w+") as netrc:
+        netrc.write("garbage")
+
+    m.get('https://databricks.com/api/2.0/endpoint', text=json.dumps({}))
+    client = ApiClient(host="https://databricks.com")
+    client.perform_query("GET", "/endpoint")
+    assert "Authorization" not in m.request_history[0].headers
+
+def test_api_client_auth_no_netrc(m):
+    m.get('https://databricks.com/api/2.0/endpoint', text=json.dumps({}))
+    client = ApiClient(host="https://databricks.com")
+    client.perform_query("GET", "/endpoint")
+    assert "Authorization" not in m.request_history[0].headers

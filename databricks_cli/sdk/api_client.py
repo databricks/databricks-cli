@@ -39,6 +39,8 @@ import pprint
 from . import version
 
 from requests.adapters import HTTPAdapter
+from requests.utils import get_netrc_auth
+from requests.auth import HTTPBasicAuth
 from six.moves.urllib.parse import urlparse
 
 try:
@@ -63,6 +65,30 @@ class TlsV1HttpAdapter(HTTPAdapter):
     def init_poolmanager(self, connections, maxsize, block=False):
         self.poolmanager = PoolManager(num_pools=connections, maxsize=maxsize, block=block, ssl_version=ssl.PROTOCOL_TLSv1_2)
 
+# https://github.com/psf/requests/issues/2773#issuecomment-174312831
+class FallbackNetrcAuth(requests.auth.AuthBase):
+    '''Force requests to ignore the ``.netrc`` if other authentication 
+    methods have been setup. Fallback to ``.netrc`` if not. 
+
+    Use with::
+
+        requests.get(url, auth=FallbackNetrcAuth())
+        
+        s = requests.Session()
+        s.auth = FallbackNetrcAuth()
+    '''
+
+    def __call__(self, r):
+        if "Authorization" in r.headers:
+            return r
+        
+        netrc_tuple = get_netrc_auth(r.url)
+
+        if netrc_tuple is None or not any(netrc_tuple):
+            return r
+        
+        return HTTPBasicAuth(*netrc_tuple)(r)
+
 class ApiClient(object):
     """
     A partial Python implementation of dbc rest api
@@ -82,6 +108,7 @@ class ApiClient(object):
             raise_on_status=False # return original response when retries have been exhausted
         )
         self.session = requests.Session()
+        self.session.auth = FallbackNetrcAuth()
         self.session.mount('https://', TlsV1HttpAdapter(max_retries=retries))
 
         parsed_url = urlparse(host)
