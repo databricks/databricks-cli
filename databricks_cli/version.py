@@ -71,3 +71,20 @@ def next_development_version(value=None):
     minor = int(match.group(2))
     patch = int(match.group(3))
     return "{}.{}.{}.dev0".format(major, minor, patch + 1)
+
+
+def to_release_version(value=None):
+    """
+    Returns the release version for the current development version of databricks-cli.
+    """
+    if value is None:
+        value = version
+
+    if is_release_version(value):
+        raise ValueError("Expected development version, got: " + value)
+
+    match = _match_version(value)
+    major = int(match.group(1))
+    minor = int(match.group(2))
+    patch = int(match.group(3))
+    return "{}.{}.{}".format(major, minor, patch)

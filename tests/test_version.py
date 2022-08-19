@@ -66,3 +66,16 @@ def test_next_development_version():
     assert version.next_development_version("0.16.1111") == "0.16.1112.dev0"
     assert version.next_development_version("0.17.0") == "0.17.1.dev0"
     assert version.next_development_version("1.0.0") == "1.0.1.dev0"
+
+
+def test_to_release_version():
+    # Fail with release version.
+    with pytest.raises(ValueError):
+        version.to_release_version("1.0.0")
+
+    # Works with development version.
+    assert version.to_release_version("0.16.0.dev0") == "0.16.0"
+    assert version.to_release_version("0.16.8.dev0") == "0.16.8"
+    assert version.to_release_version("0.16.1111.dev1") == "0.16.1111"
+    assert version.to_release_version("0.17.0.dev") == "0.17.0"
+    assert version.to_release_version("1.0.0.x") == "1.0.0"
