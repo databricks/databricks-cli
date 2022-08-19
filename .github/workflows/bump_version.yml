@@ -1,0 +1,50 @@
+name: Bump version
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: Target branch
+        default: main
+        type: string
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: "3.10"
+
+      - name: Generate versions
+        id: version
+        env:
+          PYTHONPATH: /home/runner/work/databricks-cli/databricks-cli
+        shell: python
+        run: |
+          from databricks_cli.version import version, next_development_version, to_release_version
+
+          release_version = to_release_version(version)
+          development_version = next_development_version(release_version)
+
+          print("::set-output name=version::" + version)
+          print("::set-output name=release_version::" + release_version)
+          print("::set-output name=development_version::" + development_version)
+
+      - name: Bump to release version
+        run: |
+          perl -pi -e 's/${{ steps.version.outputs.version }}/${{ steps.version.outputs.release_version }}' databricks_cli/version.py
+          git commit -a -m "Bump version to ${{ steps.version.outputs.release_version }}"
+
+      - name: Bump to development version
+        run: |
+          perl -pi -e 's/${{ steps.version.outputs.release_version }}/${{ steps.version.outputs.development_version }}' databricks_cli/version.py
+          git commit -a -m "Bump version to ${{ steps.version.outputs.development_version }}"
+
+      - name: Push
+        run: |
+          git push origin ${{ inputs.target_branch }}
