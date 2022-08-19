@@ -59,6 +59,8 @@ class JobsService(object):
         format=None,
         dbt_task=None,
         access_control_list=None,
+        pipeline_task=None,
+        python_wheel_task=None,
     ):
         _data = {}
         if name is not None:
@@ -133,6 +135,18 @@ class JobsService(object):
                 raise TypeError('Expected databricks.DbtTask() or dict for field dbt_task')
         if access_control_list is not None:
             _data['access_control_list'] = access_control_list
+        if pipeline_task is not None:
+            _data['pipeline_task'] = pipeline_task
+            if not isinstance(pipeline_task, dict):
+                raise TypeError(
+                    'Expected databricks.PipelineTask() or dict for field pipeline_task'
+                )
+        if python_wheel_task is not None:
+            _data['python_wheel_task'] = python_wheel_task
+            if not isinstance(python_wheel_task, dict):
+                raise TypeError(
+                    'Expected databricks.PythonWheelTask() or dict for field python_wheel_task'
+                )
         return self.client.perform_query(
             'POST', '/jobs/create', data=_data, headers=headers, version=version
         )
@@ -156,6 +170,8 @@ class JobsService(object):
         git_source=None,
         dbt_task=None,
         access_control_list=None,
+        pipeline_task=None,
+        python_wheel_task=None,
     ):
         _data = {}
         if run_name is not None:
@@ -210,6 +226,18 @@ class JobsService(object):
                 raise TypeError('Expected databricks.DbtTask() or dict for field dbt_task')
         if access_control_list is not None:
             _data['access_control_list'] = access_control_list
+        if pipeline_task is not None:
+            _data['pipeline_task'] = pipeline_task
+            if not isinstance(pipeline_task, dict):
+                raise TypeError(
+                    'Expected databricks.PipelineTask() or dict for field pipeline_task'
+                )
+        if python_wheel_task is not None:
+            _data['python_wheel_task'] = python_wheel_task
+            if not isinstance(python_wheel_task, dict):
+                raise TypeError(
+                    'Expected databricks.PythonWheelTask() or dict for field python_wheel_task'
+                )
         return self.client.perform_query(
             'POST', '/jobs/runs/submit', data=_data, headers=headers, version=version
         )
@@ -286,6 +314,7 @@ class JobsService(object):
         headers=None,
         version=None,
         dbt_commands=None,
+        pipeline_params=None,
     ):
         _data = {}
         if job_id is not None:
@@ -304,6 +333,12 @@ class JobsService(object):
             _data['idempotency_token'] = idempotency_token
         if dbt_commands is not None:
             _data['dbt_commands'] = dbt_commands
+        if pipeline_params is not None:
+            _data['pipeline_params'] = pipeline_params
+            if not isinstance(pipeline_params, dict):
+                raise TypeError(
+                    'Expected databricks.PipelineParameters() or dict for field pipeline_params'
+                )
         return self.client.perform_query(
             'POST', '/jobs/run-now', data=_data, headers=headers, version=version
         )
@@ -321,6 +356,7 @@ class JobsService(object):
         headers=None,
         version=None,
         dbt_commands=None,
+        pipeline_params=None,
     ):
         _data = {}
         if run_id is not None:
@@ -341,6 +377,12 @@ class JobsService(object):
             _data['python_named_params'] = python_named_params
         if dbt_commands is not None:
             _data['dbt_commands'] = dbt_commands
+        if pipeline_params is not None:
+            _data['pipeline_params'] = pipeline_params
+            if not isinstance(pipeline_params, dict):
+                raise TypeError(
+                    'Expected databricks.PipelineParameters() or dict for field pipeline_params'
+                )
         return self.client.perform_query(
             'POST', '/jobs/runs/repair', data=_data, headers=headers, version=version
         )
