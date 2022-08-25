@@ -272,7 +272,7 @@ def update_recipient_cli(api_client, name, new_name, comment, owner,
     The public specification for the JSON request is in development.
     """
     if ((new_name is not None) or (comment is not None) or (owner is not None) or
-        (allowed_ip_address is not None)):
+        len(allowed_ip_address) > 0):
         if (json_file is not None) or (json is not None):
             raise ValueError('Cannot specify JSON if any other update flags are specified')
         data = {'name': new_name, 'comment': comment, 'owner': owner}
