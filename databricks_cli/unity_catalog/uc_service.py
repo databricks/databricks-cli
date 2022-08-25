@@ -31,11 +31,13 @@ class UnityCatalogService(object):
 
     # Metastore Operations
 
-    def create_metastore(self, name, storage_root, headers=None):
+    def create_metastore(self, name, storage_root, region, headers=None):
         _data = {
             'name': name,
             'storage_root': storage_root,
         }
+        if region is not None:
+            _data['region'] = region
         return self.client.perform_query('POST', '/unity-catalog/metastores', data=_data,
                                          headers=headers)
 
