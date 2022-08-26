@@ -31,8 +31,8 @@ class UnityCatalogApi(object):
 
     # Metastore APIs
 
-    def create_metastore(self, name, storage_root):
-        return self.client.create_metastore(name, storage_root)
+    def create_metastore(self, name, storage_root, region):
+        return self.client.create_metastore(name, storage_root, region)
 
     def list_metastores(self):
         return self.client.list_metastores()

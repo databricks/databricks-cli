@@ -39,15 +39,18 @@ from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
 @click.option('--name', required=True, help='Name of the new metastore.')
 @click.option('--storage-root', required=True,
               help='Storage root URL for the new metastore.')
+@click.option('--region', required=False,
+              help='Region for the new metastore. ' +
+                   'Only workspaces located in the same region can be assigned to this metastore.')
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def create_metastore_cli(api_client, name, storage_root):
+def create_metastore_cli(api_client, name, storage_root, region):
     """
     Create new metastore.
     """
-    metastore_json = UnityCatalogApi(api_client).create_metastore(name, storage_root)
+    metastore_json = UnityCatalogApi(api_client).create_metastore(name, storage_root, region)
     click.echo(mc_pretty_format(metastore_json))
 
 
