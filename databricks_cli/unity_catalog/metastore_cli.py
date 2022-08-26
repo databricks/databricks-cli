@@ -41,7 +41,7 @@ from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
               help='Storage root URL for the new metastore.')
 @click.option('--region', required=False,
               help='Region for the new metastore. ' +
-                   'Only workspaces from same region can be assigned to metastore.')
+                   'Only workspaces located in the same region can be assigned to this metastore.')
 @debug_option
 @profile_option
 @eat_exceptions
