@@ -24,7 +24,7 @@
 import re
 
 
-version = '0.17.3' #  NOQA
+version = '0.17.4.dev0' #  NOQA
 
 
 def print_version_callback(ctx, param, value): #  NOQA
