@@ -291,6 +291,7 @@ def update_recipient_cli(api_client, name, new_name, comment, owner,
                short_help='Rotate token for the recipient.')
 @click.option('--name', required=True, help='Name of new recipient.')
 @click.option('--existing-token-expire-in-seconds', default=None, required=False,
+              type=int,
               help='Expire the existing token in number of seconds from now,' +
                    ' 0 to expire it immediately.')
 @debug_option
@@ -359,10 +360,6 @@ def create_provider_cli(api_client, name, comment, recipient_profile_json_file,
 
     The public specification for the JSON request is in development.
     """
-    if recipient_profile_json is None and recipient_profile_json_file is None:
-        created_provider = UnityCatalogApi(api_client).create_provider(
-            name, comment, recipient_profile=None)
-        click.echo(mc_pretty_format(created_provider))
     json_cli_base(recipient_profile_json_file, recipient_profile_json,
                   lambda json: UnityCatalogApi(api_client).create_provider(name, comment, json),
                   error_msg='Either --recipient-profile-json-file or ' +
