@@ -1495,7 +1495,7 @@ class DeltaPipelinesService(object):
         _data['cause'] = 'USER_ACTION'
         return self.client.perform_query(
             'POST',
-            '/pipelines/{pipeline_id}/start'.format(pipeline_id=pipeline_id),
+            '/pipelines/{pipeline_id}/updates'.format(pipeline_id=pipeline_id),
             data=_data,
             headers=headers,
         )

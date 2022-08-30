@@ -233,7 +233,7 @@ def test_start_without_refresh(pipelines_api):
     expected_data = {
         "cause": "USER_ACTION"
     }
-    client_mock.assert_called_with('POST', '/pipelines/{}/start'.format(PIPELINE_ID),
+    client_mock.assert_called_with('POST', '/pipelines/{}/updates'.format(PIPELINE_ID),
                                    data=expected_data, headers=None)
 
 
@@ -245,7 +245,7 @@ def test_start_with_refresh(pipelines_api):
         "cause": "USER_ACTION",
         "full_refresh": True,
     }
-    client_mock.assert_called_with('POST', '/pipelines/{}/start'.format(PIPELINE_ID),
+    client_mock.assert_called_with('POST', '/pipelines/{}/updates'.format(PIPELINE_ID),
                                    data=expected_data, headers=None)
 
 
