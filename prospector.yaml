@@ -33,6 +33,7 @@ pylint:
     - redundant-u-string-prefix
     - consider-using-from-import
     - missing-timeout
+    - too-many-locals
 
 mccabe:
   disable:
