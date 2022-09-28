@@ -21,6 +21,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import functools
+
 import click
 
 from databricks_cli.click_types import JsonClickType
@@ -31,18 +33,26 @@ from databricks_cli.unity_catalog.utils import del_none, hide, json_file_help, j
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base
 
 
+def create_update_common_options(f):
+    @click.option('--url', default=None,
+                help='Path URL for the new external location')
+    @click.option('--storage-credential-name', default=None,
+                help='Name of storage credential to use with new external location')
+    @click.option('--read-only/--no-read-only', is_flag=True, default=None,
+                help='Whether the external location is read-only')
+    @click.option('--comment', default=None,
+                help='Free-form text description.')
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        f(*args, **kwargs)
+    return wrapper
+
+
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Create External Location.')
 @click.option('--name', default=None,
               help='Name of new external location')
-@click.option('--url', default=None,
-              help='Path URL for the new external location')
-@click.option('--storage-credential-name', default=None,
-              help='Name of storage credential to use with new external location')
-@click.option('--read-only/--no-read-only', is_flag=True, default=None,
-              help='Whether the external location is read-only')
-@click.option('--comment', default=None,
-              help='Free-form text description.')
+@create_update_common_options
 @click.option('--skip-validation', '-s', 'skip_val', is_flag=True, default=False,
               help='Skip the validation of location\'s storage credential before creation')
 @click.option('--json-file', default=None, type=click.Path(),
@@ -122,14 +132,7 @@ def get_location_cli(api_client, name):
 @click.option('--name', required=True,
               help='Name of the external location to update.')
 @click.option('--new-name', default=None, help='New name of the external location.')
-@click.option('--url', default=None,
-              help='Path URL for the external location')
-@click.option('--storage-credential-name', default=None,
-              help='Name of storage credential to use with external location')
-@click.option('--read-only/--no-read-only', is_flag=True, default=None,
-              help='Whether the external location is read-only')
-@click.option('--comment', default=None,
-              help='Free-form text description.')
+@create_update_common_options
 @click.option('--owner', default=None,
               help='Owner of the external location.')
 @click.option('--force', '-f', is_flag=True, default=False,

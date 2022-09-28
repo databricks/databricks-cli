@@ -21,6 +21,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import functools
+
 import click
 
 from databricks_cli.click_types import JsonClickType
@@ -65,51 +67,59 @@ def fill_credential(
         }
 
 
+def create_update_common_options(f):
+    @click.option('--aws-iam-role-arn', default=None,
+                help='The Amazon Resource Name (ARN) of the AWS IAM role for S3 data access.')
+    @click.option('--az-sp-directory-id', default=None,
+                help=(
+                    'The directory ID corresponding to the Azure Active Directory (AAD) '
+                    'tenant of the application.'))
+    @click.option('--az-sp-application-id', default=None,
+                help=(
+                    'The application ID of the application registration within the referenced '
+                    'AAD tenant.'))
+    @click.option('--az-sp-client-secret', default=None,
+                help='The client secret generated for the above app ID in AAD.')
+    @click.option('--az-mi-access-connector-id', default=None,
+                help=(
+                    'The Azure resource ID of the Azure Databricks Access Connector. '
+                    'Use the format, '
+                    '/subscriptions/{guid}/resourceGroups/{rg-name}/providers/Microsoft.Databricks'
+                    '/accessConnectors/{connector-name} .'))
+    @click.option('--az-mi-id', default=None,
+                help=(
+                    'The Azure resource ID of the managed identity. Use the format, '
+                    '/subscriptions/{guid}/resourceGroups/{rg-name}/providers'
+                    '/Microsoft.ManagedIdentity/userAssignedIdentities/{identity-name} .'
+                    'This is only available for user-assigned identities. '
+                    'For system-assigned identities, access-connector-id is used to identify '
+                    'the identity. If this flag is not provided, '
+                    'then we assume that it is using the system-assigned identity.'))
+    @click.option('--gcp-sak-email', default=None,
+                help=(
+                    'Credential for GCP Service Account Key. '
+                    'The email of the service account.'))
+    @click.option('--gcp-sak-private-key-id', default=None,
+                help=(
+                    'Credential for GCP Service Account Key. '
+                    'The ID of the service account\'s private key.'))
+    @click.option('--gcp-sak-private-key', default=None,
+                help=(
+                    'Credential for GCP Service Account Key. '
+                    'The service account\'s RSA private key.'))
+    @click.option('--comment', default=None,
+                help='Free-form text description.')
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        f(*args, **kwargs)
+    return wrapper
+
+
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Create storage credential.')
 @click.option('--name', default=None,
               help='Name of new storage credential')
-@click.option('--aws-iam-role-arn', default=None,
-              help='The Amazon Resource Name (ARN) of the AWS IAM role for S3 data access.')
-@click.option('--az-sp-directory-id', default=None,
-              help=(
-                'The directory ID corresponding to the Azure Active Directory (AAD) '
-                'tenant of the application.'))
-@click.option('--az-sp-application-id', default=None,
-              help=(
-                'The application ID of the application registration within the referenced '
-                'AAD tenant.'))
-@click.option('--az-sp-client-secret', default=None,
-              help='The client secret generated for the above app ID in AAD.')
-@click.option('--az-mi-access-connector-id', default=None,
-              help=(
-                'The Azure resource ID of the Azure Databricks Access Connector. Use the format, '
-                '/subscriptions/{guid}/resourceGroups/{rg-name}/providers/Microsoft.Databricks'
-                '/accessConnectors/{connector-name} .'))
-@click.option('--az-mi-id', default=None,
-              help=(
-                'The Azure resource ID of the managed identity. Use the format, '
-                '/subscriptions/{guid}/resourceGroups/{rg-name}/providers'
-                '/Microsoft.ManagedIdentity/userAssignedIdentities/{identity-name} .'
-                'This is only available for user-assigned identities. '
-                'For system-assigned identities, access-connector-id is used to identify '
-                'the identity. '
-                'If this flag is not provided, then we assume that it is using the system-assigned '
-                'identity.'))
-@click.option('--gcp-sak-email', default=None,
-              help=(
-                'Credential for GCP Service Account Key. '
-                'The email of the service account.'))
-@click.option('--gcp-sak-private-key-id', default=None,
-              help=(
-                'Credential for GCP Service Account Key. '
-                'The ID of the service account\'s private key.'))
-@click.option('--gcp-sak-private-key', default=None,
-              help=(
-                'Credential for GCP Service Account Key. '
-                'The service account\'s RSA private key.'))
-@click.option('--comment', default=None,
-              help='Free-form text description.')
+@create_update_common_options
 @click.option('--skip-validation', '-s', 'skip_val', is_flag=True, default=False,
               help='Skip the validation of new credential info before creation')
 @click.option('--json-file', default=None, type=click.Path(),
@@ -199,55 +209,7 @@ def get_credential_cli(api_client, name):
 @click.option('--name', required=True,
               help='Name of the storage credential to update.')
 @click.option('--new-name', default=None, help='New name of the storage credential.')
-@click.option('--aws-iam-role-arn', default=None,
-              help=(
-                'Credential for AWS. The Amazon Resource Name (ARN) of the AWS IAM role for S3 '
-                'data access.'))
-@click.option('--az-sp-directory-id', default=None,
-              help=(
-                'Credential for Azure Service Principal. '
-                'The directory ID corresponding to the Azure Active Directory (AAD) tenant of '
-                'the application.'))
-@click.option('--az-sp-application-id', default=None,
-              help=(
-                'Credential for Azure Service Princinpal. '
-                'The application ID of the application registration within the referenced AAD '
-                'tenant.'))
-@click.option('--az-sp-client-secret', default=None,
-              help=(
-                'Credential for Azure Service Princnipal. '
-                'The client secret generated for the above app ID in AAD.'))
-@click.option('--az-mi-access-connector-id', default=None,
-              help=(
-                'Credential for Azure Managed Identity. '
-                'The Azure resource ID of the Azure Databricks Access Connector. Use the format, '
-                '/subscriptions/{guid}/resourceGroups/{rg-name}/providers/Microsoft.Databricks'
-                '/accessConnectors/{connector-name} .'))
-@click.option('--az-mi-id', default=None,
-              help=(
-                'Credential for Azure Managed Identity. '
-                'The Azure resource ID of the managed identity. Use the format, '
-                '/subscriptions/{guid}/resourceGroups/{rg-name}/providers'
-                '/Microsoft.ManagedIdentity/userAssignedIdentities/{identity-name} .'
-                'This is only available for user-assigned identities. '
-                'For system-assigned identities, access-connector-id is used to identify the '
-                'identity. '
-                'If this flag is not provided, then we assume that it is using the system-assigned '
-                'identity.'))
-@click.option('--gcp-sak-email', default=None,
-              help=(
-                'Credential for GCP Service Account Key. '
-                'The email of the service account.'))
-@click.option('--gcp-sak-private-key-id', default=None,
-              help=(
-                'Credential for GCP Service Account Key. '
-                'The ID of the service account\'s private key.'))
-@click.option('--gcp-sak-private-key', default=None,
-              help=(
-                'Credential for GCP Service Account Key. '
-                'The service account\'s RSA private key.'))
-@click.option('--comment', default=None,
-              help='Free-form text description.')
+@create_update_common_options
 @click.option('--owner', default=None,
               help='Owner of the storage credential.')
 @click.option('--skip-validation', '-s', 'skip_val', is_flag=True, default=False,
