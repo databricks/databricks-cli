@@ -216,3 +216,4 @@ def test_unassign_metastore_assignment_cli(api_mock, echo_mock):
         ])
     api_mock.delete_metastore_assignment.assert_called_once_with(WORKSPACE_ID, METASTORE_ID)
     echo_mock.assert_called_once_with(mc_pretty_format({}))
+    

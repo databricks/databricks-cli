@@ -250,3 +250,4 @@ def test_validate_location_cli(api_mock, echo_mock):
             }
         })
     echo_mock.assert_called_once_with(mc_pretty_format({}))
+    

@@ -214,3 +214,4 @@ def test_update_credential_cli_with_json(api_mock, echo_mock):
         },
         False)
     echo_mock.assert_called_once_with(mc_pretty_format(STORAGE_CREDENTIAL))
+    
