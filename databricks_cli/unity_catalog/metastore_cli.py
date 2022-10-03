@@ -88,6 +88,21 @@ def get_metastore_cli(api_client, metastore_id):
                short_help='Update a metastore.')
 @click.option('--id', 'metastore_id', required=True, type=MetastoreIdClickType(),
               help='Unique identifier of the metastore to update.')
+@click.option('--new-name', default=None, help='New name of the metastore.')
+@click.option('--storage-root-credential-id', default=None,
+              help='Storage Credential ID to access storage root.')
+@click.option('--delta-sharing-scope', default=None,
+              help='Delta sharing scope. Can be INTERNAL or INTERNAL_AND_EXTERNAL.')
+@click.option('--delta-sharing-recipient-token-lifetime-in-seconds', default=None, type=int,
+              help=(
+                'The token lifetime determines how long a generated Delta Sharing token is '
+                'valid for. 0 for no expiration.'))
+@click.option('--delta-sharing-organization-name', default=None,
+              help=(
+                'The organization name of a Delta Sharing entity. '
+                'The name will be used in Databricks-to-Databricks Delta Sharing as the official '
+                'name.'))
+@click.option('--owner', default=None, help='Owner of the metastore.')
 @click.option('--json-file', default=None, type=click.Path(),
               help=json_file_help(method='PATCH', path='/metastores/{id}'))
 @click.option('--json', default=None, type=JsonClickType(),
@@ -96,13 +111,36 @@ def get_metastore_cli(api_client, metastore_id):
 @profile_option
 @eat_exceptions
 @provide_api_client
-def update_metastore_cli(api_client, metastore_id, json_file, json):
+def update_metastore_cli(api_client, metastore_id, new_name,
+                         storage_root_credential_id,
+                         delta_sharing_scope, delta_sharing_recipient_token_lifetime_in_seconds,
+                         delta_sharing_organization_name, owner, json_file, json):
     """
     Update a metastore.
 
     The public specification for the JSON request is in development.
     """
-    json_cli_base(json_file, json,
+    has_delta_sharing_flag = (
+        (delta_sharing_scope is not None) or
+        (delta_sharing_recipient_token_lifetime_in_seconds is not None) or
+        (delta_sharing_organization_name is not None))
+    if ((new_name is not None) or
+        (storage_root_credential_id is not None) or has_delta_sharing_flag or (owner is not None)):
+        if (json_file is not None) or (json is not None):
+            raise ValueError('Cannot specify JSON if any other update flags are specified')
+        data = {
+            'name': new_name,
+            'storage_root_credential_id': storage_root_credential_id,
+            'delta_sharing_scope': delta_sharing_scope,
+            'delta_sharing_recipient_token_lifetime_in_seconds':
+            delta_sharing_recipient_token_lifetime_in_seconds,
+            'delta_sharing_organization_name': delta_sharing_organization_name,
+            'owner': owner
+        }
+        metastore_json = UnityCatalogApi(api_client).update_metastore(metastore_id, data)
+        click.echo(mc_pretty_format(metastore_json))
+    else:
+        json_cli_base(json_file, json,
                   lambda json: UnityCatalogApi(api_client).update_metastore(metastore_id, json))
 
 

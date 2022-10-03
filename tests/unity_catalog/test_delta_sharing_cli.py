@@ -31,8 +31,6 @@ from databricks_cli.unity_catalog.utils import mc_pretty_format
 from databricks_cli.unity_catalog import delta_sharing_cli
 from tests.utils import provide_conf
 
-ECHO_MODULE_NAME = 'databricks_cli.unity_catalog.delta_sharing_cli.click.echo'
-
 SHARE_NAME = 'test_share'
 SHARES = {
     'shares': [
