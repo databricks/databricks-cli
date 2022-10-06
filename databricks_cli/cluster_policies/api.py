@@ -20,6 +20,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from json import dumps as json_dumps
+
 from databricks_cli.sdk import PolicyService
 
 
@@ -27,11 +29,25 @@ class ClusterPolicyApi(object):
     def __init__(self, api_client):
         self.client = PolicyService(api_client)
 
+    @staticmethod
+    def format_policy_for_api(policy):
+        if isinstance(policy.get("definition"), dict):
+            policy["definition"] = json_dumps(policy["definition"])
+        return policy
+
     def create_cluster_policy(self, json):
-        return self.client.client.perform_query('POST', '/policies/clusters/create', data=json)
+        return self.client.client.perform_query(
+            "POST",
+            "/policies/clusters/create",
+            data=ClusterPolicyApi.format_policy_for_api(json),
+        )
 
     def edit_cluster_policy(self, json):
-        return self.client.client.perform_query('POST', '/policies/clusters/edit', data=json)
+        return self.client.client.perform_query(
+            "POST",
+            "/policies/clusters/edit",
+            data=ClusterPolicyApi.format_policy_for_api(json),
+        )
 
     def delete_cluster_policy(self, policy_id):
         return self.client.delete_policy(policy_id)

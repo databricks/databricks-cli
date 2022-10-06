@@ -20,28 +20,43 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import shutil
-import tempfile
 
 import mock
 import pytest
 
-import databricks_cli.configure.provider as provider
 from databricks_cli.cluster_policies.api import ClusterPolicyApi
 
 
-@pytest.fixture(autouse=True)
-def mock_conf_dir():
-    path = tempfile.mkdtemp()
-    provider._home = path
-    yield
-    shutil.rmtree(path)
+@pytest.mark.parametrize(
+    "policy, expected",
+    [
+        ({"definition": "foo"}, {"definition": "foo"}),
+        ({"definition": {"foo": "bar"}}, {"definition": '{"foo": "bar"}'}),
+    ],
+)
+def test_format_policy_for_api(policy, expected):
+    result = ClusterPolicyApi.format_policy_for_api(policy)
+    assert result == expected
 
 
-@pytest.fixture()
-def fixture_cluster_policies_api():
-    with mock.patch(
-        "databricks_cli.cluster_policies.api.PolicyService"
-    ) as service_mock:
-        service_mock.return_value = mock.MagicMock()
-        yield ClusterPolicyApi(None)
+@pytest.mark.parametrize(
+    "fct_name, method, action",
+    [
+        ("create_cluster_policy", "POST", "create"),
+        ("edit_cluster_policy", "POST", "edit"),
+    ],
+)
+@mock.patch(
+    "databricks_cli.cluster_policies.api.ClusterPolicyApi.format_policy_for_api"
+)
+def test_create_and_edit_cluster_policy(
+    mock_format_policy_for_api, fct_name, method, action, fixture_cluster_policies_api
+):
+    mock_policy = mock.Mock()
+    getattr(fixture_cluster_policies_api, fct_name)(mock_policy)
+    mock_format_policy_for_api.assert_called_once_with(mock_policy)
+    fixture_cluster_policies_api.client.client.perform_query.assert_called_once_with(
+        method,
+        "/policies/clusters/{}".format(action),
+        data=mock_format_policy_for_api.return_value,
+    )
