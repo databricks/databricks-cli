@@ -136,6 +136,9 @@ def shared_data_object(name):
 @click.option('--add-table', default=None, multiple=True,
               metavar='NAME',
               help='Full name of table to add to share (can be specified multiple times).')
+@click.option('--update-table', default=None, multiple=True,
+              metavar='NAME',
+              help='Full name of table to update from share (can be specified multiple times).')
 @click.option('--remove-table', default=None, multiple=True,
               metavar='NAME',
               help='Full name of table to remove from share (can be specified multiple times).')
@@ -148,7 +151,7 @@ def shared_data_object(name):
 @eat_exceptions
 @provide_api_client
 def update_share_cli(api_client, name, new_name, comment, owner,
-                     add_table, remove_table, json_file, json):
+                     add_table, update_table, remove_table, json_file, json):
     """
     Update a share.
 
@@ -161,6 +164,8 @@ def update_share_cli(api_client, name, new_name, comment, owner,
         updates = []
         for a in add_table:
             updates.append({'action': 'ADD', 'data_object': shared_data_object(a)})
+        for u in update_table:
+            updates.append({'action': 'UPDATE', 'data_object': shared_data_object(u)})
         for r in remove_table:
             updates.append({'action': 'REMOVE', 'data_object': shared_data_object(r)})
         data = {'name': new_name, 'comment': comment, 'owner': owner, 'updates': updates}

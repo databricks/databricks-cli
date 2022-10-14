@@ -173,6 +173,8 @@ def test_update_share_cli(api_mock, echo_mock):
             '--owner', 'owner',
             '--add-table', 'add.table.one',
             '--add-table', 'add.table.two',
+            '--update-table', 'update.table.one',
+            '--update-table', 'update.table.two',
             '--remove-table', 'remove.table.one',
             '--remove-table', 'remove.table.two'
         ])
@@ -192,6 +194,20 @@ def test_update_share_cli(api_mock, echo_mock):
                 'action': 'ADD',
                 'data_object': {
                     'name': 'add.table.two',
+                    'data_object_type': 'TABLE'
+                }
+            },
+            {
+                'action': 'UPDATE',
+                'data_object': {
+                    'name': 'update.table.one',
+                    'data_object_type': 'TABLE'
+                }
+            },
+            {
+                'action': 'UPDATE',
+                'data_object': {
+                    'name': 'update.table.two',
                     'data_object_type': 'TABLE'
                 }
             },
