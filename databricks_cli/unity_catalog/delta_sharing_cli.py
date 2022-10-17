@@ -208,7 +208,7 @@ def update_share_cli(api_client, name, new_name, comment, owner,
 @profile_option
 @eat_exceptions
 @provide_api_client
-def update_share_table_cli(api_client, name, table, shared_as, comment,
+def update_share_table_cli(api_client, share, table, shared_as, comment,
                      partition_spec, enable_cdf, disable_cdf, json_file, json):
     """
     Updates a shared table.
@@ -243,10 +243,10 @@ def update_share_table_cli(api_client, name, table, shared_as, comment,
                 }
             ]
         }
-        share_json = UnityCatalogApi(api_client).update_share(name, data)
+        share_json = UnityCatalogApi(api_client).update_share(share, data)
         click.echo(mc_pretty_format(share_json))
     else:
-        json_cli_base(json_file, json, lambda d: UnityCatalogApi(api_client).update_share(name, { 
+        json_cli_base(json_file, json, lambda d: UnityCatalogApi(api_client).update_share(share, { 
             'updates': [
                 {
                     'action': 'UPDATE',
