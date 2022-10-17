@@ -25,8 +25,9 @@
 
 import mock
 import pytest
+import click
 from click.testing import CliRunner
-from databricks_cli.unity_catalog.utils import mc_pretty_format
+from databricks_cli.unity_catalog.utils import mc_pretty_format, parse_partitions
 
 from databricks_cli.unity_catalog import delta_sharing_cli
 from tests.utils import provide_conf
@@ -207,6 +208,157 @@ def test_update_share_cli(api_mock, echo_mock):
                 'data_object': {
                     'name': 'remove.table.two',
                     'data_object_type': 'TABLE'
+                }
+            }
+        ]
+    }
+    api_mock.update_share.assert_called_once_with(SHARE_NAME, expected_data)
+    echo_mock.assert_called_once_with(mc_pretty_format(SHARE))
+
+
+def test_single_partition_value():
+    assert parse_partitions("(a='1')") == [
+        {
+            'values': [
+                {
+                    'name': 'a',
+                    'op': 'EQUAL',
+                    'value': '1'
+                }
+            ]
+        }
+    ]
+
+
+def test_multiple_partition_values():
+    assert parse_partitions("(a='1', b LIKE '3', c like '4')") == [
+        {
+            'values': [
+                {
+                    'name': 'a',
+                    'op': 'EQUAL',
+                    'value': '1'
+                },
+                {
+                    'name': 'b',
+                    'op': 'LIKE',
+                    'value': '3'
+                },
+                {
+                    'name': 'c',
+                    'op': 'LIKE',
+                    'value': '4'
+                }
+            ]
+        }
+    ]
+
+
+def test_multiple_partition_specifications():
+    assert parse_partitions("(a='1'), (b LIKE '3', c like '4')") == [
+        {
+            'values': [
+                {
+                    'name': 'a',
+                    'op': 'EQUAL',
+                    'value': '1'
+                },
+            ]
+        },
+        {
+            'values': [
+                {
+                    'name': 'b',
+                    'op': 'LIKE',
+                    'value': '3'
+                },
+                {
+                    'name': 'c',
+                    'op': 'LIKE',
+                    'value': '4'
+                }
+            ]
+        }
+    ]
+
+
+def test_parse_empty_partitions_properly():
+    assert parse_partitions('') == []
+    assert parse_partitions('  ') == []
+
+
+def test_invalid_partition_syntax():
+    err = None
+    try:
+        parse_partitions('a=1')
+    except click.BadParameter as e:
+        err = e
+    assert err is not None
+
+    err = None
+    try:
+        parse_partitions('(a=1')
+    except click.BadParameter as e:
+        err = e
+    assert err is not None
+
+    err = None
+    try:
+        parse_partitions("(a='\\'', b LIKE 'like LIKE'), (c = '\\(=)')")
+    except click.BadParameter as e:
+        err = e
+    assert err is not None
+
+
+@provide_conf
+def test_update_share_table_cli(api_mock, echo_mock):
+    api_mock.update_share.return_value = SHARE
+    runner = CliRunner()
+    runner.invoke(
+        delta_sharing_cli.update_share_table_cli,
+        args=[
+            '--share', SHARE_NAME,
+            '--table', 'update.table',
+            '--shared-as', 'catalog.schema.table',
+            '--comment', 'update.comment',
+            '--partition-spec', '(a = \'1\', b LIKE \'bob\'), (c = \'2\')',
+            '--enable-cdf'
+        ])
+    expected_data = {
+        'updates': [
+            {
+                'action': 'UPDATE',
+                'data_object': {
+                    'name': 'update.table',
+                    'data_object_type': 'TABLE',
+                    'comment': 'update.comment',
+                    'shared_as': 'catalog.schema.table',
+                    'cdf_enabled': True,
+                    'partitions': [
+                        {
+                            'values': [
+                                {
+                                    'name': 'a',
+                                    'op': 'EQUAL',
+                                    'value': '1',
+                                },
+                                {
+                                    'name': 'b',
+                                    'op': 'LIKE',
+                                    'value': 'bob',
+                                }
+                            ]
+                        },
+                        {
+                            'values': [
+                                {
+                                    'name': 'c',
+                                    'op': 'EQUAL',
+                                    'value': '2',
+                                },
+                            ]
+                        },
+                    ]
                 }
             }
         ]

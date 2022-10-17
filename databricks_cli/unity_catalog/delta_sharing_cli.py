@@ -27,7 +27,7 @@ from databricks_cli.click_types import JsonClickType
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.unity_catalog.api import UnityCatalogApi
 from databricks_cli.unity_catalog.utils import hide, json_file_help, json_string_help, \
-    mc_pretty_format
+    mc_pretty_format, parse_partitions
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base, \
     merge_dicts_shallow
 
@@ -120,8 +120,21 @@ def update_share_permissions_cli(api_client, name, json_file, json):
                   lambda json: UnityCatalogApi(api_client).update_share_permissions(name, json))
 
 
-def shared_data_object(name):
-    return {'name': name, 'data_object_type': 'TABLE'}
+def shared_data_object(name, comment=None, shared_as=None, cdf_enabled=None, partitions=None):
+    val = {
+        'name': name, 
+        'data_object_type': 'TABLE'
+    }
+    print(name, comment, shared_as, cdf_enabled, partitions)
+    if comment is not None:
+        val['comment'] = comment
+    if shared_as is not None:
+        val['shared_as'] = shared_as
+    if cdf_enabled is not None:
+        val['cdf_enabled'] = cdf_enabled
+    if partitions is not None:
+        val['partitions'] = partitions
+    return val
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -169,6 +182,61 @@ def update_share_cli(api_client, name, new_name, comment, owner,
     else:
         json_cli_base(json_file, json,
                       lambda json: UnityCatalogApi(api_client).update_share(name, json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Update a shared table.')
+@click.option('--share', required=True,
+              help='Name of the share to update.')
+@click.option('--table', required=True,
+              help='Full name of the table to update from share.')
+@click.option('--shared-as', default=None,
+              help='New name of the table inside the share.')
+@click.option('--comment', default=None,
+              help='New comment of the table inside the share.')
+@click.option('--partition-spec', default=None,
+              help='New partition specification of the table inside the share.')
+@click.option('--enable-cdf', is_flag=True, default=None,
+              help='Enables change data feed of the table inside the share.')
+@click.option('--disable-cdf', is_flag=True, default=None,
+              help='Enables change data feed of the table inside the share.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def update_share_table_cli(api_client, name, table, shared_as, comment,
+                     partition_spec, enable_cdf, disable_cdf):
+    """
+    Updates a shared table.
+
+    The public specification for the JSON request is in development.
+    """
+    partitions = parse_partitions(partition_spec)
+
+    cdf_enabled = None
+    if enable_cdf is not None and disable_cdf is not None:
+        raise click.BadParameter("You can only pass in either --enable-cdf or --disable-cdf and not both.")
+    elif enable_cdf is not None:
+        cdf_enabled = enable_cdf
+    elif disable_cdf is not None:
+        cdf_enabled = disable_cdf
+
+    data = { 
+        'updates': [
+            {
+                'action': 'UPDATE',
+                'data_object': shared_data_object(
+                    name=table,
+                    shared_as=shared_as,
+                    comment=comment,
+                    cdf_enabled=cdf_enabled,
+                    partitions=partitions,
+                )
+            }
+        ]
+    }
+    share_json = UnityCatalogApi(api_client).update_share(name, data)
+    click.echo(mc_pretty_format(share_json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -498,6 +566,7 @@ def register_shares_commands(cmd_group):
     shares_group.add_command(list_shares_cli, name='list')
     shares_group.add_command(get_share_cli, name='get')
     shares_group.add_command(update_share_cli, name='update')
+    shares_group.add_command(update_share_table_cli, name='update-table')
     shares_group.add_command(delete_share_cli, name='delete')
     shares_group.add_command(list_share_permissions_cli, name='list-permissions')
     shares_group.add_command(update_share_permissions_cli, name='update-permissions')
