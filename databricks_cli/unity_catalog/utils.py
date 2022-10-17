@@ -24,7 +24,6 @@
 import re
 import itertools
 import copy
-import click
 
 from databricks_cli.utils import pretty_format
 
@@ -91,7 +90,7 @@ def parse_partitions(partition_spec):
 
     it = peek(re.finditer(partition_regex, trimmed, re.IGNORECASE))
     if it is None:
-        raise click.BadParameter("bad partition specification format")
+        raise ValueError("Bad partition specification format")
 
     for match in it:
         values = []

@@ -291,21 +291,21 @@ def test_invalid_partition_syntax():
     err = None
     try:
         parse_partitions('a=1')
-    except click.BadParameter as e:
+    except ValueError as e:
         err = e
     assert err is not None
 
     err = None
     try:
         parse_partitions('(a=1')
-    except click.BadParameter as e:
+    except ValueError as e:
         err = e
     assert err is not None
 
     err = None
     try:
         parse_partitions("(a='\\'', b LIKE 'like LIKE'), (c = '\\(=)')")
-    except click.BadParameter as e:
+    except ValueError as e:
         err = e
     assert err is not None
 
