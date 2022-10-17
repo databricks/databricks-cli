@@ -25,7 +25,6 @@
 
 import mock
 import pytest
-import click
 from click.testing import CliRunner
 from databricks_cli.unity_catalog.utils import mc_pretty_format, parse_partitions
 
