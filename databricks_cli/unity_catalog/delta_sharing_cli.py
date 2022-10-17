@@ -220,7 +220,8 @@ def update_share_table_cli(api_client, share, table, shared_as, comment,
     cdf_enabled = None
     if enable_cdf is not None and disable_cdf is not None:
         raise ValueError("You can only pass in either --enable-cdf or --disable-cdf and not both.")
-    elif enable_cdf is not None:
+    
+    if enable_cdf is not None:
         cdf_enabled = enable_cdf
     elif disable_cdf is not None:
         cdf_enabled = disable_cdf
