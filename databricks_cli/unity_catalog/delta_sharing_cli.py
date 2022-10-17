@@ -200,12 +200,16 @@ def update_share_cli(api_client, name, new_name, comment, owner,
               help='Enables change data feed of the table inside the share.')
 @click.option('--disable-cdf', is_flag=True, default=None,
               help='Enables change data feed of the table inside the share.')
+@click.option('--json-file', default=None, type=click.Path(),
+              help="Updates the shared table to shared data object represented in JSON file.")
+@click.option('--json', default=None, type=JsonClickType(),
+              help="Updates the shared table to shared data object represented in JSON.")
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
 def update_share_table_cli(api_client, name, table, shared_as, comment,
-                     partition_spec, enable_cdf, disable_cdf):
+                     partition_spec, enable_cdf, disable_cdf, json_file, json):
     """
     Updates a shared table.
 
@@ -215,28 +219,41 @@ def update_share_table_cli(api_client, name, table, shared_as, comment,
 
     cdf_enabled = None
     if enable_cdf is not None and disable_cdf is not None:
-        raise click.BadParameter("You can only pass in either --enable-cdf or --disable-cdf and not both.")
+        raise ValueError("You can only pass in either --enable-cdf or --disable-cdf and not both.")
     elif enable_cdf is not None:
         cdf_enabled = enable_cdf
     elif disable_cdf is not None:
         cdf_enabled = disable_cdf
 
-    data = { 
-        'updates': [
-            {
-                'action': 'UPDATE',
-                'data_object': shared_data_object(
-                    name=table,
-                    shared_as=shared_as,
-                    comment=comment,
-                    cdf_enabled=cdf_enabled,
-                    partitions=partitions,
-                )
-            }
-        ]
-    }
-    share_json = UnityCatalogApi(api_client).update_share(name, data)
-    click.echo(mc_pretty_format(share_json))
+    if shared_as is not None or comment is not None or partition_spec is not None or \
+        enable_cdf is not None or disable_cdf is not None:
+        if (json_file is not None) or (json is not None):
+            raise ValueError('Cannot specify JSON if any other update flags are specified')
+        data = { 
+            'updates': [
+                {
+                    'action': 'UPDATE',
+                    'data_object': shared_data_object(
+                        name=table,
+                        shared_as=shared_as,
+                        comment=comment,
+                        cdf_enabled=cdf_enabled,
+                        partitions=partitions,
+                    )
+                }
+            ]
+        }
+        share_json = UnityCatalogApi(api_client).update_share(name, data)
+        click.echo(mc_pretty_format(share_json))
+    else:
+        json_cli_base(json_file, json, lambda d: UnityCatalogApi(api_client).update_share(name, { 
+            'updates': [
+                {
+                    'action': 'UPDATE',
+                    'data_object': d,
+                }
+            ]
+        }))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
