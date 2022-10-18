@@ -21,8 +21,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
-import itertools
 import copy
 
 from databricks_cli.utils import pretty_format
@@ -65,43 +63,3 @@ def json_file_help(method, path):
 def json_string_help(method, path):
     path = "/api/2.0/unity-catalog" + path
     return "JSON string to {} to {}.".format(method, path)
-
-
-def peek(iterable):
-    try:
-        first = next(iterable)
-    except StopIteration:
-        return None
-    return itertools.chain([first], iterable)
-
-
-spec_regex = r"(\w+)\s*(\=|like)\s*'([\w\d\s]+)'[,\s]*"
-partition_regex = r"\((?:%s)+\)[,\s]*" % spec_regex
-
-def parse_partitions(partition_spec):
-    if partition_spec is None:
-        return None
-
-    partitions = []
-
-    trimmed = partition_spec.strip()
-    if len(trimmed) == 0:
-        return partitions
-
-    it = peek(re.finditer(partition_regex, trimmed, re.IGNORECASE))
-    if it is None:
-        raise ValueError("Bad partition specification format")
-
-    for match in it:
-        values = []
-        partition = match.group()
-        for (name, op, value) in re.findall(spec_regex, partition, re.IGNORECASE):
-            values.append({
-                'name': name,
-                'op': 'EQUAL' if op == '=' else 'LIKE',
-                'value': value,
-            })
-        partitions.append({
-            'values': values,
-        })
-    return partitions

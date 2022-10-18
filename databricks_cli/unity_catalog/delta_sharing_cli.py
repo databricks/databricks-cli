@@ -21,13 +21,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from json import loads as json_loads
+
 import click
 
 from databricks_cli.click_types import JsonClickType
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
 from databricks_cli.unity_catalog.api import UnityCatalogApi
 from databricks_cli.unity_catalog.utils import hide, json_file_help, json_string_help, \
-    mc_pretty_format, parse_partitions
+    mc_pretty_format
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, json_cli_base, \
     merge_dicts_shallow
 
@@ -194,11 +196,11 @@ def update_share_cli(api_client, name, new_name, comment, owner,
               help='New name of the table inside the share.')
 @click.option('--comment', default=None,
               help='New comment of the table inside the share.')
-@click.option('--partition-spec', default=None,
-              help='New partition specification of the table inside the share.')
-@click.option('--enable-cdf', is_flag=True, default=None,
+@click.option('--partitions', default=None, type=JsonClickType(),
+              help='New partition specification of the table inside the share represented in JSON.')
+@click.option('--cdf', is_flag=True, default=None,
               help='Enables change data feed of the table inside the share.')
-@click.option('--disable-cdf', is_flag=True, default=None,
+@click.option('--no-cdf', is_flag=True, default=None,
               help='Enables change data feed of the table inside the share.')
 @click.option('--json-file', default=None, type=click.Path(),
               help="Updates the shared table to shared data object represented in JSON file.")
@@ -209,25 +211,23 @@ def update_share_cli(api_client, name, new_name, comment, owner,
 @eat_exceptions
 @provide_api_client
 def update_share_table_cli(api_client, share, table, shared_as, comment,
-                     partition_spec, enable_cdf, disable_cdf, json_file, json):
+                     partitions, cdf, no_cdf, json_file, json):
     """
     Updates a shared table.
 
     The public specification for the JSON request is in development.
     """
-    partitions = parse_partitions(partition_spec)
-
     cdf_enabled = None
-    if enable_cdf is not None and disable_cdf is not None:
-        raise ValueError("You can only pass in either --enable-cdf or --disable-cdf and not both.")
+    if cdf is not None and no_cdf is not None:
+        raise ValueError("You can only pass in either --cdf or --no-cdf and not both.")
     
-    if enable_cdf is not None:
-        cdf_enabled = enable_cdf
-    elif disable_cdf is not None:
-        cdf_enabled = disable_cdf
+    if cdf is not None:
+        cdf_enabled = cdf
+    elif no_cdf is not None:
+        cdf_enabled = no_cdf
 
-    if shared_as is not None or comment is not None or partition_spec is not None or \
-        enable_cdf is not None or disable_cdf is not None:
+    if shared_as is not None or comment is not None or partitions is not None or \
+        cdf is not None or no_cdf is not None:
         if (json_file is not None) or (json is not None):
             raise ValueError('Cannot specify JSON if any other update flags are specified')
         data = { 
@@ -239,7 +239,7 @@ def update_share_table_cli(api_client, share, table, shared_as, comment,
                         shared_as=shared_as,
                         comment=comment,
                         cdf_enabled=cdf_enabled,
-                        partitions=partitions,
+                        partitions=json_loads(partitions),
                     )
                 }
             ]
