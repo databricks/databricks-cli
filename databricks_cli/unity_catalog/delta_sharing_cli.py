@@ -226,8 +226,8 @@ def add_share_table_cli(api_client, share, table, shared_as, comment,
     elif no_cdf is not None:
         cdf_enabled = no_cdf
 
-    if shared_as is not None or comment is not None or partitions is not None or \
-        cdf is not None or no_cdf is not None:
+    if (shared_as is not None or comment is not None or partitions is not None or
+        cdf is not None or no_cdf is not None):
         if (json_file is not None) or (json is not None):
             raise ValueError('Cannot specify JSON if any other flags are specified')
         data = { 
@@ -297,8 +297,8 @@ def update_share_table_cli(api_client, share, table, shared_as, comment,
     elif no_cdf is not None:
         cdf_enabled = no_cdf
 
-    if shared_as is not None or comment is not None or partitions is not None or \
-        cdf is not None or no_cdf is not None:
+    if (shared_as is not None or comment is not None or partitions is not None or 
+        cdf is not None or no_cdf is not None):
         if (json_file is not None) or (json is not None):
             raise ValueError('Cannot specify JSON if any other flags are specified')
         data = { 
