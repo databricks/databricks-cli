@@ -210,9 +210,9 @@ def create_common_shared_data_object_options(f):
               help='Name of the share to update.')
 @create_common_shared_data_object_options
 @click.option('--json-file', default=None, type=click.Path(),
-              help="Updates the shared table to shared data object represented in JSON file.")
+              help="Adds a shared table based on shared data object represented in JSON file.")
 @click.option('--json', default=None, type=JsonClickType(),
-              help="Updates the shared table to shared data object represented in JSON.")
+              help="Adds a shared table based on shared data object represented in JSON.")
 @debug_option
 @profile_option
 @eat_exceptions
@@ -315,9 +315,9 @@ def update_share_table_cli(api_client, share, table, shared_as, comment,
 @click.option('--shared-as', default=None,
               help='New name of the table inside the share.')
 @click.option('--json-file', default=None, type=click.Path(),
-              help="Updates the shared table to shared data object represented in JSON file.")
+              help="Removes the shared table based on the shared data object represented in JSON file.")
 @click.option('--json', default=None, type=JsonClickType(),
-              help="Updates the shared table to shared data object represented in JSON.")
+              help="Removes the shared table based on the shared data object represented in JSON.")
 @debug_option
 @profile_option
 @eat_exceptions
