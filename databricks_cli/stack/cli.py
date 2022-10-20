@@ -28,7 +28,7 @@ import click
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS
 from databricks_cli.version import print_version_callback, version
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option
-from databricks_cli.stack.api import StackApi
+from databricks_cli.stack.api import StackApi, STACK_CLI_DEPRECATION
 
 DEBUG_MODE = True
 
@@ -88,15 +88,18 @@ def _save_json(path, data):
 @provide_api_client
 def deploy(api_client, config_path, **kwargs):
     """
-    Deploy a stack to the databricks workspace given a JSON stack configuration template.
+    [Deprecated] Deploy a stack to the databricks workspace given a JSON stack configuration
+    template.
 
     After deployment, a stack status will be saves at <config_file_name>.deployed.json. Please
     do not edit or move the file as it is generated through the CLI and is used for future
     deployments of the stack. If you run into errors with the stack status at deployment,
-    please delete the stack status file and try the deployment again. If the problem persists,
-    please raise a Github issue on the Databricks CLI repository at
-    https://www.github.com/databricks/databricks-cli/issues
+    please delete the stack status file and try the deployment again.
+
+    Please switch to using the generally available Databricks Terraform Provider instead:
+    https://docs.databricks.com/dev-tools/terraform/index.html
     """
+    click.secho('WARNING: ' + STACK_CLI_DEPRECATION, bg='red', fg='white')
     click.echo('#' * 80)
     click.echo('Deploying stack at: {} with options: {}'.format(config_path, kwargs))
     stack_config = _load_json(config_path)
@@ -127,9 +130,13 @@ def deploy(api_client, config_path, **kwargs):
 @provide_api_client
 def download(api_client, config_path, **kwargs):
     """
-    Download workspace notebooks of a stack to the local filesystem given a JSON stack
+    [Deprecated] Download workspace notebooks of a stack to the local filesystem given a JSON stack
     configuration template.
+
+    Please switch to using the generally available Databricks Terraform Provider instead:
+    https://docs.databricks.com/dev-tools/terraform/index.html
     """
+    click.secho('WARNING: ' + STACK_CLI_DEPRECATION, bg='red', fg='white')
     click.echo('#' * 80)
     click.echo('Downloading stack at: {} with options: {}'.format(config_path, kwargs))
     stack_config = _load_json(config_path)
@@ -149,7 +156,10 @@ def download(api_client, config_path, **kwargs):
 @profile_option
 def stack_group():  # pragma: no cover
     """
-    [Beta] Utility to deploy and download Databricks resource stacks.
+    [Deprecated] Utility to deploy and download Databricks resource stacks.
+
+    Please switch to using the generally available Databricks Terraform Provider instead:
+    https://docs.databricks.com/dev-tools/terraform/index.html
     """
     pass
 
