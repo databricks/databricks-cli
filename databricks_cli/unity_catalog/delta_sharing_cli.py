@@ -150,10 +150,10 @@ def shared_data_object(name=None, comment=None, shared_as=None, cdf_enabled=None
 @click.option('--owner', default=None, required=False,
               help='Owner of the share.')
 @click.option('--add-table', default=None, multiple=True,
-              metavar='NAME',
+              metavar='NAME', hidden=True,
               help='Full name of table to add to share (can be specified multiple times).')
 @click.option('--remove-table', default=None, multiple=True,
-              metavar='NAME',
+              metavar='NAME', hidden=True,
               help='Full name of table to remove from share (can be specified multiple times).')
 @click.option('--json-file', default=None, type=click.Path(),
               help=json_file_help(method='PATCH', path='/shares/{name}'))
@@ -189,15 +189,15 @@ def update_share_cli(api_client, name, new_name, comment, owner,
 
 def create_common_shared_data_object_options(f):
     @click.option('--table', required=True,
-              help='Full name of the table to update from share.')
+                  help='Full name of the shared table.')
     @click.option('--shared-as', default=None,
-                help='New name of the table inside the share.')
+                  help='New name of the table to be shared as.')
     @click.option('--comment', default=None,
-                help='New comment of the table inside the share.')
+                  help='New comment of the shared table.')
     @click.option('--partitions', default=None, type=JsonClickType(),
-                help='New partition specification of the table represented in JSON.')
+                  help='New partition specification of the shared table represented in JSON.')
     @click.option('--cdf/--no-cdf', is_flag=True, default=None,
-                help='Enables change data feed of the table inside the share.')
+                  help='Enables change data feed of the shared table.')
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
         f(*args, **kwargs)
