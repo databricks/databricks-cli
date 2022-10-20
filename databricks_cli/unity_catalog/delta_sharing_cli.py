@@ -196,9 +196,7 @@ def create_common_shared_data_object_options(f):
                 help='New comment of the table inside the share.')
     @click.option('--partitions', default=None, type=JsonClickType(),
                 help='New partition specification of the table represented in JSON.')
-    @click.option('--cdf', is_flag=True, default=None,
-                help='Enables change data feed of the table inside the share.')
-    @click.option('--no-cdf', is_flag=True, default=None,
+    @click.option('--cdf/--no-cdf', is_flag=True, default=None,
                 help='Enables change data feed of the table inside the share.')
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
@@ -220,23 +218,13 @@ def create_common_shared_data_object_options(f):
 @eat_exceptions
 @provide_api_client
 def add_share_table_cli(api_client, share, table, shared_as, comment,
-                        partitions, cdf, no_cdf, json_file, json):
+                        partitions, cdf, json_file, json):
     """
     Adds a shared table.
 
     The public specification for the JSON request is in development.
     """
-    cdf_enabled = None
-    if cdf is not None and no_cdf is not None:
-        raise ValueError("You can only pass in either --cdf or --no-cdf and not both.")
-    
-    if cdf is not None:
-        cdf_enabled = cdf
-    elif no_cdf is not None:
-        cdf_enabled = no_cdf
-
-    if (shared_as is not None or comment is not None or partitions is not None or
-        cdf is not None or no_cdf is not None):
+    if (shared_as is not None) or (comment is not None) or (partitions is not None) or (cdf is not None):
         if (json_file is not None) or (json is not None):
             raise ValueError('Cannot specify JSON if any other flags are specified')
         data = { 
@@ -247,8 +235,8 @@ def add_share_table_cli(api_client, share, table, shared_as, comment,
                         name=table,
                         shared_as=shared_as,
                         comment=comment,
-                        cdf_enabled=cdf_enabled,
-                        partitions=json_loads(partitions),
+                        cdf_enabled=cdf,
+                        partitions=json_loads(partitions) if partitions is not None else None,
                     )
                 }
             ]
@@ -280,23 +268,13 @@ def add_share_table_cli(api_client, share, table, shared_as, comment,
 @eat_exceptions
 @provide_api_client
 def update_share_table_cli(api_client, share, table, shared_as, comment,
-                           partitions, cdf, no_cdf, json_file, json):
+                           partitions, cdf, json_file, json):
     """
     Updates a shared table.
 
     The public specification for the JSON request is in development.
     """
-    cdf_enabled = None
-    if cdf is not None and no_cdf is not None:
-        raise ValueError("You can only pass in either --cdf or --no-cdf and not both.")
-    
-    if cdf is not None:
-        cdf_enabled = cdf
-    elif no_cdf is not None:
-        cdf_enabled = no_cdf
-
-    if (shared_as is not None or comment is not None or partitions is not None or 
-        cdf is not None or no_cdf is not None):
+    if (shared_as is not None) or (comment is not None) or (partitions is not None) or (cdf is not None):
         if (json_file is not None) or (json is not None):
             raise ValueError('Cannot specify JSON if any other flags are specified')
         data = { 
@@ -307,8 +285,8 @@ def update_share_table_cli(api_client, share, table, shared_as, comment,
                         name=table,
                         shared_as=shared_as,
                         comment=comment,
-                        cdf_enabled=cdf_enabled,
-                        partitions=json_loads(partitions),
+                        cdf_enabled=cdf,
+                        partitions=json_loads(partitions) if partitions is not None else None,
                     )
                 }
             ]
