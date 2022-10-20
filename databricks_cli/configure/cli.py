@@ -46,7 +46,9 @@ DEFAULT_SCOPES = [
     'mlflow',
     'offline_access',
     'sql',
-    'unity-catalog'
+    'unity-catalog',
+    'api://37c5111f-0c9e-4cd3-9d17-15621c5bf746/sql',
+    '//37c5111f-0c9e-4cd3-9d17-15621c5bf746/sql'
 ]
 
 

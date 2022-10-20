@@ -73,7 +73,7 @@ class UTCTimeZone(tzinfo):
 
 # Some contant values
 OIDC_REDIRECTOR_PATH = "oidc"
-CLIENT_ID = "databricks-cli"
+CLIENT_ID = "37c5111f-0c9e-4cd3-9d17-15621c5bf746"
 REDIRECT_PORT = 8020
 UTC = UTCTimeZone()
 
@@ -87,7 +87,8 @@ def get_redirect_url(port=REDIRECT_PORT):
 
 
 def fetch_well_known_config(idp_url):
-    known_config_url = "{idp_url}/.well-known/oauth-authorization-server".format(idp_url=idp_url)
+    known_config_url = "{idp_url}/.well-known/openid-configuration".format(idp_url=idp_url)
+    print(known_config_url)
     try:
         response = requests.request(method="GET", url=known_config_url)
     except RequestException:
@@ -198,7 +199,7 @@ def get_authorization_code(client, auth_url, redirect_url, scope, state, challen
 
 def send_auth_code_token_request(client, token_request_url, redirect_url, code, verifier):
     token_request_body = client.prepare_request_body(code=code, redirect_uri=redirect_url)
-    data = "{body}&code_verifier={verifier}".format(body=token_request_body, verifier=verifier)
+    data = "{body}&code_verifier={verifier}&client_secret=ZMQ8Q~ZkH7fwCR21iNxVCcvDzF8frfxojOCIgdeP".format(body=token_request_body, verifier=verifier)
     return send_token_request(token_request_url, data)
 
 
@@ -207,6 +208,8 @@ def send_token_request(token_request_url, data):
         "Accept": "application/json",
         "Content-Type": "application/x-www-form-urlencoded"
     }
+
+    click.echo("request token from {token_request_url}")
     response = requests.request(method="POST", url=token_request_url, data=data, headers=headers)
     oauth_response = json.loads(response.text)
     return oauth_response
@@ -223,6 +226,7 @@ def send_refresh_token_request(hostname, refresh_token):
 
 
 def get_tokens_from_response(oauth_response):
+    click.echo("token response: {res}".format(res=oauth_response))
     access_token = oauth_response['access_token']
     refresh_token = oauth_response['refresh_token'] if 'refresh_token' in oauth_response else None
     return access_token, refresh_token
@@ -263,7 +267,9 @@ def get_tokens(hostname, scope=None):
     oauth_config = fetch_well_known_config(idp_url)
     # We are going to override oauth_config["authorization_endpoint"] use the
     # /oidc redirector on the hostname, which may inject additional parameters.
-    auth_url = "{}/v1/authorize".format(get_idp_url(hostname))
+    # auth_url = "{}/authorize".format(get_idp_url(hostname))
+    auth_url = oauth_config["authorization_endpoint"]
+    click.echo("authorization endpoint : {auth_url}")
     state = token_urlsafe(16)
     (verifier, challenge) = get_challenge()
     client = get_client()
