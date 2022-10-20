@@ -195,7 +195,7 @@ def create_common_shared_data_object_options(f):
     @click.option('--comment', default=None,
                 help='New comment of the table inside the share.')
     @click.option('--partitions', default=None, type=JsonClickType(),
-                help='New partition specification of the table inside the share represented in JSON.')
+                help='New partition specification of the table represented in JSON.')
     @click.option('--cdf', is_flag=True, default=None,
                 help='Enables change data feed of the table inside the share.')
     @click.option('--no-cdf', is_flag=True, default=None,
