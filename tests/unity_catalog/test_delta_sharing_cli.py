@@ -302,7 +302,7 @@ def test_update_share_table_cli(api_mock, echo_mock):
 
 
 @provide_conf
-def test_remove_share_table_cli(api_mock, echo_mock):
+def test_remove_share_table_cli_by_table(api_mock, echo_mock):
     api_mock.update_share.return_value = SHARE
     runner = CliRunner()
     runner.invoke(
@@ -310,7 +310,6 @@ def test_remove_share_table_cli(api_mock, echo_mock):
         args=[
             '--share', SHARE_NAME,
             '--table', 'remove.table',
-            '--shared-as', 'catalog.schema.table',
         ])
     expected_data = {
         'updates': [
@@ -319,6 +318,30 @@ def test_remove_share_table_cli(api_mock, echo_mock):
                 'data_object': {
                     'data_object_type': 'TABLE',
                     'name': 'remove.table',
+                }
+            }
+        ]
+    }
+    api_mock.update_share.assert_called_once_with(SHARE_NAME, expected_data)
+    echo_mock.assert_called_once_with(mc_pretty_format(SHARE))
+
+
+@provide_conf
+def test_remove_share_table_cli_by_shared_as(api_mock, echo_mock):
+    api_mock.update_share.return_value = SHARE
+    runner = CliRunner()
+    runner.invoke(
+        delta_sharing_cli.remove_share_table_cli,
+        args=[
+            '--share', SHARE_NAME,
+            '--shared-as', 'catalog.schema.table',
+        ])
+    expected_data = {
+        'updates': [
+            {
+                'action': 'REMOVE',
+                'data_object': {
+                    'data_object_type': 'TABLE',
                     'shared_as': 'catalog.schema.table',
                 }
             }
@@ -328,6 +351,18 @@ def test_remove_share_table_cli(api_mock, echo_mock):
     echo_mock.assert_called_once_with(mc_pretty_format(SHARE))
 
 
+@provide_conf
+def test_remove_share_table_cli_asserts_error_if_both_specified(api_mock):
+    runner = CliRunner()
+    runner.invoke(
+        delta_sharing_cli.remove_share_table_cli,
+        args=[
+            '--share', SHARE_NAME,
+            '--table', 'remove.table',
+            '--shared-as', 'catalog.schema.table'
+        ]
+    )
+    assert not api_mock.update_share.called
 
 @provide_conf
 def test_update_share_cli_with_json(api_mock, echo_mock):

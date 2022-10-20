@@ -21,6 +21,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import functools
 from json import loads as json_loads
 
 import click
@@ -186,22 +187,30 @@ def update_share_cli(api_client, name, new_name, comment, owner,
                       lambda json: UnityCatalogApi(api_client).update_share(name, json))
 
 
+def create_common_shared_data_object_options(f):
+    @click.option('--table', required=True,
+              help='Full name of the table to update from share.')
+    @click.option('--shared-as', default=None,
+                help='New name of the table inside the share.')
+    @click.option('--comment', default=None,
+                help='New comment of the table inside the share.')
+    @click.option('--partitions', default=None, type=JsonClickType(),
+                help='New partition specification of the table inside the share represented in JSON.')
+    @click.option('--cdf', is_flag=True, default=None,
+                help='Enables change data feed of the table inside the share.')
+    @click.option('--no-cdf', is_flag=True, default=None,
+                help='Enables change data feed of the table inside the share.')
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        f(*args, **kwargs)
+    return wrapper
+
+
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Add a shared table.')
 @click.option('--share', required=True,
               help='Name of the share to update.')
-@click.option('--table', required=True,
-              help='Full name of the table to update from share.')
-@click.option('--shared-as', default=None,
-              help='New name of the table inside the share.')
-@click.option('--comment', default=None,
-              help='New comment of the table inside the share.')
-@click.option('--partitions', default=None, type=JsonClickType(),
-              help='New partition specification of the table inside the share represented in JSON.')
-@click.option('--cdf', is_flag=True, default=None,
-              help='Enables change data feed of the table inside the share.')
-@click.option('--no-cdf', is_flag=True, default=None,
-              help='Enables change data feed of the table inside the share.')
+@create_common_shared_data_object_options
 @click.option('--json-file', default=None, type=click.Path(),
               help="Updates the shared table to shared data object represented in JSON file.")
 @click.option('--json', default=None, type=JsonClickType(),
@@ -211,7 +220,7 @@ def update_share_cli(api_client, name, new_name, comment, owner,
 @eat_exceptions
 @provide_api_client
 def add_share_table_cli(api_client, share, table, shared_as, comment,
-                     partitions, cdf, no_cdf, json_file, json):
+                        partitions, cdf, no_cdf, json_file, json):
     """
     Adds a shared table.
 
@@ -261,18 +270,7 @@ def add_share_table_cli(api_client, share, table, shared_as, comment,
                short_help='Update a shared table.')
 @click.option('--share', required=True,
               help='Name of the share to update.')
-@click.option('--table', required=True,
-              help='Full name of the table to update from share.')
-@click.option('--shared-as', default=None,
-              help='New name of the table inside the share.')
-@click.option('--comment', default=None,
-              help='New comment of the table inside the share.')
-@click.option('--partitions', default=None, type=JsonClickType(),
-              help='New partition specification of the table inside the share represented in JSON.')
-@click.option('--cdf', is_flag=True, default=None,
-              help='Enables change data feed of the table inside the share.')
-@click.option('--no-cdf', is_flag=True, default=None,
-              help='Enables change data feed of the table inside the share.')
+@create_common_shared_data_object_options
 @click.option('--json-file', default=None, type=click.Path(),
               help="Updates the shared table to shared data object represented in JSON file.")
 @click.option('--json', default=None, type=JsonClickType(),
@@ -282,7 +280,7 @@ def add_share_table_cli(api_client, share, table, shared_as, comment,
 @eat_exceptions
 @provide_api_client
 def update_share_table_cli(api_client, share, table, shared_as, comment,
-                     partitions, cdf, no_cdf, json_file, json):
+                           partitions, cdf, no_cdf, json_file, json):
     """
     Updates a shared table.
 
@@ -348,10 +346,11 @@ def remove_share_table_cli(api_client, share, table, shared_as, json_file, json)
     """
     Removes a shared table either by table name or the shared-as table name.
 
-    If both are specified, then it'll default to using the shared-as table name.
-
     The public specification for the JSON request is in development.
     """
+    if table is not None and shared_as is not None:
+        raise ValueError("You can only pass in either --table or --shared_as and not both.")
+
     if table is not None or shared_as is not None:
         if (json_file is not None) or (json is not None):
             raise ValueError('Cannot specify JSON if any other flags are specified')
