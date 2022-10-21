@@ -49,7 +49,7 @@ def eat_exceptions(function):
                                'reconfigure with ``dbfs configure``')
             elif exception.response.status_code == 403:
                 error_and_quit('Authorization failed. Your token may be expired or '
-                               'lack the valid scope')
+                        'lack the valid scope, with error {err}'.format(err = exception.response.content))
             else:
                 error_and_quit(exception.response.content)
         except Exception as exception:  # noqa

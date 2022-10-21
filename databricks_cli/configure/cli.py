@@ -48,6 +48,7 @@ DEFAULT_SCOPES = [
     'sql',
     'unity-catalog',
     'api://37c5111f-0c9e-4cd3-9d17-15621c5bf746/sql',
+    'api://37c5111f-0c9e-4cd3-9d17-15621c5bf746/clusters',
     '//37c5111f-0c9e-4cd3-9d17-15621c5bf746/sql'
 ]
 
