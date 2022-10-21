@@ -228,6 +228,7 @@ def test_add_share_table_cli(api_mock, echo_mock):
             '--comment', 'add.comment',
             '--partitions', '[{"values": [{"name": "a", "op": "EQUAL", "value": "1"}]}]',
             '--cdf',
+            '--start-version', '1'
         ])
     expected_data = {
         'updates': [
@@ -249,7 +250,8 @@ def test_add_share_table_cli(api_mock, echo_mock):
                                 },
                             ]
                         },
-                    ]
+                    ],
+                    'start_version': 1
                 }
             }
         ]
@@ -271,6 +273,7 @@ def test_update_share_table_cli(api_mock, echo_mock):
             '--comment', 'update.comment',
             '--partitions', '[{"values": [{"name": "a", "op": "EQUAL", "value": "1"}]}]',
             '--cdf',
+            '--start-version', '1'
         ])
     expected_data = {
         'updates': [
@@ -292,7 +295,8 @@ def test_update_share_table_cli(api_mock, echo_mock):
                                 },
                             ]
                         },
-                    ]
+                    ],
+                    'start_version': 1
                 }
             }
         ]

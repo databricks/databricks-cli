@@ -123,7 +123,8 @@ def update_share_permissions_cli(api_client, name, json_file, json):
                   lambda json: UnityCatalogApi(api_client).update_share_permissions(name, json))
 
 
-def shared_data_object(name=None, comment=None, shared_as=None, cdf_enabled=None, partitions=None):
+def shared_data_object(name=None, comment=None, shared_as=None, 
+                       cdf_enabled=None, partitions=None, start_version=None):
     val = {
         'data_object_type': 'TABLE'
     }
@@ -137,6 +138,8 @@ def shared_data_object(name=None, comment=None, shared_as=None, cdf_enabled=None
         val['cdf_enabled'] = cdf_enabled
     if partitions is not None:
         val['partitions'] = partitions
+    if start_version is not None:
+        val['start_version'] = start_version
     return val
 
 
@@ -197,7 +200,9 @@ def create_common_shared_data_object_options(f):
     @click.option('--partitions', default=None, type=JsonClickType(),
                   help='New partition specification of the shared table represented in JSON.')
     @click.option('--cdf/--no-cdf', is_flag=True, default=None,
-                  help='Enables change data feed of the shared table.')
+                  help='Toggles the change data feed for the shared table.')
+    @click.option('--start-version', default=None, type=int,
+                  help='Specifies the current version of the shared table.')
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
         f(*args, **kwargs)
@@ -218,14 +223,14 @@ def create_common_shared_data_object_options(f):
 @eat_exceptions
 @provide_api_client
 def add_share_table_cli(api_client, share, table, shared_as, comment,
-                        partitions, cdf, json_file, json):
+                        partitions, cdf, start_version, json_file, json):
     """
     Adds a shared table.
 
     The public specification for the JSON request is in development.
     """
     if ((shared_as is not None) or (comment is not None) or (partitions is not None) or 
-        (cdf is not None)):
+        (cdf is not None) or (start_version is not None)):
         if (json_file is not None) or (json is not None):
             raise ValueError('Cannot specify JSON if any other flags are specified')
         data = { 
@@ -238,6 +243,7 @@ def add_share_table_cli(api_client, share, table, shared_as, comment,
                         comment=comment,
                         cdf_enabled=cdf,
                         partitions=json_loads(partitions) if partitions is not None else None,
+                        start_version=start_version,
                     )
                 }
             ]
@@ -269,14 +275,14 @@ def add_share_table_cli(api_client, share, table, shared_as, comment,
 @eat_exceptions
 @provide_api_client
 def update_share_table_cli(api_client, share, table, shared_as, comment,
-                           partitions, cdf, json_file, json):
+                           partitions, cdf, start_version, json_file, json):
     """
     Updates a shared table.
 
     The public specification for the JSON request is in development.
     """
     if ((shared_as is not None) or (comment is not None) or (partitions is not None) or 
-        (cdf is not None)):
+        (cdf is not None) or (start_version is not None)):
         if (json_file is not None) or (json is not None):
             raise ValueError('Cannot specify JSON if any other flags are specified')
         data = { 
@@ -289,6 +295,7 @@ def update_share_table_cli(api_client, share, table, shared_as, comment,
                         comment=comment,
                         cdf_enabled=cdf,
                         partitions=json_loads(partitions) if partitions is not None else None,
+                        start_version=start_version,
                     )
                 }
             ]
