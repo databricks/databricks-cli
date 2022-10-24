@@ -140,11 +140,7 @@ class WorkspaceApi(object):
         if exclude_hidden_files:
             # for now, just exclude hidden files or directories based on starting '.'
             filenames = [f for f in filenames if not f.startswith('.')]
-        try:
-            self.mkdirs(target_path, headers=headers)
-        except HTTPError as e:
-            click.echo(e.response.json())
-            return
+        self.mkdirs(target_path, headers=headers)
         for filename in filenames:
             cur_src = os.path.join(source_path, filename)
             # don't use os.path.join here since it will set \ on Windows
