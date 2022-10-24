@@ -152,6 +152,7 @@ def shared_data_object(name=None, comment=None, shared_as=None,
               help='Free-form text description.')
 @click.option('--owner', default=None, required=False,
               help='Owner of the share.')
+# These options are hidden to encourage the usage of the new commands: add-table/update-table
 @click.option('--add-table', default=None, multiple=True,
               metavar='NAME', hidden=True,
               help='Full name of table to add to share (can be specified multiple times).')
