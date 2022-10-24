@@ -25,7 +25,6 @@ import os
 from base64 import b64encode, b64decode
 
 import click
-from requests.exceptions import HTTPError
 
 from databricks_cli.dbfs.exceptions import LocalFileExistsException
 from databricks_cli.sdk import WorkspaceService
