@@ -186,7 +186,7 @@ class ApiClient(object):
 
 
 def _is_uc_path(path):
-    return path.startswith('/unity-catalog') or path.startswith('/lineage-tracking')
+    return path.startswith('/unity-catalog')
 
 
 def _translate_boolean_to_query_param(value):
