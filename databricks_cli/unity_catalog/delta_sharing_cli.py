@@ -21,6 +21,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import functools
+from json import loads as json_loads
+
 import click
 
 from databricks_cli.click_types import JsonClickType
@@ -120,8 +123,24 @@ def update_share_permissions_cli(api_client, name, json_file, json):
                   lambda json: UnityCatalogApi(api_client).update_share_permissions(name, json))
 
 
-def shared_data_object(name):
-    return {'name': name, 'data_object_type': 'TABLE'}
+def shared_data_object(name=None, comment=None, shared_as=None, 
+                       cdf_enabled=None, partitions=None, start_version=None):
+    val = {
+        'data_object_type': 'TABLE'
+    }
+    if name is not None:
+        val['name'] = name
+    if comment is not None:
+        val['comment'] = comment
+    if shared_as is not None:
+        val['shared_as'] = shared_as
+    if cdf_enabled is not None:
+        val['cdf_enabled'] = cdf_enabled
+    if partitions is not None:
+        val['partitions'] = partitions
+    if start_version is not None:
+        val['start_version'] = start_version
+    return val
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -133,11 +152,12 @@ def shared_data_object(name):
               help='Free-form text description.')
 @click.option('--owner', default=None, required=False,
               help='Owner of the share.')
+# These options are hidden to encourage the usage of the new commands: add-table/update-table
 @click.option('--add-table', default=None, multiple=True,
-              metavar='NAME',
+              metavar='NAME', hidden=True,
               help='Full name of table to add to share (can be specified multiple times).')
 @click.option('--remove-table', default=None, multiple=True,
-              metavar='NAME',
+              metavar='NAME', hidden=True,
               help='Full name of table to remove from share (can be specified multiple times).')
 @click.option('--json-file', default=None, type=click.Path(),
               help=json_file_help(method='PATCH', path='/shares/{name}'))
@@ -169,6 +189,181 @@ def update_share_cli(api_client, name, new_name, comment, owner,
     else:
         json_cli_base(json_file, json,
                       lambda json: UnityCatalogApi(api_client).update_share(name, json))
+
+
+def create_common_shared_data_object_options(f):
+    @click.option('--table', required=True,
+                  help='Full name of the shared table.')
+    @click.option('--shared-as', default=None,
+                  help='New name of the table to be shared as.')
+    @click.option('--comment', default=None,
+                  help='New comment of the shared table.')
+    @click.option('--partitions', default=None, type=JsonClickType(),
+                  help='New partition specification of the shared table represented in JSON.')
+    @click.option('--cdf/--no-cdf', is_flag=True, default=None,
+                  help='Toggles the change data feed for the shared table.')
+    @click.option('--start-version', default=None, type=int,
+                  help='Specifies the current version of the shared table.')
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        f(*args, **kwargs)
+    return wrapper
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Add a shared table.')
+@click.option('--share', required=True,
+              help='Name of the share to update.')
+@create_common_shared_data_object_options
+@click.option('--json-file', default=None, type=click.Path(),
+              help="Adds a shared table based on shared data object represented in JSON file.")
+@click.option('--json', default=None, type=JsonClickType(),
+              help="Adds a shared table based on shared data object represented in JSON.")
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def add_share_table_cli(api_client, share, table, shared_as, comment,
+                        partitions, cdf, start_version, json_file, json):
+    """
+    Adds a shared table.
+
+    The public specification for the JSON request is in development.
+    """
+    if ((shared_as is not None) or (comment is not None) or (partitions is not None) or 
+        (cdf is not None) or (start_version is not None)):
+        if (json_file is not None) or (json is not None):
+            raise ValueError('Cannot specify JSON if any other flags are specified')
+        data = { 
+            'updates': [
+                {
+                    'action': 'ADD',
+                    'data_object': shared_data_object(
+                        name=table,
+                        shared_as=shared_as,
+                        comment=comment,
+                        cdf_enabled=cdf,
+                        partitions=json_loads(partitions) if partitions is not None else None,
+                        start_version=start_version,
+                    )
+                }
+            ]
+        }
+        share_json = UnityCatalogApi(api_client).update_share(share, data)
+        click.echo(mc_pretty_format(share_json))
+    else:
+        json_cli_base(json_file, json, lambda d: UnityCatalogApi(api_client).update_share(share, { 
+            'updates': [
+                {
+                    'action': 'ADD',
+                    'data_object': d,
+                }
+            ]
+        }))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Update a shared table.')
+@click.option('--share', required=True,
+              help='Name of the share to update.')
+@create_common_shared_data_object_options
+@click.option('--json-file', default=None, type=click.Path(),
+              help="Updates the shared table to shared data object represented in JSON file.")
+@click.option('--json', default=None, type=JsonClickType(),
+              help="Updates the shared table to shared data object represented in JSON.")
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def update_share_table_cli(api_client, share, table, shared_as, comment,
+                           partitions, cdf, start_version, json_file, json):
+    """
+    Updates a shared table.
+
+    The public specification for the JSON request is in development.
+    """
+    if ((shared_as is not None) or (comment is not None) or (partitions is not None) or 
+        (cdf is not None) or (start_version is not None)):
+        if (json_file is not None) or (json is not None):
+            raise ValueError('Cannot specify JSON if any other flags are specified')
+        data = { 
+            'updates': [
+                {
+                    'action': 'UPDATE',
+                    'data_object': shared_data_object(
+                        name=table,
+                        shared_as=shared_as,
+                        comment=comment,
+                        cdf_enabled=cdf,
+                        partitions=json_loads(partitions) if partitions is not None else None,
+                        start_version=start_version,
+                    )
+                }
+            ]
+        }
+        share_json = UnityCatalogApi(api_client).update_share(share, data)
+        click.echo(mc_pretty_format(share_json))
+    else:
+        json_cli_base(json_file, json, lambda d: UnityCatalogApi(api_client).update_share(share, { 
+            'updates': [
+                {
+                    'action': 'UPDATE',
+                    'data_object': d,
+                }
+            ]
+        }))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Update a shared table.')
+@click.option('--share', required=True,
+              help='Name of the share to update.')
+@click.option('--table', default=None,
+              help='Full name of the table to update from share.')
+@click.option('--shared-as', default=None,
+              help='New name of the table inside the share.')
+@click.option('--json-file', default=None, type=click.Path(),
+              help="Removes the shared table based on shared data object represented in JSON file.")
+@click.option('--json', default=None, type=JsonClickType(),
+              help="Removes the shared table based on shared data object represented in JSON.")
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def remove_share_table_cli(api_client, share, table, shared_as, json_file, json):
+    """
+    Removes a shared table either by table name or the shared-as table name.
+
+    The public specification for the JSON request is in development.
+    """
+    if table is not None and shared_as is not None:
+        raise ValueError("You can only pass in either --table or --shared_as and not both.")
+
+    if table is not None or shared_as is not None:
+        if (json_file is not None) or (json is not None):
+            raise ValueError('Cannot specify JSON if any other flags are specified')
+        data = { 
+            'updates': [
+                {
+                    'action': 'REMOVE',
+                    'data_object': shared_data_object(
+                        name=table,
+                        shared_as=shared_as,
+                    )
+                }
+            ]
+        }
+        share_json = UnityCatalogApi(api_client).update_share(share, data)
+        click.echo(mc_pretty_format(share_json))
+    else:
+        json_cli_base(json_file, json, lambda d: UnityCatalogApi(api_client).update_share(share, { 
+            'updates': [
+                {
+                    'action': 'REMOVE',
+                    'data_object': d,
+                }
+            ]
+        }))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -498,6 +693,9 @@ def register_shares_commands(cmd_group):
     shares_group.add_command(list_shares_cli, name='list')
     shares_group.add_command(get_share_cli, name='get')
     shares_group.add_command(update_share_cli, name='update')
+    shares_group.add_command(add_share_table_cli, name='add-table')
+    shares_group.add_command(update_share_table_cli, name='update-table')
+    shares_group.add_command(remove_share_table_cli, name='remove-table')
     shares_group.add_command(delete_share_cli, name='delete')
     shares_group.add_command(list_share_permissions_cli, name='list-permissions')
     shares_group.add_command(update_share_permissions_cli, name='update-permissions')
