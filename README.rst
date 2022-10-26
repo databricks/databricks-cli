@@ -65,4 +65,4 @@ Documentation
 For the latest CLI documentation, see
 
 - `Databricks <https://docs.databricks.com/user-guide/dev-tools/databricks-cli.html>`_
-- `Azure Databricks <https://docs.azuredatabricks.net/user-guide/dev-tools/databricks-cli.html>`_
+- `Azure Databricks <https://learn.microsoft.com/en-us/azure/databricks/dev-tools/cli>`_
