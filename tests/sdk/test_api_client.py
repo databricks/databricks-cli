@@ -133,6 +133,10 @@ def test_api_client_url_parsing():
     client = ApiClient(host='https://databricks.com?o=123')
     assert client.get_url('') == 'https://databricks.com/api/2.0'
 
+    # this is to test that users can set a custom host for the apiclient if they are forced to interact with Databricks via a proxy
+    client = ApiClient(host='https://mydatabricksproxyservice.com/databricks/proxy')
+    assert client.get_url('') == 'https://mydatabricksproxyservice.com/databricks/proxy/api/2.0'
+
     # NOTE: this technically is not possible since we validate that the "host" has a prefix of https:// in
     # databricks_cli.configure.cli
     client = ApiClient(host='http://databricks.com')

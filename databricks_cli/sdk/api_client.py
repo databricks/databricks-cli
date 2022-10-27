@@ -110,10 +110,15 @@ class ApiClient(object):
         self.session = requests.Session()
         self.session.auth = FallbackNetrcAuth()
         self.session.mount('https://', TlsV1HttpAdapter(max_retries=retries))
-
+        
         parsed_url = urlparse(host)
         scheme = parsed_url.scheme
-        hostname = parsed_url.hostname
+        # this is to allow enterprise users to specify a custom host if they are forced to interact with Databricks via a proxy
+        if "databricks.com" in host:
+            hostname = parsed_url.hostname
+        else:
+            hostname = parsed_url.hostname + parsed_url.path
+
         self.url = "%s://%s/api/" % (scheme, hostname)
         if user is not None and password is not None:
             encoded_auth = (user + ":" + password).encode()
