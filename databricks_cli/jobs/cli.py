@@ -87,9 +87,8 @@ def reset_cli(api_client, json_file, json, job_id, version):
         with open(json_file, 'r') as f:
             json = f.read()
     deser_json = json_loads(json)
-    """
-    If the payload is defined using the API definition rather than the CLI one, extract the settings data.
-    """
+    # If the payload is defined using the API definition rather than the CLI
+    # extract the settings data.
     json_settings = deser_json['new_settings'] if (
         'new_settings' in deser_json) else deser_json
 
