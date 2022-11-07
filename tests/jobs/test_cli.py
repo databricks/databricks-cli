@@ -74,24 +74,26 @@ def test_create_cli_json_file(jobs_api_mock, tmpdir):
 
 RESET_JSON = '{"job_name": "test_job"}'
 
-CORRECT_RESPONSE = {'job_id': 1,
-                    'new_settings': json.loads(RESET_JSON)}
+CORRECT_REQUEST_PAYLOAD = {'job_id': 1,
+                           'new_settings': json.loads(RESET_JSON)}
+
 
 @provide_conf
 def test_reset_cli_json(jobs_api_mock):
     runner = CliRunner()
     runner.invoke(cli.reset_cli, ['--json', RESET_JSON, '--job-id', 1])
-    assert jobs_api_mock.reset_job.call_args[0][0] == CORRECT_RESPONSE
+    assert jobs_api_mock.reset_job.call_args[0][0] == CORRECT_REQUEST_PAYLOAD
 
 
-RESET_JSON_NEW_SETTINGS = '{"new_settings": {"job_name": "test_job"}}'
+RESET_JSON_NEW_SETTINGS = '{"new_settings": RESET_JSON}'
 
 
 @provide_conf
 def test_reset_cli_json_new_settings(jobs_api_mock):
     runner = CliRunner()
-    runner.invoke(cli.reset_cli, ['--json', RESET_JSON_NEW_SETTINGS, '--job-id', 1])
-    assert jobs_api_mock.reset_job.call_args[0][0] == CORRECT_RESPONSE
+    runner.invoke(cli.reset_cli, [
+                  '--json', RESET_JSON_NEW_SETTINGS, '--job-id', 1])
+    assert jobs_api_mock.reset_job.call_args[0][0] == CORRECT_REQUEST_PAYLOAD
 
 
 LIST_RETURN = {
@@ -322,7 +324,8 @@ def test_get_job_21(jobs_api_mock):
         runner = CliRunner()
         runner.invoke(cli.get_cli, ['--job-id', '1', '--version', '2.1'])
         assert jobs_api_mock.get_job.call_args == mock.call('1', version='2.1')
-        assert echo_mock.call_args[0][0] == pretty_format(LIST_21_RETURN['jobs'][0])
+        assert echo_mock.call_args[0][0] == pretty_format(
+            LIST_21_RETURN['jobs'][0])
 
 
 @provide_conf

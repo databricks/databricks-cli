@@ -87,14 +87,16 @@ def reset_cli(api_client, json_file, json, job_id, version):
         with open(json_file, 'r') as f:
             json = f.read()
     deser_json = json_loads(json)
-    if 'new_settings' in deser_json:
-        request_body = deser_json
-        request_body['job_id'] = job_id
-    else:
-        request_body = {
-            'job_id': job_id,
-            'new_settings': deser_json
-        }
+    """
+    If the payload is defined using the API definition rather than the CLI one, extract the settings data.
+    """
+    json_settings = deser_json['new_settings'] if (
+        'new_settings' in deser_json) else deser_json
+
+    request_body = {
+        'job_id': job_id,
+        'new_settings': json_settings
+    }
     JobsApi(api_client).reset_job(request_body, version=version)
 
 
