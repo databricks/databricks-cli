@@ -61,7 +61,7 @@ def create_cli(api_client, json_file, json, version):
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
-@click.option('--job-id', required=True, type=JobIdClickType(), help=JobIdClickType.help)
+@click.option('--job-id', default=None, type=JobIdClickType(), help=JobIdClickType.help)
 @click.option('--json-file', default=None, type=click.Path(),
               help='File containing partial JSON request to POST to /api/2.*/jobs/reset. '
                    'For more, read full help message.')
@@ -89,13 +89,19 @@ def reset_cli(api_client, json_file, json, job_id, version):
     deser_json = json_loads(json)
     # If the payload is defined using the API definition rather than the CLI
     # extract the settings data.
-    json_settings = deser_json['new_settings'] if (
+    new_settings = deser_json['new_settings'] if (
         'new_settings' in deser_json) else deser_json
+
+    # If job id is not defined in the call we fall back to checking
+    # the JSON for a job_id property
+    if job_id is None:
+        job_id = deser_json['job_id']
 
     request_body = {
         'job_id': job_id,
-        'new_settings': json_settings
+        'new_settings': new_settings
     }
+
     JobsApi(api_client).reset_job(request_body, version=version)
 
 

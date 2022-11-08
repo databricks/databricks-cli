@@ -96,6 +96,13 @@ def test_reset_cli_json_new_settings(jobs_api_mock):
     assert jobs_api_mock.reset_job.call_args[0][0] == CORRECT_REQUEST_PAYLOAD
 
 
+@provide_conf
+def test_reset_cli_json_new_settings_no_job_id(jobs_api_mock):
+    runner = CliRunner()
+    runner.invoke(cli.reset_cli, ['--json', RESET_JSON_NEW_SETTINGS])
+    assert jobs_api_mock.reset_job.call_args[0][0] == CORRECT_REQUEST_PAYLOAD
+
+
 LIST_RETURN = {
     'jobs': [{
         'job_id': 1,
