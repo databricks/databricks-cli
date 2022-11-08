@@ -95,11 +95,11 @@ def reset_cli(api_client, json_file, json, job_id, version):
     # If job id is not defined in the call we fall back to checking
     # the JSON for a job_id property
     if job_id is None:
-        if ('job_id' in deser_json):
+        if 'job_id' in deser_json:
             job_id = deser_json['job_id']
         else:
             raise RuntimeError(
-                'Either --job-id or a root level json key "job_id" should be provided')
+                'Either --job-id or a root-level json key "job_id" should be provided')
 
     request_body = {
         'job_id': job_id,
