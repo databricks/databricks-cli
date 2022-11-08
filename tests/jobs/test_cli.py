@@ -85,7 +85,7 @@ def test_reset_cli_json(jobs_api_mock):
     assert jobs_api_mock.reset_job.call_args[0][0] == CORRECT_REQUEST_PAYLOAD
 
 
-RESET_JSON_NEW_SETTINGS = '{ "new_settings": %s }' % RESET_JSON
+RESET_JSON_NEW_SETTINGS = '{ "new_settings": %s, "job_id": 1 }' % RESET_JSON
 
 
 @provide_conf
