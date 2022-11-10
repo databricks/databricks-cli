@@ -379,7 +379,7 @@ class UnityCatalogService(object):
     # Recipient Operations
 
     def create_recipient(self, name, comment=None, sharing_id=None,
-                         allowed_ip_addresses=None, headers=None):
+                         allowed_ip_addresses=None, properties = None, headers=None):
         _data = {
             'name': name,
         }
@@ -393,6 +393,10 @@ class UnityCatalogService(object):
         if allowed_ip_addresses is not None:
             _data['ip_access_list'] = {
                 'allowed_ip_addresses': allowed_ip_addresses,
+            }
+        if properties is not None:
+            _data['properties_kvpairs'] = {
+                'properties': properties
             }
 
         return self.client.perform_query('POST', '/unity-catalog/recipients', data=_data,
