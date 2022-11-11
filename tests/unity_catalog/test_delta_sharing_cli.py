@@ -477,7 +477,7 @@ def test_create_recipient_cli(api_mock, echo_mock):
     
 
 @provide_conf
-def test_create_recipient_cli_invalid_custom_property(api_mock, echo_mock):
+def test_create_recipient_cli_invalid_custom_property(api_mock):
     api_mock.create_recipient.return_value = RECIPIENT
     runner = CliRunner()
     runner.invoke(
