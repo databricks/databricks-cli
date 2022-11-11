@@ -477,6 +477,20 @@ def test_create_recipient_cli(api_mock, echo_mock):
     
 
 @provide_conf
+def test_create_recipient_cli_invalid_custom_property(api_mock, echo_mock):
+    api_mock.create_recipient.return_value = RECIPIENT
+    runner = CliRunner()
+    runner.invoke(
+        delta_sharing_cli.create_recipient_cli,
+        args=[
+            '--name', RECIPIENT_NAME,
+            '--custom-property', 'k1=v1=v2'
+        ])
+
+    assert not api_mock.create_recipient.called
+
+
+@provide_conf
 def test_create_recipient_cli_with_sharing_id(api_mock, echo_mock):
     api_mock.create_recipient.return_value = RECIPIENT
     runner = CliRunner()
