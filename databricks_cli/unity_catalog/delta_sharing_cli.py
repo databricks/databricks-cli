@@ -394,22 +394,25 @@ def delete_share_cli(api_client, name):
               help=(
                   'IP address in CIDR notation that is allowed to use delta sharing. '
                   '(can be specified multiple times).'))
-@click.option('--property', default=None, type=JsonClickType(), required=False, multiple=True,
+@click.option('--custom-property', default=None, required=False, multiple=True,
               help=(
-                  'Custom properties of the recipient. For format should be '
-                  '{"key": "<property-key>", "value": "<property-value>"}. '
-                  'Example: {"key": "country", "value": "US"}'))                  
+                  'Custom properties of the recipient. Key and value should be provided '
+                  'at the same time separated by an equal sign. '
+                  'Example: --custom-property country=US'))                 
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def create_recipient_cli(api_client, name, comment, sharing_id, allowed_ip_address, property):
+def create_recipient_cli(api_client, name, comment, sharing_id,
+                         allowed_ip_address, custom_property):
     """
     Create a new recipient.
     """
-    properties = [json_loads(property_str) for property_str in property]
+    parsed_custom_properties = [property_str.split('=') for property_str in custom_property]
+    custom_properties = [{"key": property_key, "value": property_value}
+                            for (property_key, property_value) in parsed_custom_properties]
     recipient_json = UnityCatalogApi(api_client).create_recipient(
-        name, comment, sharing_id, allowed_ip_address, properties)
+        name, comment, sharing_id, allowed_ip_address, custom_properties)
     click.echo(mc_pretty_format(recipient_json))
 
 
@@ -457,12 +460,12 @@ def get_recipient_cli(api_client, name):
                   'IP address in CIDR notation that is allowed to use delta sharing '
                   '(can be specified multiple times). Specify a single empty string to disable '
                   'IP allowlist.'))
-@click.option('--property', default=None, type=JsonClickType(), required=False, multiple=True,
+@click.option('--custom-property', default=None, required=False, multiple=True,
               help=(
-                  'Custom properties of the recipient. The format should be '
-                  '{"key": "<property-key>", "value": "<property-value>"}. '
-                  'Example: {"key": "country", "value": "US"}. '
-                  'Specify a single empty object `{}` to remove all properties.'))               
+                  'Custom properties of the recipient. Key and value should be provided '
+                  'at the same time separated by an equal sign. '
+                  'Example: --custom-property country=US'
+                  'Speficy a single empty string to remove all customer properties.'))      
 @click.option('--json-file', default=None, type=click.Path(),
               help=json_file_help(method='PATCH', path='/recipients/{name}'))
 @click.option('--json', default=None, type=JsonClickType(),
@@ -472,14 +475,14 @@ def get_recipient_cli(api_client, name):
 @eat_exceptions
 @provide_api_client
 def update_recipient_cli(api_client, name, new_name, comment, owner,
-                         allowed_ip_address, property, json_file, json):
+                         allowed_ip_address, custom_property, json_file, json):
     """
     Update a recipient.
 
     The public specification for the JSON request is in development.
     """
     if ((new_name is not None) or (comment is not None) or (owner is not None) or
-        len(allowed_ip_address) or len(property) > 0):
+        len(allowed_ip_address) or len(custom_property) > 0):
         if (json_file is not None) or (json is not None):
             raise ValueError('Cannot specify JSON if any other update flags are specified')
         data = {'name': new_name, 'comment': comment, 'owner': owner}
@@ -487,10 +490,14 @@ def update_recipient_cli(api_client, name, new_name, comment, owner,
             data['ip_access_list'] = {}
             if len(allowed_ip_address) != 1 or allowed_ip_address[0] != '':
                 data['ip_access_list']['allowed_ip_addresses'] = allowed_ip_address
-        if len(property) > 0:
+        if len(custom_property) > 0:
             data['properties_kvpairs'] = {}
-            if len(property) != 1 or json_loads(property[0]) != {}:
-                data['properties_kvpairs']['properties'] = [json_loads(property_str) for property_str in property]
+            if len(custom_property) != 1 or custom_property[0] != '':
+                parsed_custom_properties = [property_str.split('=')
+                    for property_str in custom_property]
+                data['properties_kvpairs']['properties'] = [{"key": property_key,
+                                                            "value": property_value}
+                    for (property_key, property_value) in parsed_custom_properties]
         recipient_json = UnityCatalogApi(api_client).update_recipient(name, data)
         click.echo(mc_pretty_format(recipient_json))
     else:
