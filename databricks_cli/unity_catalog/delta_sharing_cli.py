@@ -408,7 +408,7 @@ def create_recipient_cli(api_client, name, comment, sharing_id,
     """
     Create a new recipient.
     """
-    parsed_custom_properties = [property_str.split('=') for property_str in custom_property]
+    parsed_custom_properties = [property_str.split('=', 2) for property_str in custom_property]
     custom_properties = [{"key": property_key, "value": property_value}
                             for (property_key, property_value) in parsed_custom_properties]
     recipient_json = UnityCatalogApi(api_client).create_recipient(
@@ -493,7 +493,7 @@ def update_recipient_cli(api_client, name, new_name, comment, owner,
         if len(custom_property) > 0:
             data['properties_kvpairs'] = {}
             if len(custom_property) != 1 or custom_property[0] != '':
-                parsed_custom_properties = [property_str.split('=')
+                parsed_custom_properties = [property_str.split('=', 2)
                     for property_str in custom_property]
                 data['properties_kvpairs']['properties'] = [{"key": property_key,
                                                             "value": property_value}
