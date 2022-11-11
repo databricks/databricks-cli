@@ -379,7 +379,7 @@ class UnityCatalogService(object):
     # Recipient Operations
 
     def create_recipient(self, name, comment=None, sharing_id=None,
-                         allowed_ip_addresses=None, custom_properties = None, headers=None):
+                         allowed_ip_addresses=None, custom_properties=None, headers=None):
         _data = {
             'name': name,
         }
