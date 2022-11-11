@@ -408,9 +408,13 @@ def create_recipient_cli(api_client, name, comment, sharing_id,
     """
     Create a new recipient.
     """
-    parsed_custom_properties = [property_str.split('=', 2) for property_str in custom_property]
-    custom_properties = [{"key": property_key, "value": property_value}
-                            for (property_key, property_value) in parsed_custom_properties]
+    custom_properties = []
+    for property_str in custom_property:
+        tokens = property_str.split('=', 2)
+        if len(tokens) != 2:
+            raise ValueError('Invalid format of custom property. '
+                             + 'The format should be <key>=<value>.')
+        custom_properties.append({"key": tokens[0], "value": tokens[1]})
     recipient_json = UnityCatalogApi(api_client).create_recipient(
         name, comment, sharing_id, allowed_ip_address, custom_properties)
     click.echo(mc_pretty_format(recipient_json))
@@ -465,7 +469,7 @@ def get_recipient_cli(api_client, name):
                   'Custom properties of the recipient. Key and value should be provided '
                   'at the same time separated by an equal sign. '
                   'Example: --custom-property country=US'
-                  'Speficy a single empty string to remove all customer properties.'))      
+                  'Specify a single empty string to remove all custom properties.'))      
 @click.option('--json-file', default=None, type=click.Path(),
               help=json_file_help(method='PATCH', path='/recipients/{name}'))
 @click.option('--json', default=None, type=JsonClickType(),
@@ -493,11 +497,14 @@ def update_recipient_cli(api_client, name, new_name, comment, owner,
         if len(custom_property) > 0:
             data['properties_kvpairs'] = {}
             if len(custom_property) != 1 or custom_property[0] != '':
-                parsed_custom_properties = [property_str.split('=', 2)
-                    for property_str in custom_property]
-                data['properties_kvpairs']['properties'] = [{"key": property_key,
-                                                            "value": property_value}
-                    for (property_key, property_value) in parsed_custom_properties]
+                data['properties_kvpairs']['properties'] = []
+                for property_str in custom_property:
+                    tokens = property_str.split('=', 2)
+                    if len(tokens) != 2:
+                        raise ValueError('Invalid format of custom property. '
+                                         + 'The format should be <key>=<value>.')
+                    data['properties_kvpairs']['properties'].append({"key": tokens[0],
+                                                                     "value": tokens[1]})
         recipient_json = UnityCatalogApi(api_client).update_recipient(name, data)
         click.echo(mc_pretty_format(recipient_json))
     else:
