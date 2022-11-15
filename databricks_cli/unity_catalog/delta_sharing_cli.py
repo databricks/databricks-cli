@@ -405,7 +405,7 @@ def parse_recipient_custom_properties(custom_property_list):
               help=(
                   'IP address in CIDR notation that is allowed to use delta sharing. '
                   '(can be specified multiple times).'))
-@click.option('--custom-property', default=None, required=False, multiple=True,
+@click.option('--property', 'custom_property', default=None, required=False, multiple=True,
               help=(
                   'Custom properties of the recipient. Key and value should be provided '
                   'at the same time separated by an equal sign. '
@@ -469,7 +469,7 @@ def get_recipient_cli(api_client, name):
                   'IP address in CIDR notation that is allowed to use delta sharing '
                   '(can be specified multiple times). Specify a single empty string to disable '
                   'IP allowlist.'))
-@click.option('--custom-property', default=None, required=False, multiple=True,
+@click.option('--property', 'custom_property', default=None, required=False, multiple=True,
               help=(
                   'Custom properties of the recipient. Key and value should be provided '
                   'at the same time separated by an equal sign. '

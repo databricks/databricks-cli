@@ -463,8 +463,8 @@ def test_create_recipient_cli(api_mock, echo_mock):
             '--comment', 'comment',
             '--allowed-ip-address', '8.8.8.8',
             '--allowed-ip-address', '8.8.4.4',
-            '--custom-property', 'k1=v1',
-            '--custom-property', 'k2=v2'
+            '--property', 'k1=v1',
+            '--property', 'k2=v2'
         ])
     api_mock.create_recipient.assert_called_once_with(
         RECIPIENT_NAME,
@@ -484,7 +484,7 @@ def test_create_recipient_cli_invalid_custom_property(api_mock):
         delta_sharing_cli.create_recipient_cli,
         args=[
             '--name', RECIPIENT_NAME,
-            '--custom-property', 'k1=v1=v2'
+            '--property', 'k1=v1=v2'
         ])
 
     assert not api_mock.create_recipient.called
@@ -538,8 +538,8 @@ def test_update_recipient_cli(api_mock, echo_mock):
             '--owner', 'owner',
             '--allowed-ip-address', '8.8.8.8',
             '--allowed-ip-address', '8.8.4.4',
-            '--custom-property', 'k1=v1',
-            '--custom-property', 'k2=v2'
+            '--property', 'k1=v1',
+            '--property', 'k2=v2'
         ])
     expected_data = {
         'name': 'new_recipient_name',
