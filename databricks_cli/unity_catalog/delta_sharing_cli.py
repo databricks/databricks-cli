@@ -383,6 +383,17 @@ def delete_share_cli(api_client, name):
 
 ##############  Recipient Commands  ##############
 
+def parse_recipient_custom_properties(custom_property_list):
+    custom_properties = []
+    for property_str in custom_property_list:
+        tokens = property_str.split('=', 2)
+        if len(tokens) != 2:
+            raise ValueError('Invalid format of custom property. '
+                             + 'The format should be <key>=<value>.')
+        custom_properties.append({"key": tokens[0], "value": tokens[1]})
+    return custom_properties    
+
+
 @click.command(context_settings=CONTEXT_SETTINGS,
                short_help='Create a new recipient.')
 @click.option('--name', required=True, help='Name of new recipient.')
@@ -398,7 +409,7 @@ def delete_share_cli(api_client, name):
               help=(
                   'Custom properties of the recipient. Key and value should be provided '
                   'at the same time separated by an equal sign. '
-                  'Example: --custom-property country=US'))                 
+                  'Example: --custom-property country=US.'))                 
 @debug_option
 @profile_option
 @eat_exceptions
@@ -408,15 +419,9 @@ def create_recipient_cli(api_client, name, comment, sharing_id,
     """
     Create a new recipient.
     """
-    custom_properties = []
-    for property_str in custom_property:
-        tokens = property_str.split('=', 2)
-        if len(tokens) != 2:
-            raise ValueError('Invalid format of custom property. '
-                             + 'The format should be <key>=<value>.')
-        custom_properties.append({"key": tokens[0], "value": tokens[1]})
     recipient_json = UnityCatalogApi(api_client).create_recipient(
-        name, comment, sharing_id, allowed_ip_address, custom_properties)
+        name, comment, sharing_id,
+        allowed_ip_address, parse_recipient_custom_properties(custom_property))
     click.echo(mc_pretty_format(recipient_json))
 
 
@@ -468,7 +473,7 @@ def get_recipient_cli(api_client, name):
               help=(
                   'Custom properties of the recipient. Key and value should be provided '
                   'at the same time separated by an equal sign. '
-                  'Example: --custom-property country=US'
+                  'Example: --custom-property country=US. '
                   'Specify a single empty string to remove all custom properties.'))      
 @click.option('--json-file', default=None, type=click.Path(),
               help=json_file_help(method='PATCH', path='/recipients/{name}'))
@@ -497,14 +502,8 @@ def update_recipient_cli(api_client, name, new_name, comment, owner,
         if len(custom_property) > 0:
             data['properties_kvpairs'] = {}
             if len(custom_property) != 1 or custom_property[0] != '':
-                data['properties_kvpairs']['properties'] = []
-                for property_str in custom_property:
-                    tokens = property_str.split('=', 2)
-                    if len(tokens) != 2:
-                        raise ValueError('Invalid format of custom property. '
-                                         + 'The format should be <key>=<value>.')
-                    data['properties_kvpairs']['properties'].append({"key": tokens[0],
-                                                                     "value": tokens[1]})
+                data['properties_kvpairs']['properties'] = parse_recipient_custom_properties(
+                    custom_property)
         recipient_json = UnityCatalogApi(api_client).update_recipient(name, data)
         click.echo(mc_pretty_format(recipient_json))
     else:
