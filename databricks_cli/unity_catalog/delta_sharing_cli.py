@@ -388,7 +388,7 @@ def parse_recipient_custom_properties(custom_property_list):
     for property_str in custom_property_list:
         tokens = property_str.split('=', 2)
         if len(tokens) != 2:
-            raise ValueError('Invalid format of custom property. '
+            raise ValueError('Invalid format for property. '
                              + 'The format should be <key>=<value>.')
         custom_properties.append({"key": tokens[0], "value": tokens[1]})
     return custom_properties    
