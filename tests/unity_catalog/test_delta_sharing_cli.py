@@ -463,11 +463,32 @@ def test_create_recipient_cli(api_mock, echo_mock):
             '--comment', 'comment',
             '--allowed-ip-address', '8.8.8.8',
             '--allowed-ip-address', '8.8.4.4',
+            '--property', 'k1=v1',
+            '--property', 'k2=v2'
         ])
     api_mock.create_recipient.assert_called_once_with(
-        RECIPIENT_NAME, 'comment', None, ('8.8.8.8', '8.8.4.4'))
+        RECIPIENT_NAME,
+        'comment',
+        None,
+        ('8.8.8.8', '8.8.4.4'),
+        [{"key": "k1", "value": "v1"}, {"key": "k2", "value": "v2"}]
+    )
     echo_mock.assert_called_once_with(mc_pretty_format(RECIPIENT))
     
+
+@provide_conf
+def test_create_recipient_cli_invalid_custom_property(api_mock):
+    api_mock.create_recipient.return_value = RECIPIENT
+    runner = CliRunner()
+    runner.invoke(
+        delta_sharing_cli.create_recipient_cli,
+        args=[
+            '--name', RECIPIENT_NAME,
+            '--property', 'k1=v1=v2'
+        ])
+
+    assert not api_mock.create_recipient.called
+
 
 @provide_conf
 def test_create_recipient_cli_with_sharing_id(api_mock, echo_mock):
@@ -480,7 +501,7 @@ def test_create_recipient_cli_with_sharing_id(api_mock, echo_mock):
             '--sharing-id', '123e4567-e89b-12d3-a456-426614174000'
         ])
     api_mock.create_recipient.assert_called_once_with(
-        RECIPIENT_NAME, None, '123e4567-e89b-12d3-a456-426614174000', ())
+        RECIPIENT_NAME, None, '123e4567-e89b-12d3-a456-426614174000', (), [])
     echo_mock.assert_called_once_with(mc_pretty_format(RECIPIENT))
 
 
@@ -516,7 +537,9 @@ def test_update_recipient_cli(api_mock, echo_mock):
             '--comment', 'comment',
             '--owner', 'owner',
             '--allowed-ip-address', '8.8.8.8',
-            '--allowed-ip-address', '8.8.4.4'
+            '--allowed-ip-address', '8.8.4.4',
+            '--property', 'k1=v1',
+            '--property', 'k2=v2'
         ])
     expected_data = {
         'name': 'new_recipient_name',
@@ -527,6 +550,12 @@ def test_update_recipient_cli(api_mock, echo_mock):
                 '8.8.8.8',
                 '8.8.4.4'
             )
+        },
+        'properties_kvpairs': {
+            'properties': [
+                {"key": "k1", "value": "v1"}, 
+                {"key": "k2", "value": "v2"}
+            ]
         }
     }
     api_mock.update_recipient.assert_called_once_with(RECIPIENT_NAME, expected_data)
