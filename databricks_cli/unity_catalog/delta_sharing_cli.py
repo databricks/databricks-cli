@@ -407,9 +407,9 @@ def parse_recipient_custom_properties(custom_property_list):
                   '(can be specified multiple times).'))
 @click.option('--property', 'custom_property', default=None, required=False, multiple=True,
               help=(
-                  'Custom properties of the recipient. Key and value should be provided '
+                  'Properties of the recipient. Key and value should be provided '
                   'at the same time separated by an equal sign. '
-                  'Example: --custom-property country=US.'))                 
+                  'Example: --property country=US.'))
 @debug_option
 @profile_option
 @eat_exceptions
