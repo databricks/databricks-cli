@@ -471,10 +471,10 @@ def get_recipient_cli(api_client, name):
                   'IP allowlist.'))
 @click.option('--property', 'custom_property', default=None, required=False, multiple=True,
               help=(
-                  'Custom properties of the recipient. Key and value should be provided '
+                  'Properties of the recipient. Key and value should be provided '
                   'at the same time separated by an equal sign. '
-                  'Example: --custom-property country=US. '
-                  'Specify a single empty string to remove all custom properties.'))      
+                  'Example: --property country=US. '
+                  'Specify a single empty string to remove all properties.'))
 @click.option('--json-file', default=None, type=click.Path(),
               help=json_file_help(method='PATCH', path='/recipients/{name}'))
 @click.option('--json', default=None, type=JsonClickType(),
