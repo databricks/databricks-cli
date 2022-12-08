@@ -9,6 +9,5 @@ flake8-polyfill==1.0.2
 mccabe==0.6.1
 prospector==1.7.7
 pycodestyle==2.8.0
-pydantic==1.10.2
 pyflakes==2.4.0
 pylint==2.15.5
