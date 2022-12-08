@@ -1,7 +1,7 @@
 -r ./dev-requirements.txt
 prospector[with_pyroma]
 
-# Latest versions of the linter introduce rules that make it fail.
+# More recent versions of these linters introduce rules that make it fail.
 # Pin these versions to keep the ruleset fixed.
 dodgy==0.2.1
 flake8==4.0.1
