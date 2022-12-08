@@ -60,7 +60,7 @@ jobs:
           env_vars: OS,PYTHON_VERSION
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         python-version:
@@ -125,7 +125,7 @@ jobs:
 
   compat:
     name: Public API compatibility
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout
         uses: actions/checkout@v2
