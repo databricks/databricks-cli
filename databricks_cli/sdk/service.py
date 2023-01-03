@@ -287,7 +287,7 @@ class JobsService(object):
         )
 
     def list_jobs(
-        self, job_type=None, expand_tasks=None, limit=None, offset=None, headers=None, version=None
+        self, job_type=None, expand_tasks=None, limit=None, offset=None, headers=None, version=None, name_filter=None
     ):
         _data = {}
         if job_type is not None:
@@ -298,6 +298,8 @@ class JobsService(object):
             _data['limit'] = limit
         if offset is not None:
             _data['offset'] = offset
+        if name_filter is not None:
+            _data['name'] = name_filter
         return self.client.perform_query(
             'GET', '/jobs/list', data=_data, headers=headers, version=version
         )

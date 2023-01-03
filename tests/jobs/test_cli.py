@@ -313,6 +313,14 @@ def test_list_offset(jobs_api_mock):
     assert jobs_api_mock.list_jobs.call_args[1]['offset'] == 1
     assert jobs_api_mock.list_jobs.call_args[1]['version'] == '2.1'
 
+@provide_conf
+def test_list_name(jobs_api_mock):
+    jobs_api_mock.list_jobs.return_value = LIST_RETURN_1
+    runner = CliRunner()
+    result = runner.invoke(cli.list_cli, ['--version=2.1', '--name', 'foo'])
+    assert result.exit_code == 0
+    assert jobs_api_mock.list_jobs.call_args[1]['name_filter'] == 'foo'
+    assert jobs_api_mock.list_jobs.call_args[1]['version'] == '2.1'
 
 @provide_conf
 def test_list_limit(jobs_api_mock):

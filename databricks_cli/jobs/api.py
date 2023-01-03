@@ -32,9 +32,10 @@ class JobsApi(object):
                                                 version=version)
 
     def list_jobs(self, job_type=None, expand_tasks=None, offset=None, limit=None, headers=None,
-                  version=None):
+                  version=None, name_filter=None):
         resp = self.client.list_jobs(job_type=job_type, expand_tasks=expand_tasks, offset=offset,
-                                     limit=limit, headers=headers, version=version)
+                                     limit=limit, headers=headers, version=version, 
+                                     name_filter=name_filter)
         if 'jobs' not in resp:
             resp['jobs'] = []
         return resp
@@ -56,6 +57,6 @@ class JobsApi(object):
                                    idempotency_token, headers=headers, version=version)
 
     def _list_jobs_by_name(self, name, headers=None):
-        jobs = self.list_jobs(headers=headers)['jobs']
+        jobs = self.list_jobs(headers=headers, name_filter=name)['jobs']
         result = list(filter(lambda job: job['settings']['name'] == name, jobs))
         return result

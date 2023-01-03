@@ -126,6 +126,11 @@ def test_list_jobs():
             'GET', '/jobs/list', data={}, headers=None, version='3.0'
         )
 
+        api.list_jobs(version='2.1', name_filter='foo')
+        api_client_mock.perform_query.assert_called_with(
+            'GET', '/jobs/list', data={'name':'foo'}, headers=None, version='2.1'
+        )
+
 
 @provide_conf
 def test_run_now():
