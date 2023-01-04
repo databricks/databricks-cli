@@ -29,7 +29,7 @@ from tabulate import tabulate
 from databricks_cli.click_types import OutputClickType, JsonClickType, JobIdClickType
 from databricks_cli.jobs.api import JobsApi
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, json_cli_base, \
-    truncate_string
+    truncate_string, walk_paginated_api
 
 from databricks_cli.configure.config import provide_api_client, profile_option, \
     get_profile_from_context, debug_option, get_config, api_version_option
@@ -160,20 +160,22 @@ def list_cli(api_client, output, job_type, version, expand_tasks, offset, limit,
                    '--offset, --limit, --all, and --name are only available in API 2.1', err=True)
         return
     jobs_api = JobsApi(api_client)
-    has_more = True
-    jobs = []
-    if _all:
-        offset = 0
-        limit = 20
-    while has_more:
-        jobs_json = jobs_api.list_jobs(job_type=job_type, expand_tasks=expand_tasks,
-                                       offset=offset, limit=limit, version=version,
-                                       name_filter=name_filter)
-        jobs += jobs_json['jobs'] if 'jobs' in jobs_json else []
-        has_more = jobs_json.get('has_more', False) and _all
-        if has_more:
-            offset = offset + \
-                (len(jobs_json['jobs']) if 'jobs' in jobs_json else limit)
+
+    jobs = walk_paginated_api(
+        lambda offset, limit: jobs_api.list_jobs(
+            job_type=job_type,
+            expand_tasks=expand_tasks,
+            offset=offset,
+            limit=limit,
+            version=version,
+            name_filter=name_filter,
+        ),
+        "jobs",
+        20,
+        offset,
+        limit,
+        _all,
+    )
 
     out = {'jobs': jobs}
     if OutputClickType.is_json(output):

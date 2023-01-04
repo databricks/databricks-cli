@@ -31,7 +31,7 @@ from tabulate import tabulate
 from databricks_cli.click_types import OutputClickType, JsonClickType, RunIdClickType
 from databricks_cli.jobs.cli import check_version
 from databricks_cli.utils import eat_exceptions, CONTEXT_SETTINGS, pretty_format, truncate_string, \
-    error_and_quit, backoff_with_jitter
+    error_and_quit, backoff_with_jitter, walk_paginated_api
 from databricks_cli.configure.config import provide_api_client, profile_option, debug_option, \
     api_version_option
 from databricks_cli.runs.api import RunsApi
@@ -149,21 +149,22 @@ def list_cli(api_client, job_id, active_only, completed_only, offset, limit, exp
                    '--offset, --limit, and --all are only available in API 2.1', err=True)
         return
     runs_api = RunsApi(api_client)
-
-    has_more = True
-    runs = []
-    if _all:
-        offset = 0
-        limit = 20
-    while has_more:
-        runs_json = runs_api.list_runs(
-            job_id, active_only, completed_only, offset, limit,
-            version=version, expand_tasks=expand_tasks)
-        runs += runs_json['runs'] if 'runs' in runs_json else []
-        has_more = runs_json.get('has_more', False) and _all
-        if has_more:
-            offset = offset + \
-                (len(runs_json['runs']) if 'runs' in runs_json else limit)
+    runs = walk_paginated_api(
+        lambda offset, limit: runs_api.list_runs(
+            job_id,
+            active_only,
+            completed_only,
+            offset,
+            limit,
+            version=version,
+            expand_tasks=expand_tasks,
+        ),
+        "runs",
+        20,
+        offset,
+        limit,
+        _all,
+    )
     runs_output = {"runs": runs}
     if OutputClickType.is_json(output):
         click.echo(pretty_format(runs_output))

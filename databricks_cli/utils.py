@@ -172,3 +172,17 @@ def merge_dicts_shallow(*dicts):
         result.update(d)
     return result
     
+def walk_paginated_api(fetch, key, page_size, offset, limit, _all):
+    has_more = True
+    objects = []
+    if _all:
+        offset = 0
+        limit = page_size
+    while has_more:
+        objects_json = fetch(offset, limit)
+        objects += objects_json[key] if key in objects_json else []
+        has_more = objects_json.get('has_more', False) and _all
+        if has_more:
+            offset = offset + \
+                (len(objects_json[key]) if key in objects_json else limit)
+    return objects
