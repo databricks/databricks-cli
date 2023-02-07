@@ -1555,17 +1555,33 @@ class ReposService(object):
             'GET', '/repos/{id}'.format(id=id), data=_data, headers=headers
         )
 
-    def update_repo(self, id, branch=None, tag=None, headers=None):
+    def update_repo(
+        self,
+        id,
+        branch=None,
+        tag=None,
+        headers=None,
+        sparse_checkout=None,
+    ):
         _data = {}
         if branch is not None:
             _data['branch'] = branch
         if tag is not None:
             _data['tag'] = tag
+        if sparse_checkout is not None:
+            _data['sparse_checkout'] = sparse_checkout
         return self.client.perform_query(
             'PATCH', '/repos/{id}'.format(id=id), data=_data, headers=headers
         )
 
-    def create_repo(self, url, provider, path=None, headers=None):
+    def create_repo(
+        self,
+        url,
+        provider,
+        path=None,
+        headers=None,
+        sparse_checkout=None,
+    ):
         _data = {}
         if url is not None:
             _data['url'] = url
@@ -1578,6 +1594,8 @@ class ReposService(object):
                 "The Git provider parameter wasn't specified and we can't detect it "
                 "from URL. Please pass 'provider' option"
             )
+        if sparse_checkout is not None:
+            _data['sparse_checkout'] = sparse_checkout
         if path is not None:
             _data['path'] = path
         return self.client.perform_query('POST', '/repos', data=_data, headers=headers)
