@@ -214,6 +214,84 @@ def test_update_share_cli(api_mock, echo_mock):
     api_mock.update_share.assert_called_once_with(SHARE_NAME, expected_data)
     echo_mock.assert_called_once_with(mc_pretty_format(SHARE))
 
+@provide_conf
+def test_add_share_schema_cli(api_mock, echo_mock):
+    api_mock.update_share.return_value = SHARE
+    runner = CliRunner()
+    runner.invoke(
+        delta_sharing_cli.add_share_schema_cli,
+        args=[
+            '--share', SHARE_NAME,
+            '--schema', 'catalog.schema',
+            '--comment', 'add.comment',
+        ])
+    expected_data = {
+        'updates': [
+            {
+                'action': 'ADD',
+                'data_object': {
+                    'data_object_type': 'SCHEMA',
+                    'name': 'catalog.schema',
+                    'comment': 'add.comment',
+                }
+            }
+        ]
+    }
+    api_mock.update_share.assert_called_once_with(SHARE_NAME, expected_data)
+    echo_mock.assert_called_once_with(mc_pretty_format(SHARE))
+
+
+@provide_conf
+def test_update_share_schema_cli(api_mock, echo_mock):
+    api_mock.update_share.return_value = SHARE
+    runner = CliRunner()
+    runner.invoke(
+        delta_sharing_cli.update_share_schema_cli,
+        args=[
+            '--share', SHARE_NAME,
+            '--schema', 'catalog.schema',
+            '--comment', 'update.comment',
+        ])
+    expected_data = {
+        'updates': [
+            {
+                'action': 'UPDATE',
+                'data_object': {
+                    'data_object_type': 'SCHEMA',
+                    'name': 'catalog.schema',
+                    'comment': 'update.comment',
+                }
+            }
+        ]
+    }
+    api_mock.update_share.assert_called_once_with(SHARE_NAME, expected_data)
+    echo_mock.assert_called_once_with(mc_pretty_format(SHARE))
+
+
+@provide_conf
+def test_remove_share_schema_cli(api_mock, echo_mock):
+    api_mock.update_share.return_value = SHARE
+    runner = CliRunner()
+    runner.invoke(
+        delta_sharing_cli.remove_share_schema_cli,
+        args=[
+            '--share', SHARE_NAME,
+            '--schema', 'catalog.schema',
+        ])
+    expected_data = {
+        'updates': [
+            {
+                'action': 'REMOVE',
+                'data_object': {
+                    'data_object_type': 'SCHEMA',
+                    'name': 'catalog.schema',
+                }
+            }
+        ]
+    }
+    api_mock.update_share.assert_called_once_with(SHARE_NAME, expected_data)
+    echo_mock.assert_called_once_with(mc_pretty_format(SHARE))
+
 
 @provide_conf
 def test_add_share_table_cli(api_mock, echo_mock):
