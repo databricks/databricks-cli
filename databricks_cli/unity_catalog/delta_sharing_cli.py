@@ -420,7 +420,7 @@ def add_share_table_cli(api_client, share, table, shared_as, comment,
     else:
         def api_call(d):
             if 'data_object_type' in d and d['data_object_type'] != "TABLE":
-                raise ValueError('Must specify data_object_type a "TABLE" '
+                raise ValueError('Must specify data_object_type as "TABLE" '
                                  'or not specify data_object_type at all')
             UnityCatalogApi(api_client).update_share(share, { 
                 'updates': [
@@ -477,7 +477,7 @@ def update_share_table_cli(api_client, share, table, shared_as, comment,
     else:
         def api_call(d):
             if 'data_object_type' in d and d['data_object_type'] != "TABLE":
-                raise ValueError('Must specify data_object_type a "TABLE" '
+                raise ValueError('Must specify data_object_type as "TABLE" '
                                  'or not specify data_object_type at all')
             UnityCatalogApi(api_client).update_share(share, { 
                 'updates': [
@@ -534,7 +534,7 @@ def remove_share_table_cli(api_client, share, table, shared_as, json_file, json)
     else:
         def api_call(d):
             if 'data_object_type' in d and d['data_object_type'] != "TABLE":
-                raise ValueError('Must specify data_object_type a "TABLE" '
+                raise ValueError('Must specify data_object_type as "TABLE" '
                                  'or not specify data_object_type at all')
             UnityCatalogApi(api_client).update_share(share, { 
                 'updates': [
