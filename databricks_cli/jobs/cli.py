@@ -130,7 +130,7 @@ def _jobs_to_table(jobs_json):
 @click.option('--all', '_all', is_flag=True,
               help='Lists all jobs by executing sequential calls to the API ' +
                    '(only available in API 2.1).')
-@click.option('--name', 'name_filter', default=None, type=str,
+@click.option('--name', 'name', default=None, type=str,
               help='If provided, only returns jobs that match the supplied ' + 
                    'name (only available in API 2.1).')
 @api_version_option
@@ -138,7 +138,7 @@ def _jobs_to_table(jobs_json):
 @profile_option
 @eat_exceptions
 @provide_api_client
-def list_cli(api_client, output, job_type, version, expand_tasks, offset, limit, _all, name_filter):
+def list_cli(api_client, output, job_type, version, expand_tasks, offset, limit, _all, name):
     """
     Lists the jobs in the Databricks Job Service.
 
@@ -154,7 +154,7 @@ def list_cli(api_client, output, job_type, version, expand_tasks, offset, limit,
     """
     check_version(api_client, version)
     api_version = version or api_client.jobs_api_version
-    using_features_only_in_21 = expand_tasks or offset or limit or _all or name_filter
+    using_features_only_in_21 = expand_tasks or offset or limit or _all or name
     if api_version != '2.1' and using_features_only_in_21:
         click.echo(click.style('ERROR', fg='red') + ': the options --expand-tasks, ' +
                    '--offset, --limit, --all, and --name are only available in API 2.1', err=True)
@@ -168,7 +168,7 @@ def list_cli(api_client, output, job_type, version, expand_tasks, offset, limit,
     while has_more:
         jobs_json = jobs_api.list_jobs(job_type=job_type, expand_tasks=expand_tasks,
                                        offset=offset, limit=limit, version=version,
-                                       name_filter=name_filter)
+                                       name=name)
         jobs += jobs_json['jobs'] if 'jobs' in jobs_json else []
         has_more = jobs_json.get('has_more', False) and _all
         if has_more:
