@@ -61,6 +61,9 @@ class JobsService(object):
         access_control_list=None,
         pipeline_task=None,
         python_wheel_task=None,
+        sql_task=None,
+        webhook_notifications=None,
+        continuous=None,
     ):
         _data = {}
         if name is not None:
@@ -147,6 +150,22 @@ class JobsService(object):
                 raise TypeError(
                     'Expected databricks.PythonWheelTask() or dict for field python_wheel_task'
                 )
+        if sql_task is not None:
+            _data['sql_task'] = sql_task
+            if not isinstance(sql_task, dict):
+                raise TypeError('Expected databricks.SqlTask() or dict for field sql_task')
+        if webhook_notifications is not None:
+            _data['webhook_notifications'] = webhook_notifications
+            if not isinstance(webhook_notifications, dict):
+                raise TypeError(
+                    'Expected databricks.WebhookNotifications() or dict for field webhook_notifications'
+                )
+        if continuous is not None:
+            _data['continuous'] = continuous
+            if not isinstance(continuous, dict):
+                raise TypeError(
+                    'Expected databricks.ContinuousSettings() or dict for field continuous'
+                )
         return self.client.perform_query(
             'POST', '/jobs/create', data=_data, headers=headers, version=version
         )
@@ -172,6 +191,8 @@ class JobsService(object):
         access_control_list=None,
         pipeline_task=None,
         python_wheel_task=None,
+        sql_task=None,
+        webhook_notifications=None,
     ):
         _data = {}
         if run_name is not None:
@@ -238,6 +259,16 @@ class JobsService(object):
                 raise TypeError(
                     'Expected databricks.PythonWheelTask() or dict for field python_wheel_task'
                 )
+        if sql_task is not None:
+            _data['sql_task'] = sql_task
+            if not isinstance(sql_task, dict):
+                raise TypeError('Expected databricks.SqlTask() or dict for field sql_task')
+        if webhook_notifications is not None:
+            _data['webhook_notifications'] = webhook_notifications
+            if not isinstance(webhook_notifications, dict):
+                raise TypeError(
+                    'Expected databricks.WebhookNotifications() or dict for field webhook_notifications'
+                )
         return self.client.perform_query(
             'POST', '/jobs/runs/submit', data=_data, headers=headers, version=version
         )
@@ -278,28 +309,35 @@ class JobsService(object):
             'POST', '/jobs/delete', data=_data, headers=headers, version=version
         )
 
-    def get_job(self, job_id, headers=None, version=None):
+    def get_job(self, job_id, headers=None, version=None, include_trigger_history=None):
         _data = {}
         if job_id is not None:
             _data['job_id'] = job_id
+        if include_trigger_history is not None:
+            _data['include_trigger_history'] = include_trigger_history
         return self.client.perform_query(
             'GET', '/jobs/get', data=_data, headers=headers, version=version
         )
 
     def list_jobs(
-        self, job_type=None, expand_tasks=None, limit=None, offset=None, headers=None, version=None, name_filter=None
+        self,
+        job_type=None,
+        expand_tasks=None,
+        limit=None,
+        offset=None,
+        headers=None,
+        version=None,
+        name=None,
     ):
         _data = {}
-        if job_type is not None:
-            _data['job_type'] = job_type
         if expand_tasks is not None:
             _data['expand_tasks'] = expand_tasks
         if limit is not None:
             _data['limit'] = limit
         if offset is not None:
             _data['offset'] = offset
-        if name_filter is not None:
-            _data['name'] = name_filter
+        if name is not None:
+            _data['name'] = name
         return self.client.perform_query(
             'GET', '/jobs/list', data=_data, headers=headers, version=version
         )
@@ -359,6 +397,8 @@ class JobsService(object):
         version=None,
         dbt_commands=None,
         pipeline_params=None,
+        rerun_all_failed_tasks=None,
+        rerun_dependent_tasks=None,
     ):
         _data = {}
         if run_id is not None:
@@ -385,6 +425,10 @@ class JobsService(object):
                 raise TypeError(
                     'Expected databricks.PipelineParameters() or dict for field pipeline_params'
                 )
+        if rerun_all_failed_tasks is not None:
+            _data['rerun_all_failed_tasks'] = rerun_all_failed_tasks
+        if rerun_dependent_tasks is not None:
+            _data['rerun_dependent_tasks'] = rerun_dependent_tasks
         return self.client.perform_query(
             'POST', '/jobs/runs/repair', data=_data, headers=headers, version=version
         )
@@ -402,6 +446,7 @@ class JobsService(object):
         expand_tasks=None,
         start_time_from=None,
         start_time_to=None,
+        page_token=None,
     ):
         _data = {}
         if job_id is not None:
@@ -422,6 +467,8 @@ class JobsService(object):
             _data['start_time_from'] = start_time_from
         if start_time_to is not None:
             _data['start_time_to'] = start_time_to
+        if page_token is not None:
+            _data['page_token'] = page_token
         return self.client.perform_query(
             'GET', '/jobs/runs/list', data=_data, headers=headers, version=version
         )
@@ -452,10 +499,12 @@ class JobsService(object):
             'POST', '/jobs/runs/cancel', data=_data, headers=headers, version=version
         )
 
-    def cancel_all_runs(self, job_id, headers=None, version=None):
+    def cancel_all_runs(self, job_id=None, headers=None, version=None, all_queued_runs=None):
         _data = {}
         if job_id is not None:
             _data['job_id'] = job_id
+        if all_queued_runs is not None:
+            _data['all_queued_runs'] = all_queued_runs
         return self.client.perform_query(
             'POST', '/jobs/runs/cancel-all', data=_data, headers=headers, version=version
         )

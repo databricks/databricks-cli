@@ -28,6 +28,7 @@ from mock import mock
 
 from click.testing import CliRunner
 import databricks_cli.tokens.cli as cli
+from tests.utils import provide_conf
 
 
 @pytest.fixture()
@@ -38,7 +39,8 @@ def tokens_api_mock():
         yield _tokens_api_mock
 
 
+@provide_conf
 def test_create_token_cli_defaults(tokens_api_mock):
     runner = CliRunner()
     runner.invoke(cli.create_token_cli, ['--comment', 'test'])
-    assert tokens_api_mock.create.called_with(60 * 60 * 24 * 90, 'test')
+    tokens_api_mock.create.assert_called_with(60 * 60 * 24 * 90, 'test')

@@ -9,7 +9,6 @@ jobs:
   test:
     runs-on: ${{ matrix.os }}
     strategy:
-      max-parallel: 4
       matrix:
         python-version:
           - '2.7'
