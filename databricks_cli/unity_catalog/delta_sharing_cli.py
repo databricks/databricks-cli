@@ -296,7 +296,8 @@ def update_share_schema_cli(api_client, share, schema, comment, json_file, json)
 @click.option('--schema', default=None,
               help='Full name of the schema to remove from share.')
 @click.option('--json-file', default=None, type=click.Path(),
-              help="Removes the shared schema based on shared data object represented in JSON file.")
+              help="Removes the shared schema based on shared data object" + 
+              "represented in JSON file.")
 @click.option('--json', default=None, type=JsonClickType(),
               help="Removes the shared schema based on shared data object represented in JSON.")
 @debug_option
