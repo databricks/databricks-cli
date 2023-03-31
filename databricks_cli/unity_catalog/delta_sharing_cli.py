@@ -290,7 +290,7 @@ def update_share_schema_cli(api_client, share, schema, comment, json_file, json)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Update a shared schema.')
+               short_help='Remove a shared schema.')
 @click.option('--share', required=True,
               help='Name of the share to update.')
 @click.option('--schema', default=None,
@@ -491,7 +491,7 @@ def update_share_table_cli(api_client, share, table, shared_as, comment,
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
-               short_help='Update a shared table.')
+               short_help='Remove a shared table.')
 @click.option('--share', required=True,
               help='Name of the share to update.')
 @click.option('--table', default=None,
