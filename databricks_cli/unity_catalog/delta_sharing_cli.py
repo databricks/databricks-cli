@@ -306,7 +306,7 @@ def update_share_schema_cli(api_client, share, schema, comment, json_file, json)
 @provide_api_client
 def remove_share_schema_cli(api_client, share, schema, json_file, json):
     """
-    Removes a shared schema either by full schema name.
+    Removes a shared schema by full schema name.
 
     The public specification for the JSON request is in development.
     """
@@ -530,7 +530,7 @@ def remove_share_table_cli(api_client, share, table, shared_as, json_file, json)
             })
         json_cli_base(json_file, json, api_call)
     else:
-        if table is None or shared_as is None:
+        if table is None and shared_as is None:
             raise ValueError('Must specify full or shared as table name when removing shared table')
         data = { 
             'updates': [
