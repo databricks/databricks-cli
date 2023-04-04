@@ -180,7 +180,7 @@ def shared_schema_object(name=None, comment=None):
     return val
 
 def create_common_shared_schema_options(f):
-    @click.option('--schema', required=True,
+    @click.option('--schema', default=None,
                   help='Full name of the shared schema.')
     @click.option('--comment', default=None,
                   help='New comment of the shared schema.')
@@ -208,9 +208,22 @@ def add_share_schema_cli(api_client, share, schema, comment, json_file, json):
 
     The public specification for the JSON request is in development.
     """
-    if comment is not None:
-        if (json_file is not None) or (json is not None):
-            raise ValueError('Cannot specify JSON if any other flags are specified')
+    if (json_file is not None) or (json is not None):
+        def api_call(d):
+            if 'data_object_type' not in d or d['data_object_type'] != "SCHEMA":
+                raise ValueError('Must specify data_object_type as "SCHEMA"')
+            UnityCatalogApi(api_client).update_share(share, { 
+                'updates': [
+                    {
+                        'action': 'ADD',
+                        'data_object': d,
+                    }
+                ]
+            })
+        json_cli_base(json_file, json, api_call)
+    else:
+        if schema is None:
+            raise ValueError("Must specify full schema name when adding shared schema")
         data = { 
             'updates': [
                 {
@@ -224,19 +237,6 @@ def add_share_schema_cli(api_client, share, schema, comment, json_file, json):
         }
         share_json = UnityCatalogApi(api_client).update_share(share, data)
         click.echo(mc_pretty_format(share_json))
-    else:
-        def api_call(d):
-            if 'data_object_type' not in d or d['data_object_type'] != "SCHEMA":
-                raise ValueError('Must specify data_object_type as "SCHEMA"')
-            UnityCatalogApi(api_client).update_share(share, { 
-                'updates': [
-                    {
-                        'action': 'ADD',
-                        'data_object': d,
-                    }
-                ]
-            })
-        json_cli_base(json_file, json, api_call)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -258,9 +258,22 @@ def update_share_schema_cli(api_client, share, schema, comment, json_file, json)
 
     The public specification for the JSON request is in development.
     """
-    if comment is not None:
-        if (json_file is not None) or (json is not None):
-            raise ValueError('Cannot specify JSON if any other flags are specified')
+    if (json_file is not None) or (json is not None):
+        def api_call(d):
+            if 'data_object_type' not in d or d['data_object_type'] != "SCHEMA":
+                raise ValueError('Must specify data_object_type as "SCHEMA"')
+            UnityCatalogApi(api_client).update_share(share, { 
+                'updates': [
+                    {
+                        'action': 'UPDATE',
+                        'data_object': d,
+                    }
+                ]
+            })
+        json_cli_base(json_file, json, api_call)
+    else:
+        if schema is None:
+            raise ValueError("Must specify full schema name when updating shared schema")
         data = { 
             'updates': [
                 {
@@ -274,19 +287,6 @@ def update_share_schema_cli(api_client, share, schema, comment, json_file, json)
         }
         share_json = UnityCatalogApi(api_client).update_share(share, data)
         click.echo(mc_pretty_format(share_json))
-    else:
-        def api_call(d):
-            if 'data_object_type' not in d or d['data_object_type'] != "SCHEMA":
-                raise ValueError('Must specify data_object_type as "SCHEMA"')
-            UnityCatalogApi(api_client).update_share(share, { 
-                'updates': [
-                    {
-                        'action': 'UPDATE',
-                        'data_object': d,
-                    }
-                ]
-            })
-        json_cli_base(json_file, json, api_call)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -310,22 +310,7 @@ def remove_share_schema_cli(api_client, share, schema, json_file, json):
 
     The public specification for the JSON request is in development.
     """
-    if schema is not None:
-        if (json_file is not None) or (json is not None):
-            raise ValueError('Cannot specify JSON if any other flags are specified')
-        data = { 
-            'updates': [
-                {
-                    'action': 'REMOVE',
-                    'data_object': shared_schema_object(
-                        name=schema,
-                    )
-                }
-            ]
-        }
-        share_json = UnityCatalogApi(api_client).update_share(share, data)
-        click.echo(mc_pretty_format(share_json))
-    else:
+    if (json_file is not None) or (json is not None):
         def api_call(d):
             if 'data_object_type' not in d or d['data_object_type'] != "SCHEMA":
                 raise ValueError('Must specify data_object_type as "SCHEMA"')
@@ -338,6 +323,22 @@ def remove_share_schema_cli(api_client, share, schema, json_file, json):
                 ]
             })
         json_cli_base(json_file, json, api_call)
+    else:
+        if schema is None:
+            raise ValueError("Must specify full schema name when removing shared schema")
+        data = { 
+            'updates': [
+                {
+                    'action': 'REMOVE',
+                    'data_object': shared_schema_object(
+                        name=schema,
+                    )
+                }
+            ]
+        }
+        share_json = UnityCatalogApi(api_client).update_share(share, data)
+        click.echo(mc_pretty_format(share_json))
+        
 
 def shared_table_object(name=None, comment=None, shared_as=None, 
                        cdf_enabled=None, partitions=None, start_version=None):
@@ -359,7 +360,7 @@ def shared_table_object(name=None, comment=None, shared_as=None,
     return val
 
 def create_common_shared_table_options(f):
-    @click.option('--table', required=True,
+    @click.option('--table', default=None,
                   help='Full name of the shared table.')
     @click.option('--shared-as', default=None,
                   help='New name of the table to be shared as.')
@@ -397,10 +398,23 @@ def add_share_table_cli(api_client, share, table, shared_as, comment,
 
     The public specification for the JSON request is in development.
     """
-    if ((shared_as is not None) or (comment is not None) or (partitions is not None) or 
-        (cdf is not None) or (start_version is not None)):
-        if (json_file is not None) or (json is not None):
-            raise ValueError('Cannot specify JSON if any other flags are specified')
+    if (json_file is not None) or (json is not None):
+        def api_call(d):
+            if 'data_object_type' in d and d['data_object_type'] != "TABLE":
+                raise ValueError('Must specify data_object_type as "TABLE" '
+                                 'or not specify data_object_type at all')
+            UnityCatalogApi(api_client).update_share(share, { 
+                'updates': [
+                    {
+                        'action': 'REMOVE',
+                        'data_object': d,
+                    }
+                ]
+            })
+        json_cli_base(json_file, json, api_call)
+    else:
+        if table is None:
+            raise ValueError('Must specify table name when adding shared table')
         data = { 
             'updates': [
                 {
@@ -418,20 +432,6 @@ def add_share_table_cli(api_client, share, table, shared_as, comment,
         }
         share_json = UnityCatalogApi(api_client).update_share(share, data)
         click.echo(mc_pretty_format(share_json))
-    else:
-        def api_call(d):
-            if 'data_object_type' in d and d['data_object_type'] != "TABLE":
-                raise ValueError('Must specify data_object_type as "TABLE" '
-                                 'or not specify data_object_type at all')
-            UnityCatalogApi(api_client).update_share(share, { 
-                'updates': [
-                    {
-                        'action': 'REMOVE',
-                        'data_object': d,
-                    }
-                ]
-            })
-        json_cli_base(json_file, json, api_call)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -454,10 +454,23 @@ def update_share_table_cli(api_client, share, table, shared_as, comment,
 
     The public specification for the JSON request is in development.
     """
-    if ((shared_as is not None) or (comment is not None) or (partitions is not None) or 
-        (cdf is not None) or (start_version is not None)):
-        if (json_file is not None) or (json is not None):
-            raise ValueError('Cannot specify JSON if any other flags are specified')
+    if (json_file is not None) or (json is not None):
+        def api_call(d):
+            if 'data_object_type' in d and d['data_object_type'] != "TABLE":
+                raise ValueError('Must specify data_object_type as "TABLE" '
+                                 'or not specify data_object_type at all')
+            UnityCatalogApi(api_client).update_share(share, { 
+                'updates': [
+                    {
+                        'action': 'UPDATE',
+                        'data_object': d,
+                    }
+                ]
+            })
+        json_cli_base(json_file, json, api_call)
+    else:
+        if table is None:
+            raise ValueError('Must specify table name when updating shared table')
         data = { 
             'updates': [
                 {
@@ -475,20 +488,6 @@ def update_share_table_cli(api_client, share, table, shared_as, comment,
         }
         share_json = UnityCatalogApi(api_client).update_share(share, data)
         click.echo(mc_pretty_format(share_json))
-    else:
-        def api_call(d):
-            if 'data_object_type' in d and d['data_object_type'] != "TABLE":
-                raise ValueError('Must specify data_object_type as "TABLE" '
-                                 'or not specify data_object_type at all')
-            UnityCatalogApi(api_client).update_share(share, { 
-                'updates': [
-                    {
-                        'action': 'UPDATE',
-                        'data_object': d,
-                    }
-                ]
-            })
-        json_cli_base(json_file, json, api_call)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -516,23 +515,7 @@ def remove_share_table_cli(api_client, share, table, shared_as, json_file, json)
     if table is not None and shared_as is not None:
         raise ValueError("You can only pass in either --table or --shared_as and not both.")
 
-    if table is not None or shared_as is not None:
-        if (json_file is not None) or (json is not None):
-            raise ValueError('Cannot specify JSON if any other flags are specified')
-        data = { 
-            'updates': [
-                {
-                    'action': 'REMOVE',
-                    'data_object': shared_table_object(
-                        name=table,
-                        shared_as=shared_as,
-                    )
-                }
-            ]
-        }
-        share_json = UnityCatalogApi(api_client).update_share(share, data)
-        click.echo(mc_pretty_format(share_json))
-    else:
+    if (json_file is not None) or (json is not None):
         def api_call(d):
             if 'data_object_type' in d and d['data_object_type'] != "TABLE":
                 raise ValueError('Must specify data_object_type as "TABLE" '
@@ -546,6 +529,22 @@ def remove_share_table_cli(api_client, share, table, shared_as, json_file, json)
                 ]
             })
         json_cli_base(json_file, json, api_call)
+    else:
+        if table is None or shared_as is None:
+            raise ValueError('Must specify full or shared as table name when removing shared table')
+        data = { 
+            'updates': [
+                {
+                    'action': 'REMOVE',
+                    'data_object': shared_table_object(
+                        name=table,
+                        shared_as=shared_as,
+                    )
+                }
+            ]
+        }
+        share_json = UnityCatalogApi(api_client).update_share(share, data)
+        click.echo(mc_pretty_format(share_json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
