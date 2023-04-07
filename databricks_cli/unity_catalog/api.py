@@ -131,6 +131,12 @@ class UnityCatalogApi(object):
     def delete_catalog(self, catalog_name):
         return self.client.delete_catalog(catalog_name)
 
+    def get_catalog_bindings(self, name):
+        return self.client.get_catalog_bindings(name)
+
+    def update_catalog_bindings(self, name, workspace_bindings_spec):
+        return self.client.update_catalog_bindings(name, workspace_bindings_spec)
+
     # Schema APIs
 
     def create_schema(self, catalog_name, schema_name, comment):
