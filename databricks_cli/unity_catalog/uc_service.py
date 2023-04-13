@@ -239,6 +239,17 @@ class UnityCatalogService(object):
         return self.client.perform_query('DELETE', '/unity-catalog/catalogs/%s' % (name),
                                          data=_data, headers=headers)
 
+    def get_catalog_bindings(self, name, headers=None):
+        _data = {}
+        return self.client.perform_query('GET',
+                                         '/unity-catalog/workspace-bindings/catalogs/%s' % (name),
+                                         data=_data, headers=headers)
+
+    def update_catalog_bindings(self, name, workspace_bindings_spec, headers=None):
+        return self.client.perform_query('PATCH',
+                                         '/unity-catalog/workspace-bindings/catalogs/%s' % (name),
+                                         data=workspace_bindings_spec, headers=headers)
+
     # Schema Operations
 
     def create_schema(self, catalog_name, new_schema_name, comment=None, headers=None):

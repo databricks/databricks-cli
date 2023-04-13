@@ -137,6 +137,44 @@ def delete_catalog_cli(api_client, name, purge):
     UnityCatalogApi(api_client).delete_catalog(name)
 
 
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Get workspace bindings of a catalog.')
+@click.option('--name', required=True,
+              help='Name of the catalog to get bindings for.')
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def get_catalog_bindings_cli(api_client, name):
+    """
+    Get workspace bindings of a catalog.
+    """
+    catalog_json = UnityCatalogApi(api_client).get_catalog_bindings(name)
+    click.echo(mc_pretty_format(catalog_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Update workspace bindings of a catalog.')
+@click.option('--name', required=True,
+              help='Name of the catalog to update bindings for.')
+@click.option('--json-file', default=None, type=click.Path(),
+              help=json_file_help(method='PATCH', path='/workspace-bindings/catalogs/{name}'))
+@click.option('--json', default=None, type=JsonClickType(),
+              help=json_string_help(method='PATCH', path='/workspace-bindings/catalogs/{name}'))
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def update_catalog_bindings_cli(api_client, name, json_file, json):
+    """
+    Update workspace bindings of a catalog.
+
+    The public specification for the JSON request is in development.
+    """
+    json_cli_base(json_file, json,
+                  lambda json: UnityCatalogApi(api_client).update_catalog_bindings(name, json))
+
+
 @click.group()
 def catalogs_group():  # pragma: no cover
     pass
@@ -149,6 +187,8 @@ def register_catalog_commands(cmd_group):
     cmd_group.add_command(hide(get_catalog_cli), name='get-catalog')
     cmd_group.add_command(hide(update_catalog_cli), name='update-catalog')
     cmd_group.add_command(hide(delete_catalog_cli), name='delete-catalog')
+    cmd_group.add_command(hide(get_catalog_bindings_cli), name='get-catalog-bindings')
+    cmd_group.add_command(hide(update_catalog_bindings_cli), name='update-catalog-bindings')
 
     # Register command group.
     catalogs_group.add_command(create_catalog_cli, name='create')
@@ -156,4 +196,6 @@ def register_catalog_commands(cmd_group):
     catalogs_group.add_command(get_catalog_cli, name='get')
     catalogs_group.add_command(update_catalog_cli, name='update')
     catalogs_group.add_command(delete_catalog_cli, name='delete')
+    catalogs_group.add_command(get_catalog_bindings_cli, name='get-bindings')
+    catalogs_group.add_command(update_catalog_bindings_cli, name='update-bindings')
     cmd_group.add_command(catalogs_group, name='catalogs')
