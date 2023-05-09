@@ -53,7 +53,9 @@ class WorkspaceLanguage(object):
         return language_and_format
 
     @classmethod
-    def to_extension(cls, language):
+    def to_extension(cls, language, jupyter_fmt=False):
+        if jupyter_fmt:
+            return '.ipynb'
         if language == cls.SCALA:
             return '.scala'
         elif language == cls.PYTHON:
