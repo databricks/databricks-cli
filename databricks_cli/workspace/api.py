@@ -149,16 +149,11 @@ class WorkspaceApi(object):
                                           headers=headers)
             elif os.path.isfile(cur_src):
                 ext = WorkspaceLanguage.get_extension(cur_src)
-                if ext != '':
-                    cur_dst = cur_dst[:-len(ext)]
-                    (language, file_format) = WorkspaceLanguage.to_language_and_format(cur_src)
-                    self.import_workspace(cur_src, cur_dst, language, file_format, overwrite,
-                                          headers=headers)
-                    click.echo('{} -> {}'.format(cur_src, cur_dst))
-                else:
-                    extensions = ', '.join(WorkspaceLanguage.EXTENSIONS)
-                    click.echo(('{} does not have a valid extension of {}. Skip this file and ' +
-                                'continue.').format(cur_src, extensions))
+                cur_dst = cur_dst[:-len(ext)]
+                (language, file_format) = WorkspaceLanguage.to_language_and_format(cur_src)
+                self.import_workspace(cur_src, cur_dst, language, file_format, overwrite,
+                                      headers=headers)
+                click.echo('{} -> {}'.format(cur_src, cur_dst))
 
     def export_workspace_dir(self, source_path, target_path, overwrite, headers=None):
         if os.path.isfile(target_path):
