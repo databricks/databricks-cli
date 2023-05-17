@@ -91,7 +91,7 @@ def mkdirs_cli(api_client, workspace_path):
 @profile_option
 @eat_exceptions
 @provide_api_client
-def import_workspace_cli(api_client, source_path, target_path, language=None, format, overwrite): # NOQA
+def import_workspace_cli(api_client, source_path, target_path, format, overwrite, language=None): # NOQA
     """
     Imports a file from local to the Databricks workspace.
 
