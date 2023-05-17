@@ -87,7 +87,6 @@ def mkdirs_cli(api_client, workspace_path):
               help=', '.join(WorkspaceLanguage.ALL))
 @click.option('--format', '-f', default=WorkspaceFormat.SOURCE, type=FormatClickType())
 @click.option('--overwrite', '-o', is_flag=True, default=False)
-@click.option('--are_workspace_files', '-wf', is_flag=True, default=False)
 @debug_option
 @profile_option
 @eat_exceptions
@@ -177,6 +176,7 @@ def export_dir_cli(api_client, source_path, target_path, overwrite):
 @click.argument('target_path')
 @click.option('--overwrite', '-o', is_flag=True, default=False)
 @click.option('--exclude-hidden-files', '-e', is_flag=True, default=False)
+@click.option('--are_workspace_files', '-wf', is_flag=True, default=False)
 @debug_option
 @profile_option
 @eat_exceptions
@@ -185,9 +185,9 @@ def import_dir_cli(api_client, source_path, target_path, overwrite, exclude_hidd
     """
     Recursively imports a directory from local to the Databricks workspace.
 
-    Only directories and files with the extensions .scala, .py, .sql, .r, .R, .ipynb are imported by default.
-    If are_workspace_files is set to True 
+    Only directories and files with the extensions .scala, .py, .sql, .r, .R, .ipynb are imported by default and are converted to notebooks compatible with the original extension.
     When imported, these extensions will be stripped off the name of the notebook.
+    If are_workspace_files is set to True, the files will be imported as as with their original extensions.
     """
     WorkspaceApi(api_client).import_workspace_dir(source_path, target_path, overwrite,
                                                   exclude_hidden_files, are_workspace_files)
