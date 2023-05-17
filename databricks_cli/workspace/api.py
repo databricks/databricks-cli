@@ -132,7 +132,7 @@ class WorkspaceApi(object):
     def delete(self, workspace_path, is_recursive, headers=None):
         self.client.delete(workspace_path, is_recursive, headers=headers)
 
-    def import_workspace_dir(self, source_path, target_path, overwrite, exclude_hidden_files, are_workspace_files=False
+    def import_workspace_dir(self, source_path, target_path, overwrite, exclude_hidden_files, are_workspace_files,
                              headers=None):
         # pylint: disable=too-many-locals
         filenames = os.listdir(source_path)
