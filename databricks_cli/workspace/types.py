@@ -50,6 +50,8 @@ class WorkspaceLanguage(object):
             language_and_format = (None, WorkspaceFormat.HTML)
         elif ext == '.dbc':
             language_and_format = (None, WorkspaceFormat.DBC)
+        else:
+            language_and_format = (None, WorkspaceFormat.AUTO)
         return language_and_format
 
     @classmethod
@@ -87,7 +89,8 @@ class WorkspaceFormat(object):
     HTML = 'HTML'
     JUPYTER = 'JUPYTER'
     DBC = 'DBC'
-    ALL = [SOURCE, HTML, JUPYTER, DBC]
+    AUTO = 'AUTO'
+    ALL = [SOURCE, HTML, JUPYTER, DBC, AUTO]
 
 
 class FormatClickType(ParamType):
