@@ -143,6 +143,33 @@ class UnityCatalogService(object):
         return self.client.perform_query('POST', '/unity-catalog/validate-storage-credentials',
                                          data=validation_spec, headers=headers)
 
+
+    # Connection Operations
+
+    def create_connection(self, con_spec, headers=None):
+        url = '/unity-catalog/connections'
+        return self.client.perform_query('POST', url, data=con_spec, headers=headers)
+
+    def list_connections(self, headers=None):
+        _data = {}
+        return self.client.perform_query('GET', '/unity-catalog/connections', data=_data,
+                                         headers=headers)
+
+    def get_connection(self, name, headers=None):
+        _data = {}
+        return self.client.perform_query('GET', '/unity-catalog/connections/%s' % (name),
+                                         data=_data, headers=headers)
+
+    def update_connection(self, name, con_spec, headers=None):
+        _data = con_spec
+        return self.client.perform_query('PATCH', '/unity-catalog/connections/%s' % (name),
+                                         data=_data, headers=headers)
+
+    def delete_connection(self, name, headers=None):
+        _data = {}
+        return self.client.perform_query('DELETE', '/unity-catalog/connections/%s' % (name),
+                                         data=_data, headers=headers)
+
     # Data Access Configuration Operations
 
     def create_dac(self, metastore_id, dac_spec, skip_validation, headers=None):
