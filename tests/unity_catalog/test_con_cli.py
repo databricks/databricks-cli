@@ -23,11 +23,10 @@
 
 # pylint:disable=redefined-outer-name
 
-import mock
 import json
+import mock
 import pytest
 from click.testing import CliRunner
-from databricks_cli.unity_catalog.utils import mc_pretty_format
 
 from databricks_cli.unity_catalog import connection_cli
 from tests.utils import provide_conf
@@ -49,7 +48,7 @@ TEST_OPTIONS = {
 COMPLETE_OPTIONS = {
     'name': CONNECTION_NAME,
     'connection_type': 'MYSQL',
-    'options_kvpairs': TEST_OPTIONS,
+    'options': TEST_OPTIONS,
     'read_only': True,
     'comment': COMMENT,
 }
@@ -57,7 +56,7 @@ COMPLETE_OPTIONS = {
 RETURN_OPTIONS = {
     'name': CONNECTION_NAME,
     'connection_type': 1,
-    'options_kvpairs': {"host": TESTHOST, "port": TESTPORT,},
+    'options': {"host": TESTHOST, "port": TESTPORT,},
     'read_only': True,
     'comment': COMMENT,
 }
