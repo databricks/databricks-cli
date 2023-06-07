@@ -111,15 +111,16 @@ class TestWorkspaceApi(object):
         test_file_path = os.path.join(tmpdir.strpath, 'test')
         with open(test_file_path, 'w') as f:
             f.write('test')
-        workspace_api.import_workspace(test_file_path, TEST_WORKSPACE_PATH, TEST_LANGUAGE,
-                                       TEST_FMT, is_overwrite=False)
+        workspace_api.import_workspace(test_file_path, TEST_WORKSPACE_PATH,
+                                       TEST_FMT, is_overwrite=False, language=TEST_LANGUAGE)
         import_workspace_mock = workspace_api.client.import_workspace
         assert import_workspace_mock.call_count == 1
         assert import_workspace_mock.call_args[0][0] == TEST_WORKSPACE_PATH
         assert import_workspace_mock.call_args[0][1] == TEST_FMT
-        assert import_workspace_mock.call_args[0][2] == TEST_LANGUAGE
-        assert import_workspace_mock.call_args[0][3] == b64encode(b'test').decode()
-        assert import_workspace_mock.call_args[0][4] is False
+        assert import_workspace_mock.call_args[0][2] == b64encode(b'test').decode()
+        assert import_workspace_mock.call_args[0][3] is False
+        assert import_workspace_mock.call_args[1]['headers'] is None
+        assert import_workspace_mock.call_args[1]['language'] == TEST_LANGUAGE
 
     def test_export_workspace(self, workspace_api, tmpdir):
         test_file_path = os.path.join(tmpdir.strpath, 'test')
