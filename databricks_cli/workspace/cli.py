@@ -83,15 +83,15 @@ def mkdirs_cli(api_client, workspace_path):
                short_help='Imports a file from local to the Databricks workspace.')
 @click.argument('source_path')
 @click.argument('target_path')
-@click.option('--language', '-l', required=True, type=LanguageClickType(),
-              help=', '.join(WorkspaceLanguage.ALL))
 @click.option('--format', '-f', default=WorkspaceFormat.SOURCE, type=FormatClickType())
 @click.option('--overwrite', '-o', is_flag=True, default=False)
+@click.option('--language', '-l', required=False, type=LanguageClickType(),
+              help=', '.join(WorkspaceLanguage.ALL))
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def import_workspace_cli(api_client, source_path, target_path, language, format, overwrite): # NOQA
+def import_workspace_cli(api_client, source_path, target_path, format, overwrite, language): # NOQA
     """
     Imports a file from local to the Databricks workspace.
 
@@ -99,7 +99,7 @@ def import_workspace_cli(api_client, source_path, target_path, language, format,
     format is documented at
     https://docs.databricks.com/api/latest/workspace.html#notebookexportformat.
     """
-    WorkspaceApi(api_client).import_workspace(source_path, target_path, language, format, overwrite) # NOQA
+    WorkspaceApi(api_client).import_workspace(source_path, target_path, format, overwrite, language) # NOQA
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
