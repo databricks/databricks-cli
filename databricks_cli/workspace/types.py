@@ -83,11 +83,12 @@ class LanguageClickType(ParamType):
 
 
 class WorkspaceFormat(object):
+    AUTO = 'AUTO'
     SOURCE = 'SOURCE'
     HTML = 'HTML'
     JUPYTER = 'JUPYTER'
     DBC = 'DBC'
-    ALL = [SOURCE, HTML, JUPYTER, DBC]
+    ALL = [AUTO, SOURCE, HTML, JUPYTER, DBC]
 
 
 class FormatClickType(ParamType):
