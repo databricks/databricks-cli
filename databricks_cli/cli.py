@@ -53,7 +53,7 @@ from databricks_cli.unity_catalog.cli import unity_catalog_group
               expose_value=False, is_eager=True, help=version)
 @debug_option
 @profile_option
-def cli(**kwargs):
+def cli(**_):
     pass
 
 
