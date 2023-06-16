@@ -143,7 +143,7 @@ def _trampoline_into_new_cli():
     e("Because both are installed and available in $PATH, " +
       "I assume you are trying to run the newer version.", nl=True)
     e("If you want to disable this behavior you can set" +
-      "DATABRICKS_CLI_DO_NOT_EXECUTE_NEWER_VERSION=1.", nl=True)
+      f"{trampoline_disable_env_var}=1.", nl=True)
 
     e("", nl=True)
 
