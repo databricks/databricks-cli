@@ -145,7 +145,7 @@ def _trampoline_into_new_cli():
 
     e("Because both are installed and available in $PATH, " +
       "I assume you are trying to run the newer version.", nl=True)
-    e("If you want to disable this behavior you can set" +
+    e("If you want to disable this behavior you can set " +
       "{}=1.".format(trampoline_disable_env_var), nl=True)
 
     e("", nl=True)
