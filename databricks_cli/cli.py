@@ -53,7 +53,7 @@ from databricks_cli.unity_catalog.cli import unity_catalog_group
               expose_value=False, is_eager=True, help=version)
 @debug_option
 @profile_option
-def cli():
+def cli(**kwargs):
     pass
 
 
@@ -122,33 +122,35 @@ def _trampoline_into_new_cli():
     candidate_version = candidate_version_obj['Version']
 
     def e(message, highlight=False, nl=False):
-        style = dict()
+        style = {}
         if not highlight:
             style["fg"] = 'yellow'
 
         click.echo(click.style(message, **style), err=True, nl=nl)
 
-    e(f"Databricks CLI ")
+    e("Databricks CLI ")
     e(f"v{candidate_version}", highlight=True)
-    e(f" found at ")
+    e(" found at ")
     e(candidate, highlight=True, nl=True)
 
-    e(f"Your current $PATH prefers running CLI ")
+    e("Your current $PATH prefers running CLI ")
     e(f"v{self_version}", highlight=True)
-    e(f" at ")
+    e(" at ")
     e(self, highlight=True, nl=True)
 
-    e(f"", nl=True)
+    e("", nl=True)
 
-    e(f"Because both are installed and available in $PATH, I assume you are trying to run the newer version.", nl=True)
-    e(f"If you want to disable this behavior you can set DATABRICKS_CLI_DO_NOT_EXECUTE_NEWER_VERSION=1.", nl=True)
+    e("Because both are installed and available in $PATH, " +
+      "I assume you are trying to run the newer version.", nl=True)
+    e("If you want to disable this behavior you can set" +
+      "DATABRICKS_CLI_DO_NOT_EXECUTE_NEWER_VERSION=1.", nl=True)
 
-    e(f"", nl=True)
+    e("", nl=True)
 
-    e(f"Executing CLI ")
+    e("Executing CLI ")
     e(f"v{candidate_version}", highlight=True)
-    e(f"...", nl=True)
-    e(f"-" * (len("Executing CLI v{candidate_version}...")), nl=True)
+    e("...", nl=True)
+    e("-" * (len(f"Executing CLI v{candidate_version}...")), nl=True)
 
     # The new CLI is at least 1MB in size. This is a good heuristic to
     # determine if the new CLI is installed.
@@ -178,7 +180,7 @@ You can find the migration guide at: https://docs.databricks.com/dev-tools/cli/m
 """
         click.echo(click.style(message, fg='yellow'), err=True)
         sys.exit(e.exit_code)
-    except click.Abort as e:
+    except click.Abort:
         click.utils.echo("Aborted!", file=sys.stderr)
         sys.exit(1)
 
