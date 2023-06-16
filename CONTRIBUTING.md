@@ -3,10 +3,9 @@ Setting up the dev environment
 To isolate dependencies from your global python installation, it is important to use a tool like
 [virtualenv](https://virtualenv.pypa.io/en/stable/). With `virtualenv` you can install the dev environment by doing the following.
 
-Another option would be to use docker directly, i.e. 
+Another option would be to use docker directly, i.e.
 ```bash
 docker run -it -v `echo $PWD`:/root python:3.6.8 bash
-docker run -it -v `echo $PWD`:/root python:2.7.12 bash
 
 ```
 
@@ -28,7 +27,7 @@ Requirements:
 Developing using Github CodeSpaces
 ----------------------------------
 
-The same development container setup used for local VSCode also works with GitHub CodeSpaces. If you have CodeSpaces enabled in your Github account then can just create a CodeSpace from the repoand start coding. 
+The same development container setup used for local VSCode also works with GitHub CodeSpaces. If you have CodeSpaces enabled in your Github account then can just create a CodeSpace from the repoand start coding.
 
 In order to test the CLI against a Databricks cluster you can define the these secrets for your CodeSpace so you don't have to run `databricks init` eacht time you open it:
 
@@ -41,4 +40,3 @@ https://docs.github.com/en/codespaces/managing-your-codespaces/managing-encrypte
 Running Tests
 ----------------
 - `tox`
-

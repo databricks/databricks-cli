@@ -9,16 +9,12 @@ ARG NODE_VERSION="none"
 RUN if [ "${NODE_VERSION}" != "none" ]; then su vscode -c "umask 0002 && . /usr/local/share/nvm/nvm.sh && nvm install ${NODE_VERSION} 2>&1"; fi
 
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends tig python2.7 python2.7-dev
+    && apt-get -y install --no-install-recommends tig
 
 RUN /usr/local/bin/python3 -m pip install --upgrade pip
 COPY requirements.txt /tmp/pip-tmp/
 COPY dev-requirements*.txt /tmp/pip-tmp/
-RUN pip3 --disable-pip-version-check --no-cache-dir install -r /tmp/pip-tmp/dev-requirements-py3.txt \
-    && wget https://bootstrap.pypa.io/pip/2.7/get-pip.py \
-    && python2.7 get-pip.py \
-    && rm get-pip.py \
-    && python2.7 -m pip install -r /tmp/pip-tmp/dev-requirements-py2.txt \
+RUN pip3 --disable-pip-version-check --no-cache-dir install -r /tmp/pip-tmp/dev-requirements-py3.txt
     && rm -rf /tmp/pip-tmp
 
 # [Optional] Uncomment this line to install global node packages.

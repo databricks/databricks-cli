@@ -18,7 +18,7 @@ In addition, please leave bug reports as issues on our `GitHub project <https://
 Requirements
 ------------
 
--  Python Version > 2.7.9 or > 3.6
+-  Python Version > 3.6
 
 Installation
 ---------------
@@ -58,7 +58,7 @@ Using Docker
 
     # run command in docker
     docker run -it databricks-cli fs --help
-    
+
 Documentation
 -------------
 
