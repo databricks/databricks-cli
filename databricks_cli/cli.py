@@ -121,7 +121,7 @@ def _trampoline_into_new_cli():
     try:
         candidate_version_obj = json.loads(candidate_version_json)
         candidate_version = candidate_version_obj['Version']
-    except RuntimeError:
+    except (RuntimeError, json.JSONDecodeError):
         candidate_version = '<unknown>'
 
     def e(message, highlight=False, nl=False):
