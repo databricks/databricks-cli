@@ -157,7 +157,7 @@ def _trampoline_into_new_cli():
 
     # The new CLI is at least 1MB in size. This is a good heuristic to
     # determine if the new CLI is installed.
-    os.execv(exec_path, sys.argv)
+    os.execv(candidate, sys.argv)
 
 
 def main():
