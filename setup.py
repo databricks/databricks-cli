@@ -46,7 +46,7 @@ setup(
     ],
     entry_points='''
         [console_scripts]
-        databricks=databricks_cli.cli:cli
+        databricks=databricks_cli.cli:main
         dbfs=databricks_cli.dbfs.cli:dbfs_group
     ''',
     zip_safe=False,
