@@ -117,7 +117,7 @@ def _trampoline_into_new_cli():
         return
 
     # Determine the version of the new CLI.
-    candidate_version_json = os.popen(f'{candidate} version --output json').read().strip()
+    candidate_version_json = os.popen(candidate + ' version --output json').read().strip()
     candidate_version_obj = json.loads(candidate_version_json)
     candidate_version = candidate_version_obj['Version']
 
@@ -129,12 +129,12 @@ def _trampoline_into_new_cli():
         click.echo(click.style(message, **style), err=True, nl=nl)
 
     e("Databricks CLI ")
-    e(f"v{candidate_version}", highlight=True)
+    e("v{}".format(candidate_version), highlight=True)
     e(" found at ")
     e(candidate, highlight=True, nl=True)
 
     e("Your current $PATH prefers running CLI ")
-    e(f"v{self_version}", highlight=True)
+    e("v{}".format(self_version), highlight=True)
     e(" at ")
     e(self, highlight=True, nl=True)
 
@@ -143,14 +143,14 @@ def _trampoline_into_new_cli():
     e("Because both are installed and available in $PATH, " +
       "I assume you are trying to run the newer version.", nl=True)
     e("If you want to disable this behavior you can set" +
-      f"{trampoline_disable_env_var}=1.", nl=True)
+      "{}=1.".format(trampoline_disable_env_var), nl=True)
 
     e("", nl=True)
 
     e("Executing CLI ")
-    e(f"v{candidate_version}", highlight=True)
+    e("v{}".format(candidate_version), highlight=True)
     e("...", nl=True)
-    e("-" * (len(f"Executing CLI v{candidate_version}...")), nl=True)
+    e("-" * (len("Executing CLI v{}...".format(candidate_version))), nl=True)
 
     # The new CLI is at least 1MB in size. This is a good heuristic to
     # determine if the new CLI is installed.
@@ -167,17 +167,17 @@ def main():
         sys.exit(0)
     except click.ClickException as e:
         e.show()
-        message = f"""
+        message = """
 It seems like you might have entered an invalid command or used invalid flags.
 
-The version of the CLI you're using is v{version}.
+The version of the CLI you're using is v{}.
 
 If you're trying to invoke the new version of our CLI, please note that the commands and
 flags might be different. To help you transition, we've created a migration guide that
 explains these changes and how to adapt your command line arguments accordingly.
 
 You can find the migration guide at: https://docs.databricks.com/dev-tools/cli/migrate.html
-"""
+""".format(version)
         click.echo(click.style(message, fg='yellow'), err=True)
         sys.exit(e.exit_code)
     except click.Abort:
