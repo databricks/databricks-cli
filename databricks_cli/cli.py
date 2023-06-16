@@ -118,8 +118,11 @@ def _trampoline_into_new_cli():
 
     # Determine the version of the new CLI.
     candidate_version_json = os.popen(candidate + ' version --output json').read().strip()
-    candidate_version_obj = json.loads(candidate_version_json)
-    candidate_version = candidate_version_obj['Version']
+    try:
+        candidate_version_obj = json.loads(candidate_version_json)
+        candidate_version = candidate_version_obj['Version']
+    except RuntimeError:
+        candidate_version = '<unknown>'
 
     def e(message, highlight=False, nl=False):
         style = {}
