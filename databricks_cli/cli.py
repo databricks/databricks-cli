@@ -161,7 +161,11 @@ def _trampoline_into_new_cli():
 
 
 def main():
-    _trampoline_into_new_cli()
+    try:
+        _trampoline_into_new_cli()
+    except Exception as e:
+        # Log the error and continue; perhaps a permissions issue?
+        click.echo("Failed to look for newer version of CLI: {}".format(e), err=True)
 
     try:
         rv = cli(standalone_mode=False)
