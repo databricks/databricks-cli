@@ -35,9 +35,7 @@ CONNECTION_NAME = 'test_connection_name'
 COMMENT = 'some_comment'
 
 TESTHOST = "test_postgresql.fakedb.com"
-TESTHOST2 = "postgresql.fakedb2.lan"
 TESTPORT = "1234"
-TESTPORT2 = "5678"
 TEST_OPTIONS = {
     "host": TESTHOST,
     "port": TESTPORT,
