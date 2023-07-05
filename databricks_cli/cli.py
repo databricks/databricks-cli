@@ -21,6 +21,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
+import os
+import sys
+
 import click
 
 from databricks_cli.configure.config import profile_option, debug_option
@@ -49,7 +53,7 @@ from databricks_cli.unity_catalog.cli import unity_catalog_group
               expose_value=False, is_eager=True, help=version)
 @debug_option
 @profile_option
-def cli():
+def cli(**_):
     pass
 
 
@@ -70,5 +74,123 @@ cli.add_command(pipelines_group, name='pipelines')
 cli.add_command(repos_group, name='repos')
 cli.add_command(unity_catalog_group, name='unity-catalog')
 
+
+def _trampoline_into_new_cli():
+    trampoline_disable_env_var = 'DATABRICKS_CLI_DO_NOT_EXECUTE_NEWER_VERSION'
+    if os.environ.get(trampoline_disable_env_var) is not None:
+        return
+
+    # Try to trampoline only if we're running the CLI as 'databricks'.
+    if os.path.basename(sys.argv[0]) != 'databricks':
+        return
+
+    # Check to see if the new version of the CLI is in $PATH.
+    paths = os.environ['PATH'].split(os.pathsep)
+    self = None
+    self_version = version
+    candidate = None
+    for path in paths:
+        exec_path = os.path.join(path, 'databricks')
+        if os.name == 'nt':
+            exec_path = os.path.join(path, 'databricks.exe')
+
+        if not os.path.exists(exec_path):
+            continue
+
+        # Keep a pointer to the first 'databricks' in $PATH.
+        if not self:
+            self = exec_path
+
+        # The new CLI is a single binary larger than 1MB.
+        # We use this as heuristic to tell if the new CLI is installed.
+        # Because this version of the CLI is much smaller, we do not
+        # need to dedup our own path to avoid an exec loop.
+        stat = os.stat(exec_path)
+        if stat.st_size < (1024 * 1024):
+            continue
+
+        candidate = exec_path
+        break
+
+    # Return if we cannot find the new CLI in $PATH.
+    if candidate is None:
+        return
+
+    # Determine the version of the new CLI.
+    candidate_version_json = os.popen(candidate + ' version --output json').read().strip()
+    try:
+        candidate_version_obj = json.loads(candidate_version_json)
+        candidate_version = candidate_version_obj['Version']
+    except (RuntimeError, json.JSONDecodeError):
+        candidate_version = '<unknown>'
+
+    def e(message, highlight=False, nl=False):
+        style = {}
+        if not highlight:
+            style["fg"] = 'yellow'
+
+        click.echo(click.style(message, **style), err=True, nl=nl)
+
+    e("Databricks CLI ")
+    e("v{}".format(candidate_version), highlight=True)
+    e(" found at ")
+    e(candidate, highlight=True, nl=True)
+
+    e("Your current $PATH prefers running CLI ")
+    e("v{}".format(self_version), highlight=True)
+    e(" at ")
+    e(self, highlight=True, nl=True)
+
+    e("", nl=True)
+
+    e("Because both are installed and available in $PATH, " +
+      "I assume you are trying to run the newer version.", nl=True)
+    e("If you want to disable this behavior you can set " +
+      "{}=1.".format(trampoline_disable_env_var), nl=True)
+
+    e("", nl=True)
+
+    e("Executing CLI ")
+    e("v{}".format(candidate_version), highlight=True)
+    e("...", nl=True)
+    e("-" * (len("Executing CLI v{}...".format(candidate_version))), nl=True)
+
+    # The new CLI is at least 1MB in size. This is a good heuristic to
+    # determine if the new CLI is installed.
+    os.execv(candidate, sys.argv)
+
+
+def main():
+    try:
+        _trampoline_into_new_cli()
+    except Exception as e: # noqa
+        # Log the error and continue; perhaps a permissions issue?
+        click.echo("Failed to look for newer version of CLI: {}".format(e), err=True)
+
+    try:
+        rv = cli(standalone_mode=False)
+        if isinstance(rv, int):
+            sys.exit(rv)
+        sys.exit(0)
+    except click.ClickException as e:
+        e.show()
+        message = """
+It seems like you might have entered an invalid command or used invalid flags.
+
+The version of the CLI you're using is v{}.
+
+If you're trying to invoke the new version of our CLI, please note that the commands and
+flags might be different. To help you transition, we've created a migration guide that
+explains these changes and how to adapt your command line arguments accordingly.
+
+You can find the migration guide at: https://docs.databricks.com/dev-tools/cli/migrate.html
+""".format(version)
+        click.echo(click.style(message, fg='yellow'), err=True)
+        sys.exit(e.exit_code)
+    except click.Abort:
+        click.utils.echo("Aborted!", file=sys.stderr)
+        sys.exit(1)
+
+
 if __name__ == "__main__":
-    cli()
+    main()
