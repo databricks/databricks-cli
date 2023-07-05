@@ -1,3 +1,9 @@
+  **Note**
+
+  **Databricks recommends that you use newer Databricks CLI versions 0.200 and above instead of legacy Databricks CLI versions 0.17 and below (located in this repository). You can find the new CLI at https://github.com/databricks/cli.**
+
+  **If you have been using the code in this repository as a Python SDK for interacting with the Databricks APIs, we recommend you use the new dedicated SDK package that can be found at https://github.com/databricks/databricks-sdk-py.**
+
 databricks-cli
 ==============
 .. image:: https://github.com/databricks/databricks-cli/actions/workflows/push.yml/badge.svg?branch=main
@@ -10,10 +16,9 @@ databricks-cli
 The Databricks Command Line Interface (CLI) is an open source tool which provides an easy to use interface to
 the Databricks platform. The CLI is built on top of the Databricks REST APIs.
 
-**Note**: This CLI is under active development and is released as an experimental client. This means that interfaces are still subject to change.
+**Note**: This CLI is no longer under active development and has been released as an experimental client.
 
-If you're interested in contributing to the project please reach out.
-In addition, please leave bug reports as issues on our `GitHub project <https://github.com/databricks/databricks-cli>`_.
+Please leave bug reports as issues on our `GitHub project <https://github.com/databricks/databricks-cli>`_.
 
 Requirements
 ------------
