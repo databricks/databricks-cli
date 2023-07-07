@@ -91,8 +91,18 @@ class DbfsApi(object):
     def __init__(self, api_client):
         self.client = DbfsService(api_client)
 
-    def list_files(self, dbfs_path, headers=None):
-        list_response = self.client.list(dbfs_path.absolute_path, headers=headers)
+    def _recursive_list(self, *args, **kwargs):
+        paths = self.client.list_files(*args, **kwargs)
+        files = [p for p in paths if not p.is_dir]
+        for p in paths:
+            files = files + self._recursive_list(p) if p.is_dir else files
+        return files
+
+    def list_files(self, dbfs_path, headers=None, is_recursive=False):
+        if is_recursive:
+            list_response = self._recursive_list(dbfs_path, headers)
+        else:
+            list_response = self.client.list(dbfs_path.absolute_path, headers=headers)
         if 'files' in list_response:
             return [FileInfo.from_json(f) for f in list_response['files']]
         else:
