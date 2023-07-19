@@ -359,6 +359,16 @@ def shared_table_object(name=None, comment=None, shared_as=None,
         val['start_version'] = start_version
     return val
 
+def shared_model_object(name=None, comment=None):
+    val = {
+        'data_object_type': 'MODEL'
+    }
+    if name is not None:
+        val['name'] = name
+    if comment is not None:
+        val['comment'] = comment
+    return val
+
 def create_common_shared_table_options(f):
     @click.option('--table', default=None,
                   help='Full name of the shared table.')
@@ -372,6 +382,16 @@ def create_common_shared_table_options(f):
                   help='Toggles the change data feed for the shared table.')
     @click.option('--start-version', default=None, type=int,
                   help='Specifies the current version of the shared table.')
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        f(*args, **kwargs)
+    return wrapper
+
+def create_common_shared_model_options(f):
+    @click.option('--model', default=None,
+                  help='Full name of the shared model.')
+    @click.option('--comment', default=None,
+                  help='New comment of the shared model.')
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
         f(*args, **kwargs)
@@ -539,6 +559,157 @@ def remove_share_table_cli(api_client, share, table, shared_as, json_file, json)
                     'data_object': shared_table_object(
                         name=table,
                         shared_as=shared_as,
+                    )
+                }
+            ]
+        }
+        share_json = UnityCatalogApi(api_client).update_share(share, data)
+        click.echo(mc_pretty_format(share_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Add a shared model.')
+@click.option('--share', required=True,
+              help='Name of the share to update.')
+@create_common_shared_model_options
+@click.option('--json-file', default=None, type=click.Path(),
+              help="Adds a shared model based on shared data object represented in JSON file.")
+@click.option('--json', default=None, type=JsonClickType(),
+              help="Adds a shared model based on shared data object represented in JSON.")
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def add_share_model_cli(api_client, share, model, comment, json_file, json):
+    """
+    Adds a shared model.
+
+    The public specification for the JSON request is in development.
+    """
+    if (json_file is not None) or (json is not None):
+        def api_call(d):
+            if 'data_object_type' in d and d['data_object_type'] != "MODEL":
+                raise ValueError('Must specify data_object_type as "MODEL" '
+                                 'or not specify data_object_type at all')
+            UnityCatalogApi(api_client).update_share(share, { 
+                'updates': [
+                    {
+                        'action': 'REMOVE',
+                        'data_object': d,
+                    }
+                ]
+            })
+        json_cli_base(json_file, json, api_call)
+    else:
+        if model is None:
+            raise ValueError('Must specify model name when adding shared table')
+        data = { 
+            'updates': [
+                {
+                    'action': 'ADD',
+                    'data_object': shared_model_object(
+                        name=model,
+                        comment=comment,
+                    )
+                }
+            ]
+        }
+        share_json = UnityCatalogApi(api_client).update_share(share, data)
+        click.echo(mc_pretty_format(share_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Update a shared model.')
+@click.option('--share', required=True,
+              help='Name of the share to update.')
+@create_common_shared_model_options
+@click.option('--json-file', default=None, type=click.Path(),
+              help="Updates the shared model to shared data object represented in JSON file.")
+@click.option('--json', default=None, type=JsonClickType(),
+              help="Updates the shared model to shared data object represented in JSON.")
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def update_share_model_cli(api_client, share, model, comment, json_file, json):
+    """
+    Updates a shared model.
+
+    The public specification for the JSON request is in development.
+    """
+    if (json_file is not None) or (json is not None):
+        def api_call(d):
+            if 'data_object_type' in d and d['data_object_type'] != "MODEL":
+                raise ValueError('Must specify data_object_type as "MODEL" '
+                                 'or not specify data_object_type at all')
+            UnityCatalogApi(api_client).update_share(share, { 
+                'updates': [
+                    {
+                        'action': 'UPDATE',
+                        'data_object': d,
+                    }
+                ]
+            })
+        json_cli_base(json_file, json, api_call)
+    else:
+        if model is None:
+            raise ValueError('Must specify model name when updating shared model')
+        data = { 
+            'updates': [
+                {
+                    'action': 'UPDATE',
+                    'data_object': shared_model_object(
+                        name=model,
+                        comment=comment,
+                    )
+                }
+            ]
+        }
+        share_json = UnityCatalogApi(api_client).update_share(share, data)
+        click.echo(mc_pretty_format(share_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Remove a shared model.')
+@click.option('--share', required=True,
+              help='Name of the share to update.')
+@click.option('--model', required=True,
+              help='Full name of the model to remove from share.')
+@click.option('--json-file', default=None, type=click.Path(),
+              help="Removes the shared model based on shared data object represented in JSON file.")
+@click.option('--json', default=None, type=JsonClickType(),
+              help="Removes the shared model based on shared data object represented in JSON.")
+@debug_option
+@profile_option
+@eat_exceptions
+@provide_api_client
+def remove_share_model_cli(api_client, share, model, json_file, json):
+    """
+    Removes a shared model either by model name or the shared-as model name.
+
+    The public specification for the JSON request is in development.
+    """
+    if (json_file is not None) or (json is not None):
+        def api_call(d):
+            if 'data_object_type' in d and d['data_object_type'] != "MODEL":
+                raise ValueError('Must specify data_object_type as "MODEL" '
+                                 'or not specify data_object_type at all')
+            UnityCatalogApi(api_client).update_share(share, { 
+                'updates': [
+                    {
+                        'action': 'REMOVE',
+                        'data_object': d,
+                    }
+                ]
+            })
+        json_cli_base(json_file, json, api_call)
+    else:
+        data = { 
+            'updates': [
+                {
+                    'action': 'REMOVE',
+                    'data_object': shared_model_object(
+                        name=model,
                     )
                 }
             ]
@@ -909,6 +1080,9 @@ def register_shares_commands(cmd_group):
     shares_group.add_command(add_share_table_cli, name='add-table')
     shares_group.add_command(update_share_table_cli, name='update-table')
     shares_group.add_command(remove_share_table_cli, name='remove-table')
+    shares_group.add_command(add_share_model_cli, name='add-model')
+    shares_group.add_command(update_share_model_cli, name='update-model')
+    shares_group.add_command(remove_share_model_cli, name='remove-model')
     shares_group.add_command(delete_share_cli, name='delete')
     shares_group.add_command(list_share_permissions_cli, name='list-permissions')
     shares_group.add_command(update_share_permissions_cli, name='update-permissions')
