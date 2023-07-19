@@ -471,6 +471,86 @@ def test_remove_share_table_cli_asserts_error_if_both_specified(api_mock):
     )
     assert not api_mock.update_share.called
 
+
+@provide_conf
+def test_add_share_model_cli(api_mock, echo_mock):
+    api_mock.update_share.return_value = SHARE
+    runner = CliRunner()
+    runner.invoke(
+        delta_sharing_cli.add_share_model_cli,
+        args=[
+            '--share', SHARE_NAME,
+            '--model', 'add.model',
+            '--comment', 'add.comment'
+        ])
+    expected_data = {
+        'updates': [
+            {
+                'action': 'ADD',
+                'data_object': {
+                    'data_object_type': 'MODEL',
+                    'name': 'add.model',
+                    'comment': 'add.comment'
+                }
+            }
+        ]
+    }
+    api_mock.update_share.assert_called_once_with(SHARE_NAME, expected_data)
+    echo_mock.assert_called_once_with(mc_pretty_format(SHARE))
+
+
+@provide_conf
+def test_update_share_model_cli(api_mock, echo_mock):
+    api_mock.update_share.return_value = SHARE
+    runner = CliRunner()
+    runner.invoke(
+        delta_sharing_cli.update_share_model_cli,
+        args=[
+            '--share', SHARE_NAME,
+            '--model', 'update.model',
+            '--comment', 'update.comment'
+        ])
+    expected_data = {
+        'updates': [
+            {
+                'action': 'UPDATE',
+                'data_object': {
+                    'data_object_type': 'MODEL',
+                    'name': 'update.model',
+                    'comment': 'update.comment'
+                }
+            }
+        ]
+    }
+    api_mock.update_share.assert_called_once_with(SHARE_NAME, expected_data)
+    echo_mock.assert_called_once_with(mc_pretty_format(SHARE))
+
+
+@provide_conf
+def test_remove_share_model_cli_by_model(api_mock, echo_mock):
+    api_mock.update_share.return_value = SHARE
+    runner = CliRunner()
+    runner.invoke(
+        delta_sharing_cli.remove_share_model_cli,
+        args=[
+            '--share', SHARE_NAME,
+            '--model', 'remove.model',
+        ])
+    expected_data = {
+        'updates': [
+            {
+                'action': 'REMOVE',
+                'data_object': {
+                    'data_object_type': 'MODEL',
+                    'name': 'remove.model',
+                }
+            }
+        ]
+    }
+    api_mock.update_share.assert_called_once_with(SHARE_NAME, expected_data)
+    echo_mock.assert_called_once_with(mc_pretty_format(SHARE))
+
+
 @provide_conf
 def test_update_share_cli_with_json(api_mock, echo_mock):
     api_mock.update_share.return_value = SHARE
