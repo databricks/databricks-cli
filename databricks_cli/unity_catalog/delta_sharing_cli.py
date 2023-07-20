@@ -590,9 +590,8 @@ def add_share_model_cli(api_client, share, model, comment, json_file, json):
     """
     if (json_file is not None) or (json is not None):
         def api_call(d):
-            if 'data_object_type' in d and d['data_object_type'] != "MODEL":
-                raise ValueError('Must specify data_object_type as "MODEL" '
-                                 'or not specify data_object_type at all')
+            if 'data_object_type' not in d or d['data_object_type'] != "MODEL":
+                raise ValueError('Must specify data_object_type as "MODEL"')
             UnityCatalogApi(api_client).update_share(share, { 
                 'updates': [
                     {
@@ -641,9 +640,8 @@ def update_share_model_cli(api_client, share, model, comment, json_file, json):
     """
     if (json_file is not None) or (json is not None):
         def api_call(d):
-            if 'data_object_type' in d and d['data_object_type'] != "MODEL":
-                raise ValueError('Must specify data_object_type as "MODEL" '
-                                 'or not specify data_object_type at all')
+            if 'data_object_type' not in d or d['data_object_type'] != "MODEL":
+                raise ValueError('Must specify data_object_type as "MODEL"')
             UnityCatalogApi(api_client).update_share(share, { 
                 'updates': [
                     {
@@ -693,9 +691,8 @@ def remove_share_model_cli(api_client, share, model, json_file, json):
     """
     if (json_file is not None) or (json is not None):
         def api_call(d):
-            if 'data_object_type' in d and d['data_object_type'] != "MODEL":
-                raise ValueError('Must specify data_object_type as "MODEL" '
-                                 'or not specify data_object_type at all')
+            if 'data_object_type' not in d or d['data_object_type'] != "MODEL":
+                raise ValueError('Must specify data_object_type as "MODEL"')
             UnityCatalogApi(api_client).update_share(share, { 
                 'updates': [
                     {
