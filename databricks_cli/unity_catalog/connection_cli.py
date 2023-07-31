@@ -81,7 +81,9 @@ def json_options(f):
     return wrapper
 
 
-redirect_uri = 'https://localhost:8771'
+redirect_uri = 'https://localhost:8331'
+snowflake_path = '/oauth/authorize'
+salesforce_path = '/services/oauth2/authorize'
 return_query_res = ""
 
 class AccessCodeRequestHandler(http.server.SimpleHTTPRequestHandler):
@@ -100,7 +102,7 @@ class AccessCodeRequestHandler(http.server.SimpleHTTPRequestHandler):
         return_query_res = self.path
 
 def run_oauth_response_server():
-    server_address = ('', 8771)
+    server_address = ('', 8331)
     httpd = socketserver.TCPServer(server_address, AccessCodeRequestHandler)
 
     ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
@@ -112,14 +114,14 @@ def run_oauth_response_server():
     except KeyboardInterrupt:
         pass
 
-def get_auth_code(host, client_id, scope):
+def get_auth_code(host, client_id, scope, path):
     oauth = oauthlib.oauth2.WebApplicationClient(client_id)
     state = generate_token()
     verifier = oauth.create_code_verifier(96)
     challenge = oauth.create_code_challenge(verifier, 'S256')
 
     authorization_url = oauth.prepare_request_uri(
-            'https://' + host + '/oauth/authorize', redirect_uri = redirect_uri, 
+            'https://' + host + path, redirect_uri = redirect_uri, 
             scope = scope, state = state, code_challenge = challenge, 
             code_challenge_method = 'S256')
     
@@ -374,6 +376,8 @@ def create_databricks_cli(api_client, name, host, httppath, token,
                short_help='Create snowflake oauth connection with CLI flags.')
 @common_create_args
 @create_update_common_options
+@click.option('--user', default=None,
+                help='Username for authorization of new connection')
 @click.option('--sfwarehouse', default=None,
                 help='Snowflake warehouse name of new connection')
 @click.option('--scope', default=None,
@@ -388,30 +392,75 @@ def create_databricks_cli(api_client, name, host, httppath, token,
 @profile_option
 @provide_api_client
 def create_snowflake_oauth_cli(api_client, name, host, port, client_id, sfwarehouse,
-                        read_only, comment, scope, client_secret):
+                        read_only, comment, scope, client_secret, user):
     """
     Create new snowflake U2M oauth connection.
     """
     missing_args = (name is None) or (host is None) or (port is None) or (client_id is None) or \
-        (client_secret is None) or (sfwarehouse is None)
+        (client_secret is None) or (sfwarehouse is None) or (user is None)
 
     if missing_args:
         raise ValueError('Must provide all required oauth connection parameters')
     
-    code_dict = get_auth_code(host, client_id, scope)
+    code_dict = get_auth_code(host, client_id, scope, snowflake_path)
     data = {
         'name': name,
         'connection_type': 'SNOWFLAKE',
-        'options': {'host': host, 'port': port, 'client_id': client_id, 
-                    'client_secret': client_secret, 'state': code_dict['state'], 
-                    'code': code_dict['code'], 'sfWarehouse': sfwarehouse, 
-                    'redirect_uri': redirect_uri, 'code_verifier': code_dict['code_verifier']},
+        'options': {'host': host, 'port': port, 'user': user, 'client_id': client_id, 
+                    'client_secret': client_secret, 'oauth_scope': scope, 
+                    'authorization_code': code_dict['code'], 'sfWarehouse': sfwarehouse, 
+                    'oauth_redirect_uri': redirect_uri, 
+                    'pkce_verifier': code_dict['code_verifier']},
         'read_only': read_only,
         'comment': comment
     }
-    click.echo(mc_pretty_format(data))
-    UnityCatalogApi(api_client).create_connection(data)
-    #click.echo(mc_pretty_format(con_json))
+    con_json = UnityCatalogApi(api_client).create_connection(data)
+    click.echo(mc_pretty_format(con_json))
+
+
+@click.command(context_settings=CONTEXT_SETTINGS,
+               short_help='Create salesforce oauth connection with CLI flags.')
+@create_update_common_options
+@click.option('--scope', default=None,
+                help='Scope of new OAuth connection. Should be a single \
+                quoted string with separate options separated by spaces')
+@click.option('--client-id', default=None,
+                help='Client ID for new connection')
+@click.option('--is-sandbox', is_flag=True, default=False,
+                help='Client ID for new connection')
+@click.option('--name', default=None,
+                help='Name of new connection')
+@click.option(
+    "--client-secret", prompt=True, hide_input=True)
+@debug_option
+@eat_exceptions
+@profile_option
+@provide_api_client
+def create_salesforce_oauth_cli(api_client, name, client_id, is_sandbox,
+                        read_only, comment, scope, client_secret):
+    """
+    Create new salesforce refresh token oauth connection.
+    """
+    missing_args = (name is None) or (client_id is None) or \
+        (client_secret is None) or (is_sandbox is None)
+
+    if missing_args:
+        raise ValueError('Must provide all required oauth connection parameters')
+    
+    code_dict = get_auth_code('login.salesforce.com', client_id, scope, salesforce_path)
+    data = {
+        'name': name,
+        'connection_type': 'SALESFORCE',
+        'options': {'client_id': client_id, 
+                    'client_secret': client_secret, 'oauth_scope': scope, 
+                    'authorization_code': code_dict['code'], 'is_sandbox': is_sandbox, 
+                    'oauth_redirect_uri': redirect_uri, 
+                    'pkce_verifier': code_dict['code_verifier']},
+        'read_only': read_only,
+        'comment': comment
+    }
+    con_json = UnityCatalogApi(api_client).create_connection(data)
+    click.echo(mc_pretty_format(con_json))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS,
@@ -538,6 +587,8 @@ def register_connection_commands(cmd_group):
     cmd_group.add_command(hide(create_snowflake_cli), name='create-snowflake-connection')
     cmd_group.add_command(hide(create_snowflake_oauth_cli), 
                           name='create-snowflake-oauth-connection')
+    cmd_group.add_command(hide(create_salesforce_oauth_cli), 
+                          name='create-salesforce-oauth-connection')
     cmd_group.add_command(hide(create_redshift_cli), name='create-redshift-connection')
     cmd_group.add_command(hide(create_sqldw_cli), name='create-sqldw-connection')
     cmd_group.add_command(hide(create_sqlserver_cli), name='create-sqlserver-connection')
@@ -556,6 +607,7 @@ def register_connection_commands(cmd_group):
     create_group.add_command(create_postgresql_cli, name='postgresql')
     create_group.add_command(create_snowflake_cli, name='snowflake')
     create_group.add_command(create_snowflake_oauth_cli, name='snowflake-oauth')
+    create_group.add_command(create_salesforce_oauth_cli, name='salesforce-oauth')
     create_group.add_command(create_redshift_cli, name='redshift')
     create_group.add_command(create_sqldw_cli, name='sqldw')
     create_group.add_command(create_sqlserver_cli, name='sqlserver')
