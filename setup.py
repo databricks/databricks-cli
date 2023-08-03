@@ -42,7 +42,7 @@ setup(
         'tabulate>=0.7.7',
         'six>=1.10.0',
         'configparser>=0.3.5;python_version < "3.6"',
-        'urllib3>=1.26.7,<2.0.0'
+        'urllib3>=1.26.7'
     ],
     entry_points='''
         [console_scripts]
