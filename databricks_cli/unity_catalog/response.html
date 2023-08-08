@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.18/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.18/dist/sweetalert2.all.min.js"></script>
+    <style>
+        body {
+            background-color: #1B3139;
+        }
+        .swal2-title, .swal2-content {
+            font-family: "Arial", sans-serif;
+        }
+    </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            Swal.fire({
+                icon: "success",
+                title: "<span style='font-family: Arial, sans-serif;'>Authorization code received</span>",
+                html: "<span style='font-family: Arial, sans-serif;'>Close this tab and return to the CLI</span>",
+                showConfirmButton: false
+            });
+        });
+    </script>
+</head>
+<body></body>
+</html>

@@ -83,6 +83,23 @@ class UnityCatalogApi(object):
     def validate_external_location(self, validation_spec):
         return self.client.validate_external_location(validation_spec)
 
+    # Connections APIs
+
+    def create_connection(self, con_spec):
+        return self.client.create_connection(con_spec)
+
+    def list_connections(self):
+        return self.client.list_connections()
+
+    def get_connection(self, name):
+        return self.client.get_connection(name)
+
+    def update_connnection(self, name, con_spec):
+        return self.client.update_connection(name, con_spec)
+
+    def delete_connection(self, name):
+        return self.client.delete_connection(name)
+
     # Data Access Configuration APIs
 
     def create_dac(self, metastore_id, dac_spec, skip_validation):

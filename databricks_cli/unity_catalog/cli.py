@@ -35,6 +35,7 @@ from databricks_cli.unity_catalog.cred_cli import register_cred_commands
 from databricks_cli.unity_catalog.delta_sharing_cli import register_delta_sharing_commands
 from databricks_cli.unity_catalog.perms_cli import register_perms_commands
 from databricks_cli.unity_catalog.lineage_cli import register_lineage_commands
+from databricks_cli.unity_catalog.connection_cli import register_connection_commands
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
@@ -56,3 +57,4 @@ register_table_commands(unity_catalog_group)
 register_delta_sharing_commands(unity_catalog_group)
 register_perms_commands(unity_catalog_group)
 register_lineage_commands(unity_catalog_group)
+register_connection_commands(unity_catalog_group)
