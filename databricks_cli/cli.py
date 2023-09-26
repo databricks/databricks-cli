@@ -182,7 +182,7 @@ new CLI.
 Note that in new versions of the CLI, commands and flags might be different.
 The migration guide above provides guidance on how to adapt your command line
 arguments accordingly.
-""".format(version)
+"""
         click.echo(click.style(message, fg='yellow'), err=True)
         sys.exit(e.exit_code)
     except click.Abort:
