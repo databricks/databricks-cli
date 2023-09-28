@@ -175,13 +175,11 @@ def main():
     except click.ClickException as e:
         e.show()
         message = """
-DEPRECATION NOTICE: Please note the version of the CLI you are using is deprecated.
-See https://docs.databricks.com/dev-tools/cli/migrate.html for migrating to the
-new CLI.
+Warning: The version of the CLI you are using is deprecated.
+To migrate to the new CLI, see https://docs.databricks.com/dev-tools/cli/migrate.html.
 
-Note that in new versions of the CLI, commands and flags might be different.
-The migration guide above provides guidance on how to adapt your command line
-arguments accordingly.
+In the new CLI, commands and flags might be different.
+The preceding migration guide provides guidance about how to adapt your commands accordingly.
 """
         click.echo(click.style(message, fg='yellow'), err=True)
         sys.exit(e.exit_code)
