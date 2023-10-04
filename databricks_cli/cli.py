@@ -175,16 +175,12 @@ def main():
     except click.ClickException as e:
         e.show()
         message = """
-It seems like you might have entered an invalid command or used invalid flags.
+Warning: The version of the CLI you are using is deprecated.
+To migrate to the new CLI, see https://docs.databricks.com/dev-tools/cli/migrate.html.
 
-The version of the CLI you're using is v{}.
-
-If you're trying to invoke the new version of our CLI, please note that the commands and
-flags might be different. To help you transition, we've created a migration guide that
-explains these changes and how to adapt your command line arguments accordingly.
-
-You can find the migration guide at: https://docs.databricks.com/dev-tools/cli/migrate.html
-""".format(version)
+In the new CLI, commands and flags might be different.
+The preceding migration guide provides guidance about how to adapt your commands accordingly.
+"""
         click.echo(click.style(message, fg='yellow'), err=True)
         sys.exit(e.exit_code)
     except click.Abort:
