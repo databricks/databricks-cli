@@ -16,7 +16,6 @@ jobs:
           - '3.9'
           - '3.10'
           - '3.11'
-          - '3.12'
 
     env:
       PYTHON_VERSION: ${{ matrix.python-version }}
@@ -62,7 +61,6 @@ jobs:
           - '3.9'
           - '3.10'
           - '3.11'
-          - '3.12'
 
     env:
       PYTHON_VERSION: ${{ matrix.python-version }}
