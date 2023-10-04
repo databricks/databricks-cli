@@ -23,7 +23,7 @@ Please leave bug reports as issues on our `GitHub project <https://github.com/da
 Requirements
 ------------
 
--  Python Version > 3.6
+-  Python Version >= 3.7
 
 Installation
 ---------------

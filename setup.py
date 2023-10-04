@@ -33,6 +33,7 @@ setup(
     name='databricks-cli',
     version=version,
     packages=find_packages(include=['databricks_cli*']),
+    python_requires=">=3.7",
     install_requires=[
         # Note: please keep this in sync with `requirements.txt`.
         'click>=7.0',
@@ -41,7 +42,6 @@ setup(
         'requests>=2.17.3',
         'tabulate>=0.7.7',
         'six>=1.10.0',
-        'configparser>=0.3.5;python_version < "3.6"',
         'urllib3>=1.26.7,<3'
     ],
     entry_points='''
@@ -58,8 +58,13 @@ setup(
     classifiers=[
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
-        'Programming Language :: Python :: 3.6',
         'License :: OSI Approved :: Apache Software License',
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
     ],
     keywords='databricks cli',
     url='https://github.com/databricks/databricks-cli'
