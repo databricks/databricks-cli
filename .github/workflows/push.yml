@@ -62,6 +62,7 @@ jobs:
       matrix:
         python-version:
           - '3.7'
+          - '3.12'
     env:
       PYTHON_VERSION: ${{ matrix.python-version }}
     steps:
