@@ -4,15 +4,15 @@ To isolate dependencies from your global python installation, it is important to
 [virtualenv](https://virtualenv.pypa.io/en/stable/). With `virtualenv` you can install the dev environment by doing the following.
 
 Another option would be to use docker directly, i.e.
-```bash
-docker run -it -v `echo $PWD`:/root python:3.6.8 bash
 
+```bash
+docker run -it -v `echo $PWD`:/root python:3.7 bash
 ```
 
 - `pip install -e .`
-- `pip install -r dev-requirements-py3.txt`
+- `pip install -r dev-requirements.txt`
 
-To verify that the installation of `databricks-cli` is the one checked out from VCS, you can check by doing `python -c "import databricks_cli; print databricks_cli.__file__"`.
+To verify that the installation of `databricks-cli` is the one checked out from VCS, you can check by doing `python -c "import databricks_cli; print(databricks_cli.__file__)"`.
 
 Developing using VSCode dev containers
 --------------------------------------

@@ -7,7 +7,7 @@ on:
 
 jobs:
   test:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         python-version:
@@ -15,9 +15,10 @@ jobs:
           - '3.8'
           - '3.9'
           - '3.10'
-        os: [ ubuntu-20.04 ]
+          - '3.11'
+          - '3.12'
+
     env:
-      OS: ${{ matrix.os }}
       PYTHON_VERSION: ${{ matrix.python-version }}
     steps:
       - name: Checkout
@@ -31,13 +32,8 @@ jobs:
       - name: Install pip
         run: pip install --upgrade pip
 
-      - name: Install development dependencies (Python 2)
-        if: ${{ startsWith(matrix.python-version, '2.') }}
-        run: pip install --upgrade -r dev-requirements-py2.txt
-
-      - name: Install development dependencies (Python 3)
-        if: ${{ startsWith(matrix.python-version, '3.') }}
-        run: pip install --upgrade -r dev-requirements-py3.txt
+      - name: Install development dependencies
+        run: pip install --upgrade -r dev-requirements.txt
 
       - name: Log package versions
         run: pip freeze
@@ -54,14 +50,20 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:
-          env_vars: OS,PYTHON_VERSION
+          env_vars: PYTHON_VERSION
 
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         python-version:
           - '3.7'
+          - '3.8'
+          - '3.9'
+          - '3.10'
+          - '3.11'
+          - '3.12'
+
     env:
       PYTHON_VERSION: ${{ matrix.python-version }}
     steps:
@@ -121,7 +123,7 @@ jobs:
 
   compat:
     name: Public API compatibility
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -138,8 +140,8 @@ jobs:
       - name: Install pip
         run: pip install --upgrade pip
 
-      - name: Install development dependencies (Python 3)
-        run: pip install --upgrade -r dev-requirements-py3.txt
+      - name: Install development dependencies
+        run: pip install --upgrade -r dev-requirements.txt
 
       - name: Run compatibility test
         run: |
