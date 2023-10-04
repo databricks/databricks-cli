@@ -22,9 +22,14 @@
 # limitations under the License.
 
 import io
+import os
+from setuptools import setup, find_packages
+from importlib.machinery import SourceFileLoader
 
-# Keep in sync with version in databricks_cli/version.py.
-version='0.17.9.dev0'
+path_to_module = os.path.join('databricks_cli', 'version.py')
+loaded_module = SourceFileLoader('databricks_cli.version', path_to_module).load_module()
+version = loaded_module.version
+
 setup(
     name='databricks-cli',
     version=version,

@@ -74,11 +74,11 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install pip
-        run: pip install --upgrade pip
+        run: pip install --upgrade pip setuptools
 
       - name: Install dependencies
         run: |
-          pip install wheel setuptools
+          pip install wheel
 
       - name: Build distribution files
         id: build-dist
