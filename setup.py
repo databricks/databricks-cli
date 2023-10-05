@@ -68,5 +68,6 @@ setup(
         "Programming Language :: Python :: 3.12",
     ],
     keywords='databricks cli',
-    url='https://github.com/databricks/databricks-cli'
+    url='https://github.com/databricks/databricks-cli',
+    options={'bdist_wheel': {'universal': True}},
 )
