@@ -27,7 +27,13 @@
 import warnings
 
 
+_has_issued_warning = False
+
 def issue_deprecation_warning():
+    global _has_issued_warning
+    if _has_issued_warning:
+        return
+    _has_issued_warning = True
     # Don't print deprecation warning when running the CLI itself.
     import sys
     import os
