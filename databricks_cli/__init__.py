@@ -24,6 +24,28 @@
 # pylint:disable=import-error
 # pylint:disable=bare-except
 
+import warnings
+
+
+_has_issued_warning = False
+
+def issue_deprecation_warning():
+    global _has_issued_warning
+    if _has_issued_warning:
+        return
+    _has_issued_warning = True
+    # Don't print deprecation warning when running the CLI itself.
+    import sys
+    import os
+    if sys.argv and os.path.basename(sys.argv[0]) == 'databricks':
+        return
+    warnings.warn("the databricks_cli module is deprecated in favor of databricks-sdk-py. Python "
+                  "3.12 will be the last version of Python supported by databricks-cli. Please "
+                  "consult the documentation for the databricks-sdk-py at "
+                  "https://databricks-sdk-py.readthedocs.io/en/latest/",
+                  DeprecationWarning, stacklevel=3)
+
+issue_deprecation_warning()
 
 def initialize_cli_for_databricks_notebooks():
     import IPython

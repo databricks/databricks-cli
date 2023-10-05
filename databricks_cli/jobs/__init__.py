@@ -1,0 +1,3 @@
+from databricks_cli import issue_deprecation_warning
+
+issue_deprecation_warning()

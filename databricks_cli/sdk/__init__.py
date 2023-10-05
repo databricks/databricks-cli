@@ -53,3 +53,7 @@ To get started, below is an example usage of the Python API client.
 """
 from .service import *
 from .api_client import ApiClient
+
+from databricks_cli import issue_deprecation_warning
+
+issue_deprecation_warning()
