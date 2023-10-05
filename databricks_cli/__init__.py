@@ -28,7 +28,12 @@ import warnings
 
 
 def issue_deprecation_warning():
-    warnings.warn("the databricks-cli module is deprecated in favor of databricks-sdk-py. Python "
+    # Don't print deprecation warning when running the CLI itself.
+    import sys
+    import os
+    if sys.argv and os.path.basename(sys.argv[0]) == 'databricks':
+        return
+    warnings.warn("the databricks_cli module is deprecated in favor of databricks-sdk-py. Python "
                   "3.12 will be the last version of Python supported by databricks-cli. Please "
                   "migrate to databricks-sdk-py as documented in the migration guide: "
                   "https://docs.databricks.com/en/dev-tools/cli/migrate.html",
