@@ -83,7 +83,7 @@ def mkdirs_cli(api_client, workspace_path):
                short_help='Imports a file from local to the Databricks workspace.')
 @click.argument('source_path')
 @click.argument('target_path')
-@click.option('--language', '-l', required=True, type=LanguageClickType(),
+@click.option('--language', '-l', required=False, type=LanguageClickType(),
               help=', '.join(WorkspaceLanguage.ALL))
 @click.option('--format', '-f', default=WorkspaceFormat.SOURCE, type=FormatClickType())
 @click.option('--overwrite', '-o', is_flag=True, default=False)
@@ -91,11 +91,11 @@ def mkdirs_cli(api_client, workspace_path):
 @profile_option
 @eat_exceptions
 @provide_api_client
-def import_workspace_cli(api_client, source_path, target_path, language, format, overwrite): # NOQA
+def import_workspace_cli(api_client, source_path, target_path, format, overwrite, language=None): # NOQA
     """
     Imports a file from local to the Databricks workspace.
 
-    The format is by default SOURCE. Possible formats are SOURCE, HTML, JUPYTER, and DBC. Each
+    The format is by default SOURCE. Possible formats are SOURCE, HTML, JUPYTER, DBC, and AUTO. Each
     format is documented at
     https://docs.databricks.com/api/latest/workspace.html#notebookexportformat.
     """
@@ -176,19 +176,21 @@ def export_dir_cli(api_client, source_path, target_path, overwrite):
 @click.argument('target_path')
 @click.option('--overwrite', '-o', is_flag=True, default=False)
 @click.option('--exclude-hidden-files', '-e', is_flag=True, default=False)
+@click.option('--are_workspace_files', '-wf', is_flag=True, default=False)
 @debug_option
 @profile_option
 @eat_exceptions
 @provide_api_client
-def import_dir_cli(api_client, source_path, target_path, overwrite, exclude_hidden_files):
+def import_dir_cli(api_client, source_path, target_path, overwrite, exclude_hidden_files, are_workspace_files):
     """
     Recursively imports a directory from local to the Databricks workspace.
 
-    Only directories and files with the extensions .scala, .py, .sql, .r, .R, .ipynb are imported.
+    Only directories and files with the extensions .scala, .py, .sql, .r, .R, .ipynb are imported by default and are converted to notebooks compatible with the original extension.
     When imported, these extensions will be stripped off the name of the notebook.
+    If are_workspace_files is set to True, the files will be imported as as with their original extensions.
     """
     WorkspaceApi(api_client).import_workspace_dir(source_path, target_path, overwrite,
-                                                  exclude_hidden_files)
+                                                  exclude_hidden_files, are_workspace_files)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS,
