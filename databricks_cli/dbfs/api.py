@@ -305,6 +305,18 @@ class DbfsApi(object):
                 click.echo(f.read(), nl=False)
 
 
+
+
+    def async_delete_start(self, dbfs_path, recursive, cluster_id, headers=None):
+        return self.client.async_delete_start(dbfs_path.absolute_path, recursive, cluster_id, headers=headers)
+
+    def async_delete_status(self, async_delete_id=None, limit=None, headers=None):
+        return self.client.async_delete_status(async_delete_id, limit, headers=headers)
+
+    def async_delete_cancel(self, async_delete_id, headers=None):
+        return self.client.async_delete_cancel(async_delete_id, headers=headers)
+
+
 class TempDir(object):
     def __init__(self, remove_on_exit=True):
         self._dir = None

@@ -996,6 +996,39 @@ class DbfsService(object):
         return self.client.perform_query('POST', '/dbfs/close', data=_data, headers=headers)
 
 
+
+
+
+
+
+    def async_delete_start(self, dbfs_path, recursive=None, cluster_id=None, headers=None):
+        _data = {}
+        _data['path'] = dbfs_path
+        if recursive is not None:
+            _data['recursive'] = recursive
+        if cluster_id is not None:
+            _data['cluster_id'] = cluster_id
+        return self.client.perform_query('POST', '/dbfs-async/delete/submit', data=_data, headers=headers)
+
+    def async_delete_status(self, async_delete_id=None, limit=None, headers=None):
+        _data = {}
+        if async_delete_id is not None:
+            _data['delete_job_id'] = async_delete_id
+            return self.client.perform_query('GET', '/dbfs-async/delete/get', data=_data, headers=headers)
+        else:
+            if limit is not None:
+                _data['limit'] = limit
+            return self.client.perform_query('GET', '/dbfs-async/delete/list', data=_data, headers=headers)
+
+    def async_delete_cancel(self, async_delete_id, headers=None):
+        _data = {}
+        _data['delete_job_id'] = async_delete_id
+        return self.client.perform_query('POST', '/dbfs-async/delete/cancel', data=_data, headers=headers)
+
+
+
+
+
 class WorkspaceService(object):
     def __init__(self, client):
         self.client = client
