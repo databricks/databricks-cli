@@ -21,13 +21,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import imp
 import io
 import os
 from setuptools import setup, find_packages
+from importlib.machinery import SourceFileLoader
 
-version = imp.load_source(
-    'databricks_cli.version', os.path.join('databricks_cli', 'version.py')).version
+path_to_module = os.path.join('databricks_cli', 'version.py')
+loaded_module = SourceFileLoader('databricks_cli.version', path_to_module).load_module()
+version = loaded_module.version
 
 setup(
     name='databricks-cli',
