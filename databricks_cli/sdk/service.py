@@ -561,6 +561,10 @@ class ClusterService(object):
         enable_local_disk_encryption=None,
         driver_instance_pool_id=None,
         apply_policy_default_values=None,
+        data_security_mode=None,
+        single_user_name=None,
+        runtime_engine=None,
+        init_scripts=None,
     ):
         _data = {}
         if num_workers is not None:
@@ -625,6 +629,18 @@ class ClusterService(object):
             _data['driver_instance_pool_id'] = driver_instance_pool_id
         if apply_policy_default_values is not None:
             _data['apply_policy_default_values'] = apply_policy_default_values
+        if data_security_mode is not None:
+            _data["data_security_mode"] = data_security_mode
+        if single_user_name is not None:
+            _data["single_user_name"] = single_user_name
+        if runtime_engine is not None:
+            _data["runtime_engine"] = runtime_engine
+        if init_scripts is not None:
+            _data["init_scripts"] = init_scripts
+            if not (isinstance(init_scripts, list) and all(isinstance(init_script, dict) for init_script in init_scripts)):
+                raise TypeError(
+                    'Expected a list of databricks.InitScriptInfo() or a list of dict for field init_scripts'
+                )
         return self.client.perform_query('POST', '/clusters/create', data=_data, headers=headers)
 
     def start_cluster(self, cluster_id, headers=None):
@@ -697,6 +713,10 @@ class ClusterService(object):
         enable_local_disk_encryption=None,
         driver_instance_pool_id=None,
         apply_policy_default_values=None,
+        data_security_mode=None,
+        single_user_name=None,
+        runtime_engine=None,
+        init_scripts=None,
     ):
         _data = {}
         if cluster_id is not None:
@@ -763,6 +783,18 @@ class ClusterService(object):
             _data['driver_instance_pool_id'] = driver_instance_pool_id
         if apply_policy_default_values is not None:
             _data['apply_policy_default_values'] = apply_policy_default_values
+        if data_security_mode is not None:
+            _data["data_security_mode"] = data_security_mode
+        if single_user_name is not None:
+            _data["single_user_name"] = single_user_name
+        if runtime_engine is not None:
+            _data["runtime_engine"] = runtime_engine
+        if init_scripts is not None:
+            _data["init_scripts"] = init_scripts
+            if not (isinstance(init_scripts, list) and all(isinstance(init_script, dict) for init_script in init_scripts)):
+                raise TypeError(
+                    'Expected a list of databricks.InitScriptInfo() or a list of dict for field init_scripts'
+                )
         return self.client.perform_query('POST', '/clusters/edit', data=_data, headers=headers)
 
     def get_cluster(self, cluster_id, headers=None):
