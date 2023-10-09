@@ -86,6 +86,12 @@ class PipelinesApi(object):
     def stop(self, pipeline_id, headers=None):
         self.client.stop(pipeline_id, headers)
 
+    def get_update_details(self, pipeline_id, update_id):
+        return self.client.get_update_details(pipeline_id, update_id)
+
+    def list_events(self, pipeline_id, query_filter=None):
+        return self.client.list_events(pipeline_id, query_filter)
+
     def _upload_libraries_and_update_settings(self, settings, settings_dir):
         settings = copy.deepcopy(settings)
         lib_objects = LibraryObject.from_json(settings.get('libraries', []))

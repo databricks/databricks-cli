@@ -1561,6 +1561,40 @@ class DeltaPipelinesService(object):
             headers=headers,
         )
 
+    def get_update_details(self, pipeline_id=None, update_id=None, headers=None):
+        _data = {}
+        return self.client.perform_query(
+            'GET',
+            '/pipelines/{pipeline_id}/updates/{update_id}'.format(pipeline_id=pipeline_id, update_id=update_id),
+            data=_data,
+            headers=headers,
+        )
+
+    def list_events(self, pipeline_id, query_filter=None):
+        def get_list_events(page_token=None, max_results=None, order_by=None):
+            _data = {}
+            if page_token:
+                _data["page_token"] = page_token
+            if max_results:
+                _data["max_results"] = max_results
+            if order_by:
+                _data["order_by"] = order_by
+            if query_filter:
+                _data["filter"] = query_filter
+            return self.client.client.perform_query(
+                'GET',
+                '/pipelines/{pipeline_id}/events'.format(pipeline_id=pipeline_id),
+                data=_data
+            )
+
+        response = get_list_events(pipeline_id, query_filter)
+        events = response.get("statuses", [])
+
+        while "next_page_token" in response:
+            response = get_list_events(page_token=response["next_page_token"])
+            events.extend(response.get("statuses", []))
+        return events
+
 
 class ReposService(object):
     __git_providers__ = {
