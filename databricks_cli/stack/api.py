@@ -23,6 +23,7 @@
 
 import os
 import json
+import warnings
 from datetime import datetime
 from requests.exceptions import HTTPError
 
@@ -72,8 +73,13 @@ DBFS_RESOURCE_PATH = 'path'
 DBFS_RESOURCE_IS_DIR = 'is_dir'
 
 
+STACK_CLI_DEPRECATION = '''Stack CLI is deprecated. Please switch to using 
+the generally available Databricks Terraform Provider instead:
+https://docs.databricks.com/dev-tools/terraform/index.html'''
+
 class StackApi(object):
     def __init__(self, api_client):
+        warnings.warn(STACK_CLI_DEPRECATION, DeprecationWarning)
         self.jobs_client = JobsApi(api_client)
         self.workspace_client = WorkspaceApi(api_client)
         self.dbfs_client = DbfsApi(api_client)
