@@ -124,7 +124,8 @@ def export_workspace_cli(api_client, source_path, target_path, format, overwrite
         file_info = WorkspaceApi(api_client).get_status(source_path)
         if not file_info.is_notebook:
             raise RuntimeError('Export can only be called on a notebook.')
-        extension = WorkspaceLanguage.to_extension(file_info.language)
+        jupyter_fmt = (format == "JUPYTER")
+        extension = WorkspaceLanguage.to_extension(file_info.language, jupyter_fmt)
         target_path = os.path.join(target_path, file_info.basename + extension)
     WorkspaceApi(api_client).export_workspace(source_path, target_path, format, overwrite) # NOQA
 
