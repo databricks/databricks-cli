@@ -103,17 +103,17 @@ class WorkspaceApi(object):
     def mkdirs(self, workspace_path, headers=None):
         self.client.mkdirs(workspace_path, headers=headers)
 
-    def import_workspace(self, source_path, target_path, language, fmt, is_overwrite, headers=None):
+    def import_workspace(self, source_path, target_path, fmt, is_overwrite, headers=None, language=None):
         with open(source_path, 'rb') as f:
             # import_workspace must take content that is typed str.
             content = b64encode(f.read()).decode()
             self.client.import_workspace(
                 target_path,
                 fmt,
-                language,
                 content,
                 is_overwrite,
-                headers=headers)
+                headers=headers,
+                language=language)
 
     def export_workspace(self, source_path, target_path, fmt, is_overwrite, headers=None):
         """

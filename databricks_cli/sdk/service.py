@@ -1013,19 +1013,19 @@ class WorkspaceService(object):
         return self.client.perform_query('GET', '/workspace/list', data=_data, headers=headers)
 
     def import_workspace(
-        self, path, format=None, language=None, content=None, overwrite=None, headers=None
+        self, path, format=None, content=None, overwrite=None, headers=None, language=None
     ):
         _data = {}
         if path is not None:
             _data['path'] = path
         if format is not None:
             _data['format'] = format
-        if language is not None:
-            _data['language'] = language
         if content is not None:
             _data['content'] = content
         if overwrite is not None:
             _data['overwrite'] = overwrite
+        if language is not None:
+            _data['language'] = language
         return self.client.perform_query('POST', '/workspace/import', data=_data, headers=headers)
 
     def export_workspace(self, path, format=None, direct_download=None, headers=None):
