@@ -160,7 +160,7 @@ class WorkspaceApi(object):
                     click.echo(('{} does not have a valid extension of {}. Skip this file and ' +
                                 'continue.').format(cur_src, extensions))
 
-    def export_workspace_dir(self, source_path, target_path, overwrite, headers=None):
+    def export_workspace_dir(self, source_path, target_path, overwrite, format=WorkspaceFormat.SOURCE, headers=None):
         if os.path.isfile(target_path):
             click.echo('{} exists as a file. Skipping this subtree {}'
                        .format(target_path, source_path))
@@ -175,7 +175,7 @@ class WorkspaceApi(object):
             elif obj.is_notebook:
                 cur_dst = cur_dst + WorkspaceLanguage.to_extension(obj.language)
                 try:
-                    self.export_workspace(cur_src, cur_dst, WorkspaceFormat.SOURCE, overwrite,
+                    self.export_workspace(cur_src, cur_dst, format, overwrite,
                                           headers=headers)
                     click.echo('{} -> {}'.format(cur_src, cur_dst))
                 except LocalFileExistsException:
